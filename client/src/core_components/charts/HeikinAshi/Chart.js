@@ -27,7 +27,7 @@ import {
 	MovingAverageTooltip,
 } from "react-stockcharts/lib/tooltip";
 import { ema, heikinAshi, sma } from "react-stockcharts/lib/indicator";
-import { fitWidth } from "react-stockcharts/lib/helper";
+import { fitWidth, fitDimensions } from "react-stockcharts/lib/helper";
 import { last } from "react-stockcharts/lib/utils";
 
 class HeikinAshi extends React.Component {
@@ -51,7 +51,7 @@ class HeikinAshi extends React.Component {
 			.merge((d, c) => { d.smaVolume50 = c; })
 			.accessor(d => d.smaVolume50);
 
-		const { type, data: initialData, width, ratio } = this.props;
+		const { type, data: initialData, width, height, ratio } = this.props;
 
 		const calculatedData = smaVolume50(ema50(ema20(ha(initialData))));
 		const xScaleProvider = discontinuousTimeScaleProvider
@@ -68,9 +68,10 @@ class HeikinAshi extends React.Component {
 		const xExtents = [start, end];
 
 		return (
-			<ChartCanvas height={400}
+			<ChartCanvas
+				height={height}
 				ratio={ratio}
-				width={width}
+				width={width-5}
 				margin={{ left: 40, right: 40, top: 10, bottom: 30 }}
 				type={type}
 				seriesName="MSFT"
@@ -170,6 +171,7 @@ class HeikinAshi extends React.Component {
 HeikinAshi.propTypes = {
 	data: PropTypes.array.isRequired,
 	width: PropTypes.number.isRequired,
+	height: PropTypes.number.isRequired,
 	ratio: PropTypes.number.isRequired,
 	type: PropTypes.oneOf(["svg", "hybrid"]).isRequired,
 };
@@ -178,6 +180,7 @@ HeikinAshi.defaultProps = {
 	type: "svg",
 };
 
-HeikinAshi = fitWidth(HeikinAshi);
+HeikinAshi = fitDimensions(HeikinAshi);
+// HeikinAshi = fitWidth(HeikinAshi);
 
 export default HeikinAshi;

@@ -6,16 +6,15 @@ import PropTypes from "prop-types";
 import { ChartCanvas, Chart } from "react-stockcharts";
 import { BarSeries, AreaSeries } from "react-stockcharts/lib/series";
 import { XAxis, YAxis } from "react-stockcharts/lib/axes";
-import { fitWidth } from "react-stockcharts/lib/helper";
+import { fitWidth, fitDimensions } from "react-stockcharts/lib/helper";
 
 class BarChart extends React.Component {
 	render() {
-		const { data, type, width, ratio } = this.props;
+		const { data, type, height, width, ratio } = this.props;
 
 		// const data = unsortedData.slice().sort((a, b) => a.income - b.income);
-
 		return (
-			<ChartCanvas ratio={ratio} width={width} height={400}
+			<ChartCanvas ratio={ratio} width={width-5} height={height}
 					margin={{ left: 40, right: 10, top: 20, bottom: 30 }} type={type}
 					seriesName="Orders"
 					xExtents={list => list.map(d => d.x)}
@@ -48,6 +47,6 @@ BarChart.defaultProps = {
 	type: "svg",
 };
 
-BarChart = fitWidth(BarChart);
+BarChart = fitDimensions(BarChart);
 
 export default BarChart;

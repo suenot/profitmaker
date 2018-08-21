@@ -54,8 +54,24 @@ class App extends React.Component {
     return (
       <div>
         <style jsx="true">{`
-            .react-grid-item {
-              background: #eee
+            body {
+              background: #efefef;
+            }
+            .widget {
+              overflow: hidden;
+              width: 100%;
+              height: 100%;
+              max-width: 100%;
+              max-height: 100%;
+              background: #fff;
+              border: 1px solid #484747;
+            }
+            .title {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              background: #484747;
+              color: white;
             }
         `}</style>
         <button onClick={() => this.resetLayout()}>Reset Layout</button>
@@ -69,22 +85,58 @@ class App extends React.Component {
           }
         >
           <div key="1" data-grid={{ w: 2, h: 3, x: 0, y: 0, minW: 2, minH: 3 }}>
-            <HeikinAshi tokenAddress="0xe41d2489571d322189246dafa5ebde1f4699f498" />
+            <div class="widget">
+              <div class="title">
+                <span>HeikinAshi</span>
+                <div>icons</div>
+              </div>
+              <HeikinAshi tokenAddress="0xe41d2489571d322189246dafa5ebde1f4699f498" />
+            </div>
           </div>
           <div key="2" data-grid={{ w: 2, h: 3, x: 2, y: 0, minW: 2, minH: 3 }}>
-            <Crocodile tokenAddress="0xe41d2489571d322189246dafa5ebde1f4699f498" />
+            <div class="widget">
+              <div class="title">
+                <span>Crocodile</span>
+                <div>icons</div>
+              </div>
+              <Crocodile tokenAddress="0xe41d2489571d322189246dafa5ebde1f4699f498" />
+            </div>
           </div>
           <div key="3" data-grid={{ w: 2, h: 3, x: 4, y: 0, minW: 2, minH: 3 }}>
-            <Orders type="asks" />
+            <div class="widget">
+              <div class="title">
+                <span>Asks</span>
+                <div>icons</div>
+              </div>
+              <Orders type="asks" />
+            </div>
           </div>
           <div key="4" data-grid={{ w: 2, h: 3, x: 6, y: 0, minW: 2, minH: 3 }}>
-            <Orders type="bids" />
+            <div class="widget">
+              <div class="title">
+                <span>Bids</span>
+                <div>icons</div>
+              </div>
+              <Orders type="bids" />
+            </div>
           </div>
           <div key="5" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
-            <CreateOrder />
+            <div class="widget">
+              <div class="title">
+                <span>Create order</span>
+                <div>icons</div>
+              </div>
+              <CreateOrder />
+            </div>
           </div>
           <div key="6" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
-            <Balance />
+            <div class="widget">
+              <div class="title">
+                <span>Balance</span>
+                <div>icons</div>
+              </div>
+              <Balance />
+            </div>
           </div>
         </ResponsiveReactGridLayout>
       </div>

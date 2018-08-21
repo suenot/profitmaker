@@ -50,9 +50,9 @@ export default class ChartComponent extends React.Component {
 
 
 		return (
-			<div className={theme.wrapper}>
-                <Chart type="hybrid" data={this.state.data} />
-            </div>
+      // <div className={theme.wrapper}>
+        <Chart type="hybrid" data={this.state.data} />
+      // </div>
 		)
 	}
 }

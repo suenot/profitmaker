@@ -9,7 +9,6 @@ class Orders extends React.Component {
     const {OrdersStore, type} = this.props
     return (
       <div>
-        <h3>{type}</h3>
         <table>
           <thead>
             <tr>
