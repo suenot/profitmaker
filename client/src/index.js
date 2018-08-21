@@ -4,11 +4,11 @@ import './index.css'
 import App from './App'
 import registerServiceWorker from './registerServiceWorker'
 import {Provider} from 'mobx-react'
-import Orderbooks from './stores/Orderbooks'
+import OrdersStore from './stores/OrdersStore'
 import CreateOrderStore from './stores/CreateOrderStore'
 
 const Root = (
-    <Provider Orderbooks={Orderbooks} CreateOrderStore={CreateOrderStore}>
+    <Provider OrdersStore={OrdersStore} CreateOrderStore={CreateOrderStore}>
         <App />
     </Provider>
 )
