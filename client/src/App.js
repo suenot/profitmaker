@@ -11,6 +11,10 @@ import Crocodile from './core_components/charts/Crocodile'
 import Balance from './core_components/Balance'
 // import GitterChat from './core_components/GitterChat'
 
+// icons
+import Clear from '@material-ui/icons/Clear'
+import Settings from '@material-ui/icons/Settings'
+
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
@@ -83,12 +87,17 @@ class App extends React.Component {
           onLayoutChange={(layout, layouts) =>
             this.onLayoutChange(layout, layouts)
           }
+          draggableCancel="input,textarea"
+          draggableHandle=".title"
         >
           <div key="1" data-grid={{ w: 2, h: 3, x: 0, y: 0, minW: 2, minH: 3 }}>
             <div class="widget">
               <div class="title">
                 <span>HeikinAshi</span>
-                <div>icons</div>
+                <div>
+                  <Settings style={{ fontSize: 18 }} />
+                  <Clear style={{ fontSize: 18 }} />
+                </div>
               </div>
               <HeikinAshi tokenAddress="0xe41d2489571d322189246dafa5ebde1f4699f498" />
             </div>
@@ -97,7 +106,10 @@ class App extends React.Component {
             <div class="widget">
               <div class="title">
                 <span>Crocodile</span>
-                <div>icons</div>
+                <div>
+                  <Settings style={{ fontSize: 18 }} />
+                  <Clear style={{ fontSize: 18 }} />
+                </div>
               </div>
               <Crocodile tokenAddress="0xe41d2489571d322189246dafa5ebde1f4699f498" />
             </div>
@@ -106,7 +118,10 @@ class App extends React.Component {
             <div class="widget">
               <div class="title">
                 <span>Asks</span>
-                <div>icons</div>
+                <div>
+                  <Settings style={{ fontSize: 18 }} />
+                  <Clear style={{ fontSize: 18 }} />
+                </div>
               </div>
               <Orders type="asks" />
             </div>
@@ -115,7 +130,10 @@ class App extends React.Component {
             <div class="widget">
               <div class="title">
                 <span>Bids</span>
-                <div>icons</div>
+                <div>
+                  <Settings style={{ fontSize: 18 }} />
+                  <Clear style={{ fontSize: 18 }} />
+                </div>
               </div>
               <Orders type="bids" />
             </div>
@@ -124,7 +142,10 @@ class App extends React.Component {
             <div class="widget">
               <div class="title">
                 <span>Create order</span>
-                <div>icons</div>
+                <div>
+                  <Settings style={{ fontSize: 18 }} />
+                  <Clear style={{ fontSize: 18 }} />
+                </div>
               </div>
               <CreateOrder />
             </div>
@@ -133,7 +154,10 @@ class App extends React.Component {
             <div class="widget">
               <div class="title">
                 <span>Balance</span>
-                <div>icons</div>
+                <div>
+                  <Settings style={{ fontSize: 18 }} />
+                  <Clear style={{ fontSize: 18 }} />
+                </div>
               </div>
               <Balance />
             </div>
