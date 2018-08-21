@@ -8,6 +8,7 @@ import Orders from './core_components/Orders'
 import CreateOrder from './core_components/CreateOrder'
 import HeikinAshi from './core_components/charts/HeikinAshi'
 import Crocodile from './core_components/charts/Crocodile'
+import Balance from './core_components/Balance'
 // import GitterChat from './core_components/GitterChat'
 
 
@@ -81,6 +82,9 @@ class App extends React.Component {
           </div>
           <div key="5" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
             <CreateOrder />
+          </div>
+          <div key="6" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
+            <Balance />
           </div>
         </ResponsiveReactGridLayout>
       </div>
