@@ -55,12 +55,12 @@ export default class ChartComponent extends React.Component {
 		// </TypeChooser>
 
 		return (
-			<div className={theme.wrapper}>
-				{overlay ? this.renderOverlay() : ''}
-				<div className={theme.chart}>
+			// <div className={theme.wrapper}>
+				// {overlay ? this.renderOverlay() : ''}
+				// <div className={theme.chart}>
 					<Chart type="hybrid" data={data} />
-				</div>
-			</div>
+				// </div>
+			// </div>
 		)
 	}
 }

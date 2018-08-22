@@ -2,14 +2,13 @@ import React from 'react'
 import _ from 'lodash'
 import { inject, observer } from 'mobx-react'
 
-@inject('Orderbooks')
+@inject('OrdersStore')
 @observer
 class Orders extends React.Component {
   render() {
-    const {Orderbooks, type} = this.props
+    const {OrdersStore, type} = this.props
     return (
       <div>
-        <h3>{type}</h3>
         <table>
           <thead>
             <tr>
@@ -20,7 +19,7 @@ class Orders extends React.Component {
           </thead>
           <tbody>
             {
-              _.map(Orderbooks[type], (order) => {
+              _.map(OrdersStore[type], (order) => {
                 return <tr key={order.id}>
                   <td>{order.price}</td>
                   <td>{order.amount}</td>
