@@ -3,7 +3,7 @@ var sleep = require('../../utils/utils').sleep
 const updateCoinmarketcap = async function(db) {
     while (true) {
         await updateCoinmarketcapFromBD(db)
-        await sleep(60000)
+        await sleep(10000)
     }
 }
 const updateCoinmarketcapFromBD = async function(db) {

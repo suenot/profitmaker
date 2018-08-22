@@ -21,15 +21,16 @@ class Balance extends React.Component {
           </thead>
           <tbody>
             {
-              _.map(BalanceStore.total, (item, i) => {
-                console.log(BalanceStore.total)
-                return <tr>
-                  <td>{i}</td>
-                  <td>{item.usd}</td>
-                  <td>{item.btc}</td>
-                  <td>{item.tkn}</td>
-                </tr>
-              })
+              console.log(BalanceStore)
+              // _.map(BalanceStore.total, (item, i) => {
+              //   console.log(BalanceStore)
+              //   return <tr>
+              //     <td>{i}</td>
+              //     <td>{item.usd}</td>
+              //     <td>{item.btc}</td>
+              //     <td>{item.tkn}</td>
+              //   </tr>
+              // })
             }
           </tbody>
         </table>

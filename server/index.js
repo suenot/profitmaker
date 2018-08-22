@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 var bodyParser = require('body-parser')
 var MongoClient = require('mongodb').MongoClient
-const pr = require('../private/keys.json').keys
+const privateKeys = require('../private/keys.json').keys
 const mongoConf = require('../private/mongo.json').mongo
 const ccxt = require ('ccxt')
 const url = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.host+':'+mongoConf.port+'/'+mongoConf.db+'?authSource=admin'
@@ -34,7 +34,7 @@ const main = async () => {
 		db = await MongoClient.connect(url)
 		localMongo = await MongoClient.connect(localMongoUrl)
 
-		try { updateBalance(localMongo, pr, 10000) } catch(err) { console.log(err) }
+		try { updateBalance(localMongo, privateKeys, 10000) } catch(err) { console.log(err) }
 		try { updateCoinmarketcap(db) } catch(err) { console.log(err) }
 
 

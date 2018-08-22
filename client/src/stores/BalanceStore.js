@@ -3,21 +3,22 @@ import axios from 'axios'
 import _ from 'lodash'
 
 class BalanceStore {
-    @observable precision = 8
-    @observable _total = 0
-    @observable _free = 0
-    @observable _used = 0
+    // @observable precision = 8
+    // @observable _total = 0
+    // @observable _free = 0
+    // @observable _used = 0
 
     @computed get total() {
-      if (this._total) {
-        return Object.assign(...Object.entries(this._total).map(([k, v]) => ({
-          [k]: {
-            usd: v.usd.toFixed(this.precision),
-            btc: v.btc.toFixed(this.precision),
-            tkn: v.tkn.toFixed(this.precision)
-          }
-        })
-        ))
+      if (this.balance) {
+        console.log(this.balance)
+        // return Object.assign(...Object.entries(this._total).map(([k, v]) => ({
+        //   [k]: {
+        //     usd: v.usd.toFixed(this.precision),
+        //     btc: v.btc.toFixed(this.precision),
+        //     tkn: v.tkn.toFixed(this.precision)
+        //   }
+        // })
+        // ))
       }
     }
     // @computed get free() {
@@ -40,13 +41,12 @@ class BalanceStore {
     // }
 
 
-    stock = 'LIQUI'
     @action fetchBalance(){
       axios.get('http://localhost:8051/balance')
       .then((response) => {
-        this._total = response.data[this.stock]['total']
-        this._free = response.data[this.stock]['free']
-        this._used = response.data[this.stock]['used']
+        this.balance = response.data
+        // this._free = response.data[this.stock]['free']
+        // this._used = response.data[this.stock]['used']
       })
       .catch((error) => { console.log(error) })
     }
