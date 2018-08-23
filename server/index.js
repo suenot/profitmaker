@@ -3,6 +3,7 @@ const app = express()
 var bodyParser = require('body-parser')
 var MongoClient = require('mongodb').MongoClient
 const privateKeys = require('../private/keys.json').keys
+const ethPockets = require('../private/keys.json').ethPockets
 const mongoConf = require('../private/mongo.json').mongo
 const ccxt = require ('ccxt')
 const url = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.host+':'+mongoConf.port+'/'+mongoConf.db+'?authSource=admin'
@@ -21,12 +22,15 @@ let localMongo
 ///////////////
 global.COINMARKETCAP
 global.BALANCE
+global.STOCKS
+global.sleepUntil = {}
 
 ///////////////
 //globals end
 ///////////////
 
 var updateBalance = require('./core_components/updateBalance')
+var initStocks = require('./core_components/initStocks')
 var updateCoinmarketcap = require('./core_components/updateCoinmarketcap')
 
 const main = async () => {
@@ -34,8 +38,12 @@ const main = async () => {
 		db = await MongoClient.connect(url)
 		localMongo = await MongoClient.connect(localMongoUrl)
 
-		try { updateBalance(localMongo, privateKeys, 10000) } catch(err) { console.log(err) }
+		await initStocks(privateKeys)
+
 		try { updateCoinmarketcap(db) } catch(err) { console.log(err) }
+		try { updateBalance(localMongo, privateKeys, ethPockets, 10000) } catch(err) { console.log(err) }
+
+
 
 
 		// balance (pie chart)
