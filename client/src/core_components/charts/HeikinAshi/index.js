@@ -2,65 +2,38 @@
 import React from 'react';
 import { render } from 'react-dom';
 import Chart from './Chart';
-import { getData } from "./utils"
+// import { getData } from "./utils"
 
 import Preloader from '../../Preloader'
+import { inject, observer } from 'mobx-react'
 
 // import { TypeChooser } from "react-stockcharts/lib/helper";
 
 import theme from './theme.scss'
 
+@inject('OrdersStore')
+@observer
 export default class ChartComponent extends React.Component {
-	state = {
-		data: 'loading',
-		overlay: true,
-	}
-
-	componentDidMount() {
-		const tokenAddress = this.props.tokenAddress
-		getData(tokenAddress).then(data => {
-			this.setState({ data })
-		})
-	}
-
-
-	removeOverlay = () => {
-		this.setState({overlay: false})
-	}
-
-	renderOverlay() {
-		return (
-			<div className={theme.overlay} onClick={this.removeOverlay}>
-				Click for scaling...
-			</div>
-		)
-	}
-
 	render() {
-		const {data, overlay} = this.state
-
-		if (data == 'loading') {
+		const {OrdersStore} = this.props
+		if (!OrdersStore.ohlcvComputed || (JSON.stringify(OrdersStore.ohlcvComputed) == '[]') ) {
+			console.log('ПРЕЛОАДЕР')
 			return <Preloader />
-		}
-		if (data == false) {
+		} else {
+			console.log('ГРАФИК')
+			console.log(OrdersStore.ohlcvComputed)
+			// var ordersJSON = JSON.parse( JSON.stringify(OrdersStore.ordersChart) )
+			var ordersJSON = JSON.parse( JSON.stringify(OrdersStore.ohlcvComputed) )
+			// var ordersJSON = OrdersStore.ohlcvComputed
+			ordersJSON = ordersJSON.map(function(order){
+				order.date = new Date(order.date)
+				return order
+			})
+			console.log( ordersJSON )
+			// if (orders != ordersJSON) { console.log('НЕ РАВНЫ') }
 			return (
-				<div>
-					Data not found...
-				</div>
+				<Chart type="hybrid" data={ordersJSON} />
 			)
 		}
-
-		// <TypeChooser>
-		// 	{type => <Chart type={type} data={this.state.data} />}
-		// </TypeChooser>
-
-		return (
-			// <div className={theme.wrapper}>
-				// {overlay ? this.renderOverlay() : ''}
-				// <div className={theme.chart}>
-					<Chart type="hybrid" data={data} />
-				// </div>
-			// </div>
-		)
 	}
 }

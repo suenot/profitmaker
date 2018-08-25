@@ -19,7 +19,7 @@ class Orders extends React.Component {
           </thead>
           <tbody>
             {
-              _.map(OrdersStore[type], (order) => {
+              _.map(OrdersStore.ordersComputedText[type], (order) => {
                 return <tr key={order.id}>
                   <td>{order.price}</td>
                   <td>{order.amount}</td>
