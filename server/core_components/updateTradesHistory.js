@@ -23,7 +23,7 @@ const fetchMyTradesByOne = async function(rateLimit, stockName) {
   await catchHead(rateLimit, stockName)
   var markets = await global.STOCKS[stockName].loadMarkets()
   for (let [key, value] of Object.entries(markets)) {
-    console.log(data)
+    // console.log(data)
     try {
       await catchHead(rateLimit, stockName)
       var partial = await global.STOCKS[stockName].fetchMyTrades(symbol = value.symbol, since = undefined, limit = undefined, params = {})
@@ -69,16 +69,6 @@ const tradesHistory = async function(db, stockName) {
       await db.collection('tradesHistory').replaceOne({'stock': stockNameUpper}, res, {upsert: true})
     }
   } catch (err) { console.log(err) }
-}
-
-const activeTrades = async function(stockName) {
-  var rateLimit = global.STOCKS[stockName]['rateLimit']
-  var stockNameUpper = stockName.toUpperCase()
-  if (global.STOCKS[stockName].has['fetchOrders']) {
-    await catchHead(rateLimit, stockName)
-    var data = await global.STOCKS[stockName].fetchOrders (symbol = undefined, since = undefined, limit = undefined, params = {})
-    console.log(data)
-  }
 }
 
 module.exports = updateTradesHistory

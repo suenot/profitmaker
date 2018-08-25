@@ -34,6 +34,7 @@ var updateBalance = require('./core_components/updateBalance')
 var initStocks = require('./core_components/initStocks')
 var updateCoinmarketcap = require('./core_components/updateCoinmarketcap')
 var updateTradesHistory = require('./core_components/updateTradesHistory')
+var updateOpenOrders = require('./core_components/updateOpenOrders')
 
 const main = async () => {
 	try {
@@ -46,6 +47,8 @@ const main = async () => {
 		try { updateBalance(localMongo, privateKeys, ethPockets, 10000) } catch(err) { console.log(err) }
 
 		try { updateTradesHistory(localMongo, privateKeys, 10000) } catch(err) { console.log(err) }
+
+		try { updateOpenOrders(localMongo, privateKeys, 10000) } catch(err) { console.log(err) }
 
 
 
