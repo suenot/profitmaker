@@ -24,6 +24,7 @@ global.COINMARKETCAP
 global.BALANCE
 global.STOCKS
 global.sleepUntil = {}
+global.TRADESHISTORY
 
 ///////////////
 //globals end
@@ -32,6 +33,7 @@ global.sleepUntil = {}
 var updateBalance = require('./core_components/updateBalance')
 var initStocks = require('./core_components/initStocks')
 var updateCoinmarketcap = require('./core_components/updateCoinmarketcap')
+var updateTradesHistory = require('./core_components/updateTradesHistory')
 
 const main = async () => {
 	try {
@@ -40,8 +42,11 @@ const main = async () => {
 
 		await initStocks(privateKeys)
 
-		try { updateCoinmarketcap(db) } catch(err) { console.log(err) }
+		try { updateCoinmarketcap(db) } catch(err) { console.log(err) } // TODO бюрать с сервера
 		try { updateBalance(localMongo, privateKeys, ethPockets, 10000) } catch(err) { console.log(err) }
+
+		try { updateTradesHistory(localMongo, privateKeys, 10000) } catch(err) { console.log(err) }
+
 
 
 
