@@ -166,39 +166,41 @@ const updateTotal = async function () {
       "data": {}
     }
     for (let [stockName, stock] of Object.entries(global.BALANCE)) {
+      if (stockName != 'TOTAL') {
       // console.log(stockName)
-      for (let [key, value] of Object.entries(stock.data)) {
-        // console.log(key, value)
-        if ( total['data'][key] === undefined ) {
-          total['data'][key] = {
-            'total': 0,
-            'totalUSD': 0,
-            'totalBTC': 0,
-            'used': 0,
-            'usedUSD': 0,
-            'usedBTC': 0,
-            'free': 0,
-            'freeUSD': 0,
-            'freeBTC': 0
+        for (let [key, value] of Object.entries(stock.data)) {
+          // console.log(key, value)
+          if ( total['data'][key] === undefined ) {
+            total['data'][key] = {
+              'total': 0,
+              'totalUSD': 0,
+              'totalBTC': 0,
+              'used': 0,
+              'usedUSD': 0,
+              'usedBTC': 0,
+              'free': 0,
+              'freeUSD': 0,
+              'freeBTC': 0
+            }
           }
+          total['data'][key]['total'] += value.total
+          total['data'][key]['totalUSD'] += value.totalUSD
+          total['data'][key]['totalBTC'] += value.totalBTC
+          total.totalBTC += value.totalBTC
+          total.totalUSD += value.totalUSD
+
+          total['data'][key]['free'] += value.free
+          total['data'][key]['freeUSD'] += value.freeUSD
+          total['data'][key]['freeBTC'] += value.freeBTC
+          total.freeBTC += value.freeBTC
+          total.freeUSD += value.freeUSD
+
+          total['data'][key]['used'] += value.used
+          total['data'][key]['usedUSD'] += value.usedUSD
+          total['data'][key]['usedBTC'] += value.usedBTC
+          total.usedBTC += value.usedBTC
+          total.usedUSD += value.usedUSD
         }
-        total['data'][key]['total'] += value.total
-        total['data'][key]['totalUSD'] += value.totalUSD
-        total['data'][key]['totalBTC'] += value.totalBTC
-        total.totalBTC += value.totalBTC
-        total.totalUSD += value.totalUSD
-
-        total['data'][key]['free'] += value.free
-        total['data'][key]['freeUSD'] += value.freeUSD
-        total['data'][key]['freeBTC'] += value.freeBTC
-        total.freeBTC += value.freeBTC
-        total.freeUSD += value.freeUSD
-
-        total['data'][key]['used'] += value.used
-        total['data'][key]['usedUSD'] += value.usedUSD
-        total['data'][key]['usedBTC'] += value.usedBTC
-        total.usedBTC += value.usedBTC
-        total.usedUSD += value.usedUSD
       }
     }
     global.BALANCE['TOTAL'] = total
