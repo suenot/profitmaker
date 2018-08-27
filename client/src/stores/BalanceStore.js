@@ -7,20 +7,22 @@ class BalanceStore {
     // @observable _total = 0
     // @observable _free = 0
     // @observable _used = 0
+    @observable balance = {'TOTAL': {'data': {}}}
+    @observable stock = 'TOTAL'
 
-    @computed get total() {
-      if (this.balance) {
-        console.log(this.balance)
-        // return Object.assign(...Object.entries(this._total).map(([k, v]) => ({
-        //   [k]: {
-        //     usd: v.usd.toFixed(this.precision),
-        //     btc: v.btc.toFixed(this.precision),
-        //     tkn: v.tkn.toFixed(this.precision)
-        //   }
-        // })
-        // ))
-      }
-    }
+    // @computed get total() {
+    //   if (this.balance) {
+    //     console.log(this.balance)
+    //     // return Object.assign(...Object.entries(this._total).map(([k, v]) => ({
+    //     //   [k]: {
+    //     //     usd: v.usd.toFixed(this.precision),
+    //     //     btc: v.btc.toFixed(this.precision),
+    //     //     tkn: v.tkn.toFixed(this.precision)
+    //     //   }
+    //     // })
+    //     // ))
+    //   }
+    // }
     // @computed get free() {
     //   return _.map(this._free, (item) => {
     //     return {
@@ -39,7 +41,7 @@ class BalanceStore {
     //     }
     //   })
     // }
-
+    
 
     @action fetchBalance(){
       axios.get('http://localhost:8051/balance')

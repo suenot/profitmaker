@@ -1,4 +1,4 @@
-var sleep = require('../../utils/utils').sleep
+var sleep = require('../../utils').sleep
 
 const updateCoinmarketcap = async function(db) {
     while (true) {

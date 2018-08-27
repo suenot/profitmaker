@@ -1,8 +1,8 @@
 const ccxt = require ('ccxt')
 const axios = require('axios')
-var sleep = require('../../utils/utils').sleep
-var catchHead = require('../../utils/utils').catchHead
-var calculateCoin = require('../../utils/utils').calculateCoin
+var sleep = require('../../utils').sleep
+var catchHead = require('../../utils').catchHead
+var calculateCoin = require('../../utils').calculateCoin
 
 const updateBalance = async function(db, privateKeys, ethPockets, timeout) {
     while (true) {
@@ -29,6 +29,12 @@ const updateStocksBalance = async function(stockName) {
         "stock": stockNameUpper,
         "timestamp": Date.now(),
         "datetime": new Date(Date.now()),
+        "freeBTC": 0,
+        "freeUSD": 0,
+        "usedBTC": 0,
+        "usedUSD": 0,
+        "totalBTC": 0,
+        "totalUSD": 0,
         "data": {}
     }
     for (let [coin, value] of Object.entries(data.total)) {
@@ -48,6 +54,12 @@ const updateStocksBalance = async function(stockName) {
             'freeUSD': calcFree.usd,
             'freeBTC': calcFree.btc
           }
+          res.freeBTC += calcFree.btc
+          res.freeUSD += calcFree.usd
+          res.usedBTC += calcUsed.btc
+          res.usedUSD += calcUsed.usd
+          res.totalBTC += calcTotal.btc
+          res.totalUSD += calcTotal.usd
         }
       }
     }
@@ -65,6 +77,12 @@ const updateETHBalance = async function(stockName, stock) {
         "stock": stockNameUpper,
         "timestamp": Date.now(),
         "datetime": new Date(Date.now()),
+        "freeBTC": 0,
+        "freeUSD": 0,
+        "usedBTC": 0,
+        "usedUSD": 0,
+        "totalBTC": 0,
+        "totalUSD": 0,
         "data": {}
     }
 
@@ -82,6 +100,12 @@ const updateETHBalance = async function(stockName, stock) {
       'freeUSD': ethCalc.usd,
       'freeBTC': ethCalc.btc
     }
+    res.freeBTC += ethCalc.btc
+    res.freeUSD += ethCalc.usd
+    res.usedBTC += 0
+    res.usedUSD += 0
+    res.totalBTC += ethCalc.btc
+    res.totalUSD += ethCalc.usd
     for (let [i, token] of Object.entries(response.data.tokens)) {
       var decimals = token['tokenInfo']['decimals']
       var symbol = token['tokenInfo']['symbol']
@@ -112,6 +136,12 @@ const updateETHBalance = async function(stockName, stock) {
           'freeUSD': calc.usd,
           'freeBTC': calc.btc
         }
+        res.freeBTC += calc.btc
+        res.freeUSD += calc.usd
+        res.usedBTC += 0
+        res.usedUSD += 0
+        res.totalBTC += calc.btc
+        res.totalUSD += calc.usd
       }
     }
     if ( global.BALANCE === undefined ) global.BALANCE = {}
@@ -155,20 +185,20 @@ const updateTotal = async function () {
         total['data'][key]['total'] += value.total
         total['data'][key]['totalUSD'] += value.totalUSD
         total['data'][key]['totalBTC'] += value.totalBTC
-        total['totalBTC'] += value.totalBTC
-        total['totalUSD'] += value.totalUSD
+        total.totalBTC += value.totalBTC
+        total.totalUSD += value.totalUSD
 
         total['data'][key]['free'] += value.free
         total['data'][key]['freeUSD'] += value.freeUSD
         total['data'][key]['freeBTC'] += value.freeBTC
-        total['freeBTC'] += value.freeBTC
-        total['freeUSD'] += value.freeUSD
+        total.freeBTC += value.freeBTC
+        total.freeUSD += value.freeUSD
 
         total['data'][key]['used'] += value.used
         total['data'][key]['usedUSD'] += value.usedUSD
         total['data'][key]['usedBTC'] += value.usedBTC
-        total['usedBTC'] += value.usedBTC
-        total['usedUSD'] += value.usedUSD
+        total.usedBTC += value.usedBTC
+        total.usedUSD += value.usedUSD
       }
     }
     global.BALANCE['TOTAL'] = total

@@ -1,6 +1,6 @@
 const ccxt = require ('ccxt')
-var sleep = require('../../utils/utils').sleep
-var catchHead = require('../../utils/utils').catchHead
+var sleep = require('../../utils').sleep
+var catchHead = require('../../utils').catchHead
 
 
 const updateTradesHistory = async function(db, privateKeys, timeout) {
