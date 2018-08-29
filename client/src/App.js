@@ -1,278 +1,157 @@
-import React from "react"
-import { BrowserRouter as Router, Link, Route } from "react-router-dom"
-import { WidthProvider, Responsive } from "react-grid-layout"
-import 'react-grid-layout/css/styles.css'
-import 'react-resizable/css/styles.css'
+import React from 'react';
+import PropTypes from 'prop-types';
+import classNames from 'classnames';
+import { withStyles } from '@material-ui/core/styles';
+import Drawer from '@material-ui/core/Drawer';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import List from '@material-ui/core/List';
+import Typography from '@material-ui/core/Typography';
+import Divider from '@material-ui/core/Divider';
+import IconButton from '@material-ui/core/IconButton';
+import MenuIcon from '@material-ui/icons/Menu';
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import { mailFolderListItems, otherMailFolderListItems } from './tileData';
+import Grid from './Grid';
 
-// components
-import Stocks from './core_components/Stocks'
-import Pairs from './core_components/Pairs'
-import Orders from './core_components/Orders'
-import CreateOrder from './core_components/CreateOrder'
-import HeikinAshi from './core_components/charts/HeikinAshi'
-import Crocodile from './core_components/charts/Crocodile'
-import Balance from './core_components/Balance'
-import HighstockWithPreloader from './core_components/HighstockWithPreloader'
-// import GitterChat from './core_components/GitterChat'
+const drawerWidth = 240;
 
-// icons
-import Clear from '@material-ui/icons/Clear'
-import Settings from '@material-ui/icons/Settings'
-import { inject, observer } from 'mobx-react'
+const styles = theme => ({
+  root: {
+    flexGrow: 1,
+    zIndex: 1,
+    overflow: 'hidden',
+    position: 'relative',
+    display: 'flex',
+  },
+  appBar: {
+    zIndex: theme.zIndex.drawer + 1,
+    transition: theme.transitions.create(['width', 'margin'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+  },
+  appBarShift: {
+    marginLeft: drawerWidth,
+    width: `calc(100% - ${drawerWidth}px)`,
+    transition: theme.transitions.create(['width', 'margin'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  },
+  menuButton: {
+    marginLeft: 12,
+    marginRight: 36,
+  },
+  hide: {
+    display: 'none',
+  },
+  drawerPaper: {
+    position: 'relative',
+    whiteSpace: 'nowrap',
+    width: drawerWidth,
+    transition: theme.transitions.create('width', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  },
+  drawerPaperClose: {
+    overflowX: 'hidden',
+    transition: theme.transitions.create('width', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+    width: theme.spacing.unit * 7,
+    [theme.breakpoints.up('sm')]: {
+      width: theme.spacing.unit * 9,
+    },
+  },
+  toolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    padding: '0 8px',
+    ...theme.mixins.toolbar,
+  },
+  content: {
+    flexGrow: 1,
+    backgroundColor: theme.palette.background.default,
+    padding: theme.spacing.unit * 3,
+  },
+});
 
+class MiniDrawer extends React.Component {
+  state = {
+    open: false,
+  };
 
-const ResponsiveReactGridLayout = WidthProvider(Responsive);
-const originalLayouts = getFromLS("layouts") || {};
+  handleDrawerOpen = () => {
+    this.setState({ open: true })
+    setTimeout(function() {
+      window.dispatchEvent(new Event('resize'))
+    }, 200)
+  };
 
-// const Stock = ({ match }) => (
-//   <div>
-//     {match.params.stockId}  {match.params.pair}
-//   </div>
-// )
-
-
-@inject('OrdersStore')
-@observer
-class App extends React.Component {
-  constructor(props) {
-    super(props)
-
-    this.state = {
-      layouts: JSON.parse(JSON.stringify(originalLayouts)),
-      tokenDecimals: 18,
-      tokenName: '-',
-      tokenSymbol: '-',
-      asks: {},
-      orderbook: {
-        'asks': {},
-        'bids': {}
-      },
-      bids: {}
-    };
-  }
-
-  static get defaultProps() {
-    return {
-      className: "layout",
-      cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
-      rowHeight: 30
-    };
-  }
-
-  resetLayout() {
-    this.setState({ layouts: {} });
-  }
-
-  onLayoutChange(layout, layouts) {
-    saveToLS("layouts", layouts);
-    this.setState({ layouts });
-  }
+  handleDrawerClose = () => {
+    this.setState({ open: false });
+    setTimeout(function() {
+      window.dispatchEvent(new Event('resize'))
+    }, 200)
+  };
 
   render() {
+    const { classes, theme } = this.props;
+
     return (
-      <Router>
-        <div>
-          <style jsx="true">{`
-              body {
-                background: #efefef;
-              }
-              .widget {
-                width: 100%;
-                height: 100%;
-                max-width: 100%;
-                max-height: 100%;
-                background: #fff;
-                border: 1px solid #484747;
-                display: flex;
-                flex-direction: column;
-              }
-              .widget-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                background: #484747;
-                color: white;
-                height: 20px;
-                flex: 0 0 20px;
-              }
-              .widget-body {
-                flex: 1 1 auto;
-                overflow-y: auto;
-                overflow-x: hidden;
-              }
-          `}</style>
-          
-          <button onClick={() => this.resetLayout()}>Reset Layout</button>
-          <ResponsiveReactGridLayout
-            className="layout"
-            cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-            rowHeight={30}
-            layouts={this.state.layouts}
-            onLayoutChange={(layout, layouts) =>
-              this.onLayoutChange(layout, layouts)
-            }
-            draggableCancel="input,textarea"
-            draggableHandle=".widget-header"
-          >
-            <div key="1" data-grid={{ w: 2, h: 3, x: 0, y: 0, minW: 2, minH: 3 }}>
-              <div class="widget">
-                <div class="widget-header">
-                  <span>HeikinAshi</span>
-                  <div>
-                    <Settings style={{ fontSize: 18 }} />
-                    <Clear style={{ fontSize: 18 }} />
-                  </div>
-                </div>
-                <div class="widget-body">
-                  <HeikinAshi tokenAddress="0xe41d2489571d322189246dafa5ebde1f4699f498" />
-                </div>
-              </div>
-            </div>
-            <div key="2" data-grid={{ w: 2, h: 3, x: 2, y: 0, minW: 2, minH: 3 }}>
-              <div class="widget">
-                <div class="widget-header">
-                  <span>Crocodile</span>
-                  <div>
-                    <Settings style={{ fontSize: 18 }} />
-                    <Clear style={{ fontSize: 18 }} />
-                  </div>
-                </div>
-                <div class="widget-body">
-                  <Crocodile tokenAddress="0xe41d2489571d322189246dafa5ebde1f4699f498" />
-                </div>
-              </div>
-            </div>
-            <div key="3" data-grid={{ w: 2, h: 3, x: 4, y: 0, minW: 2, minH: 3 }}>
-              <div class="widget">
-                <div class="widget-header">
-                  <span>Asks</span>
-                  <div>
-                    <Settings style={{ fontSize: 18 }} />
-                    <Clear style={{ fontSize: 18 }} />
-                  </div>
-                </div>
-                <div class="widget-body">
-                  <Orders type="asks" />
-                </div>
-              </div>
-            </div>
-            <div key="4" data-grid={{ w: 2, h: 3, x: 6, y: 0, minW: 2, minH: 3 }}>
-              <div class="widget">
-                <div class="widget-header">
-                  <span>Bids</span>
-                  <div>
-                    <Settings style={{ fontSize: 18 }} />
-                    <Clear style={{ fontSize: 18 }} />
-                  </div>
-                </div>
-                <div class="widget-body">
-                  <Orders type="bids" />
-                </div>
-              </div>
-            </div>
-            <div key="5" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
-              <div class="widget">
-                <div class="widget-header">
-                  <span>Create order</span>
-                  <div>
-                    <Settings style={{ fontSize: 18 }} />
-                    <Clear style={{ fontSize: 18 }} />
-                  </div>
-                </div>
-                <div class="widget-body">
-                  <CreateOrder />
-                </div>
-              </div>
-            </div>
-            <div key="6" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
-              <div class="widget">
-                <div class="widget-header">
-                  <span>Balance</span>
-                  <div>
-                    <Settings style={{ fontSize: 18 }} />
-                    <Clear style={{ fontSize: 18 }} />
-                  </div>
-                </div>
-                <div class="widget-body">
-                  <Balance />
-                </div>
-              </div>
-            </div>
-            <div key="7" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
-              <div class="widget">
-                <div class="widget-header">
-                  <span>Pairs</span>
-                  <div>
-                    <Settings style={{ fontSize: 18 }} />
-                    <Clear style={{ fontSize: 18 }} />
-                  </div>
-                </div>
-                <div class="widget-body">
-                  <Pairs />
-                </div>
-              </div>
-            </div>
-            <div key="8" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
-              <div class="widget">
-                <div class="widget-header">
-                  <span>Stocks</span>
-                  <div>
-                    <Settings style={{ fontSize: 18 }} />
-                    <Clear style={{ fontSize: 18 }} />
-                  </div>
-                </div>
-                <div class="widget-body">
-                  <Stocks />
-                </div>
-              </div>
-            </div>
-            <div key="9" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
-              <div class="widget">
-                <div class="widget-header">
-                  <span>Hightstock</span>
-                  <div>
-                    <Settings style={{ fontSize: 18 }} />
-                    <Clear style={{ fontSize: 18 }} />
-                  </div>
-                </div>
-                <div class="widget-body">
-                  <HighstockWithPreloader />
-                </div>
-              </div>
-            </div>
-          </ResponsiveReactGridLayout>
-        </div>
-      </Router>
-    );
-  }
-  async componentWillMount() {
-
-  }
-}
-
-// module.exports = ResponsiveLocalStorageLayout;
-
-function getFromLS(key) {
-  let ls = {};
-  if (global.localStorage) {
-    try {
-      ls = JSON.parse(global.localStorage.getItem("rgl-8")) || {};
-    } catch (e) {
-      /*Ignore*/
-    }
-  }
-  return ls[key];
-}
-
-function saveToLS(key, value) {
-  if (global.localStorage) {
-    global.localStorage.setItem(
-      "rgl-8",
-      JSON.stringify({
-        [key]: value
-      })
+      <div className={classes.root}>
+        <AppBar
+          position="absolute"
+          className={classNames(classes.appBar, this.state.open && classes.appBarShift)}
+        >
+          <Toolbar disableGutters={!this.state.open}>
+            <IconButton
+              color="inherit"
+              aria-label="Open drawer"
+              onClick={this.handleDrawerOpen}
+              className={classNames(classes.menuButton, this.state.open && classes.hide)}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="title" color="inherit" noWrap>
+              Mini variant drawer
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <Drawer
+          variant="permanent"
+          classes={{
+            paper: classNames(classes.drawerPaper, !this.state.open && classes.drawerPaperClose),
+          }}
+          open={this.state.open}
+        >
+          <div className={classes.toolbar}>
+            <IconButton onClick={this.handleDrawerClose}>
+              {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            </IconButton>
+          </div>
+          <Divider />
+          <List>{mailFolderListItems}</List>
+          <Divider />
+          <List>{otherMailFolderListItems}</List>
+        </Drawer>
+        <main className={classes.content}>
+          <div className={classes.toolbar} />
+          <Grid />
+        </main>
+      </div>
     );
   }
 }
 
-export default App
+MiniDrawer.propTypes = {
+  classes: PropTypes.object.isRequired,
+  theme: PropTypes.object.isRequired,
+};
+
+export default withStyles(styles, { withTheme: true })(MiniDrawer);
