@@ -8,7 +8,7 @@ const mongoConf = require('../private/mongo.json').mongo
 const ccxt = require ('ccxt')
 const url = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.host+':'+mongoConf.port+'/'+mongoConf.db+'?authSource=admin'
 app.use(bodyParser.json())
-const localMongoUrl = "mongodb://192.168.99.100:32768/client"
+const localMongoUrl = "mongodb://192.168.99.100:32771/client"
 const cors = require('cors')
 app.use(cors())
 
