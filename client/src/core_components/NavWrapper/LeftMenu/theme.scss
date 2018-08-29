@@ -1,0 +1,26 @@
+@import '../../../style/global/global.scss';
+
+.coinsMenu {
+    & [data-el="allPairs"] h3 {
+        font-weight: var(--font-weight-semi-bold);
+    }
+    & [data-el="shortName"] {
+        height: auto;
+        font-size: var(--font-size-tiny);
+        font-weight: var(--font-weight-normal);
+        color: var(--color-primary);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        width: 40px;
+        margin-right: 0px;
+    }
+    & [data-el="favicon"] {
+        width: 20px;
+        margin-left: 20px;
+    }
+    & [data-el="menuItemRemove"] {
+        font-size: var(--font-size-normal);
+        color: var(--color-text-secondary);
+    }
+}

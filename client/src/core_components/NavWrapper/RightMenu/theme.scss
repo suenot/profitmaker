@@ -1,0 +1,169 @@
+@import '../../../style/global/global.scss';
+
+[data-el="rightMenuActive"] {
+
+}
+[data-el="rightMenuInactive"] {
+    & [data-el="hideMenuInactive"] {
+        display: none;
+    }
+}
+
+[data-el="MetaMask"] {
+    & iframe {
+        width: 100% !important;
+        height: 530px !important;
+        border: 0;
+        margin: 0;
+    }
+    & .MetaMaskForkHide {
+        display: none;
+    }
+    & .MetaMaskDuplicateHide {
+        display: none;
+    }
+    & .MetaMaskDuplicate {
+        display: block;
+    }
+    & [data-el="duplicate"] {
+        text-align: center;
+        padding: 20px;
+        font-size: var(--font-size-small);
+        color: var(--color-accent);
+    }
+}
+
+
+
+
+// USER MENU
+.wrapper {
+    padding: 20px;
+}
+
+.checking {
+    padding: 0 20px;
+    & [data-el="preloader"] {
+        padding: 15px 0;
+    }
+    & p {
+        text-align: center;
+    }
+}
+
+[data-el="header"] {
+    display: flex;
+    align-items: center;
+    margin: 0 0 10px 0;
+    & > li {
+        flex: 1 1 auto;
+    }
+    & > li:first-child {
+        max-width: 70px;
+        margin-right: 10px;
+        & div {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: solid 2px var(--color-divider);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-2p);
+            background: #fff;
+        }
+    }
+}
+
+[data-el="userData"] {
+    & li {
+        display: flex;
+        font-size: var(--font-size-small);
+        padding: 5px 0;
+        & label {
+            width: 80px;
+            max-width: 80px;
+            min-width: 80px;
+            font-weight: var(--font-weight-semi-bold);
+        }
+        & span {
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    }
+}
+
+
+
+
+// METAMASK
+
+.blockInstall {
+    padding: 20px;
+
+    & > ul {
+        display: flex;
+        flex-direction: column;
+        & > li {
+            text-align: center;
+        }
+    }
+
+    & .li_icon {
+        padding: 15px 0;
+        & > span {
+            background-image: url('../../../assets/svg/metamask.svg');
+            display: inline-block;
+            text-indent: -9999px;
+            width: 150px;
+            height: 150px;
+        }
+    }
+    & .li_hint {
+        padding: 10px 0;
+    }
+    & .li_install {
+        padding: 10px 0;
+
+        & > span {
+            border-radius: 50px;
+            padding: 7px 15px;
+            margin: 0 15px;
+            display: inline-block;
+            font-weight: var(--font-weight-semi-bold);
+            color: #fff;
+            cursor: pointer;
+            background: var(--color-primary);
+            box-shadow: var(--shadow-2p);
+        }
+    }
+    & li.li_github {
+        padding: 15px 0;
+        & a {
+            color: var(--color-primary);
+            text-decoration: underline;
+        }
+    }
+
+}
+
+
+
+// USER DEPOSIT
+.depositWrapper {
+    margin: 20px 0 0;
+}
+.depositContainer {
+    display: block;
+    background: #fff;
+    border: solid 1px var(--color-primary);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--shadow-2p);
+}
+.depositActions {
+    display: flex;
+    justify-content: space-between;
+    margin: 15px 0 0;
+}
