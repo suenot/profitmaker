@@ -1,22 +1,19 @@
 var sleep = require('../../utils').sleep
 
-const updateCoinmarketcap = async function(db) {
+const updateCoinmarketcap = async function(sleep) {
     while (true) {
-        await updateCoinmarketcapFromBD(db)
-        await sleep(10000)
+        await updateCoinmarketcapFromBD()
+        await sleep(sleep)
     }
 }
-const updateCoinmarketcapFromBD = async function(db) {
+const updateCoinmarketcapFromBD = async function() {
     try {
-        cursor = await db.collection('coinmarketcap').find().toArray()
-        for (var document of cursor) {
-            if ( global.COINMARKETCAP === undefined ) global.COINMARKETCAP = {}
-            global.COINMARKETCAP[document['symbol']] = {
-                'price_usd': document['price_usd'],
-                'price_btc': document['price_btc']
-            }
-        }
-        console.log('coinmarketcap')
+
+      axios.get(`http://144.76.109.194:8051/coinmarketcap/`)
+      .then((response) => {
+          global.COINMARKETCAP = response.data
+      })
+      .catch((error) => { console.log(error) })
     } catch (err) { console.log(err) }
 }
 
