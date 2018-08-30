@@ -172,7 +172,7 @@ class OrdersStore {
                 order.price = parseFloat(order.price)
                 order.amount = parseFloat(order.amount)
                 order.total = parseFloat(order.total)
-                
+
                 _bidTotal = order.total + _bidTotal
                 order.total = _bidTotal
                 orders.bids.push(order)
@@ -247,7 +247,7 @@ class OrdersStore {
     @action async fetchStocks() {
         // axios.get('/orders.json')
         // axios.get(`http://144.76.109.194:8051/orders/${this.stock}/${encodeURI(this.pair)}`)
-        axios.get(`http://144.76.109.194:8051/stocks/`)
+        axios.get('http://localhost:8051/stocks')
         .then((response) => {
             this.stocks = response.data
             // console.log(response)
@@ -260,7 +260,7 @@ class OrdersStore {
     @action async fetchPairs() {
         // axios.get('/orders.json')
         // axios.get(`http://144.76.109.194:8051/orders/${this.stock}/${encodeURI(this.pair)}`)
-        axios.get(`http://144.76.109.194:8051/pairs/${this.stock}/`)
+        axios.get(`http://localhost:8051/${this.stock}/`)
         .then((response) => {
             // console.log(response)
 
@@ -273,7 +273,7 @@ class OrdersStore {
     @action async fetchOrders() {
         // axios.get('/orders.json')
         // axios.get(`http://144.76.109.194:8051/orders/${this.stock}/${encodeURI(this.pair)}`)
-        axios.get(`http://144.76.109.194:8051/orders/${this.stock}/${this.pair}`)
+        axios.get(`http://localhost:8051/${this.stock}/${this.pair}`)
         .then((response) => {
             // console.log(response)
             this.orders = response.data
@@ -281,7 +281,7 @@ class OrdersStore {
         .catch((error) => { console.log(error) })
     }
     @action async fetchOHLCV() {
-        axios.get(`http://144.76.109.194:8051/ohlcv/${this.stock}/${this.pair}`)
+        axios.get(`http://localhost:8051/${this.stock}/${this.pair}`)
         .then((response) => {
             // console.log('RESPONSE')
             // console.log(response)

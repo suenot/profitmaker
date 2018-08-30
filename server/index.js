@@ -4,11 +4,10 @@ var bodyParser = require('body-parser')
 var MongoClient = require('mongodb').MongoClient
 const privateKeys = require('../private/keys.json').keys
 const ethPockets = require('../private/keys.json').ethPockets
-const mongoConf = require('../private/mongo.json').mongo
+// const mongoConf = require('../private/mongo.json').mongo
 const ccxt = require ('ccxt')
-const url = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.host+':'+mongoConf.port+'/'+mongoConf.db+'?authSource=admin'
 app.use(bodyParser.json())
-const localMongoUrl = "mongodb://192.168.99.100:32771/client"
+const localMongoUrl = "mongodb://192.168.99.100:32768/client"
 const cors = require('cors')
 app.use(cors())
 
@@ -23,8 +22,14 @@ let localMongo
 global.COINMARKETCAP
 global.BALANCE
 global.STOCKS
+global.MARKETS
 global.sleepUntil = {}
 global.TRADESHISTORY
+global.OPENORDERS
+global.PAIRS
+global.ORDERBOOK
+global.OHLCV
+global.TRADESRAW
 
 ///////////////
 //globals end
@@ -35,40 +40,65 @@ var initStocks = require('./core_components/initStocks')
 var updateCoinmarketcap = require('./core_components/updateCoinmarketcap')
 var updateTradesHistory = require('./core_components/updateTradesHistory')
 var updateOpenOrders = require('./core_components/updateOpenOrders')
+var updateMarkets = require('./core_components/updateMarkets')
+var updatePairs = require('./core_components/updatePairs')
+var updateOrderbook = require('./core_components/updateOrderbook')
+var updateOHLCV = require('./core_components/updateOHLCV')
+var updateTradesRaw = require('./core_components/updateTradesRaw')
 
 const main = async () => {
 	try {
-		db = await MongoClient.connect(url)
 		localMongo = await MongoClient.connect(localMongoUrl)
 
 		await initStocks(privateKeys)
+		// получение публичных данных с сервера
+		try { updateCoinmarketcap(10000) } catch(err) { console.log(err) } // TODO бюрать с сервера
+		try { updateMarkets(10000) } catch(err) { console.log(err) }
+		try { updatePairs(10000) } catch(err) { console.log(err) }
+		try { updateOrderbook(10000) } catch(err) { console.log(err) }
+		try { updateOHLCV(10000) } catch(err) { console.log(err) }
+		try { updateTradesRaw(10000) } catch(err) { console.log(err) }
 
-		try { updateCoinmarketcap(db) } catch(err) { console.log(err) } // TODO бюрать с сервера
+		// получение приватных данных с бирж
 		try { updateBalance(localMongo, privateKeys, ethPockets, 10000) } catch(err) { console.log(err) }
-
 		try { updateTradesHistory(localMongo, privateKeys, 10000) } catch(err) { console.log(err) }
-
 		try { updateOpenOrders(localMongo, privateKeys, 10000) } catch(err) { console.log(err) }
 
-
-
-
-
+		//
 		// balance (pie chart)
 		app.get('/balance', function (req, res) {
 			res.json(global.BALANCE)
 		})
-		// balance_history (linechart)
 
-		// my_traders_short
-		// my_traders_all
+		app.get('/openOrders', function (req, res) {
+			res.json(global.OPENORDERS)
+		})
 
-		// open_orders ()
+		app.get('/myTrades', function (req, res) {
+			res.json(global.TRADESHISTORY)
+		})
 
-		// TRADE API
-		// place
-		// cancel
-		// replace
+		app.get('/stocks', function (req, res) {
+			res.json(global.MARKETS)
+		})
+
+		app.get('/pairs/:stock', function (req, res) {
+        var stock = req.params.stock
+        res.json(global.PAIRS[stock])
+    })
+
+		app.get('/orders/:stock/:pair', function (req, res) {
+	    var stock = req.params.stock
+	    var pair = req.params.pair.split('_').join('/')
+	    res.json(global.ORDERBOOK[stock][pair])
+    })
+
+		app.get('/ohlcv/:stock/:pair', function (req, res) {
+      var stock = req.params.stock
+      var pair = req.params.pair.split('_').join('/')
+      res.json(global.OHLCV[stock][pair])
+    })
+		
 	} catch (err) { }
 }
 main()
