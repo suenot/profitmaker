@@ -7,7 +7,7 @@ const ethPockets = require('../private/keys.json').ethPockets
 // const mongoConf = require('../private/mongo.json').mongo
 const ccxt = require ('ccxt')
 app.use(bodyParser.json())
-const localMongoUrl = "mongodb://192.168.99.100:32768/client"
+const localMongoUrl = "mongodb://192.168.99.100:27017/client"
 const cors = require('cors')
 app.use(cors())
 
@@ -98,7 +98,7 @@ const main = async () => {
       var pair = req.params.pair.split('_').join('/')
       res.json(global.OHLCV[stock][pair])
     })
-		
+
 	} catch (err) { }
 }
 main()
