@@ -72,6 +72,7 @@ const main = async () => {
 
 		app.get('/openOrders', function (req, res) {
 			res.json(global.OPENORDERS)
+
 		})
 
 		app.get('/myTrades', function (req, res) {

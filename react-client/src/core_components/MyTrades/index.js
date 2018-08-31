@@ -20,7 +20,7 @@ class MyTrades extends React.Component {
           </thead>
           <tbody>
           {
-            _.map(MyTradesStore.myTrades['BITFINEX']['XRP/BTC'], (item, i) => {
+            _.map(MyTradesStore.myTrades['LIQUI']['DNT/BTC'], (item, i) => {
               return (
                 <tr>
                   <td>

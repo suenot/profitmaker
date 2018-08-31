@@ -1,19 +1,18 @@
 var sleep = require('../../utils').sleep
+const axios = require('axios')
 
-const updateOHLCV = async function(sleep) {
+const updateOHLCV = async function(t) {
     while (true) {
         await updateOHLCVFromBD()
-        await sleep(sleep)
+        await sleep(t)
     }
 }
 const updateOHLCVFromBD = async function() {
     try {
 
-      axios.get(`http://144.76.109.194:8051/ohlcv/`)
-      .then((response) => {
-          global.OHLCV = response.data
-      })
-      .catch((error) => { console.log(error) })
+      var response = await axios.get(`http://144.76.109.194:8051/ohlcv/`)
+      global.OHLCV = response.data
+
     } catch (err) { console.log(err) }
 }
 

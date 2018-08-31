@@ -1,19 +1,18 @@
 var sleep = require('../../utils').sleep
+const axios = require('axios')
 
-const updateOrderbook = async function(sleep) {
+const updateOrderbook = async function(t) {
     while (true) {
         await updateOrderbookFromBD()
-        await sleep(sleep)
+        await sleep(t)
     }
 }
 const updateOrderbookFromBD = async function() {
     try {
 
-      axios.get(`http://144.76.109.194:8051/orders/`)
-      .then((response) => {
-          global.ORDERBOOK = response.data
-      })
-      .catch((error) => { console.log(error) })
+      var response = await axios.get(`http://144.76.109.194:8051/orders/`)
+      global.ORDERBOOK = response.data
+
     } catch (err) { console.log(err) }
 }
 
