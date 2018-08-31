@@ -3,7 +3,7 @@ import axios from 'axios'
 import _ from 'lodash'
 
 class OpenOrdersStore {
-  @observable openOrders = {'BITFINEX': {'XRP/BTC': {}}}
+  @observable openOrders = {'LIQUI': {'DNT/BTC': {}}}
   @action fetchOpenOrders(){
     axios.get('http://localhost:8051/openOrders')
     .then((response) => {

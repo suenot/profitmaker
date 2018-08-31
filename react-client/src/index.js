@@ -9,6 +9,7 @@ import CreateOrderStore from './stores/CreateOrderStore'
 import BalanceStore from './stores/BalanceStore'
 import OpenOrdersStore from './stores/OpenOrdersStore'
 import MyTradesStore from './stores/MyTradesStore'
+import RawTradesStore from './stores/RawTradesStore'
 
 const Root = (
     <Provider
@@ -17,6 +18,7 @@ const Root = (
       BalanceStore={BalanceStore}
       OpenOrdersStore={OpenOrdersStore}
       MyTradesStore={MyTradesStore}
+      RawTradesStore={RawTradesStore}
     >
     <App />
   </Provider>

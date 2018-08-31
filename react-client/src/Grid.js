@@ -11,6 +11,7 @@ import Pairs from './core_components/Pairs'
 import Orders from './core_components/Orders'
 import OpenOrders from './core_components/OpenOrders'
 import MyTrades from './core_components/MyTrades'
+import RawTrades from './core_components/RawTrades'
 import CreateOrder from './core_components/CreateOrder'
 import HeikinAshi from './core_components/charts/HeikinAshi'
 import Crocodile from './core_components/charts/Crocodile'
@@ -272,6 +273,20 @@ class App extends React.Component {
                 </div>
                 <div class="widget-body">
                   <MyTrades />
+                </div>
+              </div>
+            </div>
+            <div key="12" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
+              <div class="widget">
+                <div class="widget-header">
+                  <span>rawTrades</span>
+                  <div>
+                    <Settings style={{ fontSize: 18 }} />
+                    <Clear style={{ fontSize: 18 }} />
+                  </div>
+                </div>
+                <div class="widget-body">
+                  <RawTrades />
                 </div>
               </div>
             </div>

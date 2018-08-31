@@ -11,6 +11,7 @@ const updateMarketsFromBD = async function() {
   try {
 
     var response = await axios.get(`http://144.76.109.194:8051/stocks/`)
+    // console.log(global.MARKETS)
     global.MARKETS = response.data
 
 

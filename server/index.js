@@ -79,6 +79,12 @@ const main = async () => {
 			res.json(global.TRADESHISTORY)
 		})
 
+		app.get('/trades/:stock/:pair', function (req, res) {
+			var stock = req.params.stock
+      var pair = req.params.pair.split('_').join('/')
+			res.json(global.TRADESRAW)
+		})
+
 		app.get('/stocks', function (req, res) {
 			res.json(global.MARKETS)
 		})

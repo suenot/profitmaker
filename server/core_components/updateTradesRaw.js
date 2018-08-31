@@ -12,7 +12,7 @@ const updateTradesRawFromBD = async function() {
 
       var response = await axios.get(`http://144.76.109.194:8051/tradesRaw/`)
       global.TRADESRAW = response.data
-
+      // console.log(global.TRADESRAW)
     } catch (err) { console.log(err) }
 }
 
