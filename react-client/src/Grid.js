@@ -76,35 +76,7 @@ class App extends React.Component {
     return (
       <Router>
         <div>
-          <style jsx="true">{`
-              body {
-                background: #efefef;
-              }
-              .widget {
-                width: 100%;
-                height: 100%;
-                max-width: 100%;
-                max-height: 100%;
-                background: #fff;
-                border: 1px solid #484747;
-                display: flex;
-                flex-direction: column;
-              }
-              .widget-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                background: #484747;
-                color: white;
-                height: 20px;
-                flex: 0 0 20px;
-              }
-              .widget-body {
-                flex: 1 1 auto;
-                overflow-y: auto;
-                overflow-x: hidden;
-              }
-          `}</style>
+          
 
           <button onClick={() => this.resetLayout()}>Reset Layout</button>
           <ResponsiveReactGridLayout
