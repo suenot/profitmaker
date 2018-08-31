@@ -23,3 +23,36 @@ body
   flex: 1 1 auto
   overflow-y: auto
   overflow-x: hidden
+
+
+.table-compact
+  thead
+    border-bottom: 1px solid #bebebe
+    tr
+      th
+        font-weight: 500
+        font-size: 16px
+  tbody
+    tr
+
+      td
+        font-weight: 200
+        font-size: 14px
+        padding: 4px 8px
+
+.widget-body
+  position: relative
+
+.el-table
+  position: absolute
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  .el-table__header-wrapper
+    position: absolute
+    height: 40px
+  .el-table__body-wrapper
+    position: absolute
+    top: 40px
+    height: calc(100% - 40px) !important

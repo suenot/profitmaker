@@ -3,6 +3,42 @@ import axios from 'axios'
 import _ from 'lodash'
 
 class OrdersStore {
+
+
+    @observable createBuyPrice = 0
+    @observable createBuyAmount = 0
+
+
+    @observable createSellPrice = 0
+    @observable createSellAmount = 0
+
+
+    @computed get createSellTotal() {
+      return (parseFloat(this.createSellPrice) * parseFloat(this.createSellAmount)).toFixed(8)
+    }
+
+
+    @observable columns = [
+      {
+        label: "Price",
+        prop: "price",
+        width: 150
+      },
+      {
+        label: "Amount",
+        prop: "amount",
+        width: 150
+      },
+      {
+        label: "Total",
+        prop: "total",
+        width: 150
+      }
+    ]
+
+
+
+
     @observable precision = 8
     @observable count = 0
     @observable stock = 'LIQUI'

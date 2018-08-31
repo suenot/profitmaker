@@ -24,6 +24,7 @@ global.BALANCE
 global.STOCKS
 global.MARKETS
 global.sleepUntil = {}
+global.sleepUntilPriority = {}
 global.TRADESHISTORY
 global.OPENORDERS
 global.PAIRS

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles'
 import MenuItem from '@material-ui/core/MenuItem'
 import TextField from '@material-ui/core/TextField'
-// 
+//
 import FormGroup from '@material-ui/core/FormGroup'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Checkbox from '@material-ui/core/Checkbox'
@@ -14,6 +14,9 @@ import FavoriteBorder from '@material-ui/icons/FavoriteBorder'
 //
 import Button from '@material-ui/core/Button'
 import { inject, observer } from 'mobx-react'
+
+import 'element-theme-default'
+import { Input } from 'element-react'
 
 const styles = theme => ({
   container: {
@@ -30,57 +33,18 @@ const styles = theme => ({
   },
 })
 
-@inject('CreateOrderStore')
+@inject('OrdersStore')
 @observer
 class CreateOrder extends React.Component {
   render() {
-    const {CreateOrderStore, classes} = this.props
+    const {OrdersStore, classes, type} = this.props
     return (
       <div>
-        <div class="header">Sell</div>
-        <form className={classes.container} noValidate autoComplete="off" onSubmit={this.sellAll}>
-          <TextField
-            id="price"
-            label="Price"
-            className={classes.textField}
-            value={CreateOrderStore.price}
-            onChange={console.log('changed')}
-            margin="normal"
-          />
-          <TextField
-            id="amount"
-            label="Amount"
-            className={classes.textField}
-            value={CreateOrderStore.amount}
-            onChange={console.log('changed')}
-            margin="normal"
-          />
-          <TextField
-            id="minAmount"
-            label="Min amount"
-            className={classes.textField}
-            value={CreateOrderStore.minAmount}
-            onChange={console.log('changed')}
-            margin="normal"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={CreateOrderStore.unencumbered}
-                onChange={console.log('changed')}
-                value="checkedBalance"
-                color="primary"
-              />
-            }
-            label="Place order on unencumbered balance"
-          />
-          <Button variant="contained" color="primary" className={classes.button} fullWidth="true" type="submit">Sell</Button>
-          <ul>
-            <li>{CreateOrderStore.result}</li>
-            <li>{CreateOrderStore.orders}</li>
-            <li>{CreateOrderStore.rebateAddress}</li>
-          </ul>
-        </form>
+
+        <Input placeholder="Price" defaultValue={OrdersStore.createSellPrice} />
+        <Input placeholder="Amount" defaultValue={OrdersStore.createSellAmount} />
+        <p>Total: {OrdersStore.createSellTotal}</p>
+
       </div>
     )
   }

@@ -21,6 +21,8 @@
     "d3-time-format": "^2.1.1",
     "dotenv": "4.0.0",
     "dotenv-expand": "4.2.0",
+    "element-react": "^1.4.21",
+    "element-theme-default": "^1.4.13",
     "eslint": "4.10.0",
     "eslint-config-react-app": "^2.1.0",
     "eslint-loader": "1.9.0",

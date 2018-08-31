@@ -76,7 +76,7 @@ class App extends React.Component {
     return (
       <Router>
         <div>
-          
+
 
           <button onClick={() => this.resetLayout()}>Reset Layout</button>
           <ResponsiveReactGridLayout
@@ -153,14 +153,14 @@ class App extends React.Component {
             <div key="5" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
               <div class="widget">
                 <div class="widget-header">
-                  <span>Create order</span>
+                  <span>Create sell order</span>
                   <div>
                     <Settings style={{ fontSize: 18 }} />
                     <Clear style={{ fontSize: 18 }} />
                   </div>
                 </div>
                 <div class="widget-body">
-                  <CreateOrder />
+                  <CreateOrder type="sell" />
                 </div>
               </div>
             </div>
