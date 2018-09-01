@@ -61,8 +61,8 @@ const main = async () => {
 		try { updateTradesRaw(10000) } catch(err) { console.log(err) }
 
 		// получение приватных данных с бирж
-		try { updateBalance(localMongo, privateKeys, ethPockets, 10000) } catch(err) { console.log(err) }
-		try { updateTradesHistory(localMongo, privateKeys, 10000) } catch(err) { console.log(err) }
+		try { updateBalance(localMongo, privateKeys, ethPockets, 30000) } catch(err) { console.log(err) }
+		try { updateTradesHistory(localMongo, privateKeys, 30000) } catch(err) { console.log(err) }
 		try { updateOpenOrders(localMongo, privateKeys, 10000) } catch(err) { console.log(err) }
 
 		//
@@ -83,7 +83,7 @@ const main = async () => {
 		app.get('/trades/:stock/:pair', function (req, res) {
 			var stock = req.params.stock
       var pair = req.params.pair.split('_').join('/')
-			res.json(global.TRADESRAW)
+			res.json(global.TRADESRAW[stock][pair])
 		})
 
 		app.get('/stocks', function (req, res) {

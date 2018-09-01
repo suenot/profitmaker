@@ -1,38 +1,50 @@
 import React from 'react'
 import _ from 'lodash'
 import { inject, observer } from 'mobx-react'
+import moment from 'moment'
 
 @inject('RawTradesStore')
 @observer
 class RawTrades extends React.Component {
   render() {
+    var colWidth = {
+      width: 220
+    }
     const {RawTradesStore} = this.props
     return (
       <div>
-        <h5>orders</h5>
+        <div className="el-table el-table--fit el-table--enable-row-hover myTrades-table no-thead">
+          <div className="el-table__body-wrapper">
+            <table className="el-table__body">
+              <tbody>
+              {
+                _.map(RawTradesStore.rawTrades, (item, i) => {
+                  return (
+                    <tr className="el-table__row"  key={item['id']}>
+                      <td style={colWidth}>
+                        <div className="cell">
+                          <span style={item['side'] === 'buy'?{color: '#ea0371'}:{color: '#83b327'}}>{item['price']}</span>
 
-        <table>
-          <thead>
-            <tr>
-              <th>orderInfo</th>
-              <th>tradeInfo</th>
-            </tr>
-          </thead>
-          <tbody>
-          {
-            _.map(RawTradesStore.rawTrades, (item, i) => {
-              return (
-                <tr>
-                  
-                </tr>
-              )
-            })
-
-
-          }
-          </tbody>
-        </table>
-
+                        </div>
+                      </td>
+                      <td style={colWidth}>
+                        <div className="cell">
+                          {item['amount']}
+                        </div>
+                      </td>
+                      <td style={colWidth}>
+                        <div className="cell">
+                          { moment(item['datetime']).format('HH:mm:ss') }
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              }
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     )
   }

@@ -4,6 +4,9 @@ import _ from 'lodash'
 
 class MyTradesStore {
   @observable myTrades = {'LIQUI': {'DNT/BTC': {}}}
+
+  
+
   @action fetchMyTrades(){
     axios.get('http://localhost:8051/myTrades')
     .then((response) => {

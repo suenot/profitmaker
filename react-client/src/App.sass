@@ -52,7 +52,25 @@ body
   .el-table__header-wrapper
     position: absolute
     height: 40px
+
   .el-table__body-wrapper
     position: absolute
     top: 40px
     height: calc(100% - 40px) !important
+
+    table
+      border-spacing: 0px
+      border: 0px
+  &.no-thead
+    .el-table__body-wrapper
+      top: 0
+      height: 100% !important
+      
+.myTrades-table
+  .el-table__header
+    th
+      max-width: 220px
+      min-width: 220px
+  .el-table__body
+    td
+      font-size: 12px
