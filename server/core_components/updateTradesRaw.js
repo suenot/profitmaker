@@ -16,4 +16,14 @@ const updateTradesRawFromBD = async function() {
     } catch (err) { console.log(err) }
 }
 
-module.exports = updateTradesRaw
+const getTrades = async function(stock, pair) {
+  try {
+    var request = await axios.get(`http://144.76.109.194:8051/trades/${stock}/${pair}`)
+    return request.data
+  } catch (err) { console.log(err) }
+}
+
+
+exports.updateTradesRaw = updateTradesRaw
+exports.updateTradesRawFromBD = updateTradesRawFromBD
+exports.getTrades = getTrades

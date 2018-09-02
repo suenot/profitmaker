@@ -18,4 +18,14 @@ const updateMarketsFromBD = async function() {
   } catch (err) { console.log(err) }
 }
 
-module.exports = updateMarkets
+const getStocks = async function() {
+  try {
+    var response = await axios.get(`http://144.76.109.194:8051/stocks/`)
+    return response.data
+  } catch (err) { console.log(err) }
+}
+
+
+exports.updateMarkets = updateMarkets
+exports.updateMarketsFromBD = updateMarketsFromBD
+exports.getStocks = getStocks

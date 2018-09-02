@@ -4,9 +4,9 @@ const catchHead = async function(rateLimit, stock) {
     while (true) {
 
         if ( global.sleepUntil[stock] == undefined ) {
-            sleepUntil[stock] = new Date(Date.now() + rateLimit + 500)
+            global.sleepUntil[stock] = new Date(Date.now() + rateLimit + 500)
             break
-        } else if ( sleepUntil[stock] < new Date() ) {
+        } else if ( global.sleepUntil[stock] < new Date() ) {
             global.sleepUntil[stock] = new Date(Date.now() + rateLimit + 500)
             break
         } else {

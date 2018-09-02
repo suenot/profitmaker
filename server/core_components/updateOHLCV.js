@@ -16,4 +16,13 @@ const updateOHLCVFromBD = async function() {
     } catch (err) { console.log(err) }
 }
 
-module.exports = updateOHLCV
+const getOHLCV = async function(stock, pair) {
+  try {
+    var response = await axios.get(`http://144.76.109.194:8051/ohlcv/${stock}/${pair}`)
+    return response.data
+  } catch (err) { console.log(err) }
+}
+
+exports.updateOHLCV = updateOHLCV
+exports.updateOHLCVFromBD = updateOHLCVFromBD
+exports.getOHLCV = getOHLCV

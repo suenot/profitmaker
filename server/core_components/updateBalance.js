@@ -66,6 +66,7 @@ const updateStocksBalance = async function(stockName) {
     if ( global.BALANCE === undefined ) global.BALANCE = {}
     if ( global.BALANCE[stockNameUpper] === undefined ) global.BALANCE[stockNameUpper] = {}
     global.BALANCE[stockNameUpper] = res
+    // console.log(stockNameUpper, global.BALANCE[stockNameUpper]['totalUSD'])
   } catch (err) { console.log(err) }
 }
 

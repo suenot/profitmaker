@@ -15,5 +15,14 @@ const updateOrderbookFromBD = async function() {
 
     } catch (err) { console.log(err) }
 }
+const getOrderBook = async function(stock, pair) {
+  try {
+    var response = await axios.get(`http://144.76.109.194:8051/orders/${stock}/${pair}`)
+    return response.data
+  } catch (err) { console.log(err) }
+}
 
-module.exports = updateOrderbook
+
+exports.updateOrderbook = updateOrderbook
+exports.updateOrderbookFromBD = updateOrderbookFromBD
+exports.getOrderBook = getOrderBook

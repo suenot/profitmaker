@@ -2,6 +2,7 @@ import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
 
+
 class RawTradesStore {
   @observable stock = 'LIQUI'
   @observable pair = 'ETH_BTC'
