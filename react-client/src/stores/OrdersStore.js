@@ -1,8 +1,15 @@
 import { observable, action, computed, autorun, toJS } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
+// import GlobalStore from './GlobalStore'
 
 class OrdersStore {
+  @observable stock = 'LIQUI'
+  @observable pair = 'ETH_BTC'
+  @observable coinFrom = 'ETH'
+  @observable coinTo = 'BTC'
+  // @computed get stock() {return GlobalStore.stock }
+  // @computed get pair() {return GlobalStore.pair }
 
 
   // @observable createBuyPrice = 0
@@ -53,7 +60,7 @@ class OrdersStore {
     {
       label: "Price",
       prop: "price",
-      width: 150
+      width: 150,
     },
     {
       label: "Amount",
@@ -72,10 +79,6 @@ class OrdersStore {
 
   @observable precision = 8
   @observable count = 0
-  @observable stock = 'LIQUI'
-  @observable pair = 'ETH_BTC'
-  @observable coinFrom = 'ETH'
-  @observable coinTo = 'BTC'
   @observable orders = {
       'asks': [],
       'bids': []

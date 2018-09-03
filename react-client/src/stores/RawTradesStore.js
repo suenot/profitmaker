@@ -1,11 +1,13 @@
 import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
-
+import OrdersStore from './OrdersStore'
 
 class RawTradesStore {
-  @observable stock = 'LIQUI'
-  @observable pair = 'ETH_BTC'
+  @computed get stock() {return OrdersStore.stock }
+  @computed get pair() {return OrdersStore.pair }
+  // @observable stock = 'LIQUI'
+  // @observable pair = 'ETH_BTC'
   @observable rawTrades = []
 
   @action fetchRawTrades(){
@@ -28,5 +30,7 @@ const store = window.RawTradesStore = new RawTradesStore()
 export default store
 
 autorun(() => {
+  console.log(store.stock)
+  console.log(store.pair)
   store.fetchRawTrades()
 })

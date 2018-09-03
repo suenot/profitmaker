@@ -7,7 +7,8 @@ import { Table } from 'element-react'
 @observer
 class Orders extends React.Component {
   render() {
-    const {OrdersStore, type} = this.props
+    const {OrdersStore, data} = this.props
+    const {type} = data
     return (
       <div>
         <Table

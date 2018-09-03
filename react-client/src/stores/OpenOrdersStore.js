@@ -1,8 +1,13 @@
 import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
+import OrdersStore from './GlobalStore'
 
 class OpenOrdersStore {
+  @computed get stock() {return OrdersStore.stock }
+  @computed get pair() {return OrdersStore.pair }
+
+
   @observable openOrders = {'LIQUI': {'DNT/BTC': {}}}
   @action fetchOpenOrders(){
     axios.get('http://localhost:8051/openOrders')
@@ -21,5 +26,7 @@ const store = window.OpenOrdersStore = new OpenOrdersStore()
 export default store
 
 autorun(() => {
+  console.log(store.stock)
+  console.log(store.pair)
   store.fetchOpenOrders()
 })

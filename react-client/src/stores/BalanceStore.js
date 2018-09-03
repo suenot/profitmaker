@@ -1,8 +1,11 @@
 import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
+import OrdersStore from './OrdersStore'
 
 class BalanceStore {
+  @computed get stock() {return OrdersStore.stock }
+  @computed get pair() {return OrdersStore.pair }
     // @observable precision = 8
     // @observable _total = 0
     // @observable _free = 0
@@ -59,5 +62,7 @@ const store = window.BalanceStore = new BalanceStore()
 export default store
 
 autorun(() => {
+  console.log(store.stock)
+  console.log(store.pair)
   store.fetchBalance()
 })

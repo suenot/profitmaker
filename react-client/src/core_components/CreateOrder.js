@@ -25,7 +25,8 @@ const styles = theme => ({
 @observer
 class CreateOrder extends React.Component {
   render() {
-    const {OrdersStore, classes, type} = this.props
+    const {OrdersStore, classes, data} = this.props
+    const {type} = data
     return (
       <div>
         <p>

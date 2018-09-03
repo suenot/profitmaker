@@ -1,8 +1,12 @@
 import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
+import OrdersStore from './OrdersStore'
 
 class MyTradesStore {
+  @computed get stock() {return OrdersStore.stock }
+  @computed get pair() {return OrdersStore.pair }
+
   @observable myTrades = {'LIQUI': {'DNT/BTC': {}}}
 
   
@@ -23,5 +27,7 @@ const store = window.MyTradesStore = new MyTradesStore()
 export default store
 
 autorun(() => {
+  console.log(store.stock)
+  console.log(store.pair)
   store.fetchMyTrades()
 })
