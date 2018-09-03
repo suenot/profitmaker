@@ -79,6 +79,12 @@ const main = async () => {
 			res.json(global.TRADESHISTORY)
 		})
 
+		app.post('/createOrder', async function(req, res) {
+			try {
+				console.log(req.body)
+			} catch (err) {console.log(err)}
+		})
+
 		app.get('/trades/:stock/:pair', async function (req, res) {
 			try {
 				var stock = req.params.stock
@@ -128,7 +134,9 @@ const main = async () => {
 			try {
 				var stock = req.params.stock
 				var pair = req.params.pair
+
 				var ohlcv = await getOHLCV(stock, pair)
+				console.log(ohlcv)
 				res.json(ohlcv)
 			} catch (err) {
 				res.status(500).send({ error: 'function getOHLCV get ' + stock + ' ' + pair + ' failed!' })

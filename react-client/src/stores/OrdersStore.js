@@ -288,6 +288,9 @@ class OrdersStore {
   }
 
   @computed get ohlcvComputed() {
+    if ( JSON.stringify(this.ohlcv) !== '[]' ) {
+      console.log(this.ohlcv)
+      console.log('not equal')
       return this.ohlcv.map((item) => {
           return {
               'date': new Date(item[0]),
@@ -302,6 +305,10 @@ class OrdersStore {
               'split': '',
           }
       })
+    } else {
+      return []
+    }
+
 
   }
 
@@ -351,15 +358,17 @@ class OrdersStore {
       .catch((error) => { console.log(error) })
   }
   @action async fetchOHLCV() {
-      axios.get(`http://localhost:8051/ohlcv/${this.stock}/${this.pair}`)
+      // axios.get(`http://localhost:8051/ohlcv/${this.stock}/${this.pair}`)
+      axios.get(`http://144.76.109.194:8051/ohlcv/${this.stock}/${this.pair}`)
       .then((response) => {
           // console.log('RESPONSE')
           // console.log(response)
           this.ohlcv = response.data.data
       })
       .catch((error) => {
-          console.log('ERRROR')
-          console.log(error)
+          this.ohlcv = []
+          // console.log('ERRROR')
+          // console.log(error)
       })
   }
   @action async precisionLess() {
