@@ -1,22 +1,10 @@
 import React from 'react'
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles'
-import MenuItem from '@material-ui/core/MenuItem'
-import TextField from '@material-ui/core/TextField'
-//
-import FormGroup from '@material-ui/core/FormGroup'
-import FormControlLabel from '@material-ui/core/FormControlLabel'
-import Checkbox from '@material-ui/core/Checkbox'
-import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank'
-import CheckBoxIcon from '@material-ui/icons/CheckBox'
-import Favorite from '@material-ui/icons/Favorite'
-import FavoriteBorder from '@material-ui/icons/FavoriteBorder'
-//
-import Button from '@material-ui/core/Button'
 import { inject, observer } from 'mobx-react'
 
 import 'element-theme-default'
-import { Input } from 'element-react'
+import { Input, Button } from 'element-react'
 
 const styles = theme => ({
   container: {
@@ -40,13 +28,29 @@ class CreateOrder extends React.Component {
     const {OrdersStore, classes, type} = this.props
     return (
       <div>
-
-        <Input placeholder="Price" defaultValue={OrdersStore.createSellPrice} />
-        <Input placeholder="Amount" defaultValue={OrdersStore.createSellAmount} />
-        <p>Total: {OrdersStore.createSellTotal}</p>
-
+        <p>
+          <div className="text">Price</div>
+          <Input placeholder="Price" value={OrdersStore.createPrice[type]} onChange={this.changeValue.bind(this, 'price', type)} />
+        </p>
+        <p>
+          <div className="text">Amount</div>
+          <Input placeholder="Amount" value={OrdersStore.createAmount[type]} onChange={this.changeValue.bind(this, 'amount', type)} />
+        </p>
+        <p>
+          <div className="text">Total</div>
+          <Input placeholder="Total" value={OrdersStore.createTotal[type]} onChange={this.changeValue.bind(this, 'total', type)} />
+        </p>
+        <p>
+          <Button type={type === 'buy' ? 'success' : 'danger'} onClick={this.createOrder.bind(this, type)}>{type}</Button>
+        </p>
       </div>
     )
+  }
+  changeValue(field, type, value) {
+    this.props.OrdersStore.createChange(value, field, type)
+  }
+  createOrder(type) {
+    this.props.OrdersStore.createOrder(type)
   }
 }
 
@@ -55,5 +59,3 @@ CreateOrder.propTypes = {
 }
 
 export default withStyles(styles)(CreateOrder)
-
-// export default Sell

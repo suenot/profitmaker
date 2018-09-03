@@ -150,20 +150,7 @@ class App extends React.Component {
                 </div>
               </div>
             </div>
-            <div key="5" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
-              <div class="widget">
-                <div class="widget-header">
-                  <span>Create sell order</span>
-                  <div>
-                    <Settings style={{ fontSize: 18 }} />
-                    <Clear style={{ fontSize: 18 }} />
-                  </div>
-                </div>
-                <div class="widget-body">
-                  <CreateOrder type="sell" />
-                </div>
-              </div>
-            </div>
+
             <div key="6" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
               <div class="widget">
                 <div class="widget-header">
@@ -259,6 +246,34 @@ class App extends React.Component {
                 </div>
                 <div class="widget-body">
                   <RawTrades />
+                </div>
+              </div>
+            </div>
+            <div key="5" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
+              <div class="widget">
+                <div class="widget-header">
+                  <span>Create sell order</span>
+                  <div>
+                    <Settings style={{ fontSize: 18 }} />
+                    <Clear style={{ fontSize: 18 }} />
+                  </div>
+                </div>
+                <div class="widget-body">
+                  <CreateOrder type="sell" />
+                </div>
+              </div>
+            </div>
+            <div key="13" data-grid={{ w: 2, h: 3, x: 8, y: 0, minW: 2, minH: 3 }}>
+              <div class="widget">
+                <div class="widget-header">
+                  <span>Create buy order</span>
+                  <div>
+                    <Settings style={{ fontSize: 18 }} />
+                    <Clear style={{ fontSize: 18 }} />
+                  </div>
+                </div>
+                <div class="widget-body">
+                  <CreateOrder type="buy" />
                 </div>
               </div>
             </div>

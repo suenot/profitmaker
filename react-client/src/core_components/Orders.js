@@ -14,9 +14,7 @@ class Orders extends React.Component {
           style={{width: '100%'}}
           columns={OrdersStore.columns}
           data={OrdersStore.ordersComputedText[type]}
-          
         />
-
       </div>
     )
   }

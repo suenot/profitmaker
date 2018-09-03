@@ -4,7 +4,9 @@ import axios from 'axios'
 class CreateOrderStore {
     @observable price = 0
     @observable amount = 0
-    @observable result = 0
+    @computed get total() {
+        return this.price * this.amount
+    }
 
 }
 
