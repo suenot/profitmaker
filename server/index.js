@@ -44,10 +44,11 @@ var updateTradesHistory = require('./core_components/updateTradesHistory')
 var updateOpenOrders = require('./core_components/updateOpenOrders')
 var {updateMarkets, getStocks} = require('./core_components/updateMarkets')
 var {updatePairs, getPairs} = require('./core_components/updatePairs')
-
 var {updateOrderbook, getOrderBook} = require('./core_components/updateOrderbook')
 var {updateOHLCV, getOHLCV} = require('./core_components/updateOHLCV')
 var {updateTradesRaw, getTrades} = require('./core_components/updateTradesRaw')
+
+var createOrder = require('./core_components/createOrder')
 
 const main = async () => {
 	try { var localMongo = await startMongo() } catch(err) { console.log(err) }
@@ -81,7 +82,7 @@ const main = async () => {
 
 		app.post('/createOrder', async function(req, res) {
 			try {
-				console.log(req.body)
+				result = await createOrder(req.body)
 			} catch (err) {console.log(err)}
 		})
 
@@ -136,7 +137,7 @@ const main = async () => {
 				var pair = req.params.pair
 
 				var ohlcv = await getOHLCV(stock, pair)
-				console.log(ohlcv)
+				// console.log(ohlcv)
 				res.json(ohlcv)
 			} catch (err) {
 				res.status(500).send({ error: 'function getOHLCV get ' + stock + ' ' + pair + ' failed!' })
