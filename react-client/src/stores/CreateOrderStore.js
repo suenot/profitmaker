@@ -1,20 +1,25 @@
-import { observable, action, autorun } from 'mobx'
+import { observable, action, autorun, computed } from 'mobx'
 import axios from 'axios'
+import GlobalStore from './GlobalStore'
 
 class CreateOrderStore {
+
+  @computed get stock() {return GlobalStore.stock }
+  @computed get pair() {return GlobalStore.pair }
 
   @observable createPrice = {'buy': '', 'sell': ''}
   @observable createAmount = {'buy': '', 'sell': ''}
   @observable createTotal = {'buy': '', 'sell': ''}
 
   @action createChange(value, field, type) {
+    var total
     if (field === 'price') {
       this.createPrice[type] = value
-      var total = (parseFloat(this.createPrice[type]) * parseFloat(this.createAmount[type])).toFixed(8)
+      total = (parseFloat(this.createPrice[type]) * parseFloat(this.createAmount[type])).toFixed(8)
       this.createTotal[type] = total !== 'NaN' ? total : ''
     } else if (field === 'amount') {
       this.createAmount[type] = value
-      var total = (parseFloat(this.createPrice[type]) * parseFloat(this.createAmount[type])).toFixed(8)
+      total = (parseFloat(this.createPrice[type]) * parseFloat(this.createAmount[type])).toFixed(8)
       this.createTotal[type] = (total !== 'NaN') ? total : ''
     } else if (field === 'total') {
       this.createTotal[type] = value

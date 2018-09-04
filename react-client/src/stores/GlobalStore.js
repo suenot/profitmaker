@@ -18,7 +18,10 @@ class GlobalStore {
     .then((response) => {
       this.stocks = response.data
     })
-    .catch((error) => { console.log(error) })
+    .catch((error) => {
+      this.stocks = {}
+      console.log(error)
+    })
   }
   // END STOCKS
 
@@ -41,7 +44,9 @@ class GlobalStore {
         return pair.split('/').join('_')
       })
     })
-    .catch((error) => { console.log(error) })
+    .catch((error) => {
+      this.pairs = []
+      console.log(error) })
   }
   // END PAIRS
 

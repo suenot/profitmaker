@@ -56,7 +56,7 @@ const main = async () => {
 
 		await initStocks(privateKeys)
 		// получение публичных данных с сервера
-		try { updateCoinmarketcap(10000) } catch(err) { console.log(err) } // Ведро - нужно для ссхт апи
+		try { updateCoinmarketcap(30000) } catch(err) { console.log(err) } // Ведро - нужно для ссхт апи
 		// try { updateMarkets(10000) } catch(err) { console.log(err) } - // Ведро - нужно для фронта - просто убрать цикл
 		// try { updatePairs(10000) } catch(err) { console.log(err) }
 		// try { updateOrderbook(10000) } catch(err) { console.log(err) }
@@ -73,11 +73,26 @@ const main = async () => {
 		app.get('/balance', function (req, res) {
 			res.json(global.BALANCE)
 		})
-		app.get('/openOrders', function (req, res) {
-			res.json(global.OPENORDERS)
+		app.get('/openOrders/:stock/:pair', function (req, res) {
+			try {
+				var stock = req.params.stock
+				var pair = req.params.pair.split('_').join('/')
+				res.json(global.OPENORDERS[stock][pair])
+			} catch (err) {
+				res.status(500).send({ error: 'openOrders get ' + stock + ' ' + pair + ' failed!' })
+				console.log('openOrders ERROR', err)
+			}
 		})
-		app.get('/myTrades', function (req, res) {
-			res.json(global.TRADESHISTORY)
+		app.get('/myTrades/:stock/:pair', function (req, res) {
+			try {
+				var stock = req.params.stock
+				var pair = req.params.pair.split('_').join('/')
+				res.json(global.TRADESHISTORY[stock][pair])
+			} catch (err) {
+				res.status(500).send({ error: 'myTrades get ' + stock + ' ' + pair + ' failed!' })
+				console.log('myTrades ERROR', err)
+			}
+
 		})
 
 		app.post('/createOrder', async function(req, res) {

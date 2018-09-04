@@ -28,7 +28,7 @@ class MyTrades extends React.Component {
             <table className="el-table__body">
               <tbody>
               {
-                _.map(MyTradesStore.myTrades['LIQUI']['DNT/BTC'], (item, i) => {
+                _.map(MyTradesStore.myTrades, (item, i) => {
                   return (
                     <tr className="el-table__row">
                       <td style={colWidth}>

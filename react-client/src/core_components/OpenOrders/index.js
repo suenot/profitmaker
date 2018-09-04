@@ -22,7 +22,7 @@ class OpenOrders extends React.Component {
           </thead>
           <tbody>
           {
-            _.map(OpenOrdersStore.openOrders['LIQUI']['DNT/BTC'], (item, i) => {
+            _.map(OpenOrdersStore.openOrders, (item, i) => {
               return (
                 <tr>
                   <td>

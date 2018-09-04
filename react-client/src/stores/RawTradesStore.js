@@ -19,7 +19,10 @@ class RawTradesStore {
       this.rawTrades = _.orderBy(data, ['timestamp'], ['desc'])
 
     })
-    .catch((error) => { console.log(error) })
+    .catch((error) => {
+      this.rawTrades = []
+      console.log(error)
+    })
   }
 
 

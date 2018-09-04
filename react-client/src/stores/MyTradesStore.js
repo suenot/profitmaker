@@ -7,14 +7,17 @@ class MyTradesStore {
   @computed get stock() {return GlobalStore.stock }
   @computed get pair() {return GlobalStore.pair }
 
-  @observable myTrades = {'LIQUI': {'DNT/BTC': {}}}
+  @observable myTrades = {}
 
   @action fetchMyTrades(){
-    axios.get('http://localhost:8051/myTrades')
+    axios.get(`http://localhost:8051/myTrades/${this.stock}/${this.pair}`)
     .then((response) => {
       this.myTrades = response.data
     })
-    .catch((error) => { console.log(error) })
+    .catch((error) => {
+      console.log(error)
+      this.myTrades = {}
+    })
   }
 
 }
