@@ -56,7 +56,7 @@ const main = async () => {
 
 		await initStocks(privateKeys)
 		// получение публичных данных с сервера
-		try { updateCoinmarketcap(10000) } catch(err) { console.log(err) } // Ведро - нужно для ссхт апи
+		try { updateCoinmarketcap(30000) } catch(err) { console.log(err) } // Ведро - нужно для ссхт апи
 		// try { updateMarkets(10000) } catch(err) { console.log(err) } - // Ведро - нужно для фронта - просто убрать цикл
 		// try { updatePairs(10000) } catch(err) { console.log(err) }
 		// try { updateOrderbook(10000) } catch(err) { console.log(err) }
