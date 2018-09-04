@@ -4,9 +4,9 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import { ChartCanvas, Chart } from "react-stockcharts";
-import { BarSeries, AreaSeries } from "react-stockcharts/lib/series";
+import { AreaSeries } from "react-stockcharts/lib/series";
 import { XAxis, YAxis } from "react-stockcharts/lib/axes";
-import { fitWidth, fitDimensions } from "react-stockcharts/lib/helper";
+import { fitDimensions } from "react-stockcharts/lib/helper";
 
 class BarChart extends React.Component {
 	render() {

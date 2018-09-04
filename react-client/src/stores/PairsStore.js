@@ -1,28 +1,12 @@
-import { observable, action, autorun } from 'mobx'
+import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
+import _ from 'lodash'
+import StocksStore from './StocksStore'
 
-class GlobalStore {
+class PairsStore {
 
-  // START STOCKS
-  @observable stock = 'LIQUI'
+  @computed get stock() {return StocksStore.stock }
 
-  @observable stocks = {}
-
-  @action setStock(stock) {
-    console.log('SET STOCK')
-    this.stock = stock
-  }
-
-  @action async fetchStocks() {
-    axios.get('http://localhost:8051/stocks')
-    .then((response) => {
-      this.stocks = response.data
-    })
-    .catch((error) => { console.log(error) })
-  }
-  // END STOCKS
-
-  // START PAIRS
   @observable pair = 'ETH_BTC'
   @observable coinFrom = 'ETH'
   @observable coinTo = 'BTC'
@@ -43,17 +27,15 @@ class GlobalStore {
     })
     .catch((error) => { console.log(error) })
   }
-  // END PAIRS
 
 }
 
-const store = window.GlobalStore = new GlobalStore()
+const store = window.PairsStore = new PairsStore()
 
 export default store
 
 autorun(() => {
   console.log(store.stock)
   console.log(store.pair)
-  store.fetchStocks()
   store.fetchPairs()
 })

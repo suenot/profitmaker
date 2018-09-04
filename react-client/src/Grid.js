@@ -18,7 +18,6 @@ import HeikinAshi from './core_components/charts/HeikinAshi'
 import Crocodile from './core_components/charts/Crocodile'
 import Balance from './core_components/Balance'
 import HighstockWithPreloader from './core_components/HighstockWithPreloader'
-import GitterChat from './core_components/GitterChat'
 
 // icons
 import Clear from '@material-ui/icons/Clear'
@@ -59,8 +58,9 @@ class Grid extends React.Component {
   static get defaultProps() {
     return {
       className: "layout",
-      cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
-      rowHeight: 30
+      // cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
+      cols: { lg: 24, md: 20, sm: 12, xs: 8, xxs: 4 },
+      rowHeight: 10 // 30
     };
   }
 
@@ -79,8 +79,8 @@ class Grid extends React.Component {
       <Router>
         <ResponsiveReactGridLayout
           className="layout"
-          cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-          rowHeight={30}
+          cols={{ lg: 24, md: 20, sm: 12, xs: 8, xxs: 4 }} // in 2 times more
+          rowHeight={10}
           layouts={this.state.layouts}
           onLayoutChange={(layout, layouts) => {
               this.onLayoutChange(layout, layouts)

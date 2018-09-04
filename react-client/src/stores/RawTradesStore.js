@@ -1,11 +1,11 @@
 import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
-import OrdersStore from './OrdersStore'
+import GlobalStore from './GlobalStore'
 
 class RawTradesStore {
-  @computed get stock() {return OrdersStore.stock }
-  @computed get pair() {return OrdersStore.pair }
+  @computed get stock() {return GlobalStore.stock }
+  @computed get pair() {return GlobalStore.pair }
   // @observable stock = 'LIQUI'
   // @observable pair = 'ETH_BTC'
   @observable rawTrades = []

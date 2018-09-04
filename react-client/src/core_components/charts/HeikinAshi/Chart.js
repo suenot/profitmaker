@@ -27,7 +27,7 @@ import {
 	MovingAverageTooltip,
 } from "react-stockcharts/lib/tooltip";
 import { ema, heikinAshi, sma } from "react-stockcharts/lib/indicator";
-import { fitWidth, fitDimensions } from "react-stockcharts/lib/helper";
+import { fitDimensions } from "react-stockcharts/lib/helper";
 import { last } from "react-stockcharts/lib/utils";
 
 class HeikinAshi extends React.Component {

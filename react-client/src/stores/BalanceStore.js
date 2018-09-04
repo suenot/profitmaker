@@ -1,11 +1,10 @@
 import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
-import _ from 'lodash'
-import OrdersStore from './OrdersStore'
+import GlobalStore from './GlobalStore'
 
 class BalanceStore {
-  @computed get stock() {return OrdersStore.stock }
-  @computed get pair() {return OrdersStore.pair }
+  @computed get stock() {return GlobalStore.stock }
+  @computed get pair() {return GlobalStore.pair }
     // @observable precision = 8
     // @observable _total = 0
     // @observable _free = 0
@@ -44,7 +43,7 @@ class BalanceStore {
     //     }
     //   })
     // }
-    
+
 
     @action fetchBalance(){
       axios.get('http://localhost:8051/balance')

@@ -1,25 +1,22 @@
 import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
-import _ from 'lodash'
-import OrdersStore from './OrdersStore'
+import GlobalStore from './GlobalStore'
 
 class MyTradesStore {
-  @computed get stock() {return OrdersStore.stock }
-  @computed get pair() {return OrdersStore.pair }
+
+  @computed get stock() {return GlobalStore.stock }
+  @computed get pair() {return GlobalStore.pair }
 
   @observable myTrades = {'LIQUI': {'DNT/BTC': {}}}
-
-  
 
   @action fetchMyTrades(){
     axios.get('http://localhost:8051/myTrades')
     .then((response) => {
       this.myTrades = response.data
-      // console.log('myTrades', this.myTrades)
-
     })
     .catch((error) => { console.log(error) })
   }
+
 }
 
 const store = window.MyTradesStore = new MyTradesStore()
