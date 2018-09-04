@@ -1,4 +1,6 @@
-import { observable, action, computed, autorun } from 'mobx'
+import { observable } from 'mobx'
+
+// components
 import Orders from '../core_components/Orders'
 import Stocks from '../core_components/Stocks'
 import Pairs from '../core_components/Pairs'

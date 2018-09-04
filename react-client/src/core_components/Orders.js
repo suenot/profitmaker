@@ -1,7 +1,5 @@
 import React from 'react'
-import _ from 'lodash'
 import { inject, observer } from 'mobx-react'
-import 'element-theme-default'
 import { Table } from 'element-react'
 @inject('OrdersStore')
 @observer

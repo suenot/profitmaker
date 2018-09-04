@@ -1,19 +1,18 @@
 import React from 'react'
 import _ from 'lodash'
 import { inject, observer } from 'mobx-react'
-import { Link } from "react-router-dom"
 
-@inject('OrdersStore')
+@inject('GlobalStore')
 @observer
 class Pairs extends React.Component {
   render() {
-    const {OrdersStore, type} = this.props
+    const {GlobalStore} = this.props
     return (
       <div>
         <table>
           <tbody>
             {
-              _.map(OrdersStore.pairs, (pair) => {
+              _.map(GlobalStore.pairs, (pair) => {
                 return <tr key={pair}>
                   <td><a href="#" onClick={this.handleClick.bind(this, pair)}>{pair}</a></td>
                 </tr>
@@ -25,7 +24,7 @@ class Pairs extends React.Component {
     )
   }
   handleClick(pair) {
-    this.props.OrdersStore.setPair(pair)
+    this.props.GlobalStore.setPair(pair)
   }
 }
 

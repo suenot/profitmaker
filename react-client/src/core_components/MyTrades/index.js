@@ -13,8 +13,6 @@ class MyTrades extends React.Component {
     const {MyTradesStore} = this.props
     return (
       <div>
-
-
         <div className="el-table el-table--fit el-table--enable-row-hover myTrades-table">
           <div className="el-table__header-wrapper">
             <table classMane="el-table__header">
@@ -53,14 +51,11 @@ class MyTrades extends React.Component {
                     </tr>
                   )
                 })
-
-
               }
               </tbody>
             </table>
           </div>
         </div>
-
       </div>
     )
   }
