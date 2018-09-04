@@ -16,7 +16,11 @@ import { mailFolderListItems, otherMailFolderListItems } from './tileData';
 import Grid from './Grid';
 import 'element-theme-default'
 import './App.sass'
+import { inject, observer } from 'mobx-react'
+
+
 const drawerWidth = 240;
+
 
 const styles = theme => ({
   root: {
@@ -82,6 +86,8 @@ const styles = theme => ({
   },
 });
 
+@inject('GlobalStore')
+@observer
 class MiniDrawer extends React.Component {
   state = {
     open: false,
@@ -102,7 +108,7 @@ class MiniDrawer extends React.Component {
   };
 
   render() {
-    const { classes, theme } = this.props;
+    const { classes, theme, GlobalStore } = this.props;
 
     return (
       <div className={classes.root}>
@@ -120,7 +126,7 @@ class MiniDrawer extends React.Component {
               <MenuIcon />
             </IconButton>
             <Typography variant="title" color="inherit" noWrap>
-              Mini variant drawer
+              {GlobalStore.stock} : {GlobalStore.pair}
             </Typography>
           </Toolbar>
         </AppBar>
