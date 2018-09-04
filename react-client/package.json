@@ -52,6 +52,7 @@
     "react-dom": "^16.4.2",
     "react-grid-layout": "^0.16.6",
     "react-router-dom": "^4.3.1",
+    "react-s-alert": "^1.4.1",
     "react-stockcharts": "^0.7.7",
     "reapop": "^2.0.0",
     "resolve": "1.6.0",

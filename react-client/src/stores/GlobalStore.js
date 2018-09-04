@@ -1,6 +1,9 @@
 import { observable, action, autorun } from 'mobx'
 import axios from 'axios'
 
+// components
+import Crocodile from '../core_components/charts/Crocodile'
+
 class GlobalStore {
 
   // START STOCKS
@@ -50,6 +53,17 @@ class GlobalStore {
   }
   // END PAIRS
 
+  // START DRAWERS
+  @observable drawerRightOpen = false
+  @observable drawerRightComponent = Crocodile
+  @observable drawerRightData = {}
+  @action drawerRightToggle() {
+    this.drawerRightOpen = !this.drawerRightOpen
+  }
+  @action drawerRightSet(component) {
+    this.drawerRightComponent = component
+  }
+  // END DRAWERS
 }
 
 const store = window.GlobalStore = new GlobalStore()
