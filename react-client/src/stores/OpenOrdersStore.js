@@ -7,9 +7,9 @@ class OpenOrdersStore {
   @computed get pair() {return GlobalStore.pair }
 
 
-  @observable openOrders = {'LIQUI': {'DNT/BTC': {}}}
+  @observable openOrders = {}
   @action fetchOpenOrders(){
-    axios.get('http://localhost:8051/openOrders')
+    axios.get(`http://localhost:8051/openOrders/${this.stock}/${this.pair}`)
     .then((response) => {
       this.openOrders = response.data
     })

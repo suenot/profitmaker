@@ -198,7 +198,13 @@ class OrdersStore {
     .then((response) => {
       this.orders = response.data
     })
-    .catch((error) => { console.log(error) })
+    .catch((error) => {
+      this.orders = {
+        'asks': [],
+        'bids': []
+      }
+      console.log(error)
+    })
   }
 
   @action async precisionLess() {
