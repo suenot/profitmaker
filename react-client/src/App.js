@@ -2,6 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import { withStyles } from '@material-ui/core/styles'
+import CssBaseline from '@material-ui/core/CssBaseline';
 import Drawer from '@material-ui/core/Drawer'
 import AppBar from '@material-ui/core/AppBar'
 import Toolbar from '@material-ui/core/Toolbar'
@@ -165,6 +166,8 @@ class MiniDrawer extends React.Component {
     const { classes, theme, GlobalStore } = this.props
 
     return (
+      <React.Fragment>
+      <CssBaseline />
       <div className={classes.root}>
         <Alert stack={{limit: 3}} />
         <AppBar
@@ -236,9 +239,12 @@ class MiniDrawer extends React.Component {
         </Drawer>
         <main className={classes.content}>
           <div className={classes.toolbar} />
-          <Grid />
+          <div className={classes.tableContainer}>
+            <Grid />
+          </div>
         </main>
       </div>
+      </React.Fragment>
     )
   }
 }
