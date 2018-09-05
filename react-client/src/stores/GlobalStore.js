@@ -2,7 +2,8 @@ import { observable, action, autorun } from 'mobx'
 import axios from 'axios'
 
 // components
-import Crocodile from '../core_components/charts/Crocodile'
+// import Crocodile from '../core_components/charts/Crocodile'
+import Pairs from '../core_components/Pairs'
 
 class GlobalStore {
 
@@ -55,7 +56,7 @@ class GlobalStore {
 
   // START DRAWERS
   @observable drawerRightOpen = false
-  @observable drawerRightComponent = Crocodile
+  @observable drawerRightComponent = Pairs
   @observable drawerRightData = {}
   @action drawerRightToggle() {
     this.drawerRightOpen = !this.drawerRightOpen

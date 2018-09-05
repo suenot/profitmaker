@@ -6,10 +6,7 @@ import { inject, observer } from 'mobx-react'
 @observer
 class Stocks extends React.Component {
   render() {
-    var colWidth = {
-      width: 180
-    }
-    const {GlobalStore, type} = this.props
+    const {GlobalStore} = this.props
     return (
       <div>
         <div className="el-table el-table--fit noHeader-table">
@@ -19,7 +16,7 @@ class Stocks extends React.Component {
               <tbody>
                 {
                   _.map(GlobalStore.stocks, (stock) => {
-                    return <tr key={stock} lassName="el-table__row">
+                    return <tr key={stock} className="el-table__row">
                       <td><div className="cell"><a href="#" onClick={this.handleClick.bind(this, stock.name)}>{stock.name}</a></div></td>
                     </tr>
                   })

@@ -22,7 +22,6 @@ class DashboardsStore {
     {i: "4", component: Balance, header: "Balance", data: {}, x: 2, y: 0, w: 2, h: 4, minW: 2, minH: 3},
     {i: "5", component: Pairs, header: "Pairs", data: {}, x: 2, y: 0, w: 2, h: 4, minW: 2, minH: 3},
     {i: "6", component: Stocks, header: "Stocks", data: {}, x: 2, y: 0, w: 2, h: 4, minW: 2, minH: 3},
-    {i: "7", component: HighstockWithPreloader, header: "HighstockWithPreloader", data: {}, x: 2, y: 0, w: 2, h: 4, minW: 2, minH: 3},
     {i: "8", component: OpenOrders, header: "OpenOrders", data: {}, x: 2, y: 0, w: 2, h: 4, minW: 2, minH: 3},
     {i: "9", component: MyTrades, header: "MyTrades", data: {}, x: 2, y: 0, w: 2, h: 4, minW: 2, minH: 3},
     {i: "10", component: RawTrades, header: "RawTrades", data: {}, x: 2, y: 0, w: 2, h: 4, minW: 2, minH: 3},

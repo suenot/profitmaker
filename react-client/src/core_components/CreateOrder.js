@@ -6,7 +6,7 @@ import { Input, Button } from 'element-react'
 @observer
 class CreateOrder extends React.Component {
   render() {
-    const {CreateOrderStore, classes, data} = this.props
+    const {CreateOrderStore, data} = this.props
     const {type} = data
     return (
       <div className="createOrder">
