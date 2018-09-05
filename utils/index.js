@@ -28,13 +28,15 @@ const calculateCoin = async function (amount, coin) {
 // TRADE UTILS START
 ////////////////////
 const create = async function (stockName, symbol, side, amount, price) {
-    try {
+    // try {
       var rateLimit = global.STOCKS[stockName]['rateLimit']
       await catchHead(rateLimit, stockName)
       return await global.STOCKS[stockName].createOrder (symbol, 'limit', side, amount, price) /// ('BTC/USD', 1, 2500.00)
-    } catch (err) {
-      console.log('Что-то сломалось ', err)
-    }
+    // } catch (err) {
+    //   console.log('createOrder error')
+    //   console.log(err)
+    //   return err
+    // }
 }
 const cancel = async function(stockName, id, symbol){
     try {

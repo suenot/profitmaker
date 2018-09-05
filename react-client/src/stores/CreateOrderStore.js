@@ -1,7 +1,7 @@
 import { observable, action, autorun, computed } from 'mobx'
 import axios from 'axios'
 import GlobalStore from './GlobalStore'
-
+import Alert from 'react-s-alert'
 class CreateOrderStore {
 
   @computed get stock() {return GlobalStore.stock }
@@ -29,6 +29,13 @@ class CreateOrderStore {
   }
 
   @action createOrder(type) {
+    var createMsg = 'creating ' + type + ' order on ' + this.stock + ': '+ this.pair + ' price: '+this.createPrice[type] + ' amount: ' + this.createAmount[type]
+    Alert.warning(createMsg, {
+      position: 'bottom-right',
+      effect: 'scale',
+      beep: false,
+      timeout: 'none'
+    })
     axios.post('http://localhost:8051/createOrder', {
       'stock': this.stock,
       'pair': this.pair,
@@ -37,10 +44,26 @@ class CreateOrderStore {
       'amount': this.createAmount[type],
     })
     .then((response) => {
-      console.log(response)
+      // console.log(response)
       console.log(response.data)
+
+      Alert.success('orderCreated', {
+        position: 'bottom-right',
+        effect: 'scale',
+        beep: false,
+        timeout: 'none'
+      })
+
     })
-    .catch((error) => { console.log(error) })
+    .catch((error) => {
+      console.log(error.response.data.error)
+      Alert.error(error.response.data.error, {
+        position: 'bottom-right',
+        effect: 'scale',
+        beep: false,
+        timeout: 'none'
+      })
+    })
   }
 
 }

@@ -2,18 +2,20 @@ const ccxt = require ('ccxt')
 var {sleep, create, catchHead} = require('../../utils')
 
 const createOrder = async function(data) {
-  try {
+  // try {
     var stockUpper = data.stock
     var stockName = stockUpper.toLowerCase()
     var symbol = data.pair.split('_').join('/')
     var side =  data.type
     var amount = data.amount
     var price = data.price
-    return await create (stockName, symbol, side, amount, price)
-  } catch(err) {
-    return err
-    console.log(err)
-  }
+    var result = await create (stockName, symbol, side, amount, price)
+    // console.log('midFunction: ')
+    // console.log(result)
+    return result
+  // } catch(err) {
+  //   console.log('err', err)
+  // }
 }
 
 // { stock: 'BITFINEX',

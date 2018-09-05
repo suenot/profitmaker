@@ -12,6 +12,7 @@
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "mongodb": "^2.2.31",
-    "nodemon": "^1.12.1"
+    "nodemon": "^1.12.1",
+    "serialize-error": "^2.1.0"
   }
 }

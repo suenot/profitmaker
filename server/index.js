@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 var bodyParser = require('body-parser')
-
+const serializeError = require('serialize-error')
 const privateKeys = require('../private/keys.json').keys
 const ethPockets = require('../private/keys.json').ethPockets
 
@@ -97,8 +97,16 @@ const main = async () => {
 
 		app.post('/createOrder', async function(req, res) {
 			try {
-				result = await createOrder(req.body)
-			} catch (err) {console.log(err)}
+
+				var result = await createOrder(req.body)
+
+				res.json(result)
+			} catch (err) {
+				console.log('trade error')
+				var errorS = serializeError(err).message
+				console.log(errorS)
+				res.status(500).send({error: errorS})
+			}
 		})
 
 		app.get('/trades/:stock/:pair', async function (req, res) {
