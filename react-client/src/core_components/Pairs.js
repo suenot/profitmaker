@@ -6,20 +6,31 @@ import { inject, observer } from 'mobx-react'
 @observer
 class Pairs extends React.Component {
   render() {
+    var colWidth = {
+      width: 180
+    }
     const {GlobalStore} = this.props
     return (
       <div>
-        <table>
-          <tbody>
-            {
-              _.map(GlobalStore.pairs, (pair) => {
-                return <tr key={pair}>
-                  <td><a href="#" onClick={this.handleClick.bind(this, pair)}>{pair}</a></td>
-                </tr>
-              })
-            }
-          </tbody>
-        </table>
+        <div className="el-table el-table--fit noHeader-table">
+          <div className="el-table__body-wrapper">
+            <table className="el-table__body">
+              <tbody>
+                {
+                  _.map(GlobalStore.pairs, (pair) => {
+                    return <tr key={pair} lassName="el-table__row">
+                      <td style={colWidth}>
+                        <div className="cell">
+                          <a href="#" onClick={this.handleClick.bind(this, pair)}>{pair}</a>
+                        </div>
+                      </td>
+                    </tr>
+                  })
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     )
   }

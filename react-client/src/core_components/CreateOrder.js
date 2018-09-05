@@ -9,7 +9,7 @@ class CreateOrder extends React.Component {
     const {CreateOrderStore, classes, data} = this.props
     const {type} = data
     return (
-      <div>
+      <div className="createOrder">
         <p>
           <div className="text">Price</div>
           <Input placeholder="Price" value={CreateOrderStore.createPrice[type]} onChange={this.changeValue.bind(this, 'price', type)} />
@@ -22,9 +22,9 @@ class CreateOrder extends React.Component {
           <div className="text">Total</div>
           <Input placeholder="Total" value={CreateOrderStore.createTotal[type]} onChange={this.changeValue.bind(this, 'total', type)} />
         </p>
-        <p>
-          <Button type={type === 'buy' ? 'success' : 'danger'} onClick={this.createOrder.bind(this, type)}>{type}</Button>
-        </p>
+
+        <Button type={type === 'buy' ? 'success' : 'danger'} onClick={this.createOrder.bind(this, type)}>{type}</Button>
+
       </div>
     )
   }
