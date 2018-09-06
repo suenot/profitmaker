@@ -212,11 +212,7 @@ class App extends React.Component {
               paper: classNames(classes.drawerPaperRight, !GlobalStore.drawerRightOpen && classes.drawerPaperRightClose),
             }}
           >
-            <div>
-              <br />
-              <br />
-              <br />
-              {/* <Orders data={{type: "asks"}} /> */}
+            <div class="drawer-spacer">
               {React.createElement(GlobalStore.drawerRightComponent, {'data': GlobalStore.drawerRightData})}
             </div>
           </Drawer>
