@@ -41,7 +41,8 @@ var updateBalance = require('./core_components/updateBalance')
 var initStocks = require('./core_components/initStocks')
 var updateCoinmarketcap = require('./core_components/updateCoinmarketcap')
 var updateTradesHistory = require('./core_components/updateTradesHistory')
-var updateOpenOrders = require('./core_components/updateOpenOrders')
+// var updateOpenOrders = require('./core_components/updateOpenOrders')
+var {openOrders, fetchOpenOrder, getOpenOrders} = require('./core_components/openOrders')
 var {updateMarkets, getStocks} = require('./core_components/updateMarkets')
 var {updatePairs, getPairs} = require('./core_components/updatePairs')
 var {updateOrderbook, getOrderBook} = require('./core_components/updateOrderbook')
@@ -49,6 +50,7 @@ var {updateOHLCV, getOHLCV} = require('./core_components/updateOHLCV')
 var {updateTradesRaw, getTrades} = require('./core_components/updateTradesRaw')
 
 var createOrder = require('./core_components/createOrder')
+var cancelOrder = require('./core_components/cancelOrder')
 
 const main = async () => {
 	try { var localMongo = await startMongo() } catch(err) { console.log(err) }
@@ -57,27 +59,26 @@ const main = async () => {
 		await initStocks(privateKeys)
 		// получение публичных данных с сервера
 		try { updateCoinmarketcap(30000) } catch(err) { console.log(err) } // Ведро - нужно для ссхт апи
-		// try { updateMarkets(10000) } catch(err) { console.log(err) } - // Ведро - нужно для фронта - просто убрать цикл
-		// try { updatePairs(10000) } catch(err) { console.log(err) }
-		// try { updateOrderbook(10000) } catch(err) { console.log(err) }
-		// try { updateOHLCV(10000) } catch(err) { console.log(err) }
-		// try { updateTradesRaw(10000) } catch(err) { console.log(err) }
 
-		// получение приватных данных с бирж
+
+		// // получение приватных данных с бирж
 		try { updateBalance(localMongo, privateKeys, ethPockets, 30000) } catch(err) { console.log(err) }
 		try { updateTradesHistory(localMongo, privateKeys, 30000) } catch(err) { console.log(err) }
-		try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
+		try { openOrders(localMongo) } catch(err) { console.log(err) }
+		// // try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
 
 		//
 		// balance (pie chart)
 		app.get('/balance', function (req, res) {
 			res.json(global.BALANCE)
 		})
-		app.get('/openOrders/:stock/:pair', function (req, res) {
+		app.get('/openOrders/:stock/:pair', async function (req, res) {
 			try {
 				var stock = req.params.stock
-				var pair = req.params.pair.split('_').join('/')
-				res.json(global.OPENORDERS[stock][pair])
+				var symbol = req.params.pair.split('_').join('/')
+				var data = await getOpenOrders(localMongo, stock, symbol)
+				// console.log(data)
+				res.json(data)
 			} catch (err) {
 				res.status(500).send({ error: 'openOrders get ' + stock + ' ' + pair + ' failed!' })
 				console.log('openOrders ERROR', err)
@@ -95,10 +96,21 @@ const main = async () => {
 
 		})
 
+		app.post('/cancelOrder', async function(req, res) {
+			try {
+				// console.log('cancel trade')
+				// console.log(req.body)
+				var result = await cancelOrder(req.body, localMongo)
+			} catch (err) {
+				var errorS = serializeError(err).message
+				console.log(errorS)
+				res.status(500).send({error: errorS})
+			}
+		})
 		app.post('/createOrder', async function(req, res) {
 			try {
 
-				var result = await createOrder(req.body)
+				var result = await createOrder(req.body, localMongo)
 
 				res.json(result)
 			} catch (err) {

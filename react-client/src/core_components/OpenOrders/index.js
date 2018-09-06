@@ -33,25 +33,25 @@ class OpenOrders extends React.Component {
                   return (
                     <tr>
                       <td>
-                        id: {item['id']}<br/>
-                        status: {item['status']}<br/>
-                        type: {item['type']}<br/>
-                        side: {item['side']}<br/>
-                        symbol:{item['symbol']}<br/>
-                        date: {item['datetime']}<br/>
+                        id: {item['data']['id']}<br/>
+                        status: {item['data']['status']}<br/>
+                        type: {item['data']['type']}<br/>
+                        side: {item['data']['side']}<br/>
+                        symbol:{item['data']['symbol']}<br/>
+                        date: {item['data']['datetime']}<br/>
                       </td>
                       <td>
-                        price: {item['price']}<br/>
+                        price: {item['data']['price']}<br/>
                       </td>
                       <td>
-                        amount: {item['amount']}<br/>
-                        filled: {item['filled']}<br/>
-                        remaining: {item['remaining']}<br/>
-                        lastTrade: {item['lastTradeTimestamp']}
+                        amount: {item['data']['amount']}<br/>
+                        filled: {item['data']['filled']}<br/>
+                        remaining: {item['data']['remaining']}<br/>
+                        lastTrade: {item['data']['lastTradeTimestamp']}
                       </td>
                       <td>
-                        close<br/>
-                        change
+                        <button onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], OpenOrdersStore.stock)}>close</button>
+
                       </td>
 
                     </tr>
@@ -66,6 +66,9 @@ class OpenOrders extends React.Component {
         </div>
       </div>
     )
+  }
+  cancelOrder(id, symbol, _id, stock, e) {
+    this.props.OpenOrdersStore.cancelOrder(id, symbol, _id, stock)
   }
 }
 

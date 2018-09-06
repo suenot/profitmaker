@@ -39,13 +39,13 @@ const create = async function (stockName, symbol, side, amount, price) {
     // }
 }
 const cancel = async function(stockName, id, symbol){
-    try {
+    // try {
       var rateLimit = global.STOCKS[stockName]['rateLimit']
       await catchHead(rateLimit, stockName)
       return await global.STOCKS[stockName].cancelOrder(id, symbol)
-    } catch (err) {
-      console.log('Что-то сломалось ', err)
-    }
+    // } catch (err) {
+    //   console.log('Что-то сломалось ', err)
+    // }
 }
 const change = async function(stockName, id, symbol, side, new_price){
     try {
