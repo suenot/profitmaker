@@ -14,5 +14,8 @@
     "mongodb": "^2.2.31",
     "nodemon": "^1.12.1",
     "serialize-error": "^2.1.0"
+  },
+  "scripts": {
+    "start": "nodemon index.js"
   }
 }

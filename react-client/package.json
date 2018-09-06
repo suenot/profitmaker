@@ -43,6 +43,8 @@
     "lodash": "^4.17.10",
     "mobx": "^5.0.3",
     "mobx-react": "^5.2.5",
+    "mobx-stored": "^1.0.2",
+    "mobx-sync": "^0.8.4",
     "moment": "^2.22.2",
     "object-assign": "4.1.1",
     "postcss-flexbugs-fixes": "3.2.0",
