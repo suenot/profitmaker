@@ -1,6 +1,7 @@
 import React from 'react'
 import _ from 'lodash'
 import { inject, observer } from 'mobx-react'
+
 // import ReactEcharts from 'echarts-for-react'
 
 @inject('BalanceStore')
@@ -10,7 +11,14 @@ class Balance extends React.Component {
   //   return option
   // }
   render() {
-    const {BalanceStore} = this.props
+    const {BalanceStore, data} = this.props
+    const {total} = data
+    if (!BalanceStore.stock) {
+      return (<div></div>)
+    }
+    var stock = total ? 'TOTAL' : BalanceStore.stock
+
+    console.log(stock)
     return (
       <div>
         {/* <ReactEcharts
@@ -18,45 +26,37 @@ class Balance extends React.Component {
           style={{height: '350px', width: '100%'}}
           className='react_for_echarts'
         /> */}
-        <h5>{BalanceStore.stock}</h5>
-        <h6>freeBTC: {BalanceStore.balance[BalanceStore.stock].freeBTC || ""}</h6>
-        <h6>freeUSD: {BalanceStore.balance[BalanceStore.stock].freeUSD || ""}</h6>
-        <h6>usedBTC: {BalanceStore.balance[BalanceStore.stock].usedBTC || ""}</h6>
-        <h6>usedUSD: {BalanceStore.balance[BalanceStore.stock].usedUSD || ""}</h6>
-        <h6>totalBTC: {BalanceStore.balance[BalanceStore.stock].totalBTC || ""}</h6>
-        <h6>totalUSD: {BalanceStore.balance[BalanceStore.stock].totalUSD || ""}</h6>
-
-        <table>
+        <table className="simpleTable">
           <thead>
             <tr>
-              <th>name</th>
-              <th>free</th>
-              <th>used</th>
-              <th>total</th>
+              <th colSpan="2" className="simpleTable">{(BalanceStore.balance[stock].totalBTC || 0).toFixed(8)} BTC</th>
+              <th colSpan="2" className="simpleTable">{(BalanceStore.balance[stock].totalUSD || 0).toFixed(2)} USD</th>
+            </tr>
+            <tr>
+              <th>coins</th>
+              <th>on orders</th>
+              <th>ßTC value</th>
+              <th>USD value</th>
             </tr>
           </thead>
           <tbody>
             {
 
-              _.map(BalanceStore.balance[BalanceStore.stock].data, (item, i) => {
+              _.map(BalanceStore.balance[stock].data, (item, i) => {
 
                 return (
                   <tr key={i}>
-                    <td>{i}</td>
                     <td>
-                      tkn: {item.free.toFixed(BalanceStore.precision) || ""}<br/>
-                      usd: {item.freeUSD.toFixed(BalanceStore.precision) || ""}<br/>
-                      btc: {item.freeBTC.toFixed(BalanceStore.precision) || ""}
+                      {(item.free || 0).toFixed(8)} {i}
                     </td>
                     <td>
-                      tkn: {item.used.toFixed(BalanceStore.precision) || ""}<br/>
-                      usd: {item.usedUSD.toFixed(BalanceStore.precision) || ""}<br/>
-                      btc: {item.usedBTC.toFixed(BalanceStore.precision) || ""}
+                      {(item.used || 0).toFixed(8)}
                     </td>
                     <td>
-                      tkn: {item.total.toFixed(BalanceStore.precision) || ""}<br/>
-                      usd: {item.totalUSD.toFixed(BalanceStore.precision) || ""}<br/>
-                      btc: {item.totalBTC.toFixed(BalanceStore.precision) || ""}
+                      {(item.totalBTC || 0).toFixed(8)}
+                    </td>
+                    <td>
+                      {(item.totalUSD || 0).toFixed(2)}
                     </td>
                   </tr>
                 )
@@ -64,6 +64,10 @@ class Balance extends React.Component {
             }
           </tbody>
         </table>
+
+
+
+
 
       </div>
     )

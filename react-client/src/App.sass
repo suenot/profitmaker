@@ -102,3 +102,30 @@ body
 // drawer
 .drawer-spacer
   margin-top: 64px
+
+.simpleTable
+  border: none
+  border-spacing: 0px
+  border-collapse: separate
+  width: 100%
+  th, td
+    padding: 4px 6px
+    white-space: nowrap
+    text-overflow: ellipsis
+  .simpleTable-header
+    font-size: 13px
+  th
+    background: #3f51b5
+    color: #fff
+    font-size: 12px
+
+  td
+    font-weight: 300
+    font-size: 12px
+    box-shadow: 0 0 0.5px #bebebe
+    text-align: right
+    &:nth-child(1)
+      text-align: left
+  // tbody
+  //   tr
+  //     background: linear-gradient(to right, #ffffff 0%,#ffffff 60%,#7db9e8 60%,#7db9e8 100%)
