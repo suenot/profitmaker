@@ -2,6 +2,7 @@
 // import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import { observable, action, autorun, computed } from 'mobx'
 import axios from 'axios'
+import localforage from 'localforage'
 
 
 // components
@@ -16,6 +17,8 @@ class GlobalStore {
   // }
   // START STOCKS
   @observable stock = 'LIQUI'
+  stockIsSet = false
+  // @observable stock = 'LIQUI'
   // static stock = sessionStored('stock', 'LIQUI')
 
   @observable stocks = {}
@@ -39,6 +42,7 @@ class GlobalStore {
 
   // START PAIRS
   @observable pair = 'ETH_BTC'
+  pairIsSet = false
   @computed get base() {
     return this.pair.split('_')[0]
   }
@@ -91,12 +95,29 @@ export default store
 //   // console.log(store.user.model.foo)
 // })
 
-autorun(() => {
+localforage.getItem('stock').then(function (value) {
+  if (value) store.setStock(value)
+  else store.setStock('LIQUI')
+})
+localforage.getItem('pair').then(function (value) {
+  if (value) store.setPair(value)
+  else store.setPair('ETH_BTC')
+})
+
+autorun(async () => {
+
+  //   // we got our value
+  // }).catch(function (err) {
+  //   // we got an error
+  // })
   console.log(store.stock)
   console.log(store.pair)
+  await localforage.setItem('stock', store.stock)
+  await localforage.setItem('pair', store.pair)
   store.fetchStocks()
   store.fetchPairs()
   // trunk.updateStore(store)
+
 })
 
 
