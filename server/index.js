@@ -63,7 +63,7 @@ const main = async () => {
 
 		// // получение приватных данных с бирж
 		try { updateBalance(localMongo, privateKeys, ethPockets, 30000) } catch(err) { console.log(err) }
-		try { updateTradesHistory(localMongo, privateKeys, 30000) } catch(err) { console.log(err) }
+		// try { updateTradesHistory(localMongo, privateKeys, 30000) } catch(err) { console.log(err) }
 		try { openOrders(localMongo) } catch(err) { console.log(err) }
 		// // try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
 
@@ -101,6 +101,7 @@ const main = async () => {
 				// console.log('cancel trade')
 				// console.log(req.body)
 				var result = await cancelOrder(req.body, localMongo)
+				res.json(result)
 			} catch (err) {
 				var errorS = serializeError(err).message
 				console.log(errorS)

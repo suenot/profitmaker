@@ -28,7 +28,7 @@ const getOpenOrdersFromDB = async function(db) {
 const createParseLists = async function(data, db) {
   try {
     for (let [i, item] of Object.entries(data)) {
-      fetchOpenOrder(item.stock, item.symbol, db, item.id, item._id )
+      await fetchOpenOrder(item.stock, item.symbol, db, item.id )
     }
   } catch (err) { console.log(err)}
 }
@@ -36,35 +36,40 @@ const createParseLists = async function(data, db) {
 
 const fetchOpenOrder = async function(stock, symbol, db, id, _id='') {
   try {
+    // var log = {
+    // 	stock,
+    //   symbol,
+    //   id,
+    //   _id
+    // }
+    // console.log(log)
     var stockName = stock.toLowerCase()
     var rateLimit = global.STOCKS[stockName]['rateLimit']
     await catchHead(rateLimit, stockName)
     try {
       var data = await global.STOCKS[stockName].fetchOrder(id, symbol)
-      // console.log(data)
-      console.log('найдены ордера, проверяем коллекцию ' + stockName + ':'+ symbol + ':'+_id)
-
-      console.log(item)
-      var res = {
+      if (data.status === 'canceled' || data.status === 'closed') {
+        // console.log(data)
+        // console.log('не найдено ордеров, удаляем коллекцию ' + stockName + ':'+ symbol + ':'+_id)
+        // await db.collection('openOrders').deleteOne({'_id': ObjectId(_id)})
+        await db.collection('openOrders').deleteOne({'stock': stock, 'symbol': symbol, 'id': id})
+      } else {
+        // console.log(data)
+        // console.log('найдены ордера, проверяем коллекцию ' + stockName + ':'+ symbol + ':'+id)
+        var res = {
           'stock': stock,
-          'symbol': data.symbol,
+          'symbol': symbol,
           'id': data.id,
           'timestamp': Date.now(),
           'datetime': new Date(Date.now()),
           'data': data
+        }
+        await db.collection('openOrders').replaceOne({'stock': stock, 'symbol': symbol, 'id': data.id}, res, {upsert: true})
       }
-      await db.collection('openOrders').replaceOne({'stock': stock, 'symbol': symbol, 'id': data.id}, res, {upsert: true})
-
     } catch (err) {
-      // console.log(err)
-      // console.log('не найдено ордеров, удаляем коллекцию ' + stockName + ':'+ symbol + ':'+_id)
-      if (_id !== '') {
-        await db.collection('openOrders').deleteOne({'_id': ObjectId(_id)})
-      }
+      console.log(err)
     }
-
   } catch (err) { console.log(err)}
-
 }
 const getOpenOrders = async function(db, stock, symbol) {
   try {
