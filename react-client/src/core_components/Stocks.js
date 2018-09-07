@@ -16,8 +16,8 @@ class Stocks extends React.Component {
               <tbody>
                 {
                   _.map(GlobalStore.stocks, (stock) => {
-                    return <tr key={stock} className="el-table__row">
-                      <td><div className="cell"><a href="#" onClick={this.handleClick.bind(this, stock.name)}>{stock.name}</a></div></td>
+                    return <tr key={stock.name} className="el-table__row">
+                      <td><div className="cell" onClick={this.handleClick.bind(this, stock.name)}>{stock.name}</div></td>
                     </tr>
                   })
                 }

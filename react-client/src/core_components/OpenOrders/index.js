@@ -14,7 +14,7 @@ class OpenOrders extends React.Component {
       <div>
         <div className="el-table el-table--fit el-table--enable-row-hover myTrades-table">
           <div className="el-table__header-wrapper">
-            <table classMane="el-table__header">
+            <table className="el-table__header">
               <thead>
                 <tr>
                   <th className="is-leaf" style={colWidth}><div className="cell">orderInfo</div></th>
@@ -51,14 +51,10 @@ class OpenOrders extends React.Component {
                       </td>
                       <td>
                         <button onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], OpenOrdersStore.stock)}>close</button>
-
                       </td>
-
                     </tr>
                   )
                 })
-
-
               }
               </tbody>
             </table>

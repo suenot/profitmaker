@@ -2,8 +2,9 @@ import { observable, action, autorun, computed } from 'mobx'
 import axios from 'axios'
 import GlobalStore from './GlobalStore'
 import Alert from 'react-s-alert'
-class CreateOrderStore {
 
+
+class CreateOrderStore {
   @computed get stock() {return GlobalStore.stock }
   @computed get pair() {return GlobalStore.pair }
 

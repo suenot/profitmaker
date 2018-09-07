@@ -146,7 +146,7 @@ class App extends React.Component {
   }
 
   render() {
-    const { classes, theme, GlobalStore } = this.props
+    const { classes, GlobalStore } = this.props
 
     return (
       <React.Fragment>
@@ -204,7 +204,6 @@ class App extends React.Component {
             <List>{otherMailFolderListItems}</List>
           </Drawer>
           <Drawer
-            variant="permanent"
             anchor="right"
             open={GlobalStore.drawerRightOpen}
             variant="permanent"
@@ -212,7 +211,7 @@ class App extends React.Component {
               paper: classNames(classes.drawerPaperRight, !GlobalStore.drawerRightOpen && classes.drawerPaperRightClose),
             }}
           >
-            <div class="drawer-spacer">
+            <div className="drawer-spacer">
               {React.createElement(GlobalStore.drawerRightComponent, {'data': GlobalStore.drawerRightData})}
             </div>
           </Drawer>

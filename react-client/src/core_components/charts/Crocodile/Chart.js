@@ -1,4 +1,5 @@
 
+/* eslint-disable */
 import { scalePoint } from  "d3-scale";
 import React from "react";
 import PropTypes from "prop-types";
@@ -7,19 +8,32 @@ import { ChartCanvas, Chart } from "react-stockcharts";
 import { AreaSeries } from "react-stockcharts/lib/series";
 import { XAxis, YAxis } from "react-stockcharts/lib/axes";
 import { fitDimensions } from "react-stockcharts/lib/helper";
+// import { discontinuousTimeScaleProvider } from "react-stockcharts/lib/scale";
 
 class BarChart extends React.Component {
 	render() {
 		const { data, type, height, width, ratio } = this.props;
 
-		// const data = unsortedData.slice().sort((a, b) => a.income - b.income);
+    // const data = unsortedData.slice().sort((a, b) => a.income - b.income);
+    // comment param
+    // xExtents={list => list.map(d => d.x)}
+    //
+    // const xScaleProvider = discontinuousTimeScaleProvider
+    // const {
+		// 	// data,
+		// 	// xScale,
+		// 	// xAccessor,
+		// 	displayXAccessor,
+    // } = xScaleProvider(data);
+              // xAccessor={d => d.x} xScale={scalePoint()}
+          // displayXAccessor={displayXAccessor}
 		return (
-			<ChartCanvas ratio={ratio} width={width-5} height={height}
+      <ChartCanvas ratio={ratio} width={width-5} height={height}
 					margin={{ left: 40, right: 10, top: 20, bottom: 30 }} type={type}
 					seriesName="Orders"
-					xExtents={list => list.map(d => d.x)}
-					data={data}
-					xAccessor={d => d.x} xScale={scalePoint()}
+          data={data}
+          xExtents={list => list.map(d => d.x)}
+          xAccessor={d => d.x} xScale={scalePoint()}
 					padding={0}>
 				<Chart id={1} yExtents={d => [0, d.y]} fill="#ff0077">
 					<XAxis axisAt="bottom" orient="bottom" />

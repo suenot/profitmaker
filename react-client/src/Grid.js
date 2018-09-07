@@ -1,23 +1,25 @@
+/* eslint-disable import/first */
 import _ from 'lodash'
 import React from "react"
-import { BrowserRouter as Router, Link, Route } from "react-router-dom"
+import { BrowserRouter as Router } from "react-router-dom"
+// import { BrowserRouter as Router, Link, Route } from "react-router-dom"
 import { WidthProvider, Responsive } from "react-grid-layout"
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
 
 // components
-import Stocks from './core_components/Stocks'
-import Pairs from './core_components/Pairs'
-import Orders from './core_components/Orders'
-import OpenOrders from './core_components/OpenOrders'
-import MyTrades from './core_components/MyTrades'
-import RawTrades from './core_components/RawTrades'
-import CreateOrder from './core_components/CreateOrder'
-import HeikinAshi from './core_components/charts/HeikinAshi'
-import Crocodile from './core_components/charts/Crocodile'
-import Balance from './core_components/Balance'
-import HighstockWithPreloader from './core_components/HighstockWithPreloader'
+// import Stocks from './core_components/Stocks'
+// import Pairs from './core_components/Pairs'
+// import Orders from './core_components/Orders'
+// import OpenOrders from './core_components/OpenOrders'
+// import MyTrades from './core_components/MyTrades'
+// import RawTrades from './core_components/RawTrades'
+// import CreateOrder from './core_components/CreateOrder'
+// import HeikinAshi from './core_components/charts/HeikinAshi'
+// import Crocodile from './core_components/charts/Crocodile'
+// import Balance from './core_components/Balance'
+// import HighstockWithPreloader from './core_components/HighstockWithPreloader'
 
 // icons
 import Clear from '@material-ui/icons/Clear'
@@ -94,18 +96,25 @@ class Grid extends React.Component {
         >
           {
             _.map(DashboardsStore.widgets, (widget, i) => {
+              // console.log((widget.component).toString())
+              // console.log(typeof(widget.component))
+              const Component = require(widget.component+"").default
+              // const Component = require('./core_components/Orders').default
+              // console.log(Component)
               return (
                 <div key={widget.i} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
-                  <div class="widget">
-                    <div class="widget-header">
+                  <div className="widget">
+                    <div className="widget-header">
                       <span>{widget.header}</span>
                       <div>
                         <Settings style={{ fontSize: 18 }} />
                         <Clear style={{ fontSize: 18 }} />
                       </div>
                     </div>
-                    <div class="widget-body">
-                      { React.createElement(widget.component, {'data': widget.data}) }
+                    <div className="widget-body">
+                      {
+                        React.createElement(Component, {'data': widget.data})
+                      }
                     </div>
                   </div>
                 </div>

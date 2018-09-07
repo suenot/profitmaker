@@ -18,9 +18,9 @@ export async function getDataChart(tokenAddress) {
 	let asks = []
 	let bids = []
 
-	getOrders.map((item, index) => {
+	getOrders.forEach((item, index) => {
 
-		if(item.type == 'sell') {
+		if(item.type === 'sell') {
 			asks.push({
 				x: item.price,
 				y: item.total,
@@ -40,8 +40,8 @@ export async function getDataChart(tokenAddress) {
 	bids = _.orderBy(bids, ['total'], ['desc']);
 
 	let together = []
-	asks.map((item, index) => { together.push(item) })
-	bids.map((item, index) => { together.push(item) })
+	asks.forEach((item, index) => { together.push(item) })
+	bids.forEach((item, index) => { together.push(item) })
 
 	console.log('----')
 	console.log(together)

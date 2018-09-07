@@ -10,7 +10,7 @@ const parseDate = timeParse("%Y-%m-%d");
 function jsonPrepare(arr) {
 
 	let result = []
-	_.values(arr).map((item, index) => {
+	_.values(arr).forEach(function(item, index) {
 		result.push({
 			absoluteChange: '',
 			close: item.close,

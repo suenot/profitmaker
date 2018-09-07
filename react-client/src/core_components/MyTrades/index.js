@@ -15,7 +15,7 @@ class MyTrades extends React.Component {
       <div>
         <div className="el-table el-table--fit el-table--enable-row-hover myTrades-table">
           <div className="el-table__header-wrapper">
-            <table classMane="el-table__header">
+            <table className="el-table__header">
               <thead>
                 <tr>
                   <th className="is-leaf" style={colWidth}><div className="cell">orderInfo</div></th>

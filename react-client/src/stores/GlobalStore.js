@@ -1,7 +1,7 @@
+// import { version, AsyncTrunk, ignore } from './mobx-sync/src/index.ts'
+import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import { observable, action, autorun, computed } from 'mobx'
 import axios from 'axios'
-// import { sessionStored } from 'mobx-stored'
-import { version, SyncTrunk, AsyncTrunk, ignore } from 'mobx-sync'
 
 
 // components
@@ -86,7 +86,7 @@ export default store
 const trunk = new AsyncTrunk(store, { storage: localStorage })
 trunk.init().then(() => {
   // trunk.getItem
-  console.log('***********')
+  // console.log('***********')
   // do any staff as you wanted with loaded store
   // console.log(store.user.model.foo)
 })

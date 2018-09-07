@@ -20,8 +20,8 @@ class Pairs extends React.Component {
                   _.map(GlobalStore.pairs, (pair) => {
                     return <tr key={pair} className="el-table__row">
                       <td style={colWidth}>
-                        <div className="cell">
-                          <a href="#" onClick={this.handleClick.bind(this, pair)}>{pair}</a>
+                        <div className="cell" onClick={this.handleClick.bind(this, pair)}>
+                          {pair}
                         </div>
                       </td>
                     </tr>

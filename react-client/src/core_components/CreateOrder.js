@@ -10,18 +10,12 @@ class CreateOrder extends React.Component {
     const {type} = data
     return (
       <div className="createOrder">
-        <p>
-          <div className="text">Price</div>
-          <Input placeholder="Price" value={CreateOrderStore.createPrice[type]} onChange={this.changeValue.bind(this, 'price', type)} />
-        </p>
-        <p>
-          <div className="text">Amount</div>
-          <Input placeholder="Amount" value={CreateOrderStore.createAmount[type]} onChange={this.changeValue.bind(this, 'amount', type)} />
-        </p>
-        <p>
-          <div className="text">Total</div>
-          <Input placeholder="Total" value={CreateOrderStore.createTotal[type]} onChange={this.changeValue.bind(this, 'total', type)} />
-        </p>
+        <div className="text">Price</div>
+        <Input placeholder="Price" value={CreateOrderStore.createPrice[type]} onChange={this.changeValue.bind(this, 'price', type)} />
+        <div className="text">Amount</div>
+        <Input placeholder="Amount" value={CreateOrderStore.createAmount[type]} onChange={this.changeValue.bind(this, 'amount', type)} />
+        <div className="text">Total</div>
+        <Input placeholder="Total" value={CreateOrderStore.createTotal[type]} onChange={this.changeValue.bind(this, 'total', type)} />
 
         <Button type={type === 'buy' ? 'success' : 'danger'} onClick={this.createOrder.bind(this, type)}>{type}</Button>
 

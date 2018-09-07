@@ -16,7 +16,7 @@ class Orders extends React.Component {
           columns={OrdersStore.columns}
           data={OrdersStore.ordersComputedText[type]}
         /> */}
-        <table class="table">
+        <table className="table">
           <thead>
             <tr>
               <td>price</td>

@@ -78,18 +78,18 @@ class OrdersStore {
           _askPrice = order.price
         }
       }
-      for (var order of orders.bids) {
-        if (!order.amount) {
+      for (var _order of orders.bids) {
+        if (!_order.amount) {
           // continue
         } else if (!_bidPrice) {
-          _orders.asks.push(order)
-          _bidPrice = order.price
-        } else if (_bidPrice === order.price) {
-          _orders.bids[_orders.bids.length-1].amount += order.amount
+          _orders.asks.push(_order)
+          _bidPrice = _order.price
+        } else if (_bidPrice === _order.price) {
+          _orders.bids[_orders.bids.length-1].amount += _order.amount
           _orders.bids[_orders.bids.length-1].total = _orders.bids[_orders.bids.length-1].amount * _orders.bids[_orders.bids.length-1].price
         } else {
-          _orders.bids.push(order)
-          _bidPrice = order.price
+          _orders.bids.push(_order)
+          _bidPrice = _order.price
         }
       }
     }
@@ -150,13 +150,13 @@ class OrdersStore {
       }
     }
     if ( JSON.stringify(_orders.bids) !== '[]' ) {
-      for (var order of _orders.bids) {
-        order.price = parseFloat(order.price)
-        order.amount = parseFloat(order.amount)
-        order.total = parseFloat(order.total)
-        _bidTotal = order.total + _bidTotal
-        order.total = _bidTotal
-        orders.bids.push(order)
+      for (var _order of _orders.bids) {
+        _order.price = parseFloat(_order.price)
+        _order.amount = parseFloat(_order.amount)
+        _order.total = parseFloat(_order.total)
+        _bidTotal = _order.total + _bidTotal
+        _order.total = _bidTotal
+        orders.bids.push(_order)
       }
     }
     orders.asks = _.orderBy(orders.asks, ['price'], ['asc'])
