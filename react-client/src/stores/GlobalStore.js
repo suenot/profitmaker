@@ -17,6 +17,7 @@ class GlobalStore {
   // }
   // START STOCKS
   @observable stock = 'LIQUI'
+  // @observable stock = ( await localforage.getItem('stock') ) || 'LIQUI'
   stockIsSet = false
   // @observable stock = 'LIQUI'
   // static stock = sessionStored('stock', 'LIQUI')
@@ -42,7 +43,10 @@ class GlobalStore {
 
   // START PAIRS
   @observable pair = 'ETH_BTC'
-  pairIsSet = false
+  // async function() {
+  //   return (await localforage.getItem('pair') || 'ETH_BTC')
+  // }
+  // pairIsSet = false
   @computed get base() {
     return this.pair.split('_')[0]
   }
@@ -104,7 +108,7 @@ localforage.getItem('pair').then(function (value) {
   else store.setPair('ETH_BTC')
 })
 
-autorun(async () => {
+autorun(() => {
 
   //   // we got our value
   // }).catch(function (err) {
@@ -112,8 +116,8 @@ autorun(async () => {
   // })
   console.log(store.stock)
   console.log(store.pair)
-  await localforage.setItem('stock', store.stock)
-  await localforage.setItem('pair', store.pair)
+  localforage.setItem('stock', store.stock)
+  localforage.setItem('pair', store.pair)
   store.fetchStocks()
   store.fetchPairs()
   // trunk.updateStore(store)
