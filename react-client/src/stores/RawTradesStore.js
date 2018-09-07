@@ -2,6 +2,7 @@ import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
 import GlobalStore from './GlobalStore'
+import uuidv1 from 'uuid/v1'
 
 class RawTradesStore {
   @computed get stock() {return GlobalStore.stock }
@@ -15,9 +16,15 @@ class RawTradesStore {
     .then((response) => {
       // response.data
       // this.rawTrades = response.data
-      var data = [...response.data.data.buy, ...response.data.data.sell]
+      var rawTrades = response.data
+      rawTrades.buy.map(function(trade){
+        return trade.uuid = uuidv1()
+      })
+      rawTrades.sell.map(function(trade){
+        return trade.uuid = uuidv1()
+      })
+      var data = [...rawTrades.buy, ...rawTrades.sell]
       this.rawTrades = _.orderBy(data, ['timestamp'], ['desc'])
-
     })
     .catch((error) => {
       this.rawTrades = []

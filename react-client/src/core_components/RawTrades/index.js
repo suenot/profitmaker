@@ -20,21 +20,21 @@ class RawTrades extends React.Component {
               {
                 _.map(RawTradesStore.rawTrades, (item, i) => {
                   return (
-                    <tr className="el-table__row"  key={item['id']}>
+                    <tr className="el-table__row"  key={item.uuid}>
                       <td style={colWidth}>
                         <div className="cell">
-                          <span style={item['side'] === 'buy'?{color: '#ea0371'}:{color: '#83b327'}}>{item['price']}</span>
+                          <span style={item.side === 'buy'?{color: '#ea0371'}:{color: '#83b327'}}>{item.price}</span>
 
                         </div>
                       </td>
                       <td style={colWidth}>
                         <div className="cell">
-                          {item['amount']}
+                          {item.amount}
                         </div>
                       </td>
                       <td style={colWidth}>
                         <div className="cell">
-                          { moment(item['datetime']).format('HH:mm:ss') }
+                          { moment(item.datetime).format('HH:mm:ss') }
                         </div>
                       </td>
                     </tr>
