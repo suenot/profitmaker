@@ -1,5 +1,5 @@
 // import { version, AsyncTrunk, ignore } from './mobx-sync/src/index.ts'
-import { version, AsyncTrunk, ignore } from 'mobx-sync'
+// import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import { observable, action, autorun, computed } from 'mobx'
 import axios from 'axios'
 
@@ -8,17 +8,17 @@ import axios from 'axios'
 // import Crocodile from '../core_components/charts/Crocodile'
 import Pairs from '../core_components/Pairs'
 
-@version(1)
+// @version(1)
 class GlobalStore {
   // constructor() {
   //   const trunk = new SyncTrunk(this, { storage: sessionStorage })
   //   trunk.init()
   // }
   // START STOCKS
-  @observable stock = 'BINANCE'
+  @observable stock = 'LIQUI'
   // static stock = sessionStored('stock', 'LIQUI')
 
-  @ignore @observable stocks = {}
+  @observable stocks = {}
 
   @action setStock(stock) {
     console.log('SET STOCK')
@@ -46,7 +46,7 @@ class GlobalStore {
     return this.pair.split('_')[1]
   }
 
-  @ignore @observable pairs = []
+  @observable pairs = []
 
   @action setPair(_pair) {
     console.log('SET PAIR')
@@ -67,9 +67,9 @@ class GlobalStore {
   // END PAIRS
 
   // START DRAWERS
-  @ignore @observable drawerRightOpen = false
-  @ignore @observable drawerRightComponent = Pairs
-  @ignore @observable drawerRightData = {}
+  @observable drawerRightOpen = false
+  @observable drawerRightComponent = Pairs
+  @observable drawerRightData = {}
   @action drawerRightToggle() {
     this.drawerRightOpen = !this.drawerRightOpen
   }
@@ -83,20 +83,20 @@ const store = window.GlobalStore = new GlobalStore()
 
 export default store
 
-const trunk = new AsyncTrunk(store, { storage: localStorage })
-trunk.init().then(() => {
-  // trunk.getItem
-  // console.log('***********')
-  // do any staff as you wanted with loaded store
-  // console.log(store.user.model.foo)
-})
+// const trunk = new AsyncTrunk(store, { storage: localStorage })
+// trunk.init().then(() => {
+//   // trunk.getItem
+//   // console.log('***********')
+//   // do any staff as you wanted with loaded store
+//   // console.log(store.user.model.foo)
+// })
 
 autorun(() => {
   console.log(store.stock)
   console.log(store.pair)
   store.fetchStocks()
   store.fetchPairs()
-  trunk.updateStore(store)
+  // trunk.updateStore(store)
 })
 
 

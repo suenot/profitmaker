@@ -7,20 +7,6 @@ import { WidthProvider, Responsive } from "react-grid-layout"
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
-
-// components
-// import Stocks from './core_components/Stocks'
-// import Pairs from './core_components/Pairs'
-// import Orders from './core_components/Orders'
-// import OpenOrders from './core_components/OpenOrders'
-// import MyTrades from './core_components/MyTrades'
-// import RawTrades from './core_components/RawTrades'
-// import CreateOrder from './core_components/CreateOrder'
-// import HeikinAshi from './core_components/charts/HeikinAshi'
-// import Crocodile from './core_components/charts/Crocodile'
-// import Balance from './core_components/Balance'
-// import HighstockWithPreloader from './core_components/HighstockWithPreloader'
-
 // icons
 import Clear from '@material-ui/icons/Clear'
 import Settings from '@material-ui/icons/Settings'
@@ -29,13 +15,6 @@ import { inject, observer } from 'mobx-react'
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 const originalLayouts = getFromLS("layouts") || {};
-
-// const Stock = ({ match }) => (
-//   <div>
-//     {match.params.stockId}  {match.params.pair}
-//   </div>
-// )
-
 
 @inject('DashboardsStore')
 @observer

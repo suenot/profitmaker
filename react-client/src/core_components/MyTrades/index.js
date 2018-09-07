@@ -30,7 +30,7 @@ class MyTrades extends React.Component {
               {
                 _.map(MyTradesStore.myTrades, (item, i) => {
                   return (
-                    <tr className="el-table__row">
+                    <tr className="el-table__row" key={item.uuid}>
                       <td style={colWidth}>
                         <div className="cell">
                           id: {item['order']}<br/>

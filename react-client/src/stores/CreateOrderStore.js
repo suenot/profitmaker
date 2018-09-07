@@ -1,4 +1,4 @@
-import { observable, action, autorun, computed } from 'mobx'
+import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import GlobalStore from './GlobalStore'
 import Alert from 'react-s-alert'
@@ -93,8 +93,7 @@ const store = window.CreateOrderStore = new CreateOrderStore()
 
 export default store
 
-autorun(() => {
-  console.log(store.stock)
-  console.log(store.pair)
-  store.fetchMyTrades()
-})
+// autorun(() => {
+//   console.log(store.stock)
+//   console.log(store.pair)
+// })
