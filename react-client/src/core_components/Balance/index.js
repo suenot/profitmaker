@@ -29,13 +29,14 @@ class Balance extends React.Component {
         <table className="simpleTable">
           <thead>
             <tr>
-              <th colSpan="2" className="simpleTable">{(BalanceStore.balance[stock].totalBTC || 0).toFixed(8)} BTC</th>
-              <th colSpan="2" className="simpleTable">{(BalanceStore.balance[stock].totalUSD || 0).toFixed(2)} USD</th>
+              <th colSpan="1" className="simpleTable-header">{BalanceStore.balance[stock].datetime || 0}</th>
+              <th colSpan="1" className="simpleTable-header">{(BalanceStore.balance[stock].totalBTC || 0).toFixed(8)} BTC</th>
+              <th colSpan="2" className="simpleTable-header">{(BalanceStore.balance[stock].totalUSD || 0).toFixed(2)} USD</th>
             </tr>
             <tr>
               <th>coins</th>
               <th>on orders</th>
-              <th>ßTC value</th>
+              <th>BTC value</th>
               <th>USD value</th>
             </tr>
           </thead>
