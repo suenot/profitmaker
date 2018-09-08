@@ -5,12 +5,16 @@ import GlobalStore from './GlobalStore'
 class BalanceStore {
   @computed get stock() {return GlobalStore.stock }
   @computed get pair() {return GlobalStore.pair }
-    // @observable precision = 8
-    // @observable _total = 0
-    // @observable _free = 0
-    // @observable _used = 0
-    @observable balance = {'TOTAL': {'data': {}}}
-    @observable stock = 'TOTAL'
+  @observable precision = 8
+  // @observable _total = 0
+  // @observable _free = 0
+  // @observable _used = 0
+  @observable balance = {
+    'TOTAL': {'totalBTC': 0, 'totalUSD': 0, 'data': {}},
+    'BINANCE': {'totalBTC': 0, 'totalUSD': 0, 'data': {}},
+    'LIQUI': {'totalBTC': 0, 'totalUSD': 0, 'data': {}}
+  }
+  // @observable stock = 'TOTAL'
 
     // @computed get total() {
     //   if (this.balance) {
