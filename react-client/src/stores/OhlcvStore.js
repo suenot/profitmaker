@@ -1,4 +1,4 @@
-import { observable, action, computed, autorun, toJS } from 'mobx'
+import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
 import GlobalStore from './GlobalStore'
 import Alert from 'react-s-alert'
@@ -12,7 +12,6 @@ class OhlcvStore {
 
   @computed get ohlcvComputed() {
     if ( JSON.stringify(this.ohlcv) !== '[]' ) {
-    // if ( toJS(this.ohlcv) !== [] ) {
       return this.ohlcv.map((item) => {
         return {
           'date': new Date(item[0]),

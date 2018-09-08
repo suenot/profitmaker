@@ -34,7 +34,7 @@ class RawTrades extends React.Component {
                       </td>
                       <td style={colWidth}>
                         <div className="cell">
-                          { moment(item.datetime).format('HH:mm:ss') }
+                          { moment(item.datetime).format('DD.MM.YY HH:mm:ss') }
                         </div>
                       </td>
                     </tr>

@@ -37,17 +37,17 @@ class Balance extends React.Component {
             <tr>
               <th>coins</th>
               <th>on orders</th>
-              <th>BTC value</th>
-              <th>USD value</th>
+              <th>BTC</th>
+              <th>USD</th>
             </tr>
           </thead>
           <tbody>
             {
 
-              _.map(balanceData.data, (item, i) => {
+              _.map(balanceData.data, (item) => {
 
                 return (
-                  <tr key={i}>
+                  <tr key={item.shortName}>
                     <td>
                       {(item.free || 0).toFixed(8)} {item.shortName}
                     </td>

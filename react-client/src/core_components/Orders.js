@@ -11,26 +11,21 @@ class Orders extends React.Component {
     const {type} = data
     return (
       <div>
-        {/* <Table
-          style={{width: '100%'}}
-          columns={OrdersStore.columns}
-          data={OrdersStore.ordersComputedText[type]}
-        /> */}
-        <table className="table">
+        <table className="simpleTable">
           <thead>
             <tr>
-              <td>price</td>
-              <td>amount</td>
-              <td>total</td>
+              <th className="simpleTable-header">price</th>
+              <th className="simpleTable-header">amount</th>
+              <th className="simpleTable-header">total</th>
             </tr>
           </thead>
           <tbody>
             {
-              _.map(OrdersStore.ordersComputedText[type], (order) => {
+              _.map(OrdersStore.orders[type], (order) => {
                 return <tr key={order.id} onClick={this.setAll.bind(this, order.price, order.amount, order.total)}>
-                  <td>{order.price}</td>
-                  <td>{order.amount}</td>
-                  <td>{order.total}</td>
+                  <td>{order.price.toFixed(8)}</td>
+                  <td>{order.amount.toFixed(8)}</td>
+                  <td>{order.total.toFixed(8)}</td>
                 </tr>
               })
             }
@@ -39,14 +34,6 @@ class Orders extends React.Component {
       </div>
     )
   }
-  // setPrice(price, e) {
-  //   e.stopPropagation()
-  //   this.props.CreateOrderStore.setPrice(price)
-  // }
-  // setAmount(amount, e) {
-  //   e.stopPropagation()
-  //   this.props.CreateOrderStore.setAmount(amount)
-  // }
   setAll(price, amount, total) {
     this.props.CreateOrderStore.setPrice(price)
     this.props.CreateOrderStore.setAmount(amount)
