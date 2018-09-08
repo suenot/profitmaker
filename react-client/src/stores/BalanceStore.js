@@ -52,6 +52,7 @@ class BalanceStore {
     @action fetchBalance(){
       axios.get('http://localhost:8051/balance')
       .then((response) => {
+        console.log(response)
         this.balance = response.data
         // this._free = response.data[this.stock]['free']
         // this._used = response.data[this.stock]['used']
