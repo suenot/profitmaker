@@ -1,4 +1,5 @@
 const express = require('express')
+const _ = require('lodash')
 const app = express()
 var bodyParser = require('body-parser')
 const serializeError = require('serialize-error')
@@ -74,7 +75,10 @@ const main = async () => {
 		app.get('/balance/:stock', function (req, res) {
 			try {
 				var stock = req.params.stock
-				res.json(global.BALANCE[stock])
+				var balance = global.BALANCE[stock]
+				balance.data = _.toArray(balance.data)
+				balance.data = _.orderBy(balance.data, ['totalUSD'], ['desc'])
+				res.json(balance)
 			} catch (err) {
 				res.status(500).send({ error: 'balance get ' + stock + ' failed!' })
 				console.log('openOrders ERROR', err)

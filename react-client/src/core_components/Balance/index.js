@@ -1,6 +1,7 @@
 import React from 'react'
 import _ from 'lodash'
 import { inject, observer } from 'mobx-react'
+import moment from 'moment'
 
 // import ReactEcharts from 'echarts-for-react'
 
@@ -29,7 +30,7 @@ class Balance extends React.Component {
         <table className="simpleTable">
           <thead>
             <tr>
-              <th colSpan="1" className="simpleTable-header">{balanceData.datetime || 0}</th>
+              <th colSpan="1" className="simpleTable-header">{moment(balanceData.datetime).format('DD.MM.YY HH:mm:ss') || 0}</th>
               <th colSpan="1" className="simpleTable-header">{(balanceData.totalBTC || 0).toFixed(8)} BTC</th>
               <th colSpan="2" className="simpleTable-header">{(balanceData.totalUSD || 0).toFixed(2)} USD</th>
             </tr>
@@ -48,7 +49,7 @@ class Balance extends React.Component {
                 return (
                   <tr key={i}>
                     <td>
-                      {(item.free || 0).toFixed(8)} {i}
+                      {(item.free || 0).toFixed(8)} {item.shortName}
                     </td>
                     <td>
                       {(item.used || 0).toFixed(8)}

@@ -44,6 +44,7 @@ const updateStocksBalance = async function(stockName) {
           var calcFree = await calculateCoin(data['free'][coin], coin)
           var calcUsed = await calculateCoin(data['used'][coin], coin)
           res['data'][coin] = {
+            'shortName': coin,
             'total': value,
             'totalUSD': calcTotal.usd,
             'totalBTC': calcTotal.btc,
@@ -91,6 +92,7 @@ const updateETHBalance = async function(stockName, stock) {
     var response = await axios.get('http://api.ethplorer.io/getAddressInfo/' + stock.address + '?apiKey=freekey')
     var ethCalc = await calculateCoin(response.data['ETH']['balance'], 'ETH')
     res['data']['ETH'] = {
+      'shortName': 'ETH',
       'total': response.data['ETH']['balance'],
       'totalUSD': ethCalc.usd,
       'totalBTC': ethCalc.btc,
@@ -115,6 +117,7 @@ const updateETHBalance = async function(stockName, stock) {
       // console.log(token['tokenInfo'])
       if (token['tokenInfo']['price'] == false) {
         res['data'][symbol] = {
+          'shortName': symbol,
           'total': balance,
           'totalUSD': 0,
           'totalBTC': 0,
@@ -127,6 +130,7 @@ const updateETHBalance = async function(stockName, stock) {
         }
       } else {
         res['data'][symbol] = {
+          'shortName': symbol,
           'total': balance,
           'totalUSD': calc.usd,
           'totalBTC': calc.btc,
@@ -173,6 +177,7 @@ const updateTotal = async function () {
           // console.log(key, value)
           if ( total['data'][key] === undefined ) {
             total['data'][key] = {
+              'shortName': key,
               'total': 0,
               'totalUSD': 0,
               'totalBTC': 0,
