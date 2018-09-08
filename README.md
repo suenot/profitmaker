@@ -47,7 +47,7 @@ First, need to set /private key for
 ```
 
 #### terminal server api:
-```http://kupi.network:8051/```
+```http://localhost:8051/```
 ```
 /balance
 /openOrders/:stock/:pair

@@ -16,9 +16,9 @@ class Balance extends React.Component {
     if (!BalanceStore.stock) {
       return (<div></div>)
     }
-    var stock = total ? 'TOTAL' : BalanceStore.stock
+    var balanceData = total ? BalanceStore['balanceTotal'] : BalanceStore['balanceStock']
 
-    console.log(stock)
+    // console.log(stock)
     return (
       <div>
         {/* <ReactEcharts
@@ -29,9 +29,9 @@ class Balance extends React.Component {
         <table className="simpleTable">
           <thead>
             <tr>
-              <th colSpan="1" className="simpleTable-header">{BalanceStore.balance[stock].datetime || 0}</th>
-              <th colSpan="1" className="simpleTable-header">{(BalanceStore.balance[stock].totalBTC || 0).toFixed(8)} BTC</th>
-              <th colSpan="2" className="simpleTable-header">{(BalanceStore.balance[stock].totalUSD || 0).toFixed(2)} USD</th>
+              <th colSpan="1" className="simpleTable-header">{balanceData.datetime || 0}</th>
+              <th colSpan="1" className="simpleTable-header">{(balanceData.totalBTC || 0).toFixed(8)} BTC</th>
+              <th colSpan="2" className="simpleTable-header">{(balanceData.totalUSD || 0).toFixed(2)} USD</th>
             </tr>
             <tr>
               <th>coins</th>
@@ -43,7 +43,7 @@ class Balance extends React.Component {
           <tbody>
             {
 
-              _.map(BalanceStore.balance[stock].data, (item, i) => {
+              _.map(balanceData.data, (item, i) => {
 
                 return (
                   <tr key={i}>

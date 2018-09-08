@@ -9,11 +9,13 @@ class BalanceStore {
   // @observable _total = 0
   // @observable _free = 0
   // @observable _used = 0
-  @observable balance = {
-    'TOTAL': {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}},
-    'BINANCE': {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}},
-    'LIQUI': {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}}
-  }
+  @observable balanceTotal = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}}
+  @observable balanceStock = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}}
+  // @observable balance = {
+  //   'TOTAL': {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}},
+  //   'BINANCE': {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}},
+  //   'LIQUI': {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}}
+  // }
   // @observable stock = 'TOTAL'
 
     // @computed get total() {
@@ -49,11 +51,16 @@ class BalanceStore {
     // }
 
 
-    @action fetchBalance(){
-      axios.get('http://localhost:8051/balance')
+    @action fetchBalance(stock){
+      axios.get(`http://localhost:8051/balance/${stock}`)
       .then((response) => {
-        console.log(response)
-        this.balance = response.data
+        console.log(response.data)
+        if (stock === 'TOTAL') {
+          this.balanceTotal = response.data
+        } else {
+          this.balanceStock = response.data
+        }
+        
         // this._free = response.data[this.stock]['free']
         // this._used = response.data[this.stock]['used']
       })
@@ -68,5 +75,6 @@ export default store
 autorun(() => {
   console.log(store.stock)
   console.log(store.pair)
-  store.fetchBalance()
+  store.fetchBalance(store.stock)
+  store.fetchBalance('TOTAL')
 })

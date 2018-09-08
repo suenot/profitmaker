@@ -71,8 +71,14 @@ const main = async () => {
 
 		//
 		// balance (pie chart)
-		app.get('/balance', function (req, res) {
-			res.json(global.BALANCE)
+		app.get('/balance/:stock', function (req, res) {
+			try {
+				var stock = req.params.stock
+				res.json(global.BALANCE[stock])
+			} catch (err) {
+				res.status(500).send({ error: 'balance get ' + stock + ' failed!' })
+				console.log('openOrders ERROR', err)
+			}
 		})
 		app.get('/openOrders/:stock/:pair', async function (req, res) {
 			try {
