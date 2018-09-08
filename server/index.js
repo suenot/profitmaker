@@ -39,6 +39,7 @@ global.TRADESRAW
 var startMongo = require('./core_components/startMongo')
 var updateBalance = require('./core_components/updateBalance')
 var initStocks = require('./core_components/initStocks')
+var initBalance = require('./core_components/initBalance')
 var updateCoinmarketcap = require('./core_components/updateCoinmarketcap')
 var updateTradesHistory = require('./core_components/updateTradesHistory')
 // var updateOpenOrders = require('./core_components/updateOpenOrders')
@@ -57,10 +58,11 @@ const main = async () => {
 	try {
 
 		await initStocks(privateKeys)
+		await initBalance(localMongo)
 		// получение публичных данных с сервера
 		try { updateCoinmarketcap(30000) } catch(err) { console.log(err) } // Ведро - нужно для ссхт апи
-
-
+    //
+    //
 		// // получение приватных данных с бирж
 		try { updateBalance(localMongo, privateKeys, ethPockets, 30000) } catch(err) { console.log(err) }
 		try { updateTradesHistory(localMongo, privateKeys, 30000) } catch(err) { console.log(err) }
