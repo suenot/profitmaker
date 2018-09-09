@@ -84,8 +84,8 @@ class CreateOrderStore {
   @action setTotal(total) {
     // this['buy'].amount = amount
     // this['sell'].amount = amount
-    this.createTotal['buy'] = total
-    this.createTotal['sell'] = total
+    this.createTotal['buy'] = total.toFixed(8)
+    this.createTotal['sell'] = total.toFixed(8)
   }
 }
 

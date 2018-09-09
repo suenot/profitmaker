@@ -9,8 +9,8 @@ class BalanceStore {
   // @observable _total = 0
   // @observable _free = 0
   // @observable _used = 0
-  @observable balanceTotal = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}}
-  @observable balanceStock = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}}
+  @observable balanceTotal = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': []}
+  @observable balanceStock = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': []}
   // @observable balance = {
   //   'TOTAL': {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}},
   //   'BINANCE': {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': {}},
