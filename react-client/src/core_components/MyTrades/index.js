@@ -1,61 +1,51 @@
 import React from 'react'
 import _ from 'lodash'
 import { inject, observer } from 'mobx-react'
+import moment from 'moment'
 
 @inject('MyTradesStore')
 @observer
 class MyTrades extends React.Component {
 
   render() {
-    var colWidth = {
-      width: 220
-    }
+    
     const {MyTradesStore} = this.props
     return (
       <div>
-        <div className="el-table el-table--fit el-table--enable-row-hover myTrades-table">
-          <div className="el-table__header-wrapper">
-            <table className="el-table__header">
-              <thead>
-                <tr>
-                  <th className="is-leaf" style={colWidth}><div className="cell">orderInfo</div></th>
-                  <th className="is-leaf" style={colWidth}><div className="cell">tradeInfo</div></th>
+        <table className="simpleTable">
+          <thead>
+            <tr>
+              <th>id</th>
+              <th>date</th>
+              <th>symbol</th>
+              <th>type</th>
+              <th>side</th>
+              <th>price</th>
+              <th>amount</th>
+              <th>cost</th>
+              <th>fee</th>
+            </tr>
+          </thead>
+          <tbody>
+          {
+            _.map(MyTradesStore.myTrades, (item, i) => {
+              return (
+                <tr key={item.uuid}>
+                  <td>{item['order']}</td>
+                  <td>{moment(item['datetime']).format('DD.MM.YY HH:mm:ss')}</td>
+                  <td>{item['symbol']}</td>
+                  <td>{item['type']}</td>
+                  <td>{item['side']}</td>
+                  <td>{item['price']}</td>
+                  <td>{item['amount']}</td>
+                  <td>{item['cost']}</td>
+                  <td>{item['fee']['cost']} {item['fee']['currency']}</td>
                 </tr>
-              </thead>
-            </table>
-          </div>
-          <div className="el-table__body-wrapper">
-            <table className="el-table__body">
-              <tbody>
-              {
-                _.map(MyTradesStore.myTrades, (item, i) => {
-                  return (
-                    <tr className="el-table__row" key={item.uuid}>
-                      <td style={colWidth}>
-                        <div className="cell">
-                          id: {item['order']}<br/>
-                          date: {item['datetime']}<br/>
-                          symbol:{item['symbol']}<br/>
-                          type: {item['type']}<br/>
-                          side: {item['side']}
-                        </div>
-                      </td>
-                      <td style={colWidth}>
-                        <div className="cell">
-                          price: {item['price']}<br/>
-                          amount: {item['amount']}<br/>
-                          cost: {item['cost']}<br/>
-                          fee: {item['fee']['cost']} {item['fee']['currency']}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              }
-              </tbody>
-            </table>
-          </div>
-        </div>
+              )
+            })
+          }
+          </tbody>
+        </table>
       </div>
     )
   }

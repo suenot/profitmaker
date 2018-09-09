@@ -17,13 +17,14 @@ class RawTradesStore {
       // response.data
       // this.rawTrades = response.data
       var rawTrades = response.data
-      rawTrades.buy.map(function(trade){
+      console.log(response.data)
+      rawTrades.data.buy.map(function(trade){
         return trade.uuid = uuidv1()
       })
-      rawTrades.sell.map(function(trade){
+      rawTrades.data.sell.map(function(trade){
         return trade.uuid = uuidv1()
       })
-      var data = [...rawTrades.buy, ...rawTrades.sell]
+      var data = [...rawTrades.data.buy, ...rawTrades.data.sell]
       this.rawTrades = _.orderBy(data, ['timestamp'], ['desc'])
     })
     .catch((error) => {

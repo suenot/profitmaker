@@ -13,38 +13,30 @@ class RawTrades extends React.Component {
     const {RawTradesStore} = this.props
     return (
       <div>
-        <div className="el-table el-table--fit el-table--enable-row-hover myTrades-table no-thead">
-          <div className="el-table__body-wrapper">
-            <table className="el-table__body">
-              <tbody>
-              {
-                _.map(RawTradesStore.rawTrades, (item, i) => {
-                  return (
-                    <tr className="el-table__row"  key={item.uuid}>
-                      <td style={colWidth}>
-                        <div className="cell">
-                          <span style={item.side === 'buy'?{color: '#ea0371'}:{color: '#83b327'}}>{item.price}</span>
-
-                        </div>
-                      </td>
-                      <td style={colWidth}>
-                        <div className="cell">
-                          {item.amount}
-                        </div>
-                      </td>
-                      <td style={colWidth}>
-                        <div className="cell">
-                          { moment(item.datetime).format('DD.MM.YY HH:mm:ss') }
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              }
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <table className="simpleTable">
+          <thead>
+            <tr>
+              <th>price</th>
+              <th>amount</th>
+              <th>datetime</th>
+            </tr>
+          </thead>
+          <tbody>
+          {
+            _.map(RawTradesStore.rawTrades, (item, i) => {
+              return (
+                <tr key={item.uuid}>
+                  <td style={item.side === 'buy'?{color: '#ea0371'}:{color: '#83b327'}}>
+                    <span >{item.price}</span>
+                  </td>
+                  <td>{item.amount}</td>
+                  <td>{ moment(item.datetime).format('DD.MM.YY HH:mm:ss') }</td>
+                </tr>
+              )
+            })
+          }
+          </tbody>
+        </table>
       </div>
     )
   }
