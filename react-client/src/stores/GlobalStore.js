@@ -40,6 +40,9 @@ class GlobalStore {
 
   @ignore @observable pairs = []
 
+  @action setPairsFilter(_pair) {
+    console.log('setPairsFilter')
+  }
   @action setPair(_pair) {
     console.log('SET PAIR')
     this.pair = _pair

@@ -12,27 +12,28 @@ class Pairs extends React.Component {
     const {GlobalStore} = this.props
     return (
       <div>
-        <div className="el-table el-table--fit noHeader-table">
-          <div className="el-table__body-wrapper">
-            <table className="el-table__body">
-              <tbody>
-                {
-                  _.map(GlobalStore.pairs, (pair) => {
-                    return <tr key={pair} className="el-table__row">
-                      <td style={colWidth}>
-                        <div className="cell" onClick={this.handleClick.bind(this, pair)}>
-                          {pair}
-                        </div>
-                      </td>
-                    </tr>
-                  })
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
+        <table className="simpleTable">
+          <tbody>
+            {
+              _.map(GlobalStore.pairs, (pair) => {
+                return <tr key={pair}>
+                  <td style={colWidth}>
+                    <div className="cell" onClick={this.handleClick.bind(this, pair)}>
+                      {pair}
+                    </div>
+                  </td>
+                </tr>
+              })
+            }
+          </tbody>
+        </table>
       </div>
     )
+  }
+  toggleFilter(e) {
+    console.log(e.target.value)
+    this.props.GlobalStore.setPairsFilter(e.target.value)
   }
   handleClick(pair) {
     this.props.GlobalStore.setPair(pair)
