@@ -16,6 +16,8 @@ class DashboardsStore {
     {i: "10", component: './core_components/RawTrades', header: "RawTrades", data: {}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
     {i: "11", component: './core_components/CreateOrder', header: "CreateOrder sell", data: {type: "sell"}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
     {i: "12", component: './core_components/CreateOrder', header: "CreateOrder buy", data: {type: "buy"}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
+    {i: "13", component: './core_components/BalancePie', header: "Total balance", data: {total: true}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
+    {i: "14", component: './core_components/BalancePie', header: "Balance", data: {total: false}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
 
 
   ]
