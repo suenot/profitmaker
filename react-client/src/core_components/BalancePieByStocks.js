@@ -82,7 +82,6 @@ class BalancePie extends React.Component {
         option={option}
         style={{width: '100%', height: '100%', position: 'absolute'}}
         className='react_for_echarts'
-        theme={'light'}
       />
     )
   }

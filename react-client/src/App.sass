@@ -105,6 +105,7 @@ body
   width: 100%
   border: 1px solid #bebebe
   outline: none
+  padding: 2px 5px
   &:focus
     border: 1px solid red
 .simpleTable
@@ -112,6 +113,8 @@ body
   border-spacing: 0px
   border-collapse: separate
   width: 100%
+  tr:hover td
+    background: rgba(0,0,0,.03)
   th, td
     padding: 4px 6px
     white-space: nowrap
@@ -120,7 +123,6 @@ body
     font-size: 13px
   th
     font-size: 12px
-
   td
     font-weight: 300
     font-size: 12px

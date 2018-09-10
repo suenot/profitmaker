@@ -17,7 +17,6 @@ class RawTradesStore {
       // response.data
       // this.rawTrades = response.data
       var rawTrades = response.data
-      console.log(response.data)
       rawTrades.data.buy.map(function(trade){
         return trade.uuid = uuidv1()
       })

@@ -43,6 +43,7 @@ var initStocks = require('./core_components/initStocks')
 var initBalance = require('./core_components/initBalance')
 var updateCoinmarketcap = require('./core_components/updateCoinmarketcap')
 var updateTradesHistory = require('./core_components/updateTradesHistory')
+var balanceHistory = require('./core_components/balanceHistory')
 // var updateOpenOrders = require('./core_components/updateOpenOrders')
 var {openOrders, fetchOpenOrder, getOpenOrders} = require('./core_components/openOrders')
 var {updateMarkets, getStocks} = require('./core_components/updateMarkets')
@@ -81,9 +82,19 @@ const main = async () => {
 				res.json(balance)
 			} catch (err) {
 				res.status(500).send({ error: 'balance get ' + stock + ' failed!' })
-				console.log('openOrders ERROR', err)
+				console.log('balance ERROR', err)
 			}
-		})
+    })
+		app.get('/balance/history/:stock/', async function (req, res) {
+			try {
+        var stock = req.params.stock
+        var result = await balanceHistory(stock, localMongo)
+        res.json(result)
+			} catch (err) {
+				res.status(500).send({ error: 'balance history get ' + stock + ' failed!' })
+				console.log('balance history ERROR', err)
+			}
+    })
 		app.get('/openOrders/:stock/:pair', async function (req, res) {
 			try {
 				var stock = req.params.stock

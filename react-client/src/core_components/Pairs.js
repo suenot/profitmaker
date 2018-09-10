@@ -19,7 +19,7 @@ class Pairs extends React.Component {
               _.map(GlobalStore.pairs, (pair) => {
                 return <tr key={pair}>
                   <td style={colWidth}>
-                    <div className="cell" onClick={this.handleClick.bind(this, pair)}>
+                    <div className="cell" onClick={this.setPair.bind(this, pair)}>
                       {pair}
                     </div>
                   </td>
@@ -35,7 +35,7 @@ class Pairs extends React.Component {
     console.log(e.target.value)
     this.props.GlobalStore.setPairsFilter(e.target.value)
   }
-  handleClick(pair) {
+  setPair(pair) {
     this.props.GlobalStore.setPair(pair)
   }
 }

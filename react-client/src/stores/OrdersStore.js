@@ -18,7 +18,6 @@ class OrdersStore {
     axios.get(`http://localhost:8051/orders/${this.stock}/${this.pair}`)
     .then((response) => {
       var _orders = response.data
-      console.log(_orders)
       // for(let ask in _orders.asks) {
       var sumAsks = 0
       for( let [key, order] of Object.entries(_orders.asks) ) {
@@ -49,7 +48,6 @@ class OrdersStore {
           sum: sumBids
         }
       }
-      console.log(_orders)
       this.orders = _orders
     })
     .catch((error) => {
