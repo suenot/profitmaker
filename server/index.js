@@ -161,7 +161,7 @@ const main = async () => {
 		app.get('/stocks', async function (req, res) {
 			try {
 				var stocks = await getStocks()
-				res.json(stocks)
+				res.json(_.toArray((stocks)))
 			} catch (err) {
 				res.status(500).send({ error: 'function getStocks failed!' })
 				console.log('getStocks ERROR', err)

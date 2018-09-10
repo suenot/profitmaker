@@ -1,12 +1,18 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import GlobalStore from './GlobalStore'
+import BalanceStore from './BalanceStore'
 import Alert from 'react-s-alert'
 
 
 class CreateOrderStore {
   @computed get stock() {return GlobalStore.stock }
   @computed get pair() {return GlobalStore.pair }
+
+  @computed get availableBuy() {return BalanceStore.availableBuy }
+  @computed get availableSell() {return BalanceStore.availableSell }
+
+  
 
   @observable createPrice = {'buy': '', 'sell': ''}
   @observable createAmount = {'buy': '', 'sell': ''}

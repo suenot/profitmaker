@@ -18,8 +18,8 @@ class DashboardsStore {
     {i: "12", component: './core_components/CreateOrder', header: "CreateOrder buy", data: {type: "buy"}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
     // {i: "13", component: './core_components/BalancePie', header: "Total balance", data: {total: true}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
     // {i: "14", component: './core_components/BalancePie', header: "Balance", data: {total: false}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
-    {i: "15", component: './core_components/BalanceHistoryArea', header: "Balance history", data: {total: false}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
-    {i: "16", component: './core_components/BalanceHistoryArea', header: "Total balance history", data: {total: true}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
+    // {i: "15", component: './core_components/BalanceHistoryArea', header: "Balance history", data: {total: false}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
+    // {i: "16", component: './core_components/BalanceHistoryArea', header: "Total balance history", data: {total: true}, x: 2, y: 0, w: 5, h: 5, minW: 2, minH: 3},
   ]
 }
 

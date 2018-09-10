@@ -13,7 +13,7 @@ class Stocks extends React.Component {
         <table className="simpleTable">
           <tbody>
             {
-              _.map(GlobalStore.stocks, (stock) => {
+              _.map(GlobalStore.stocksComputed, (stock) => {
                 return <tr key={stock.name} className="el-table__row">
                   <td><div className="cell" onClick={this.setStock.bind(this, stock.name)}>{stock.name}</div></td>
                 </tr>
@@ -25,8 +25,7 @@ class Stocks extends React.Component {
     )
   }
   toggleFilter(e) {
-    console.log(e.target.value)
-    this.props.GlobalStore.setPairsFilter(e.target.value)
+    this.props.GlobalStore.setStocksFilter(e.target.value)
   }
   setStock(stock) {
     this.props.GlobalStore.setStock(stock)

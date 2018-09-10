@@ -3,7 +3,14 @@ const _ = require('lodash')
 
 const balanceHistory = async function(stock, db) {
   try {
-    var balanceHistory = await db.collection('balanceTimeseries').find({'stock': stock}).toArray()
+    var balanceHistory = await db.collection('balanceTimeseries').find(
+      {
+        'stock': stock,
+        'datetime' : { 
+          $lt: new Date(), 
+          $gte: new Date(new Date().setDate(new Date().getDate()-7))
+        }
+    }).toArray()
     // TODO вынести в глобальные переменные и в отдельный файл
     var BALANCE_HISTORY_COINS = new Set()
     var BALANCE_HISTORY_TIMESTAMPS = []
@@ -11,6 +18,8 @@ const balanceHistory = async function(stock, db) {
     var BALANCE_HISTORY_BTC = {} // [] for every coin
     var SERIES = []
     // составляем множество из монет
+
+
     _.forEach(balanceHistory, function(item){
       BALANCE_HISTORY_TIMESTAMPS.push(item.timestamp)
       _.forEach(item.data, function(coinData, coin){
@@ -21,7 +30,7 @@ const balanceHistory = async function(stock, db) {
     })
     // записываем балансы по монетам (даже нулевые)
     _.forEach(balanceHistory, function(item){
-      _.forEach([...BALANCE_HISTORY_COINS], function(coin){
+      _.forEach(Array.from(BALANCE_HISTORY_COINS), function(coin){
         if (item.data[coin]) {
           BALANCE_HISTORY_USD[coin].push(item.data[coin].totalUSD)
           BALANCE_HISTORY_BTC[coin].push(item.data[coin].totalBTC)
@@ -32,7 +41,7 @@ const balanceHistory = async function(stock, db) {
       })
     })
     // собираем series
-    _.forEach([...BALANCE_HISTORY_COINS], function(coin){
+    _.forEach(Array.from(BALANCE_HISTORY_COINS), function(coin){
       SERIES.push({
         name: coin,
         type:'line',
@@ -42,7 +51,7 @@ const balanceHistory = async function(stock, db) {
       })
     })
     return {
-      coins: [...BALANCE_HISTORY_COINS],
+      coins: Array.from(BALANCE_HISTORY_COINS),
       timestamps: BALANCE_HISTORY_TIMESTAMPS,
       series: SERIES
     }

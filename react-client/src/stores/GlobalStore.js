@@ -1,6 +1,7 @@
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import { observable, action, autorun, computed } from 'mobx'
 import axios from 'axios'
+import _ from 'lodash'
 
 // components
 import Pairs from '../core_components/Pairs'
@@ -10,8 +11,20 @@ class GlobalStore {
 
   @observable stock = 'LIQUI'
 
-  @ignore @observable stocks = {}
+  @ignore @observable stocks = []
+  @ignore @observable stocksFilter = ''
 
+  @action setStocksFilter(_stock) {
+    this.stocksFilter = _stock
+  }
+
+  @computed get stocksComputed() {
+    return this.stocks.filter((stock) => {
+      return stock.name.toLowerCase().indexOf( this.stocksFilter.toLowerCase() ) !== -1
+    })
+  }
+
+  
   @action setStock(stock) {
     console.log('SET STOCK')
     this.stock = stock
@@ -27,10 +40,12 @@ class GlobalStore {
       console.log(error)
     })
   }
+ 
   // END STOCKS
 
   // START PAIRS
   @observable pair = 'ETH_BTC'
+  @ignore @observable pairsFilter = ''
   @computed get base() {
     return this.pair.split('_')[0]
   }
@@ -39,10 +54,19 @@ class GlobalStore {
   }
 
   @ignore @observable pairs = []
+  
+  @computed get pairsComputed() {
+    return this.pairs.filter( (pair) => {
+      return pair.toLowerCase().indexOf( this.pairsFilter.toLowerCase() ) !== -1
+    })
+  }
 
   @action setPairsFilter(_pair) {
-    console.log('setPairsFilter')
+    this.pairsFilter = _pair
   }
+  
+
+
   @action setPair(_pair) {
     console.log('SET PAIR')
     this.pair = _pair
