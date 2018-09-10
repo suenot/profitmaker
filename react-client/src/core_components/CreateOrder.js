@@ -9,14 +9,23 @@ class CreateOrder extends React.Component {
     const {CreateOrderStore, data } = this.props
     const {type} = data
     return (
+      
       <div className="createOrder">
-        <p>available: {(type === 'buy' ? CreateOrderStore.availableBuy : CreateOrderStore.availableSell).toFixed(8)} {type === 'buy' ? CreateOrderStore.pair.split('_')[1] : CreateOrderStore.pair.split('_')[0]}</p>
-        <div className="text">Price</div>
-        <Input placeholder="Price" value={CreateOrderStore.createPrice[type]} onChange={this.changeValue.bind(this, 'price', type)} />
-        <div className="text">Amount</div>
-        <Input placeholder="Amount" value={CreateOrderStore.createAmount[type]} onChange={this.changeValue.bind(this, 'amount', type)} />
-        <div className="text">Total</div>
-        <Input placeholder="Total" value={CreateOrderStore.createTotal[type]} onChange={this.changeValue.bind(this, 'total', type)} />
+        <div className="createOrder-header">
+          Available: {(type === 'buy' ? CreateOrderStore.availableBuy : CreateOrderStore.availableSell).toFixed(8)} {type === 'buy' ? CreateOrderStore.pair.split('_')[1] : CreateOrderStore.pair.split('_')[0]}
+        </div>
+        <div className="createOrder-formGroup">
+          <div className="text">Price</div>
+          <Input placeholder="Price" value={CreateOrderStore.createPrice[type]} onChange={this.changeValue.bind(this, 'price', type)} append={type === 'buy' ? CreateOrderStore.pair.split('_')[1] : CreateOrderStore.pair.split('_')[0]}/>
+        </div>
+        <div className="createOrder-formGroup">
+          <div className="text">Amount</div>
+          <Input placeholder="Amount" value={CreateOrderStore.createAmount[type]} onChange={this.changeValue.bind(this, 'amount', type)} append={type === 'buy' ? CreateOrderStore.pair.split('_')[0] : CreateOrderStore.pair.split('_')[1]}/>
+        </div>
+        <div className="createOrder-formGroup">
+          <div className="text">Total</div>
+          <Input placeholder="Total" value={CreateOrderStore.createTotal[type]} onChange={this.changeValue.bind(this, 'total', type)} append={type === 'buy' ? CreateOrderStore.pair.split('_')[1] : CreateOrderStore.pair.split('_')[0]}/>
+        </div>
 
         <Button type={type === 'buy' ? 'success' : 'danger'} onClick={this.createOrder.bind(this, type)}>{type}</Button>
 
