@@ -8,9 +8,6 @@ import moment from 'moment'
 @observer
 class OpenOrders extends React.Component {
   render() {
-    var colWidth = {
-      width: 220
-    }
     const {OpenOrdersStore} = this.props
     return (
       <div>

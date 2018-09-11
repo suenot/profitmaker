@@ -1,5 +1,4 @@
 import React from 'react'
-import _ from 'lodash'
 import { inject, observer } from 'mobx-react'
 import Preloader from './Preloader'
 import ReactEcharts from 'echarts-for-react'
@@ -11,12 +10,6 @@ class BalancePie extends React.Component {
     const {BalanceStore, data} = this.props
     const {total} = data
     var balanceData = total ? BalanceStore['balanceHistoryTotal'] : BalanceStore['balanceHistoryStock']
-    // console.log(balanceData)
-    // var legendData = []
-    // var seriesData = []
-    // var selected = {}
-    // var totalUSD = balanceData.totalUSD
-    // var otherUSD = 0
     if (JSON.stringify(balanceData) === '[]') {
       return <Preloader />
     }

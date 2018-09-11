@@ -1,7 +1,6 @@
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import { observable, action, autorun, computed } from 'mobx'
 import axios from 'axios'
-import _ from 'lodash'
 
 // components
 import Pairs from '../core_components/Pairs'
