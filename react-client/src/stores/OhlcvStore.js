@@ -1,7 +1,6 @@
 import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
 import GlobalStore from './GlobalStore'
-import Alert from 'react-s-alert'
 
 class OhlcvStore {
 
@@ -38,12 +37,6 @@ class OhlcvStore {
     })
     .catch((error) => {
       this.ohlcv = []
-      Alert.error('OHLCV error', {
-        position: 'bottom-right',
-        effect: 'scale',
-        beep: false,
-        timeout: 'none'
-      })
     })
   }
 

@@ -7,9 +7,6 @@ import moment from 'moment'
 @observer
 class RawTrades extends React.Component {
   render() {
-    var colWidth = {
-      width: 220
-    }
     const {RawTradesStore} = this.props
     return (
       <div>

@@ -8,7 +8,7 @@ import moment from 'moment'
 class MyTrades extends React.Component {
 
   render() {
-    
+
     const {MyTradesStore} = this.props
     return (
       <div>
@@ -36,10 +36,10 @@ class MyTrades extends React.Component {
                   <td>{item['symbol']}</td>
                   <td>{item['type']}</td>
                   <td>{item['side']}</td>
-                  <td>{item['price']}</td>
+                  <td>{item['price'].toFixed(8)}</td>
                   <td>{item['amount']}</td>
                   <td>{item['cost']}</td>
-                  <td>{item['fee']['cost']} {item['fee']['currency']}</td>
+                  <td>{item['fee']['cost'].toFixed(8)} {item['fee']['currency']}</td>
                 </tr>
               )
             })

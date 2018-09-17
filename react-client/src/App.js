@@ -173,14 +173,14 @@ class App extends React.Component {
               <IconButton
                 color="inherit"
                 aria-label="Settings"
-                onClick={this.drawerRightToggle.bind(this, GlobalStore)}
+                onClick={this.drawerRightToggle.bind(this)}
               >
                 <Settings />
               </IconButton>
               <IconButton
                 color="inherit"
                 aria-label="Settings"
-                onClick={this.handleClick1.bind(this, GlobalStore)}
+                onClick={this.handleClick1.bind(this)}
               >
                 <QueryBuilder />
               </IconButton>
@@ -224,11 +224,11 @@ class App extends React.Component {
     )
   }
 
-  drawerRightToggle(GlobalStore, e) {
+  drawerRightToggle(e) {
     console.log('settings')
     this.props.GlobalStore.drawerRightToggle()
   }
-  handleClick1(GlobalStore, e) {
+  handleClick1(e) {
     console.log('time: set pairs')
     this.props.GlobalStore.drawerRightSet(Pairs)
   }

@@ -1,7 +1,6 @@
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import { observable, action, autorun, computed } from 'mobx'
 import axios from 'axios'
-import _ from 'lodash'
 
 // components
 import Pairs from '../core_components/Pairs'
@@ -24,7 +23,7 @@ class GlobalStore {
     })
   }
 
-  
+
   @action setStock(stock) {
     console.log('SET STOCK')
     this.stock = stock
@@ -36,11 +35,11 @@ class GlobalStore {
       this.stocks = response.data
     })
     .catch((error) => {
-      this.stocks = {}
+      this.stocks = []
       console.log(error)
     })
   }
- 
+
   // END STOCKS
 
   // START PAIRS
@@ -54,7 +53,7 @@ class GlobalStore {
   }
 
   @ignore @observable pairs = []
-  
+
   @computed get pairsComputed() {
     return this.pairs.filter( (pair) => {
       return pair.toLowerCase().indexOf( this.pairsFilter.toLowerCase() ) !== -1
@@ -64,7 +63,7 @@ class GlobalStore {
   @action setPairsFilter(_pair) {
     this.pairsFilter = _pair
   }
-  
+
 
 
   @action setPair(_pair) {

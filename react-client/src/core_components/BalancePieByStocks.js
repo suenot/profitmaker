@@ -1,5 +1,4 @@
 import React from 'react'
-import _ from 'lodash'
 import { inject, observer } from 'mobx-react'
 import Preloader from './Preloader'
 import ReactEcharts from 'echarts-for-react'

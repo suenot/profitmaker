@@ -30,7 +30,7 @@ class Balance extends React.Component {
         <table className="simpleTable">
           <thead>
             <tr>
-              <th colSpan="1" className="simpleTable-header">{moment(balanceData.datetime).format('DD.MM.YY HH:mm:ss') || 0}</th>
+              <th colSpan="1" className="simpleTable-header">{(balanceData.datetime && moment(balanceData.datetime).format('DD.MM.YY HH:mm:ss')) || '-'}</th>
               <th colSpan="1" className="simpleTable-header">{(balanceData.totalBTC || 0).toFixed(8)} BTC</th>
               <th colSpan="2" className="simpleTable-header">{(balanceData.totalUSD || 0).toFixed(2)} USD</th>
             </tr>

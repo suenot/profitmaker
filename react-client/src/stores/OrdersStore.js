@@ -1,6 +1,5 @@
 import { observable, action, computed, autorun } from 'mobx'
 import axios from 'axios'
-import _ from 'lodash'
 import GlobalStore from './GlobalStore'
 import uuidv1 from 'uuid/v1'
 
@@ -24,7 +23,7 @@ class OrdersStore {
         var price = order[0]
         var amount = order[1]
         var total = price * amount
-        var sumAsks = total + sumAsks
+        sumAsks = total + sumAsks
         _orders.asks[key] = {
           id: uuidv1(),
           price: price,
@@ -36,15 +35,15 @@ class OrdersStore {
       // for(var bid of _orders.bids) {
       var sumBids = 0
       for( let [key, order] of Object.entries(_orders.bids) ) {
-        var price = order[0]
-        var amount = order[1]
-        var total = price * amount
-        var sumBids = total + sumBids
+        var _price = order[0]
+        var _amount = order[1]
+        var _total = _price * _amount
+        sumBids = total + sumBids
         _orders.bids[key] = {
           id: uuidv1(),
-          price: price,
-          amount: amount,
-          total: total,
+          price: _price,
+          amount: _amount,
+          total: _total,
           sum: sumBids
         }
       }
