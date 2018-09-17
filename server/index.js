@@ -150,6 +150,7 @@ const main = async () => {
 				var stock = req.params.stock
 				var pair = req.params.pair
 				var trades = await getTrades(stock, pair)
+				console.log(trades)
 				res.json(trades)
 				// res.json(global.TRADESRAW[stock][pair])
 			} catch (err) {

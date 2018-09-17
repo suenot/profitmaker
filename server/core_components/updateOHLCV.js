@@ -18,6 +18,8 @@ const updateOHLCVFromBD = async function() {
 
 const getOHLCV = async function(stock, pair) {
   try {
+    // var stock = stock.toUpperCase()
+    // var pair = pair.toUpperCase()
     var response = await axios.get(`http://144.76.109.194:8051/ohlcv/${stock}/${pair}`)
     return response.data
   } catch (err) { console.log(err) }
