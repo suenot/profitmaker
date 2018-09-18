@@ -1,4 +1,4 @@
-import { observable, action, computed, autorun } from 'mobx'
+import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import GlobalStore from './GlobalStore'
 import uuidv1 from 'uuid/v1'
@@ -14,7 +14,7 @@ class OrdersStore {
   }
 
   @action async fetchOrders() {
-    axios.get(`http://localhost:8051/orders/${this.stock}/${this.pair}`)
+    axios.get(`http://144.76.109.194:8051/orders/${this.stock}/${this.pair}`)
     .then((response) => {
       var _orders = response.data
       // for(let ask in _orders.asks) {
@@ -63,14 +63,6 @@ const store = window.OrdersStore = new OrdersStore()
 
 export default store
 
-autorun(
-  () => {
-    console.log(store.stock)
-    console.log(store.pair)
-    store.fetchOrders()
-  }
-)
-
-autorun(() => {
+setInterval(() => {
   store.fetchOrders()
-})
+}, 2000)

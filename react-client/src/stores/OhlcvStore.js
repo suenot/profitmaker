@@ -1,4 +1,4 @@
-import { observable, action, computed, autorun } from 'mobx'
+import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import GlobalStore from './GlobalStore'
 
@@ -51,8 +51,6 @@ const store = window.OhlcvStore = new OhlcvStore()
 
 export default store
 
-autorun(() => {
-  console.log(store.stock)
-  console.log(store.pair)
+setInterval(() => {
   store.fetchOhlcv()
-})
+}, 5000)

@@ -4,14 +4,13 @@ const moment = require('moment')
 
 const balanceHistory = async function(stock, db) {
   try {
-    // var balance = await db.collection('balance').findOne({'stock': stock})
     var balanceHistory = await db.collection('balanceTimeseries').find({
       'stock': stock,
       'datetime' : {
         $lt: new Date(),
         $gte: new Date(new Date().setDate(new Date().getDate()-7))
       }
-    }).toArray()
+    }).limit(24*7).toArray()
     // глобальные переменные
     var BALANCE_HISTORY_COINS = new Set()
     var BALANCE_HISTORY_COINS_RESULT = new Set()
@@ -44,7 +43,7 @@ const balanceHistory = async function(stock, db) {
       _.forEach(Array.from(BALANCE_HISTORY_COINS), function(coin){
         if (item.data[coin]) {
           // если монета есть
-          
+
           if ( (item.data[coin].totalUSD/item.totalUSD*100) > 10) {
             // если % > 5
             // console.log('*****************')
@@ -62,7 +61,7 @@ const balanceHistory = async function(stock, db) {
         } else {
           BALANCE_HISTORY_USD[coin].push(0)
           BALANCE_HISTORY_BTC[coin].push(0)
-          
+
         }
       })
       // add Other

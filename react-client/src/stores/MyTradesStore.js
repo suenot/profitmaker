@@ -1,4 +1,4 @@
-import { observable, action, computed, autorun } from 'mobx'
+import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import GlobalStore from './GlobalStore'
 import uuidv1 from 'uuid/v1'
@@ -31,8 +31,6 @@ const store = window.MyTradesStore = new MyTradesStore()
 
 export default store
 
-autorun(() => {
-  console.log(store.stock)
-  console.log(store.pair)
+setInterval(() => {
   store.fetchMyTrades()
-})
+}, 5000)

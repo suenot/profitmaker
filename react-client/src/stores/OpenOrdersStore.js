@@ -1,4 +1,4 @@
-import { observable, action, computed, autorun } from 'mobx'
+import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import GlobalStore from './GlobalStore'
 import Alert from 'react-s-alert'
@@ -31,7 +31,6 @@ class OpenOrdersStore {
       stock: stock
     }).then((response) => {
       console.log(response.data)
-
       Alert.success('orderCanceled', {
         position: 'bottom-right',
         effect: 'scale',
@@ -55,8 +54,6 @@ const store = window.OpenOrdersStore = new OpenOrdersStore()
 
 export default store
 
-autorun(() => {
-  console.log(store.stock)
-  console.log(store.pair)
+setInterval(() => {
   store.fetchOpenOrders()
-})
+}, 5000)

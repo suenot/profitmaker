@@ -12,7 +12,7 @@ class CreateOrderStore {
   @computed get availableBuy() {return BalanceStore.availableBuy }
   @computed get availableSell() {return BalanceStore.availableSell }
 
-  
+
 
   @observable createPrice = {'buy': '', 'sell': ''}
   @observable createAmount = {'buy': '', 'sell': ''}
@@ -74,22 +74,16 @@ class CreateOrderStore {
   }
 
   @action setPrice(price) {
-    // this['buy'].price = price
-    // this['sell'].price = price
     this.createPrice['buy'] = price
     this.createPrice['sell'] = price
   }
 
   @action setAmount(amount) {
-    // this['buy'].amount = amount
-    // this['sell'].amount = amount
     this.createAmount['buy'] = amount
     this.createAmount['sell'] = amount
   }
 
   @action setTotal(total) {
-    // this['buy'].amount = amount
-    // this['sell'].amount = amount
     this.createTotal['buy'] = total.toFixed(8)
     this.createTotal['sell'] = total.toFixed(8)
   }
@@ -98,8 +92,3 @@ class CreateOrderStore {
 const store = window.CreateOrderStore = new CreateOrderStore()
 
 export default store
-
-// autorun(() => {
-//   console.log(store.stock)
-//   console.log(store.pair)
-// })

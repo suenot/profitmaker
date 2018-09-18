@@ -1,6 +1,7 @@
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
-import { observable, action, autorun, computed } from 'mobx'
+import { observable, action, computed } from 'mobx'
 import axios from 'axios'
+import _ from 'lodash'
 
 // components
 import Pairs from '../core_components/Pairs'
@@ -8,7 +9,7 @@ import Pairs from '../core_components/Pairs'
 @version(1)
 class GlobalStore {
 
-  @observable stock = 'LIQUI'
+  @observable stock = 'BINANCE'
 
   @ignore @observable stocks = []
   @ignore @observable stocksFilter = ''
@@ -25,14 +26,13 @@ class GlobalStore {
 
 
   @action setStock(stock) {
-    console.log('SET STOCK')
     this.stock = stock
   }
 
   @action async fetchStocks() {
-    axios.get('http://localhost:8051/stocks')
+    axios.get('http://144.76.109.194:8051/stocks')
     .then((response) => {
-      this.stocks = response.data
+      this.stocks = _.toArray(response.data)
     })
     .catch((error) => {
       this.stocks = []
@@ -67,12 +67,11 @@ class GlobalStore {
 
 
   @action setPair(_pair) {
-    console.log('SET PAIR')
     this.pair = _pair
   }
 
   @action async fetchPairs() {
-    axios.get(`http://localhost:8051/pairs/${this.stock}`)
+    axios.get(`http://144.76.109.194:8051/pairs/${this.stock}`)
     .then((response) => {
       this.pairs = response.data.map((pair) => {
         return pair.split('/').join('_')
@@ -104,12 +103,10 @@ export default store
 const trunk = new AsyncTrunk(store, { storage: localStorage })
 trunk.init()
 
-autorun(() => {
-  console.log(store.stock)
-  console.log(store.pair)
+setInterval(() => {
   store.fetchStocks()
   store.fetchPairs()
   trunk.updateStore(store)
-})
+}, 1000)
 
 
