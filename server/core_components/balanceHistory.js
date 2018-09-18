@@ -4,7 +4,7 @@ const moment = require('moment')
 
 const balanceHistory = async function(stock, db) {
   try {
-    var balance = await db.collection('balance').find({'stock': stock}).toArray()
+    // var balance = await db.collection('balance').findOne({'stock': stock})
     var balanceHistory = await db.collection('balanceTimeseries').find({
       'stock': stock,
       'datetime' : {
@@ -14,6 +14,7 @@ const balanceHistory = async function(stock, db) {
     }).toArray()
     // глобальные переменные
     var BALANCE_HISTORY_COINS = new Set()
+    var BALANCE_HISTORY_COINS_RESULT = new Set()
     var BALANCE_HISTORY_TIMESTAMPS = []
     var BALANCE_HISTORY_DATETIMES = []
     var BALANCE_HISTORY_USD = {} // [] for every coin
@@ -43,21 +44,25 @@ const balanceHistory = async function(stock, db) {
       _.forEach(Array.from(BALANCE_HISTORY_COINS), function(coin){
         if (item.data[coin]) {
           // если монета есть
-          if ( (coin.totalUSD/balance.totalUSD*100) > 5) {
+          
+          if ( (item.data[coin].totalUSD/item.totalUSD*100) > 10) {
             // если % > 5
-            console.log('*****************')
-            console.log(balance.totalUSD)
-            console.log(coin.totalUSD)
+            // console.log('*****************')
+            BALANCE_HISTORY_COINS_RESULT.add(coin)
+            // console.log(balance.totalUSD)
+            // console.log(item.totalUSD)
             BALANCE_HISTORY_USD[coin].push(item.data[coin].totalUSD)
             BALANCE_HISTORY_BTC[coin].push(item.data[coin].totalBTC)
           } else {
             // плюсуем к Other
             otherTotalUSD = item.data[coin].totalUSD
             otherTotalBTC = item.data[coin].totalBTC
+            BALANCE_HISTORY_COINS_RESULT.add('Other')
           }
         } else {
           BALANCE_HISTORY_USD[coin].push(0)
           BALANCE_HISTORY_BTC[coin].push(0)
+          
         }
       })
       // add Other
@@ -70,7 +75,7 @@ const balanceHistory = async function(stock, db) {
 
 
     // собираем series
-    _.forEach(Array.from(BALANCE_HISTORY_COINS), function(coin){
+    _.forEach(Array.from(BALANCE_HISTORY_COINS_RESULT), function(coin){
       SERIES.push({
         name: coin,
         type:'line',
@@ -80,7 +85,7 @@ const balanceHistory = async function(stock, db) {
       })
     })
     return {
-      coins: Array.from(BALANCE_HISTORY_COINS),
+      coins: Array.from(BALANCE_HISTORY_COINS_RESULT),
       timestamps: BALANCE_HISTORY_DATETIMES,
       series: SERIES
     }

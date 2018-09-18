@@ -66,8 +66,8 @@ const main = async () => {
     //
     //
 		// // получение приватных данных с бирж
-		try { updateBalance(localMongo, privateKeys, ethPockets, 30000) } catch(err) { console.log(err) }
-		try { updateTradesHistory(localMongo, privateKeys, 30000) } catch(err) { console.log(err) }
+		try { updateBalance(localMongo, privateKeys, ethPockets, 60*60*1000) } catch(err) { console.log(err) }
+		try { updateTradesHistory(localMongo, privateKeys, 60000) } catch(err) { console.log(err) }
 		try { openOrders(localMongo) } catch(err) { console.log(err) }
 		// // try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
 
