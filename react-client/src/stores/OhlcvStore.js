@@ -32,8 +32,13 @@ class OhlcvStore {
 
   @action async fetchOhlcv() {
     axios.get(`http://144.76.109.194:8051/ohlcv/${this.stock}/${this.pair}`)
+    axios.get(`http://144.76.109.194:8051/ohlcv/${this.stock}/${this.pair}`)
     .then((response) => {
-      this.ohlcv = response.data.data
+      if (!response.data) {
+        this.ohlcv = []
+      } else {
+        this.ohlcv = response.data
+      }
     })
     .catch((error) => {
       this.ohlcv = []
