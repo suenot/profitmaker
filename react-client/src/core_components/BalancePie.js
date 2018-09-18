@@ -20,7 +20,7 @@ class BalancePie extends React.Component {
     }
     balanceData.data.forEach(function(coin){
       if (coin.totalUSD !== 0) {
-        if ( (totalUSD*coin.totalUSD/100 ) > 1) {
+        if ( (coin.totalUSD/totalUSD*100 ) > 5) {
           seriesData.push({
             name: coin.shortName,
             value: coin.totalUSD.toFixed(8)
