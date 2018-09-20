@@ -6,6 +6,7 @@ import uuidv1 from 'uuid/v1'
 class OrdersStore {
 
   @computed get stock() {return GlobalStore.stock }
+  @computed get stockLowerCase() {return GlobalStore.stockLowerCase }
   @computed get pair() {return GlobalStore.pair }
 
   @observable orders = {
@@ -14,8 +15,10 @@ class OrdersStore {
   }
 
   @action async fetchOrders() {
-    axios.get(`http://144.76.109.194:8051/orders/${this.stock}/${this.pair}`)
+    axios.get(`http://api.kupi.network/${this.stockLowerCase}/orders/${this.pair}`)
     .then((response) => {
+      console.log(response.data)
+
       var _orders = response.data
       // for(let ask in _orders.asks) {
       var sumAsks = 0

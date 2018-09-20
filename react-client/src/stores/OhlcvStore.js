@@ -5,6 +5,7 @@ import GlobalStore from './GlobalStore'
 class OhlcvStore {
 
   @computed get stock() {return GlobalStore.stock }
+  @computed get stockLowerCase() {return GlobalStore.stockLowerCase }
   @computed get pair() {return GlobalStore.pair }
 
   @observable ohlcv = []
@@ -31,8 +32,8 @@ class OhlcvStore {
   }
 
   @action async fetchOhlcv() {
-    axios.get(`http://144.76.109.194:8051/ohlcv/${this.stock}/${this.pair}`)
-    axios.get(`http://144.76.109.194:8051/ohlcv/${this.stock}/${this.pair}`)
+    axios.get(`http://api.kupi.network/${this.stockLowerCase}/ohlcv/${this.pair}`)
+    axios.get(`http://api.kupi.network/${this.stockLowerCase}/ohlcv/${this.pair}`)
     .then((response) => {
       if (!response.data) {
         this.ohlcv = []

@@ -78,7 +78,7 @@ const balanceHistory = async function(stock, db) {
       SERIES.push({
         name: coin,
         type:'line',
-        stack: '总量',
+        stack: '',
         areaStyle: {normal: {}},
         data: BALANCE_HISTORY_USD[coin]
       })

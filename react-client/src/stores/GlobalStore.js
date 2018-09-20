@@ -10,6 +10,9 @@ import Pairs from '../core_components/Pairs'
 class GlobalStore {
 
   @observable stock = 'BINANCE'
+  @computed get stockLowerCase() {
+    return this.stock.toLowerCase()
+  }
 
   @ignore @observable stocks = []
   @ignore @observable stocksFilter = ''
@@ -30,7 +33,7 @@ class GlobalStore {
   }
 
   @action async fetchStocks() {
-    axios.get('http://144.76.109.194:8051/stocks')
+    axios.get('http://api.kupi.network/stocks')
     .then((response) => {
       this.stocks = _.toArray(response.data)
     })
@@ -71,7 +74,7 @@ class GlobalStore {
   }
 
   @action async fetchPairs() {
-    axios.get(`http://144.76.109.194:8051/pairs/${this.stock}`)
+    axios.get(`http://api.kupi.network/${this.stockLowerCase}/pairs/`)
     .then((response) => {
       this.pairs = response.data.map((pair) => {
         return pair.split('/').join('_')

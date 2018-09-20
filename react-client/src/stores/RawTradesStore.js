@@ -6,11 +6,12 @@ import uuidv1 from 'uuid/v1'
 
 class RawTradesStore {
   @computed get stock() {return GlobalStore.stock }
+  @computed get stockLowerCase() {return GlobalStore.stockLowerCase }
   @computed get pair() {return GlobalStore.pair }
   @observable rawTrades = []
 
   @action fetchRawTrades(){
-    axios.get(`http://144.76.109.194:8051/trades/${this.stock}/${this.pair}`)
+    axios.get(`http://api.kupi.network/${this.stockLowerCase}/trades/${this.pair}`)
     .then((response) => {
       var rawTrades = response.data
       rawTrades.data.buy.map(function(trade){
