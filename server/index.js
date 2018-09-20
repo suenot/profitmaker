@@ -13,6 +13,8 @@ app.use(bodyParser.json())
 const cors = require('cors')
 app.use(cors())
 
+const signale = require('signale')
+
 
 
 let db
@@ -84,7 +86,7 @@ const main = async () => {
 				res.status(500).send({ error: 'balance get ' + stock + ' failed!' })
 				console.log('balance ERROR', err)
 			}
-    })
+		})
 		app.get('/balance/history/:stock/', async function (req, res) {
 			try {
         var stock = req.params.stock
@@ -94,7 +96,7 @@ const main = async () => {
 				res.status(500).send({ error: 'balance history get ' + stock + ' failed!' })
 				console.log('balance history ERROR', err)
 			}
-    })
+		})
 		app.get('/openOrders/:stock/:pair', async function (req, res) {
 			try {
 				var stock = req.params.stock
