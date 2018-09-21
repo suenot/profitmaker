@@ -1,7 +1,12 @@
-import { observable } from 'mobx'
+import { observable, action } from 'mobx'
 
 
 class DashboardsStore {
+  @observable counter = 15
+  @observable widgetsMarket = [
+    { iconText: 'Mail', icon: '../../node_modules/@material-ui/icons/Mail', component: './core_components/Orders', header: "Orders asks", data: {type: "asks"} },
+    { iconText: 'Mail', icon: '../../node_modules/@material-ui/icons/Mail', component: './core_components/Balance', header: "Total balance", data: {total: true} },
+  ]
   @observable widgets = [
     {i: "0", component: './core_components/Orders', header: "Orders asks", data: {type: "asks"}, x: 19, y: 0, w: 5, h: 19, minW: 2, minH: 3},
     {i: "1", component: './core_components/Orders', header: "Orders bids", data: {type: "bids"}, x: 19, y: 19, w: 5, h: 19, minW: 2, minH: 3},
@@ -20,6 +25,12 @@ class DashboardsStore {
     {i: "14", component: './core_components/BalanceHistoryArea', header: "Balance history", data: {total: false}, x: 19, y: 38, w: 5, h: 13, minW: 2, minH: 3},
     {i: "15", component: './core_components/BalanceHistoryArea', header: "Total balance history", data: {total: true}, x: 19, y: 51, w: 5, h: 13, minW: 2, minH: 3},
   ]
+
+  @action addWidget(widget) {
+    this.widgets.push({
+      i: this.counter+1+"", component: widget.component, header: widget.header, data: widget.data, x: 19, y: 0, w: 5, h: 19, minW: 2, minH: 3
+    })
+  }
 }
 
 const store = window.DashboardsStore = new DashboardsStore()

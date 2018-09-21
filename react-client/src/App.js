@@ -1,4 +1,6 @@
+/* eslint-disable import/first */
 import React from 'react'
+import _ from 'lodash'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import { withStyles } from '@material-ui/core/styles'
@@ -6,13 +8,15 @@ import CssBaseline from '@material-ui/core/CssBaseline'
 import Drawer from '@material-ui/core/Drawer'
 import AppBar from '@material-ui/core/AppBar'
 import Toolbar from '@material-ui/core/Toolbar'
-import List from '@material-ui/core/List'
+// import List from '@material-ui/core/List'
 import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import IconButton from '@material-ui/core/IconButton'
 import MenuIcon from '@material-ui/icons/Menu'
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
-import { mailFolderListItems, otherMailFolderListItems } from './tileData'
+import ListItem from '@material-ui/core/ListItem'
+import ListItemIcon from '@material-ui/core/ListItemIcon'
+import ListItemText from '@material-ui/core/ListItemText'
 
 import Grid from './Grid'
 import 'element-theme-default'
@@ -131,6 +135,7 @@ const styles = theme => ({
 })
 
 @inject('GlobalStore')
+@inject('DashboardsStore')
 @observer
 class App extends React.Component {
   state = {
@@ -146,7 +151,7 @@ class App extends React.Component {
   }
 
   render() {
-    const { classes, GlobalStore } = this.props
+    const { classes, GlobalStore, DashboardsStore } = this.props
 
     return (
       <React.Fragment>
@@ -199,9 +204,25 @@ class App extends React.Component {
               </IconButton>
             </div>
             <Divider />
-            <List>{mailFolderListItems}</List>
-            <Divider />
-            <List>{otherMailFolderListItems}</List>
+            {
+              _.map(DashboardsStore.widgetsMarket, (widget) => {
+                const Component = require('@material-ui/icons/Mail').default
+                // console.log('@material-ui/icons/Mail')
+                // console.log( JSON.stringify(widget.icon+"") )
+                // console.log( widget.icon.toString() )
+                // const Component = require( (widget.icon+"").toString() ).default
+                // const Component = require( widget['icon']+"" ).default
+                // const Component = import(widget.icon+"")
+                return (
+                  <ListItem button onClick={this.addWidget.bind(this, widget)}>
+                    <ListItemIcon>
+                      {React.createElement(Component)}
+                    </ListItemIcon>
+                    <ListItemText primary={widget.header} />
+                  </ListItem>
+                )
+              })
+            }
           </Drawer>
           <Drawer
             anchor="right"
@@ -223,7 +244,9 @@ class App extends React.Component {
       </React.Fragment>
     )
   }
-
+  addWidget(widget) {
+    this.props.DashboardsStore.addWidget(widget)
+  }
   drawerRightToggle(e) {
     console.log('settings')
     this.props.GlobalStore.drawerRightToggle()
