@@ -106,10 +106,10 @@ export default store
 const trunk = new AsyncTrunk(store, { storage: localStorage })
 trunk.init()
 
-setInterval(() => {
-  store.fetchStocks()
-  store.fetchPairs()
-  trunk.updateStore(store)
+setInterval(async () => {
+  await store.fetchStocks()
+  await store.fetchPairs()
+  await trunk.updateStore(store)
 }, 1000)
 
 

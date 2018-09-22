@@ -23,17 +23,8 @@ class Grid extends React.Component {
     super(props)
 
     this.state = {
-      layouts: JSON.parse(JSON.stringify(originalLayouts)),
-      tokenDecimals: 18,
-      tokenName: '-',
-      tokenSymbol: '-',
-      asks: {},
-      orderbook: {
-        'asks': {},
-        'bids': {}
-      },
-      bids: {}
-    };
+      layouts: JSON.parse(JSON.stringify(originalLayouts))
+    }
   }
 
   static get defaultProps() {
@@ -52,6 +43,7 @@ class Grid extends React.Component {
   onLayoutChange(layout, layouts) {
     saveToLS("layouts", layouts);
     this.setState({ layouts });
+    // this.props.DashboardsStore.setLayout(layout)
   }
 
   render() {
@@ -62,9 +54,10 @@ class Grid extends React.Component {
           className="layout"
           cols={{ lg: 24, md: 20, sm: 12, xs: 8, xxs: 4 }} // in 2 times more
           rowHeight={12}
+          // layouts={DashboardsStore.widgets}
           layouts={this.state.layouts}
           onLayoutChange={(layout, layouts) => {
-              this.onLayoutChange(layout, layouts)
+              this.onLayoutChange(layout)
               setTimeout(function() {
                 window.dispatchEvent(new Event('resize'))
               }, 200)
@@ -74,12 +67,8 @@ class Grid extends React.Component {
           draggableHandle=".widget-header"
         >
           {
-            _.map(DashboardsStore.widgets, (widget, i) => {
-              // console.log((widget.component).toString())
-              // console.log(typeof(widget.component))
+            _.map(DashboardsStore.widgets, (widget) => {
               const Component = require(widget.component+"").default
-              // const Component = require('./core_components/Orders').default
-              // console.log(Component)
               return (
                 <div key={widget.i} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
                   <div className="widget">

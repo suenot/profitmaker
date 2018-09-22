@@ -92,3 +92,4 @@ class CreateOrderStore {
 const store = window.CreateOrderStore = new CreateOrderStore()
 
 export default store
+

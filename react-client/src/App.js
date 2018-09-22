@@ -216,7 +216,8 @@ class App extends React.Component {
                 return (
                   <ListItem button onClick={this.addWidget.bind(this, widget)}>
                     <ListItemIcon>
-                      {React.createElement(Component)}
+                      {/* {React.createElement(Component)} */}
+                      <img src={widget.icon} width="24px" height="24px"></img>
                     </ListItemIcon>
                     <ListItemText primary={widget.header} />
                   </ListItem>
