@@ -33,7 +33,7 @@ class GlobalStore {
   }
 
   @action async fetchStocks() {
-    axios.get('http://api.kupi.network/stocks')
+    axios.get('http://api.kupi.network:8051/stocks')
     .then((response) => {
       this.stocks = _.toArray(response.data)
     })
