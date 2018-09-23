@@ -11,7 +11,7 @@ class MyTradesStore {
   @observable myTrades = {}
 
   @action fetchMyTrades(){
-    axios.get(`http://localhost:8051/myTrades/${this.stock}/${this.pair}`)
+    axios.get(`http://localhost:8051/myTrade/${this.stock}/${this.pair}`)
     .then((response) => {
       var myTrades = response.data
       myTrades.map(function(trade){

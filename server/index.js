@@ -54,6 +54,8 @@ var {updateOrderbook, getOrderBook} = require('./core_components/updateOrderbook
 var {updateOHLCV, getOHLCV} = require('./core_components/updateOHLCV')
 var {updateTradesRaw, getTrades} = require('./core_components/updateTradesRaw')
 
+var getMyTrades = require('./core_components/getMyTrades')
+
 var createOrder = require('./core_components/createOrder')
 var cancelOrder = require('./core_components/cancelOrder')
 
@@ -69,7 +71,7 @@ const main = async () => {
     //
 		// // получение приватных данных с бирж
 		try { updateBalance(localMongo, privateKeys, ethPockets, 60*60*1000) } catch(err) { console.log(err) }
-		try { updateTradesHistory(localMongo, privateKeys, 60000) } catch(err) { console.log(err) }
+		// try { updateTradesHistory(localMongo, privateKeys, 60000) } catch(err) { console.log(err) }
 		try { openOrders(localMongo) } catch(err) { console.log(err) }
 		// // try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
 
@@ -118,7 +120,18 @@ const main = async () => {
 				res.status(500).send({ error: 'myTrades get ' + stock + ' ' + pair + ' failed!' })
 				console.log('myTrades ERROR', err)
 			}
-
+    })
+    
+    app.get('/myTrade/:stock/:pair', async function (req, res) {
+			try {
+				var stock = req.params.stock.toLowerCase()
+        var pair = req.params.pair.split('_').join('/')
+        var result = await getMyTrades(stock, pair)
+        res.json(result)
+			} catch (err) {
+				res.status(500).send({ error: 'myTrade get ' + stock + ' ' + pair + ' failed!' })
+				console.log('myTrades ERROR', err)
+			}
 		})
 
 		app.post('/cancelOrder', async function(req, res) {
