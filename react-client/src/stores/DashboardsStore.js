@@ -6,30 +6,30 @@ import _ from 'lodash'
 class DashboardsStore {
   @observable counter = 15
   @ignore @observable widgetsMarket = [
-    { icon: '/img/widgets/funding-amounts.svg', component: './core_components/Orders', header: "Orders asks", data: {type: "asks"} },
-    { icon: '/img/widgets/code.svg', component: './core_components/Orders', header: "Orders bids", data: {type: "bids"} },
+    { icon: '/img/else/asks.svg', component: './core_components/Orders', header: "Orders asks", data: {type: "asks"} },
+    { icon: '/img/else/bids.svg', component: './core_components/Orders', header: "Orders bids", data: {type: "bids"} },
 
-    { icon: '/img/widgets/code.svg', component: './core_components/Stocks', header: "Stocks", data: {} },
-    { icon: '/img/widgets/code.svg', component: './core_components/Pairs', header: "Pairs", data: {} },
-
-
-    { icon: '/img/widgets/code.svg', component: './core_components/charts/HeikinAshi', header: "OHLCV", data: {} },
+    { icon: '/img/else/002-auction.svg', component: './core_components/Stocks', header: "Stocks", data: {} },
+    { icon: '/img/else/sell.svg', component: './core_components/Pairs', header: "Pairs", data: {} },
 
 
-    { icon: '/img/widgets/experts.svg', component: './core_components/MyTrades', header: "My trades", data: {} },
-    { icon: '/img/widgets/faces.svg', component: './core_components/OpenOrders', header: "Open orders", data: {} },
-    { icon: '/img/widgets/code.svg', component: './core_components/RawTrades', header: "Trades", data: {} },
+    { icon: '/img/else/022-bar-chart.svg', component: './core_components/charts/HeikinAshi', header: "OHLCV", data: {} },
 
 
-    { icon: '/img/widgets/funds-raised.svg', component: './core_components/CreateOrder', header: "Limit buy", data: {type: "buy"} },
-    { icon: '/img/widgets/likes.svg', component: './core_components/CreateOrder', header: "Limit sell", data: {type: "sell"} },
+    { icon: '/img/else/017-visibility.svg', component: './core_components/MyTrades', header: "My trades", data: {} },
+    { icon: '/img/else/019-ladybug.svg', component: './core_components/OpenOrders', header: "Open orders", data: {} },
+    { icon: '/img/else/016-hourglass.svg', component: './core_components/RawTrades', header: "Trades", data: {} },
 
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/Balance', header: "Total balance", data: {total: true} },
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/Balance', header: "Balance", data: {total: false} },
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/BalancePie', header: "Total balance", data: {total: true} },
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/BalancePie', header: "Balance", data: {total: false} },
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/BalanceHistoryArea', header: "Total balance history", data: {total: true} },
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/BalanceHistoryArea', header: "Balance history", data: {total: false} },
+
+    { icon: '/img/else/011-plus.svg', component: './core_components/CreateOrder', header: "Limit buy", data: {type: "buy"} },
+    { icon: '/img/else/012-minus.svg', component: './core_components/CreateOrder', header: "Limit sell", data: {type: "sell"} },
+
+    { icon: '/img/else/014-revenue.svg', component: './core_components/Balance', header: "Total balance", data: {total: true} },
+    { icon: '/img/else/015-abacus.svg', component: './core_components/Balance', header: "Balance", data: {total: false} },
+    { icon: '/img/else/023-pie-chart-4.svg', component: './core_components/BalancePie', header: "Total balance", data: {total: true} },
+    { icon: '/img/else/012-pie-chart-1.svg', component: './core_components/BalancePie', header: "Balance", data: {total: false} },
+    { icon: '/img/else/021-analytics.svg', component: './core_components/BalanceHistoryArea', header: "Total balance history", data: {total: true} },
+    { icon: '/img/else/020-pie-chart-3.svg', component: './core_components/BalanceHistoryArea', header: "Balance history", data: {total: false} },
   ]
   @observable widgets = [
     {i: "0", component: './core_components/Orders', header: "Orders asks", data: {type: "asks"}, x: 19, y: 0, w: 5, h: 19, minW: 2, minH: 3},
