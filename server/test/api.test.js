@@ -1,8 +1,6 @@
 const privateKeys = require('../../private/keys.json').keys.binance
 const ccxt = require ('ccxt')
-var catchHead = require('../../utils').catchHead
-
-
+// var catchHead = require('../../utils').catchHead
 
 var getMyTrades = require('../core_components/getMyTrades')
 var {getPairs} = require('../core_components/getPairs')
