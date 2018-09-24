@@ -22,7 +22,8 @@ import Grid from './Grid'
 import 'element-theme-default'
 import './App.sass'
 import { inject, observer } from 'mobx-react'
-import {Settings, QueryBuilder} from '@material-ui/icons'
+// import {Settings, QueryBuilder} from '@material-ui/icons'
+import SettingsIcon from '@material-ui/icons/Settings'
 
 import Alert from 'react-s-alert'
 import 'react-s-alert/dist/s-alert-default.css'
@@ -35,7 +36,7 @@ import 'react-s-alert/dist/s-alert-css-effects/jelly.css'
 import 'react-s-alert/dist/s-alert-css-effects/stackslide.css'
 
 // components
-import Pairs from './core_components/Pairs'
+import Settings from './core_components/Settings'
 
 const drawerWidth = 240
 
@@ -180,15 +181,15 @@ class App extends React.Component {
                 aria-label="Settings"
                 onClick={this.drawerRightToggle.bind(this)}
               >
-                <Settings />
+                <SettingsIcon />
               </IconButton>
-              <IconButton
+              {/* <IconButton
                 color="inherit"
                 aria-label="Settings"
                 onClick={this.handleClick1.bind(this)}
               >
                 <QueryBuilder />
-              </IconButton>
+              </IconButton> */}
             </Toolbar>
           </AppBar>
           <Drawer
@@ -206,11 +207,10 @@ class App extends React.Component {
             <Divider />
             {
               _.map(DashboardsStore.widgetsMarket, (widget) => {
-                const Component = require('@material-ui/icons/Mail').default
                 return (
-                  <ListItem button onClick={this.addWidget.bind(this, widget)} key={widget.i}>
+                  <ListItem button onClick={this.addWidget.bind(this, widget)} key={widget.id}>
                     <ListItemIcon>
-                      <img src={widget.icon} width="24px" height="24px"></img>
+                      <img src={widget.icon} width="24px" height="24px" alt={widget.header}></img>
                     </ListItemIcon>
                     <ListItemText primary={widget.header} />
                   </ListItem>
@@ -244,10 +244,7 @@ class App extends React.Component {
   drawerRightToggle(e) {
     console.log('settings')
     this.props.GlobalStore.drawerRightToggle()
-  }
-  handleClick1(e) {
-    console.log('time: set pairs')
-    this.props.GlobalStore.drawerRightSet(Pairs)
+    this.props.GlobalStore.drawerRightSet(Settings)
   }
 }
 

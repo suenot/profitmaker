@@ -6,31 +6,24 @@ import _ from 'lodash'
 class DashboardsStore {
   @observable counter = 15
   @ignore @observable widgetsMarket = [
-    { icon: '/img/widgets/funding-amounts.svg', component: './core_components/Orders', header: "Orders asks", data: {type: "asks"} },
-    { icon: '/img/widgets/code.svg', component: './core_components/Orders', header: "Orders bids", data: {type: "bids"} },
-
-    { icon: '/img/widgets/code.svg', component: './core_components/Stocks', header: "Stocks", data: {} },
-    { icon: '/img/widgets/code.svg', component: './core_components/Pairs', header: "Pairs", data: {} },
-
-
-    { icon: '/img/widgets/code.svg', component: './core_components/charts/HeikinAshi', header: "OHLCV", data: {} },
-
-
-    { icon: '/img/widgets/experts.svg', component: './core_components/MyTrades', header: "My trades", data: {} },
-    { icon: '/img/widgets/faces.svg', component: './core_components/OpenOrders', header: "Open orders", data: {} },
-    { icon: '/img/widgets/code.svg', component: './core_components/RawTrades', header: "Trades", data: {} },
-
-
-    { icon: '/img/widgets/funds-raised.svg', component: './core_components/CreateOrder', header: "Limit buy", data: {type: "buy"} },
-    { icon: '/img/widgets/likes.svg', component: './core_components/CreateOrder', header: "Limit sell", data: {type: "sell"} },
-
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/Balance', header: "Total balance", data: {total: true} },
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/Balance', header: "Balance", data: {total: false} },
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/BalancePie', header: "Total balance", data: {total: true} },
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/BalancePie', header: "Balance", data: {total: false} },
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/BalanceHistoryArea', header: "Total balance history", data: {total: true} },
-    { icon: '/img/widgets/portfolio.svg', component: './core_components/BalanceHistoryArea', header: "Balance history", data: {total: false} },
+    { id: "0", icon: '/img/widgets/funding-amounts.svg', component: './core_components/Orders', header: "Orders asks", data: {type: "asks"} },
+    { id: "1", icon: '/img/widgets/code.svg', component: './core_components/Orders', header: "Orders bids", data: {type: "bids"} },
+    { id: "2", icon: '/img/widgets/code.svg', component: './core_components/Stocks', header: "Stocks", data: {} },
+    { id: "3", icon: '/img/widgets/code.svg', component: './core_components/Pairs', header: "Pairs", data: {} },
+    { id: "4", icon: '/img/widgets/code.svg', component: './core_components/charts/HeikinAshi', header: "OHLCV", data: {} },
+    { id: "5", icon: '/img/widgets/experts.svg', component: './core_components/MyTrades', header: "My trades", data: {} },
+    { id: "6", icon: '/img/widgets/faces.svg', component: './core_components/OpenOrders', header: "Open orders", data: {} },
+    { id: "7", icon: '/img/widgets/code.svg', component: './core_components/RawTrades', header: "Trades", data: {} },
+    { id: "8", icon: '/img/widgets/funds-raised.svg', component: './core_components/CreateOrder', header: "Limit buy", data: {type: "buy"} },
+    { id: "9", icon: '/img/widgets/likes.svg', component: './core_components/CreateOrder', header: "Limit sell", data: {type: "sell"} },
+    { id: "10", icon: '/img/widgets/portfolio.svg', component: './core_components/Balance', header: "Total balance", data: {total: true} },
+    { id: "11", icon: '/img/widgets/portfolio.svg', component: './core_components/Balance', header: "Balance", data: {total: false} },
+    { id: "12", icon: '/img/widgets/portfolio.svg', component: './core_components/BalancePie', header: "Total balance", data: {total: true} },
+    { id: "13", icon: '/img/widgets/portfolio.svg', component: './core_components/BalancePie', header: "Balance", data: {total: false} },
+    { id: "14", icon: '/img/widgets/portfolio.svg', component: './core_components/BalanceHistoryArea', header: "Total balance history", data: {total: true} },
+    { id: "15", icon: '/img/widgets/portfolio.svg', component: './core_components/BalanceHistoryArea', header: "Balance history", data: {total: false} },
   ]
+
   @observable widgets = [
     {i: "0", component: './core_components/Orders', header: "Orders asks", data: {type: "asks"}, x: 19, y: 0, w: 5, h: 19, minW: 2, minH: 3},
     {i: "1", component: './core_components/Orders', header: "Orders bids", data: {type: "bids"}, x: 19, y: 19, w: 5, h: 19, minW: 2, minH: 3},
@@ -51,14 +44,10 @@ class DashboardsStore {
   ]
 
   @action setLayout(layout) {
-    console.log('changed')
     var widgets = _.clone(JSON.parse(JSON.stringify(this.widgets)))
-    console.log(widgets)
-    console.log(layout)
     for (var i = 0; i<widgets.length; i++) {
       for (var j = 0; j<layout.length; j++) {
         if (widgets[i].i === layout[j].i) {
-          console.log(this.widgets[i].i, layout[j].i)
           widgets[i].x = layout[j].x
           widgets[i].y = layout[j].y
           widgets[i].w = layout[j].w
@@ -78,7 +67,6 @@ class DashboardsStore {
   }
 
   @action removeWidget(id) {
-    // this.counter -= 1
     this.widgets = _.filter(this.widgets, function(item) {
       return item.i !== id;
     })
