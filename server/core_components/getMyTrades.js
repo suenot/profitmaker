@@ -6,7 +6,6 @@ const getMyTrades = async function(stockName, symbol) {
     if (global.STOCKS[stockName].has['fetchMyTrades']) {
       await catchHead(rateLimit, stockName)
       var trades = await global.STOCKS[stockName].fetchMyTrades(symbol)
-      // console.log(stockName, symbol, trades)
       return trades
     } else {
       return {'Error': stockName + ' havent  fetchMyTrades'}

@@ -4,7 +4,7 @@ var sleep = require('../../utils').sleep
 var catchHead = require('../../utils').catchHead
 var calculateCoin = require('../../utils').calculateCoin
 
-const updateBalance = async function(db, privateKeys, ethPockets, timeout) {
+const updateBalance = async function(privateKeys, ethPockets, timeout) {
     while (true) {
       for (let [stockName, stock] of Object.entries(privateKeys)) {
         await updateStocksBalance(stockName)
@@ -13,7 +13,7 @@ const updateBalance = async function(db, privateKeys, ethPockets, timeout) {
         await updateETHBalance(stockName, stock)
       }
       await updateTotal()
-      await writeTotal(db)
+      await writeTotal()
       await sleep(timeout)
     }
 }
@@ -213,13 +213,13 @@ const updateTotal = async function () {
   } catch (err) { console.log(err) }
 }
 
-const writeTotal = async function (db) {
+const writeTotal = async function () {
   if (!global.COINMARKETCAP) { return false }
   try {
     for (let [stockName, stock] of Object.entries(global.BALANCE)) {
         var stockNameUpper = stockName.toUpperCase()
-        await db.collection('balance').replaceOne({'stock': stockNameUpper}, stock, {upsert: true})
-        await db.collection('balanceTimeseries').replaceOne({'stock': stockNameUpper, "timestamp": stock.timestamp }, stock, {upsert: true}) // TODO заменить на insert
+        await global.MONGO.collection('balance').replaceOne({'stock': stockNameUpper}, stock, {upsert: true})
+        await global.MONGO.collection('balanceTimeseries').replaceOne({'stock': stockNameUpper, "timestamp": stock.timestamp }, stock, {upsert: true}) // TODO заменить на insert
     }
     console.log('balance saved')
   } catch (err) { console.log(err) }

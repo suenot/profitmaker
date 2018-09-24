@@ -1,7 +1,7 @@
 
-const initBalance = async function(db) {
+const initBalance = async function() {
   try {
-    var balance = await db.collection('balance').find({}).toArray()
+    var balance = await global.MONGO.collection('balance').find({}).toArray()
     for (let [key, value] of Object.entries(balance)) {
       delete value._id
       if ( global.BALANCE === undefined ) global.BALANCE = {}

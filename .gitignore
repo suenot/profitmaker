@@ -3,6 +3,10 @@
 # private
 private/
 
+# user files
+server/user_components/
+
+
 # dependencies
 node_modules/
 

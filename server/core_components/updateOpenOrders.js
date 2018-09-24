@@ -2,10 +2,10 @@ const ccxt = require ('ccxt')
 var sleep = require('../../utils').sleep
 var catchHead = require('../../utils').catchHead
 
-const updateOpenOrders = async function(db, privateKeys, timeout) {
+const updateOpenOrders = async function(privateKeys, timeout) {
   while (true) {
     for (let [stockName, stock] of Object.entries(privateKeys)) {
-      await marketOpenOrders(stockName, db)
+      await marketOpenOrders(stockName)
     }
     await sleep(timeout)
     console.log('openOrders')
@@ -34,7 +34,7 @@ const marketOpenOrdersByOne = async function(stockName) {
   } catch (err) { console.log(err) }
 }
 
-const marketOpenOrders = async function(stockName, db) {
+const marketOpenOrders = async function(stockName) {
   try {
     var rateLimit = global.STOCKS[stockName]['rateLimit']
     var stockNameUpper = stockName.toUpperCase()
@@ -68,7 +68,7 @@ const marketOpenOrders = async function(stockName, db) {
     if ( global.OPENORDERS === undefined ) global.OPENORDERS = {}
     if ( global.OPENORDERS[stockNameUpper] === undefined ) global.OPENORDERS[stockNameUpper] = {}
     global.OPENORDERS[stockNameUpper] = res
-    await db.collection('openOrders').replaceOne({'stock': stockNameUpper}, res, {upsert: true})
+    await global.MONGO.collection('openOrders').replaceOne({'stock': stockNameUpper}, res, {upsert: true})
 
 
 

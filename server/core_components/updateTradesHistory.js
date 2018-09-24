@@ -3,13 +3,13 @@ var sleep = require('../../utils').sleep
 var catchHead = require('../../utils').catchHead
 
 
-const updateTradesHistory = async function(db, privateKeys, timeout) {
+const updateTradesHistory = async function(privateKeys, timeout) {
   for (let [stockName, stock] of Object.entries(privateKeys)) {
 
       const updateTradesHistoryStock = async function() { // TODO change name
         while (true) {
           // console.log('++')
-          await tradesHistory(db, stockName)
+          await tradesHistory(stockName)
           // console.log('tradesHistory', stockName)
           await sleep(timeout)
         }
@@ -39,7 +39,7 @@ const fetchMyTradesByOne = async function(rateLimit, stockName) {
   return data
 }
 
-const tradesHistory = async function(db, stockName) {
+const tradesHistory = async function(stockName) {
   try {
     var rateLimit = global.STOCKS[stockName]['rateLimit']
     var stockNameUpper = stockName.toUpperCase()
@@ -66,7 +66,7 @@ const tradesHistory = async function(db, stockName) {
       if ( global.TRADESHISTORY === undefined ) global.TRADESHISTORY = {}
       if ( global.TRADESHISTORY[stockNameUpper] === undefined ) global.TRADESHISTORY[stockNameUpper] = {}
       global.TRADESHISTORY[stockNameUpper] = res
-      await db.collection('tradesHistory').replaceOne({'stock': stockNameUpper}, res, {upsert: true})
+      await global.MONGO.collection('tradesHistory').replaceOne({'stock': stockNameUpper}, res, {upsert: true})
     }
   } catch (err) { console.log(err) }
 }

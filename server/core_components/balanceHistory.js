@@ -2,9 +2,9 @@ const _ = require('lodash')
 const moment = require('moment')
 
 
-const balanceHistory = async function(stock, db) {
+const balanceHistory = async function(stock) {
   try {
-    var balanceHistory = await db.collection('balanceTimeseries').find({
+    var balanceHistory = await global.MONGO.collection('balanceTimeseries').find({
       'stock': stock,
       'datetime' : {
         $lt: new Date(),
