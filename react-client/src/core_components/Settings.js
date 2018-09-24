@@ -8,17 +8,6 @@ class Settings extends React.Component {
   render() {
     const {GlobalStore} = this.props
     return (
-      // <div className="simpleForm">
-      //   {
-      //     _.map(GlobalStore.globalSettings, (item) => {
-      //       return (
-      //         <div className="simpleForm-formGroup">
-      //           <div className="text">{item.name}</div>
-      //           <Input placeholder={item.name} value={item.value} />
-      //         </div>
-      //       )
-      //     })
-      //   }
       <div className="simpleForm">
         <div className="simpleForm-formGroup">
           <div className="text">{GlobalStore.serverBackend.name}</div>

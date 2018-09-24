@@ -3,11 +3,11 @@ import _ from 'lodash'
 import { inject, observer } from 'mobx-react'
 import moment from 'moment'
 
-@inject('RawTradesStore')
+@inject('TradesStore')
 @observer
-class RawTrades extends React.Component {
+class Trades extends React.Component {
   render() {
-    const {RawTradesStore} = this.props
+    const {TradesStore} = this.props
     return (
       <div>
         <table className="simpleTable">
@@ -20,7 +20,7 @@ class RawTrades extends React.Component {
           </thead>
           <tbody>
           {
-            _.map(RawTradesStore.rawTrades, (item, i) => {
+            _.map(TradesStore.trades, (item, i) => {
               return (
                 <tr key={item.uuid}>
                   <td style={item.side === 'buy'?{color: '#ea0371'}:{color: '#83b327'}}>
@@ -39,4 +39,4 @@ class RawTrades extends React.Component {
   }
 }
 
-export default RawTrades
+export default Trades

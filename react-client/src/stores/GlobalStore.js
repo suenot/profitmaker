@@ -98,8 +98,7 @@ class GlobalStore {
   }
   // END DRAWERS
 
-  // START SETTING
-  // @observable globalSettings = {
+  // START SETTINGS
   @observable serverBackend = {
     name: 'Server backend',
     value: 'http://api.kupi.network/'
@@ -116,7 +115,7 @@ class GlobalStore {
     name: 'Fetch interval',
     value: '2000'
   }
-  // }
+  // END SETTINGS
 }
 
 const store = window.GlobalStore = new GlobalStore()
