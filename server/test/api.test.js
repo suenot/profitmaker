@@ -18,5 +18,5 @@ describe('getStocks test find binance', () => {
     var result = await getStocks()
     expect(result['BINANCE']['name']).toEqual('BINANCE')
   })
-})
+})  
 
