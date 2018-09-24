@@ -207,16 +207,9 @@ class App extends React.Component {
             {
               _.map(DashboardsStore.widgetsMarket, (widget) => {
                 const Component = require('@material-ui/icons/Mail').default
-                // console.log('@material-ui/icons/Mail')
-                // console.log( JSON.stringify(widget.icon+"") )
-                // console.log( widget.icon.toString() )
-                // const Component = require( (widget.icon+"").toString() ).default
-                // const Component = require( widget['icon']+"" ).default
-                // const Component = import(widget.icon+"")
                 return (
-                  <ListItem button onClick={this.addWidget.bind(this, widget)}>
+                  <ListItem button onClick={this.addWidget.bind(this, widget)} key={widget.i}>
                     <ListItemIcon>
-                      {/* {React.createElement(Component)} */}
                       <img src={widget.icon} width="24px" height="24px"></img>
                     </ListItemIcon>
                     <ListItemText primary={widget.header} />

@@ -33,7 +33,9 @@ class BalanceStore {
         this.balanceStock = response.data
       }
     })
-    .catch((error) => { console.log(error) })
+    .catch((error) => {
+      // console.log(error)
+    })
   }
 
   @action fetchBalanceHistory(stock){
@@ -45,7 +47,9 @@ class BalanceStore {
         this.balanceHistoryStock = response.data
       }
     })
-    .catch((error) => { console.log(error) })
+    .catch((error) => {
+      // console.log(error)
+    })
   }
 }
 

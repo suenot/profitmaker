@@ -25,7 +25,7 @@ class RawTradesStore {
     })
     .catch((error) => {
       this.rawTrades = []
-      console.log(error)
+      // console.log(error)
     })
   }
 }

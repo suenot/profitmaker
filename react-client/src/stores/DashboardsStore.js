@@ -1,5 +1,6 @@
 import { observable, action, autorun } from 'mobx'
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
+import _ from 'lodash'
 
 @version(1)
 class DashboardsStore {
@@ -50,36 +51,49 @@ class DashboardsStore {
   ]
 
   @action setLayout(layout) {
-    // console.log('********************')
+    console.log('changed')
+    var widgets = _.clone(JSON.parse(JSON.stringify(this.widgets)))
+    console.log(widgets)
     console.log(layout)
-    // delete layouts.lg
-    // layouts.delete(lg)
-    // this.widgets = JSON.parse(JSON.stringify(layouts))
-    // this.widgets.replace(layout)
-    this.widgets = layout
+    for (var i = 0; i<widgets.length; i++) {
+      for (var j = 0; j<layout.length; j++) {
+        if (widgets[i].i === layout[j].i) {
+          console.log(this.widgets[i].i, layout[j].i)
+          widgets[i].x = layout[j].x
+          widgets[i].y = layout[j].y
+          widgets[i].w = layout[j].w
+          widgets[i].h = layout[j].h
+          break
+        }
+      }
+    }
+    this.widgets = widgets
   }
 
   @action addWidget(widget) {
-    // forEach()
+    this.counter += 1
     this.widgets.push({
-      i: this.counter+1+"", component: widget.component, header: widget.header, data: widget.data, x: 19, y: 0, w: 5, h: 19, minW: 2, minH: 3
+      i: this.counter+"", component: widget.component, header: widget.header, data: widget.data, x: 19, y: 0, w: 5, h: 19, minW: 2, minH: 3
     })
   }
+
+  @action removeWidget(id) {
+    // this.counter -= 1
+    this.widgets = _.filter(this.widgets, function(item) {
+      return item.i !== id;
+    })
+  }
+
 }
 
 const store = window.DashboardsStore = new DashboardsStore()
 
-const trunk = new AsyncTrunk(store, { storage: localStorage })
+const trunk = new AsyncTrunk(store, { storage: localStorage, storageKey: 'dashboards' })
 trunk.init()
 
-
-
 autorun(() => {
-  // Assuming that profile.asJson returns an observable Json representation of profile,
-  // send it to the server each time it is changed, but await at least 300 milliseconds before sending it.
-  // When sent, the latest value of profile.asJson will be used.
   console.log(store.widgets)
   trunk.updateStore(store)
-}, { delay: 1000 });
+}, { delay: 1000 })
 
 export default store

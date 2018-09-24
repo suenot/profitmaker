@@ -30,7 +30,7 @@ class OpenOrdersStore {
       symbol: symbol,
       stock: stock
     }).then((response) => {
-      console.log(response.data)
+      // console.log(response.data)
       Alert.success('orderCanceled', {
         position: 'bottom-right',
         effect: 'scale',
@@ -38,7 +38,7 @@ class OpenOrdersStore {
         timeout: 'none'
       })
     }).catch((error) => {
-      console.log(error.response.data.error)
+      // console.log(error.response.data.error)
       Alert.error(error.response.data.error, {
         position: 'bottom-right',
         effect: 'scale',

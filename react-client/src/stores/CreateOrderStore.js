@@ -63,7 +63,7 @@ class CreateOrderStore {
 
     })
     .catch((error) => {
-      console.log(error.response.data.error)
+      // console.log(error.response.data.error)
       Alert.error(error.response.data.error, {
         position: 'bottom-right',
         effect: 'scale',

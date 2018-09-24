@@ -17,7 +17,6 @@ class OrdersStore {
   @action async fetchOrders() {
     axios.get(`http://api.kupi.network/${this.stockLowerCase}/orders/${this.pair}`)
     .then((response) => {
-      console.log(response.data)
 
       var _orders = response.data
       // for(let ask in _orders.asks) {
@@ -57,7 +56,7 @@ class OrdersStore {
         'asks': [],
         'bids': []
       }
-      console.log(error)
+      // console.log(error)
     })
   }
 }

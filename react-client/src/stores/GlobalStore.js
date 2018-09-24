@@ -103,7 +103,7 @@ const store = window.GlobalStore = new GlobalStore()
 
 export default store
 
-const trunk = new AsyncTrunk(store, { storage: localStorage })
+const trunk = new AsyncTrunk(store, { storage: localStorage, storageKey: 'global' })
 trunk.init()
 
 setInterval(async () => {

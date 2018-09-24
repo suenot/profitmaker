@@ -20,7 +20,7 @@ class MyTradesStore {
       this.myTrades = myTrades
     })
     .catch((error) => {
-      console.log(error)
+      // console.log(error)
       this.myTrades = {}
     })
   }
