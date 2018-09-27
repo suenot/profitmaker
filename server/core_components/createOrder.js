@@ -2,7 +2,15 @@ const ccxt = require ('ccxt')
 var {sleep, create, catchHead} = require('../../utils')
 var fetchOpenOrder = require('./openOrders').fetchOpenOrder
 
+// data {
+//   stock: BINANCE,
+//   symbol: ETH_BTC,
+//   type: sell,
+//   amount: float,
+//   price: float
+// }
 const createOrder = async function(data) {
+
   var stockUpper = data.stock
   var stockName = stockUpper.toLowerCase()
   var symbol = data.pair.split('_').join('/')
