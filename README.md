@@ -1,49 +1,39 @@
 ## Quick start
-First, need to set /private key for
-### /private/keys.json
-```js
-{
-    "keys": {
-        "binance": {
-            "apiKey": "apiKey",
-            "secret": "secret"
-        },
-        "liqui": {
-            "apiKey": "apiKey",
-            "secret": "secret"
-        },
-        "cryptopia": {
-            "apiKey": "apiKey",
-            "secret": "secret"
-        }
-    },
-    "ethPockets": {
-      "eth_pocket_name_free": {
-        "address": "eth_address"
-      }
-    }
-}
+1. Install mongo
+```
+docker volume create kupi-terminal-mongo-volume
+docker run --name kupi-terminal-mongo -p 27017:27017 -v kupi-terminal-mongo-volume:/data/db -d mongo
+```
+
+2. Copy default ignored files and fill private stocks keys in ```./private/keys.json```
+```
+cp -R ./defaults/. ./
+```
+
+3. Run terminal-server
+```
+cd server
+npm run start
+``` 
+
+4. Run terminal-frontend
+```
+cd react-client
+npm run start
 ```
 
 ## API:
 #### server api:
-```http://kupi.network:8051/```
+```http://api.kupi.network/```
 ```
 /coinmarketcap
 /stocks
-/stocks/info <PLAN>
-/pairs
-/pairs/:stock
-/pairs/:stock/info <PLAN>
-/orders
-/orders/:stock <PLAN>
-/orders/:stock/:pair
-/ohlcv
-/ohlcv/:stock <PLAN>
-/ohlcv/:stock/:pair
-/trades <PLAN>
-/trades/:stock <PLAN>
-/trades/:stock/:pair
+/binance/pairs
+/binance/orders
+/binance/orders/ETH_BTC
+/binance/ohlcv
+/binance/ohlcv/ETH_BTC
+/binance/trades/ETH_BTC
 ```
 
 #### terminal server api:
