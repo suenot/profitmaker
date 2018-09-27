@@ -1,0 +1,17 @@
+{
+  "keys": {
+      "binance": {
+          "apiKey": "apiKey",
+          "secret": "secret"
+      },
+      "liqui": {
+          "apiKey": "apiKey",
+          "secret": "secret"
+      }
+  },
+  "ethPockets": {
+    "eth_pocket_name_free": {
+      "address": "eth_address"
+    }
+  }
+}

@@ -1,7 +1,10 @@
 # See https://help.github.com/ignore-files/ for more about ignoring files.
 
 # private
-private/
+/private/
+/react-client/private/
+/vue-client/private/
+/server/private/
 
 # user files
 server/user_components/
