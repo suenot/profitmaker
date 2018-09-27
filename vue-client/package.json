@@ -1,0 +1,41 @@
+{
+  "name": "vue",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "start": "vue-cli-service serve",
+    "test:unit": "vue-cli-service test:unit"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "bignumber.js": "^7.2.1",
+    "echarts": "^4.1.0",
+    "http": "^0.0.0",
+    "identicon.js": "^2.3.2",
+    "mobx": "^5.1.0",
+    "mobx-vue": "^2.0.7",
+    "v-charts": "^1.17.10",
+    "vue": "^2.5.16",
+    "vue-class-component": "^6.2.0",
+    "vue-grid-layout": "^2.1.13",
+    "vue-highcharts": "^0.0.10",
+    "vue-mobx": "^2.0.0",
+    "vue-router": "^3.0.1",
+    "vuetify": "^1.1.8",
+    "web3": "^1.0.0-beta.35"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.0.1",
+    "@vue/cli-plugin-eslint": "^3.0.0-rc.7",
+    "@vue/cli-plugin-unit-mocha": "^3.0.1",
+    "@vue/cli-service": "^3.0.0-rc.7",
+    "@vue/test-utils": "^1.0.0-beta.20",
+    "chai": "^4.1.2",
+    "node-sass": "^4.9.0",
+    "sass-loader": "^7.0.1",
+    "vue-template-compiler": "^2.5.16"
+  }
+}

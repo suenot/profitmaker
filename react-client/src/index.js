@@ -10,7 +10,7 @@ import OrdersStore from './stores/OrdersStore'
 import BalanceStore from './stores/BalanceStore'
 import OpenOrdersStore from './stores/OpenOrdersStore'
 import MyTradesStore from './stores/MyTradesStore'
-import RawTradesStore from './stores/RawTradesStore'
+import TradesStore from './stores/TradesStore'
 import DashboardsStore from './stores/DashboardsStore'
 import OhlcvStore from './stores/OhlcvStore'
 import GlobalStore from './stores/GlobalStore'
@@ -24,7 +24,7 @@ const Root = (
     BalanceStore={BalanceStore}
     OpenOrdersStore={OpenOrdersStore}
     MyTradesStore={MyTradesStore}
-    RawTradesStore={RawTradesStore}
+    TradesStore={TradesStore}
     OhlcvStore={OhlcvStore}
     CreateOrderStore={CreateOrderStore}
   >

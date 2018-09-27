@@ -26,14 +26,14 @@ class BalanceStore {
 
   @action fetchBalance(stock){
     axios.get(`http://localhost:8051/balance/${stock}`)
-    .then((response) => {
+    .then(response => {
       if (stock === 'TOTAL') {
         this.balanceTotal = response.data
       } else {
         this.balanceStock = response.data
       }
     })
-    .catch((error) => {
+    .catch(error => {
       // console.log(error)
     })
   }

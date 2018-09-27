@@ -9,20 +9,20 @@ class CreateOrder extends React.Component {
     const {CreateOrderStore, data } = this.props
     const {type} = data
     return (
-      
-      <div className="createOrder">
+
+      <div className="simpleForm">
         <div className="createOrder-header">
           Available: {(type === 'buy' ? CreateOrderStore.availableBuy : CreateOrderStore.availableSell).toFixed(8)} {type === 'buy' ? CreateOrderStore.pair.split('_')[1] : CreateOrderStore.pair.split('_')[0]}
         </div>
-        <div className="createOrder-formGroup">
+        <div className="simpleForm-formGroup">
           <div className="text">Price</div>
           <Input placeholder="Price" value={CreateOrderStore.createPrice[type]} onChange={this.changeValue.bind(this, 'price', type)} append={CreateOrderStore.pair.split('_')[1]}/>
         </div>
-        <div className="createOrder-formGroup">
+        <div className="simpleForm-formGroup">
           <div className="text">Amount</div>
           <Input placeholder="Amount" value={CreateOrderStore.createAmount[type]} onChange={this.changeValue.bind(this, 'amount', type)} append={CreateOrderStore.pair.split('_')[0]}/>
         </div>
-        <div className="createOrder-formGroup">
+        <div className="simpleForm-formGroup">
           <div className="text">Total</div>
           <Input placeholder="Total" value={CreateOrderStore.createTotal[type]} onChange={this.changeValue.bind(this, 'total', type)} append={CreateOrderStore.pair.split('_')[1]}/>
         </div>

@@ -1,7 +1,7 @@
 import React from 'react'
 import { inject, observer } from 'mobx-react'
 import _ from 'lodash'
-// import { Table } from 'element-react'
+
 @inject('CreateOrderStore')
 @inject('OrdersStore')
 @observer
@@ -21,7 +21,7 @@ class Orders extends React.Component {
           </thead>
           <tbody>
             {
-              _.map(OrdersStore.orders[type].slice(0, 10), (order) => {
+              _.map(OrdersStore.orders[type].slice(0, 15), (order) => {
                 return <tr key={order.id} onClick={this.setAll.bind(this, order.price, order.amount, order.total)}>
                   <td>{order.price.toFixed(8)}</td>
                   <td>{order.amount.toFixed(8)}</td>
