@@ -38,15 +38,16 @@ const create = async function (stockName, symbol, side, amount, price) {
     //   return err
     // }
 }
-const cancel = async function(stockName, id, symbol){
-    // try {
-      var rateLimit = global.STOCKS[stockName]['rateLimit']
-      await catchHead(rateLimit, stockName)
-      return await global.STOCKS[stockName].cancelOrder(id, symbol)
-    // } catch (err) {
-    //   console.log('Что-то сломалось ', err)
-    // }
-}
+// const cancel = async function(stockName, id, symbol){
+//     // try {
+//     console.log('***')
+//       var rateLimit = global.STOCKS[stockName]['rateLimit']
+//       await catchHead(rateLimit, stockName)
+//       return await global.STOCKS[stockName].cancelOrder(id, symbol)
+//     // } catch (err) {
+//     //   console.log('Что-то сломалось ', err)
+//     // }
+// }
 const change = async function(stockName, id, symbol, side, new_price){
     try {
       var rateLimit = global.STOCKS[stockName]['rateLimit']
@@ -67,5 +68,5 @@ exports.sleep = sleep
 exports.catchHead = catchHead
 exports.calculateCoin = calculateCoin
 exports.create = create
-exports.cancel = cancel
+// exports.cancel = cancel
 exports.change = change

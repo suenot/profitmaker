@@ -3,6 +3,8 @@ const express = require('express')
 const app = express()
 const api = require('./api')
 
+
+
 var bodyParser = require('body-parser')
 const serializeError = require('serialize-error')
 const privateKeys = require('../private/keys.json').keys
@@ -76,13 +78,17 @@ const main = async () => {
     // try { updateTradesHistory(localMongo, privateKeys, 60000) } catch(err) { console.log(err) }
     try { openOrders() } catch(err) { console.log(err) }
     // // try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
-    app.use('/', api())
-    try { 
+    app.use('/', api)
+    try {
+      const userApi = require('./user_components/api')
+      app.use('/user_components', userApi)
+    } catch(err) { console.log(err) }
+    try {
       var userComponents = require('./user_components')
-      userComponents() 
+      userComponents()
     } catch(err) { console.log(err) }
 
-    
+
   } catch (err) { }
 }
 main()
