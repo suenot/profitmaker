@@ -5,7 +5,7 @@ docker volume create kupi-terminal-mongo-volume
 docker run --name kupi-terminal-mongo -p 27017:27017 -v kupi-terminal-mongo-volume:/data/db -d mongo
 ```
 
-2. Copy default ignored files and fill private stocks keys in ```./private/keys.json```
+2. Copy ignored by default files and fill stocks private keys in ```./private/keys.json```
 ```
 cp -R ./defaults/. ./
 ```
