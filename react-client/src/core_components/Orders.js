@@ -2,12 +2,15 @@ import React from 'react'
 import { inject, observer } from 'mobx-react'
 import _ from 'lodash'
 
-@inject('CreateOrderStore')
-@inject('OrdersStore')
+import OrdersStore from '../stores/OrdersStore'
+import CreateOrderStore from '../stores/CreateOrderStore'
+// @inject('CreateOrderStore')
+// @inject('OrdersStore')
 @observer
 class Orders extends React.Component {
   render() {
-    const {OrdersStore, data} = this.props
+    // const {OrdersStore, data} = this.props
+    const {data} = this.props
     const {type} = data
     return (
       <div>
@@ -35,9 +38,9 @@ class Orders extends React.Component {
     )
   }
   setAll(price, amount, total) {
-    this.props.CreateOrderStore.setPrice(price)
-    this.props.CreateOrderStore.setAmount(amount)
-    this.props.CreateOrderStore.setTotal(total)
+    CreateOrderStore.setPrice(price)
+    CreateOrderStore.setAmount(amount)
+    CreateOrderStore.setTotal(total)
   }
 }
 

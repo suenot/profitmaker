@@ -9,15 +9,18 @@ import { inject, observer } from 'mobx-react'
 import RGL, { WidthProvider } from 'react-grid-layout'
 const GridLayout = WidthProvider(RGL)
 
-@inject('DashboardsStore')
+import DashboardsStore from './stores/DashboardsStore'
+
+
+// @inject('DashboardsStore')
 @observer
 class Grid extends React.Component {
   onLayoutChange(layout, layouts) {
-    this.props.DashboardsStore.setLayout(layout)
+    DashboardsStore.setLayout(layout)
   }
 
   render() {
-    const {DashboardsStore} = this.props
+    // const {DashboardsStore} = this.props
     return (
       <Router>
         <GridLayout
@@ -63,7 +66,7 @@ class Grid extends React.Component {
   }
 
   removeWidget(id) {
-    this.props.DashboardsStore.removeWidget(id)
+    DashboardsStore.removeWidget(id)
   }
 }
 export default Grid

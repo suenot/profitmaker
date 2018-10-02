@@ -1,13 +1,16 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
-import GlobalStore from './GlobalStore'
+// import GlobalStore from './GlobalStore'
 import uuidv1 from 'uuid/v1'
 
 class OrdersStore {
 
-  @computed get stock() {return GlobalStore.stock }
-  @computed get stockLowerCase() {return GlobalStore.stockLowerCase }
-  @computed get pair() {return GlobalStore.pair }
+  // @computed get stock() {return GlobalStore.stock }
+  // @computed get stockLowerCase() {return GlobalStore.stockLowerCase }
+  // @computed get pair() {return GlobalStore.pair }
+  @observable stock = 'BINANCE'
+  @observable stockLowerCase = 'binance'
+  @observable pair = 'ETH_BTC'
 
   @observable orders = {
     'asks': [],
@@ -61,10 +64,16 @@ class OrdersStore {
   }
 }
 
-const store = window.OrdersStore = new OrdersStore()
+// const store = window.OrdersStore = new OrdersStore()
+const store = new OrdersStore()
 
 export default store
 
+// var counter = 0
+
 setInterval(() => {
   store.fetchOrders()
+  // counter += 1
+  // console.log(counter)
+  console.log(new Date())
 }, 2000)

@@ -57,10 +57,10 @@ const store = window.BalanceStore = new BalanceStore()
 
 export default store
 
-setInterval(() => {
-  store.fetchBalance(store.stock)
-  store.fetchBalance('TOTAL')
-  store.fetchBalanceHistory(store.stock)
-  store.fetchBalanceHistory('TOTAL')
-  store.available()
-}, 5000)
+// setInterval(() => {
+//   store.fetchBalance(store.stock)
+//   store.fetchBalance('TOTAL')
+//   store.fetchBalanceHistory(store.stock)
+//   store.fetchBalanceHistory('TOTAL')
+//   store.available()
+// }, 5000)

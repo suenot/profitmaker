@@ -35,6 +35,10 @@ import 'react-s-alert/dist/s-alert-css-effects/genie.css'
 import 'react-s-alert/dist/s-alert-css-effects/jelly.css'
 import 'react-s-alert/dist/s-alert-css-effects/stackslide.css'
 
+
+import GlobalStore from './stores/GlobalStore'
+import DashboardsStore from './stores/DashboardsStore'
+
 // components
 import Settings from './core_components/Settings'
 
@@ -135,10 +139,11 @@ const styles = theme => ({
   },
 })
 
-@inject('GlobalStore')
-@inject('DashboardsStore')
+// @inject('GlobalStore')
+// @inject('DashboardsStore')
 @observer
 class App extends React.Component {
+  // state = new CartView()
   state = {
     open: false,
   }
@@ -152,7 +157,8 @@ class App extends React.Component {
   }
 
   render() {
-    const { classes, GlobalStore, DashboardsStore } = this.props
+    // const { classes, GlobalStore, DashboardsStore } = this.props
+    const { classes } = this.props
 
     return (
       <React.Fragment>
@@ -227,7 +233,7 @@ class App extends React.Component {
             }}
           >
             <div className="drawer-spacer">
-              {React.createElement(GlobalStore.drawerRightComponent, {'data': GlobalStore.drawerRightData})}
+              {/* {React.createElement(GlobalStore.drawerRightComponent, {'data': GlobalStore.drawerRightData})} */}
             </div>
           </Drawer>
           <main className={classes.content}>
@@ -239,12 +245,12 @@ class App extends React.Component {
     )
   }
   addWidget(widget) {
-    this.props.DashboardsStore.addWidget(widget)
+    DashboardsStore.addWidget(widget)
   }
   drawerRightToggle(e) {
     console.log('settings')
-    this.props.GlobalStore.drawerRightToggle()
-    this.props.GlobalStore.drawerRightSet(Settings)
+    GlobalStore.drawerRightToggle()
+    GlobalStore.drawerRightSet(Settings)
   }
 }
 
