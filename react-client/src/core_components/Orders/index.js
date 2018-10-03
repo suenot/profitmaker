@@ -1,8 +1,8 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import _ from 'lodash'
-import OrdersStore from '../stores/OrdersStore'
-import CreateOrderStore from '../stores/CreateOrderStore'
+import OrdersStore from '../../stores/OrdersStore'
+import CreateOrderStore from '../../stores/CreateOrderStore'
 
 @observer
 class Orders extends React.Component {

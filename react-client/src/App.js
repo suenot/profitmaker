@@ -23,6 +23,7 @@ import 'element-theme-default'
 import './App.sass'
 import { observer } from 'mobx-react'
 import SettingsIcon from '@material-ui/icons/Settings'
+import AddIcon from '@material-ui/icons/Add'
 
 import Alert from 'react-s-alert'
 import 'react-s-alert/dist/s-alert-default.css'
@@ -38,11 +39,7 @@ import 'react-s-alert/dist/s-alert-css-effects/stackslide.css'
 import GlobalStore from './stores/GlobalStore'
 import DashboardsStore from './stores/DashboardsStore'
 
-// components
-import Settings from './core_components/Settings'
-
 const drawerWidth = 240
-
 const styles = theme => ({
   root: {
     display: 'flex',
@@ -105,7 +102,9 @@ const styles = theme => ({
   drawerPaperRight: {
     // position: 'relative',
     // whiteSpace: 'nowrap',
+    // width: drawerWidth,
     width: drawerWidth,
+    // width: drawerRightWidth,
     transition: theme.transitions.create('width', {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
@@ -138,6 +137,7 @@ const styles = theme => ({
   },
 })
 
+
 @observer
 class App extends React.Component {
   state = {
@@ -154,9 +154,17 @@ class App extends React.Component {
 
   render() {
     const { classes } = this.props
-
+    const Component = require(GlobalStore.drawerRightComponent+"").default
     return (
       <React.Fragment>
+        <style jsx="true">{`
+          .${classes.drawerPaperRight} {
+            width: ${GlobalStore.drawerRightWidth}
+          }
+          .${classes.drawerPaperRightClose} {
+            width: 0
+          }
+        `}</style>
         <CssBaseline />
         <div className={classes.root}>
           <Alert stack={{limit: 3}} />
@@ -180,9 +188,16 @@ class App extends React.Component {
               <IconButton
                 color="inherit"
                 aria-label="Settings"
-                onClick={this.drawerRightToggle.bind(this)}
+                onClick={this.drawerRightToggle.bind(this, "./core_components/Settings", "300px")}
               >
                 <SettingsIcon />
+              </IconButton>
+              <IconButton
+                color="inherit"
+                aria-label="Settings"
+                onClick={this.drawerRightToggle.bind(this, "./core_components/Market", "432px")}
+              >
+                <AddIcon />
               </IconButton>
             </Toolbar>
           </AppBar>
@@ -200,13 +215,13 @@ class App extends React.Component {
             </div>
             <Divider />
             {
-              _.map(DashboardsStore.widgetsMarket, (widget) => {
+              _.map(DashboardsStore.dashboards, (dashboard) => {
                 return (
-                  <ListItem button onClick={this.addWidget.bind(this, widget)} key={widget.id}>
+                  <ListItem button key={dashboard.id}>
                     <ListItemIcon>
-                      <img src={widget.icon} width="24px" height="24px" alt={widget.header}></img>
+                      <img src={dashboard.icon} width="24px" height="24px" alt={dashboard.name}></img>
                     </ListItemIcon>
-                    <ListItemText primary={widget.header} />
+                    <ListItemText primary={dashboard.name} />
                   </ListItem>
                 )
               })
@@ -221,7 +236,9 @@ class App extends React.Component {
             }}
           >
             <div className="drawer-spacer">
-              {React.createElement(GlobalStore.drawerRightComponent, {'data': GlobalStore.drawerRightData})}
+              {
+                React.createElement(Component, {'data': GlobalStore.drawerRightData})
+              }
             </div>
           </Drawer>
           <main className={classes.content}>
@@ -232,12 +249,15 @@ class App extends React.Component {
       </React.Fragment>
     )
   }
-  addWidget(widget) {
-    DashboardsStore.addWidget(widget)
-  }
-  drawerRightToggle() {
-    GlobalStore.drawerRightToggle()
-    GlobalStore.drawerRightSet(Settings)
+  drawerRightToggle(component, width) {
+    if (GlobalStore.drawerRightComponent === component) {
+      // current component
+      GlobalStore.drawerRightToggle()
+    } else {
+      // new component
+      if (GlobalStore.drawerRightOpen === false) GlobalStore.drawerRightToggle()
+      GlobalStore.drawerRightSet(component, width)
+    }
   }
 }
 
@@ -246,3 +266,5 @@ App.propTypes = {
 }
 
 export default withStyles(styles)(App)
+
+// export default App

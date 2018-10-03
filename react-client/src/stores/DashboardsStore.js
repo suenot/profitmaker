@@ -4,10 +4,17 @@ import _ from 'lodash'
 
 @version(1)
 class DashboardsStore {
+
+  @ignore @observable dashboards = [
+    { id: 0, name: 'First', bg: '#ccc', icon: '/img/widgets/008-bone.svg' },
+    { id: 1, name: 'Second', bg: '#ccc', icon: '/img/widgets/portfolio.svg' },
+  ]
+
+
   @observable counter = 15
   @ignore @observable widgetsMarket = [
-    { id: "0", icon: '/img/widgets/001-increasing-list-order.svg', component: './core_components/Orders', header: "Orders asks", data: {type: "asks"} },
-    { id: "1", icon: '/img/widgets/003-sort-by-attributes.svg', component: './core_components/Orders', header: "Orders bids", data: {type: "bids"} },
+    { id: "0", icon: '/img/widgets/001-increasing-list-order.svg', component: './core_components/Orders/index.js', header: "Orders asks", data: {type: "asks"} },
+    { id: "1", icon: '/img/widgets/003-sort-by-attributes.svg', component: './core_components/Orders/index.js', header: "Orders bids", data: {type: "bids"} },
     { id: "2", icon: '/img/widgets/019-pantheon.svg', component: './core_components/Stocks', header: "Stocks", data: {} },
     { id: "3", icon: '/img/widgets/008-bone.svg', component: './core_components/Pairs', header: "Pairs", data: {} },
     { id: "4", icon: '/img/widgets/funding-amounts.svg', component: './core_components/charts/HeikinAshi', header: "OHLCV", data: {} },
