@@ -31,11 +31,10 @@ class Pairs extends React.Component {
     )
   }
   toggleFilter(e) {
-    console.log(e.target.value)
-    this.props.GlobalStore.setPairsFilter(e.target.value)
+    GlobalStore.setPairsFilter(e.target.value)
   }
   setPair(pair) {
-    this.props.GlobalStore.setPair(pair)
+    GlobalStore.setPair(pair)
   }
 }
 
