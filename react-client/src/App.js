@@ -184,13 +184,6 @@ class App extends React.Component {
               >
                 <SettingsIcon />
               </IconButton>
-              {/* <IconButton
-                color="inherit"
-                aria-label="Settings"
-                onClick={this.handleClick1.bind(this)}
-              >
-                <QueryBuilder />
-              </IconButton> */}
             </Toolbar>
           </AppBar>
           <Drawer
