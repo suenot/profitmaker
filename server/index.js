@@ -74,7 +74,7 @@ const main = async () => {
     try { updateCoinmarketcap(60000) } catch(err) { console.log(err) }
 
     // // получение приватных данных с бирж
-    try { updateBalance(privateKeys, ethPockets, 60*60*1000) } catch(err) { console.log(err) }
+    try { updateBalance(privateKeys, ethPockets, 20*60*1000) } catch(err) { console.log(err) }
     // try { updateTradesHistory(localMongo, privateKeys, 60000) } catch(err) { console.log(err) }
     try { openOrders() } catch(err) { console.log(err) }
     // // try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
