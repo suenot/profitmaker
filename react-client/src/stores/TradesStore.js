@@ -5,6 +5,15 @@ import GlobalStore from './GlobalStore'
 import uuidv1 from 'uuid/v1'
 
 class TradesStore {
+  constructor() {
+    const start = () => {
+      this.fetchTrades()
+    }
+    start()
+    setInterval(() => {
+      if (this.counter > 0) start()
+    }, 5000)
+  }
   @computed get stock() {return GlobalStore.stock }
   @computed get stockLowerCase() {return GlobalStore.stockLowerCase }
   @computed get pair() {return GlobalStore.pair }
@@ -27,12 +36,12 @@ class TradesStore {
       this.trades = []
     })
   }
+
+  counter = 0
+  @action count(n) {
+    this.counter += n
+  }
 }
 
 const store = window.TradesStore = new TradesStore()
-
 export default store
-
-setInterval(() => {
-  store.fetchTrades()
-}, 5000)

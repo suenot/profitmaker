@@ -120,8 +120,6 @@ class GlobalStore {
 
 const store = window.GlobalStore = new GlobalStore()
 
-export default store
-
 const trunk = new AsyncTrunk(store, { storage: localStorage, storageKey: 'global' })
 trunk.init()
 
@@ -131,4 +129,4 @@ setInterval(async () => {
   await trunk.updateStore(store)
 }, 1000)
 
-
+export default store

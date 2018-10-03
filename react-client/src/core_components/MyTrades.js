@@ -1,15 +1,12 @@
 import React from 'react'
 import _ from 'lodash'
-import { inject, observer } from 'mobx-react'
+import { observer } from 'mobx-react'
 import moment from 'moment'
+import MyTradesStore from '../stores/MyTradesStore'
 
-@inject('MyTradesStore')
 @observer
 class MyTrades extends React.Component {
-
   render() {
-
-    const {MyTradesStore} = this.props
     return (
       <div>
         <table className="simpleTable">
@@ -28,7 +25,7 @@ class MyTrades extends React.Component {
           </thead>
           <tbody>
           {
-            _.map(MyTradesStore.myTrades, (item, i) => {
+            _.map(MyTradesStore.myTrades, (item) => {
               return (
                 <tr key={item.uuid}>
                   <td>{item['order']}</td>
@@ -48,6 +45,12 @@ class MyTrades extends React.Component {
         </table>
       </div>
     )
+  }
+  componentDidMount() {
+    MyTradesStore.count(1)
+  }
+  componentWillUnmount() {
+    MyTradesStore.count(-1)
   }
 }
 

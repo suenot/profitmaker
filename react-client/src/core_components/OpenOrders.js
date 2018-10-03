@@ -1,14 +1,13 @@
 import React from 'react'
 import _ from 'lodash'
-import { inject, observer } from 'mobx-react'
+import { observer } from 'mobx-react'
 import { Button } from 'element-react'
 import moment from 'moment'
+import OpenOrdersStore from '../stores/OpenOrdersStore'
 
-@inject('OpenOrdersStore')
 @observer
 class OpenOrders extends React.Component {
   render() {
-    const {OpenOrdersStore} = this.props
     return (
       <div>
         <table className="simpleTable">
@@ -62,7 +61,13 @@ class OpenOrders extends React.Component {
     )
   }
   cancelOrder(id, symbol, _id, stock, e) {
-    this.props.OpenOrdersStore.cancelOrder(id, symbol, _id, stock)
+    OpenOrdersStore.cancelOrder(id, symbol, _id, stock)
+  }
+  componentDidMount() {
+    OpenOrdersStore.count(1)
+  }
+  componentWillUnmount() {
+    OpenOrdersStore.count(-1)
   }
 }
 

@@ -1,15 +1,14 @@
 import React from 'react'
 import _ from 'lodash'
-import { inject, observer } from 'mobx-react'
+import { observer } from 'mobx-react'
+import GlobalStore from '../stores/GlobalStore'
 
-@inject('GlobalStore')
 @observer
 class Pairs extends React.Component {
   render() {
     var colWidth = {
       width: 180
     }
-    const {GlobalStore} = this.props
     return (
       <div>
         <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>

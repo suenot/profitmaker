@@ -1,13 +1,13 @@
 import React from 'react'
-import { inject, observer } from 'mobx-react'
+import { observer } from 'mobx-react'
 import Preloader from './Preloader'
 import ReactEcharts from 'echarts-for-react'
+import BalanceStore from '../stores/BalanceStore'
 
-@inject('BalanceStore')
 @observer
 class BalancePie extends React.Component {
   render() {
-    const {BalanceStore, data} = this.props
+    const {data} = this.props
     const {total} = data
     var balanceData = total ? BalanceStore['balanceTotal'] : BalanceStore['balanceStock']
     var legendData = []
@@ -84,6 +84,12 @@ class BalancePie extends React.Component {
         theme={'light'}
       />
     )
+  }
+  componentDidMount() {
+    BalanceStore.count(1)
+  }
+  componentWillUnmount() {
+    BalanceStore.count(-1)
   }
 }
 

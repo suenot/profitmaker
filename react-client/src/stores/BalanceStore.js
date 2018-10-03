@@ -4,6 +4,19 @@ import GlobalStore from './GlobalStore'
 import _ from 'lodash'
 
 class BalanceStore {
+  constructor() {
+    const start = () => {
+      this.fetchBalance(this.stock)
+      this.fetchBalance('TOTAL')
+      this.fetchBalanceHistory(this.stock)
+      this.fetchBalanceHistory('TOTAL')
+      this.available()
+    }
+    start()
+    setInterval(() => {
+      if (this.counter > 0) start()
+    }, 5000)
+  }
   @computed get stock() {return GlobalStore.stock }
   @computed get pair() {return GlobalStore.pair }
   @observable precision = 8
@@ -51,16 +64,13 @@ class BalanceStore {
       // console.log(error)
     })
   }
+
+  counter = 0
+  @action count(n) {
+    this.counter += n
+  }
 }
 
 const store = window.BalanceStore = new BalanceStore()
 
 export default store
-
-// setInterval(() => {
-//   store.fetchBalance(store.stock)
-//   store.fetchBalance('TOTAL')
-//   store.fetchBalanceHistory(store.stock)
-//   store.fetchBalanceHistory('TOTAL')
-//   store.available()
-// }, 5000)

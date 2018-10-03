@@ -1,12 +1,10 @@
 import React from 'react'
 import _ from 'lodash'
-import { inject, observer } from 'mobx-react'
-
-@inject('GlobalStore')
+import { observer } from 'mobx-react'
+import GlobalStore from '../stores/GlobalStore'
 @observer
 class Stocks extends React.Component {
   render() {
-    const {GlobalStore} = this.props
     return (
       <div>
         <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
@@ -25,10 +23,10 @@ class Stocks extends React.Component {
     )
   }
   toggleFilter(e) {
-    this.props.GlobalStore.setStocksFilter(e.target.value)
+    GlobalStore.setStocksFilter(e.target.value)
   }
   setStock(stock) {
-    this.props.GlobalStore.setStock(stock)
+    GlobalStore.setStock(stock)
   }
 }
 

@@ -1,13 +1,13 @@
 import React from 'react'
 import _ from 'lodash'
-import { inject, observer } from 'mobx-react'
+import { observer } from 'mobx-react'
 import moment from 'moment'
+import BalanceStore from '../stores/BalanceStore'
 
-@inject('BalanceStore')
 @observer
 class Balance extends React.Component {
   render() {
-    const {BalanceStore, data} = this.props
+    const {data} = this.props
     const {total} = data
     if (!BalanceStore.stock) {
       return (<div></div>)
@@ -55,6 +55,12 @@ class Balance extends React.Component {
         </table>
       </div>
     )
+  }
+  componentDidMount() {
+    BalanceStore.count(1)
+  }
+  componentWillUnmount() {
+    BalanceStore.count(-1)
   }
 }
 

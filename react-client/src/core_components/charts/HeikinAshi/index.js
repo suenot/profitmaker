@@ -1,13 +1,12 @@
 import React from 'react'
 import Chart from './Chart'
 import Preloader from '../../Preloader'
-import { inject, observer } from 'mobx-react'
+import { observer } from 'mobx-react'
+import OhlcvStore from '../../../stores/OhlcvStore'
 
-@inject('OhlcvStore')
 @observer
 export default class ChartComponent extends React.Component {
 	render() {
-		const {OhlcvStore} = this.props
 		if (!OhlcvStore.ohlcvComputed || (JSON.stringify(OhlcvStore.ohlcvComputed) === '[]') ) {
 			return <Preloader />
 		} else {
@@ -20,5 +19,11 @@ export default class ChartComponent extends React.Component {
 				<Chart type="hybrid" data={ordersJSON} />
 			)
 		}
-	}
+  }
+  componentDidMount() {
+    OhlcvStore.count(1)
+  }
+  componentWillUnmount() {
+    OhlcvStore.count(-1)
+  }
 }

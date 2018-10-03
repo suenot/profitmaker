@@ -4,6 +4,15 @@ import GlobalStore from './GlobalStore'
 import Alert from 'react-s-alert'
 
 class OpenOrdersStore {
+  constructor() {
+    const start = () => {
+      this.fetchOpenOrders()
+    }
+    start()
+    setInterval(() => {
+      if (this.counter > 0) start()
+    }, 5000)
+  }
   @computed get stock() {return GlobalStore.stock }
   @computed get pair() {return GlobalStore.pair }
 
@@ -47,13 +56,14 @@ class OpenOrdersStore {
       })
     })
   }
+
+  counter = 0
+  @action count(n) {
+    this.counter += n
+  }
 }
 
 
 const store = window.OpenOrdersStore = new OpenOrdersStore()
 
 export default store
-
-setInterval(() => {
-  store.fetchOpenOrders()
-}, 5000)

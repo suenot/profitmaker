@@ -5,22 +5,20 @@ import { BrowserRouter as Router } from "react-router-dom"
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import Clear from '@material-ui/icons/Clear'
-import { inject, observer } from 'mobx-react'
+import { observer } from 'mobx-react'
 import RGL, { WidthProvider } from 'react-grid-layout'
 const GridLayout = WidthProvider(RGL)
 
 import DashboardsStore from './stores/DashboardsStore'
 
 
-// @inject('DashboardsStore')
 @observer
 class Grid extends React.Component {
-  onLayoutChange(layout, layouts) {
+  onLayoutChange(layout) {
     DashboardsStore.setLayout(layout)
   }
 
   render() {
-    // const {DashboardsStore} = this.props
     return (
       <Router>
         <GridLayout

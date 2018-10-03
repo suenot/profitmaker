@@ -21,8 +21,7 @@ import ListItemText from '@material-ui/core/ListItemText'
 import Grid from './Grid'
 import 'element-theme-default'
 import './App.sass'
-import { inject, observer } from 'mobx-react'
-// import {Settings, QueryBuilder} from '@material-ui/icons'
+import { observer } from 'mobx-react'
 import SettingsIcon from '@material-ui/icons/Settings'
 
 import Alert from 'react-s-alert'
@@ -139,11 +138,8 @@ const styles = theme => ({
   },
 })
 
-// @inject('GlobalStore')
-// @inject('DashboardsStore')
 @observer
 class App extends React.Component {
-  // state = new CartView()
   state = {
     open: false,
   }
@@ -157,7 +153,6 @@ class App extends React.Component {
   }
 
   render() {
-    // const { classes, GlobalStore, DashboardsStore } = this.props
     const { classes } = this.props
 
     return (
@@ -233,7 +228,7 @@ class App extends React.Component {
             }}
           >
             <div className="drawer-spacer">
-              {/* {React.createElement(GlobalStore.drawerRightComponent, {'data': GlobalStore.drawerRightData})} */}
+              {React.createElement(GlobalStore.drawerRightComponent, {'data': GlobalStore.drawerRightData})}
             </div>
           </Drawer>
           <main className={classes.content}>
@@ -247,8 +242,7 @@ class App extends React.Component {
   addWidget(widget) {
     DashboardsStore.addWidget(widget)
   }
-  drawerRightToggle(e) {
-    console.log('settings')
+  drawerRightToggle() {
     GlobalStore.drawerRightToggle()
     GlobalStore.drawerRightSet(Settings)
   }

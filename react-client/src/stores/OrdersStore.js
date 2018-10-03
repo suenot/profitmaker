@@ -1,16 +1,21 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
-// import GlobalStore from './GlobalStore'
+import GlobalStore from './GlobalStore'
 import uuidv1 from 'uuid/v1'
 
 class OrdersStore {
-
-  // @computed get stock() {return GlobalStore.stock }
-  // @computed get stockLowerCase() {return GlobalStore.stockLowerCase }
-  // @computed get pair() {return GlobalStore.pair }
-  @observable stock = 'BINANCE'
-  @observable stockLowerCase = 'binance'
-  @observable pair = 'ETH_BTC'
+  constructor() {
+    const start = () => {
+      this.fetchOrders()
+    }
+    start()
+    setInterval(() => {
+      if (this.counter > 0) start()
+    }, 2000)
+  }
+  @computed get stock() {return GlobalStore.stock }
+  @computed get stockLowerCase() {return GlobalStore.stockLowerCase }
+  @computed get pair() {return GlobalStore.pair }
 
   @observable orders = {
     'asks': [],
@@ -20,9 +25,7 @@ class OrdersStore {
   @action async fetchOrders() {
     axios.get(`http://api.kupi.network/${this.stockLowerCase}/orders/${this.pair}`)
     .then((response) => {
-
       var _orders = response.data
-      // for(let ask in _orders.asks) {
       var sumAsks = 0
       for( let [key, order] of Object.entries(_orders.asks) ) {
         var price = order[0]
@@ -37,7 +40,6 @@ class OrdersStore {
           sum: sumAsks
         }
       }
-      // for(var bid of _orders.bids) {
       var sumBids = 0
       for( let [key, order] of Object.entries(_orders.bids) ) {
         var _price = order[0]
@@ -59,21 +61,15 @@ class OrdersStore {
         'asks': [],
         'bids': []
       }
-      // console.log(error)
     })
+  }
+
+  counter = 0
+  @action count(n) {
+    this.counter += n
   }
 }
 
-// const store = window.OrdersStore = new OrdersStore()
-const store = new OrdersStore()
+const store = window.OrdersStore = new OrdersStore()
 
 export default store
-
-// var counter = 0
-
-setInterval(() => {
-  store.fetchOrders()
-  // counter += 1
-  // console.log(counter)
-  console.log(new Date())
-}, 2000)

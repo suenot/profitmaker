@@ -1,12 +1,11 @@
 import React from 'react'
-import { inject, observer } from 'mobx-react'
+import { observer } from 'mobx-react'
 import { Input } from 'element-react'
+import GlobalStore from '../stores/GlobalStore'
 
-@inject('GlobalStore')
 @observer
 class Settings extends React.Component {
   render() {
-    const {GlobalStore} = this.props
     return (
       <div className="simpleForm">
         <div className="simpleForm-formGroup">

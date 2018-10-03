@@ -3,7 +3,15 @@ import axios from 'axios'
 import GlobalStore from './GlobalStore'
 
 class OhlcvStore {
-
+  constructor() {
+    const start = () => {
+      this.fetchOhlcv()
+    }
+    start()
+    setInterval(() => {
+      if (this.counter > 0) start()
+    }, 5000)
+  }
   @computed get stock() {return GlobalStore.stock }
   @computed get stockLowerCase() {return GlobalStore.stockLowerCase }
   @computed get pair() {return GlobalStore.pair }
@@ -46,12 +54,12 @@ class OhlcvStore {
     })
   }
 
+  counter = 0
+  @action count(n) {
+    this.counter += n
+  }
 }
 
 const store = window.OhlcvStore = new OhlcvStore()
 
 export default store
-
-setInterval(() => {
-  store.fetchOhlcv()
-}, 5000)
