@@ -24,6 +24,7 @@ import './App.sass'
 import { observer } from 'mobx-react'
 import SettingsIcon from '@material-ui/icons/Settings'
 import AddIcon from '@material-ui/icons/Add'
+import DeleteIcon from '@material-ui/icons/Delete'
 
 import Alert from 'react-s-alert'
 import 'react-s-alert/dist/s-alert-default.css'
@@ -144,12 +145,16 @@ class App extends React.Component {
     open: false,
   }
 
-  handleDrawerOpen = () => {
-    this.setState({ open: true })
-  }
+  // handleDrawerOpen = () => {
+  //   this.setState({ open: true })
+  // }
 
-  handleDrawerClose = () => {
-    this.setState({ open: false })
+  // handleDrawerClose = () => {
+  //   this.setState({ open: false })
+  // }
+
+  handleDrawerToggle = () => {
+    this.setState({ open: !this.state.open })
   }
 
   render() {
@@ -176,14 +181,14 @@ class App extends React.Component {
               <IconButton
                 color="inherit"
                 aria-label="Open drawer"
-                onClick={this.handleDrawerOpen}
+                onClick={this.handleDrawerToggle}
                 className={classNames(classes.menuButton, this.state.open && classes.hide)}
               >
                 <MenuIcon />
               </IconButton>
               <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1}}>
-                {GlobalStore.stock} : {GlobalStore.pair}
 
+                {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name.toUpperCase() || ''} : {GlobalStore.stock} : {GlobalStore.pair}
               </Typography>
               <IconButton
                 color="inherit"
@@ -194,10 +199,17 @@ class App extends React.Component {
               </IconButton>
               <IconButton
                 color="inherit"
-                aria-label="Settings"
+                aria-label="Market"
                 onClick={this.drawerRightToggle.bind(this, "./core_components/Market", "432px")}
               >
                 <AddIcon />
+              </IconButton>
+              <IconButton
+                color="inherit"
+                aria-label="Settings"
+                onClick={this.deleteDashboard.bind(this, DashboardsStore.dashboardActiveId)}
+              >
+                <DeleteIcon />
               </IconButton>
             </Toolbar>
           </AppBar>
@@ -209,15 +221,16 @@ class App extends React.Component {
             open={this.state.open}
           >
             <div className={classes.toolbarIcon}>
-              <IconButton onClick={this.handleDrawerClose}>
-                <ChevronLeftIcon />
-              </IconButton>
+              <ListItem button>
+                <ListItemText primary="New dashboard" onClick={this.addDashboard.bind(this)}/>
+              </ListItem>
+
             </div>
             <Divider />
             {
               _.map(DashboardsStore.dashboards, (dashboard) => {
                 return (
-                  <ListItem button key={dashboard.id}>
+                  <ListItem button key={dashboard.id} onClick={this.setDashboard.bind(this, dashboard.id)}>
                     <ListItemIcon>
                       <img src={dashboard.icon} width="24px" height="24px" alt={dashboard.name}></img>
                     </ListItemIcon>
@@ -258,6 +271,15 @@ class App extends React.Component {
       if (GlobalStore.drawerRightOpen === false) GlobalStore.drawerRightToggle()
       GlobalStore.drawerRightSet(component, width)
     }
+  }
+  setDashboard(id) {
+    DashboardsStore.setDashboard(id)
+  }
+  addDashboard() {
+    DashboardsStore.addDashboard()
+  }
+  deleteDashboard(id) {
+    DashboardsStore.deleteDashboard(id)
   }
 }
 

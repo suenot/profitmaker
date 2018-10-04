@@ -8,6 +8,7 @@ import Clear from '@material-ui/icons/Clear'
 import { observer } from 'mobx-react'
 import RGL, { WidthProvider } from 'react-grid-layout'
 const GridLayout = WidthProvider(RGL)
+import Preloader from './core_components/Preloader'
 
 import DashboardsStore from './stores/DashboardsStore'
 
@@ -19,6 +20,9 @@ class Grid extends React.Component {
   }
 
   render() {
+    if (DashboardsStore.dashboardActiveId === '0') {
+      return <div></div>
+    }
     return (
       <Router>
         <GridLayout
@@ -37,7 +41,8 @@ class Grid extends React.Component {
           draggableHandle=".widget-header"
         >
           {
-            _.map(DashboardsStore.widgets, (widget) => {
+            JSON.stringify(DashboardsStore.dashboardActiveId) !== 'false' &&
+            _.map(DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].widgets, (widget) => {
               const Component = require(widget.component+"").default
               return (
                 <div key={widget.i} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
