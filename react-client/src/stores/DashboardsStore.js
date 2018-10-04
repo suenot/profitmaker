@@ -82,7 +82,7 @@ class DashboardsStore {
   }
 
   @action addWidget(widget) {
-    this.dashboards[this.dashboardActiveId].counter = (parseInt(this.dashboards[this.dashboardActiveId].counter) + 1).toString()
+    this.dashboards[this.dashboardActiveId].counter = (parseInt(this.dashboards[this.dashboardActiveId].counter, 10) + 1).toString()
     // this.counter += 1
     this.dashboards[this.dashboardActiveId].widgets.push({
       i: this.dashboards[this.dashboardActiveId].counter+"", component: widget.component, header: widget.header, data: widget.data, x: 0, y: 0, w: 5, h: 19, minW: 2, minH: 3
@@ -94,7 +94,6 @@ class DashboardsStore {
     this.dashboards[this.dashboardActiveId].widgets = _.filter(this.dashboards[this.dashboardActiveId].widgets, function(item) {
       return item.i !== id;
     })
-    // this.dashboards[this.dashboardActiveId].counter = (parseInt(this.dashboards[this.dashboardActiveId].counter) - 1).toString()
   }
 
 }

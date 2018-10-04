@@ -13,7 +13,6 @@ import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import IconButton from '@material-ui/core/IconButton'
 import MenuIcon from '@material-ui/icons/Menu'
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
@@ -188,7 +187,7 @@ class App extends React.Component {
               </IconButton>
               <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1}}>
 
-                {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name.toUpperCase() || ''} : {GlobalStore.stock} : {GlobalStore.pair}
+                {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name.toUpperCase()} : {GlobalStore.stock} : {GlobalStore.pair}
               </Typography>
               <IconButton
                 color="inherit"

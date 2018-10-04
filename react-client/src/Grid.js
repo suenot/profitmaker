@@ -8,7 +8,6 @@ import Clear from '@material-ui/icons/Clear'
 import { observer } from 'mobx-react'
 import RGL, { WidthProvider } from 'react-grid-layout'
 const GridLayout = WidthProvider(RGL)
-import Preloader from './core_components/Preloader'
 
 import DashboardsStore from './stores/DashboardsStore'
 
