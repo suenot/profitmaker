@@ -66,10 +66,11 @@ class DashboardsStore {
   // DashboardsStore.dashboards[DashboardsStore.dashboardActiveId]
   @action setLayout(layout) {
     // var widgets = _.clone(JSON.parse(JSON.stringify(this.widgets)))
+    console.log(layout)
     var widgets = _.clone(JSON.parse(JSON.stringify(this.dashboards[this.dashboardActiveId].widgets)))
     for (var i = 0; i<widgets.length; i++) {
       for (var j = 0; j<layout.length; j++) {
-        if (widgets[i].i === layout[j].i) {
+        if (widgets[i].unicId === layout[j].unicId) {
           widgets[i].x = layout[j].x
           widgets[i].y = layout[j].y
           widgets[i].w = layout[j].w
@@ -82,10 +83,12 @@ class DashboardsStore {
   }
 
   @action addWidget(widget) {
+    // var counter = this.dashboards[this.dashboardActiveId].counter
+    var dashboardName = this.dashboards[this.dashboardActiveId].name
     this.dashboards[this.dashboardActiveId].counter = (parseInt(this.dashboards[this.dashboardActiveId].counter, 10) + 1).toString()
     // this.counter += 1
     this.dashboards[this.dashboardActiveId].widgets.push({
-      i: this.dashboards[this.dashboardActiveId].counter+"", component: widget.component, header: widget.header, data: widget.data, x: 0, y: 0, w: 5, h: 19, minW: 2, minH: 3
+      i: this.dashboards[this.dashboardActiveId].counter+"", uid: dashboardName+'_'+this.dashboards[this.dashboardActiveId].counter, component: widget.component, header: widget.header, data: widget.data, x: 0, y: 0, w: 5, h: 19, minW: 2, minH: 3
     })
   }
 
