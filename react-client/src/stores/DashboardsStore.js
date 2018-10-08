@@ -1,27 +1,37 @@
 import { observable, action, reaction } from 'mobx'
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import _ from 'lodash'
+import GlobalStore from './GlobalStore'
 
 @version(1)
 class DashboardsStore {
+  constructor() {
+    const trunk = new AsyncTrunk(store, { storage: localStorage, storageKey: 'dashboards' })
+    trunk.init()
+    reaction(
+      () => store.widgets,
+      () => trunk.updateStore(store)
+    )
+  }
   @observable dashboardsCounter = 2
   @observable dashboardActiveId = '1'
   @observable dashboards = {
-    '1': { id: '1', name: 'First', bg: '#ccc', icon: '/img/widgets/008-bone.svg', widgets: [], counter: 0},
-    '2': { id: '2', name: 'Second', bg: '#ccc', icon: '/img/widgets/portfolio.svg', widgets: [], counter: 0},
+    '1': { id: '1', name: 'First', bg: '#ccc', icon: '/img/widgets/008-bone.svg', type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0},
+    '2': { id: '2', name: 'Second', bg: '#ccc', icon: '/img/widgets/portfolio.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0},
   }
   @action setDashboard(id) {
     this.dashboardActiveId = id
+    GlobalStore.setStock(this.dashboards[this.dashboardActiveId].stock)
+    GlobalStore.setPair(this.dashboards[this.dashboardActiveId].pair)
   }
-  @action addDashboard(id) {
+  @action addDashboard() {
     this.dashboardsCounter += 1
-    this.dashboards[this.dashboardsCounter+""] = { id: this.dashboardsCounter+"", name: 'Dash', bg: '#ccc', icon: '/img/widgets/010-footprint.svg', widgets: [], counter: 0}
+    this.dashboards[this.dashboardsCounter+""] = { id: this.dashboardsCounter+"", name: 'Dash', bg: '#ccc', icon: '/img/widgets/010-footprint.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0}
   }
   @action deleteDashboard(id) {
     delete this.dashboards[id]
     this.dashboardActiveId = '0'
   }
-
 
   @observable counter = 15
   @ignore @observable widgetsMarket = [
@@ -42,30 +52,7 @@ class DashboardsStore {
     { id: '14', icon: '/img/widgets/portfolio.svg', component: './core_components/BalanceHistoryArea', header: 'Total balance history', data: {total: true} },
     { id: '15', icon: '/img/widgets/portfolio.svg', component: './core_components/BalanceHistoryArea', header: 'Balance history', data: {total: false} },
   ]
-  // TODO
-  // @observable widgets = []
-  // @observable widgets = [
-  //   {i: "0", component: './core_components/Orders', header: "Orders asks", data: {type: "asks"}, x: 19, y: 0, w: 5, h: 19, minW: 2, minH: 3},
-  //   {i: "1", component: './core_components/Orders', header: "Orders bids", data: {type: "bids"}, x: 19, y: 19, w: 5, h: 19, minW: 2, minH: 3},
-  //   {i: "2", component: './core_components/Balance', header: "Total balance", data: {total: true}, x: 9, y: 51, w: 5, h: 13, minW: 2, minH: 3},
-  //   {i: "3", component: './core_components/charts/HeikinAshi', header: "OHLCV", data: {}, x: 5, y: 0, w: 14, h: 23, minW: 2, minH: 3},
-  //   {i: "4", component: './core_components/Balance', header: "Balance", data: {total: false}, x: 9, y: 38, w: 5, h: 13, minW: 2, minH: 3},
-  //   {i: "5", component: './core_components/Pairs', header: "Pairs", data: {}, x: 0, y: 9, w: 5, h: 14, minW: 2, minH: 3},
-  //   {i: "6", component: './core_components/Stocks', header: "Stocks", data: {}, x: 0, y: 0, w: 5, h: 9, minW: 2, minH: 3},
-  //   {i: "7", component: './core_components/OpenOrders', header: "Open orders", data: {}, x: 0, y: 23, w: 9, h: 15, minW: 2, minH: 3},
-  //   {i: "8", component: './core_components/MyTrades', header: "My trades", data: {}, x: 0, y: 38, w: 9, h: 13, minW: 2, minH: 3},
-  //   {i: "9", component: './core_components/Trades', header: "Trades", data: {}, x: 0, y: 51, w: 9, h: 13, minW: 2, minH: 3},
-  //   {i: "10", component: './core_components/CreateOrder', header: "Limit sell", data: {type: "sell"}, x: 14, y: 23, w: 5, h: 15, minW: 2, minH: 3},
-  //   {i: "11", component: './core_components/CreateOrder', header: "Limit buy", data: {type: "buy"}, x: 9, y: 23, w: 5, h: 15, minW: 2, minH: 3},
-  //   {i: "12", component: './core_components/BalancePie', header: "Total balance", data: {total: true}, x: 14, y: 51, w: 5, h: 13, minW: 2, minH: 3},
-  //   {i: "13", component: './core_components/BalancePie', header: "Balance", data: {total: false}, x: 14, y: 38, w: 5, h: 13, minW: 2, minH: 3},
-  //   {i: "14", component: './core_components/BalanceHistoryArea', header: "Balance history", data: {total: false}, x: 19, y: 38, w: 5, h: 13, minW: 2, minH: 3},
-  //   {i: "15", component: './core_components/BalanceHistoryArea', header: "Total balance history", data: {total: true}, x: 19, y: 51, w: 5, h: 13, minW: 2, minH: 3},
-  // ]
-
-  // DashboardsStore.dashboards[DashboardsStore.dashboardActiveId]
   @action setLayout(layout) {
-    // var widgets = _.clone(JSON.parse(JSON.stringify(this.widgets)))
     console.log(layout)
     var widgets = _.clone(JSON.parse(JSON.stringify(this.dashboards[this.dashboardActiveId].widgets)))
     for (var i = 0; i<widgets.length; i++) {
@@ -83,17 +70,14 @@ class DashboardsStore {
   }
 
   @action addWidget(widget) {
-    // var counter = this.dashboards[this.dashboardActiveId].counter
     var dashboardName = this.dashboards[this.dashboardActiveId].name
     this.dashboards[this.dashboardActiveId].counter = (parseInt(this.dashboards[this.dashboardActiveId].counter, 10) + 1).toString()
-    // this.counter += 1
     this.dashboards[this.dashboardActiveId].widgets.push({
       i: this.dashboards[this.dashboardActiveId].counter+"", uid: dashboardName+'_'+this.dashboards[this.dashboardActiveId].counter, component: widget.component, header: widget.header, data: widget.data, x: 0, y: 0, w: 5, h: 19, minW: 2, minH: 3
     })
   }
 
   @action removeWidget(id) {
-    // this.widgets = _.filter(this.widgets, function(item) {
     this.dashboards[this.dashboardActiveId].widgets = _.filter(this.dashboards[this.dashboardActiveId].widgets, function(item) {
       return item.i !== id;
     })
@@ -101,14 +85,7 @@ class DashboardsStore {
 
 }
 
-const store = window.DashboardsStore = new DashboardsStore()
+// const store = window.DashboardsStore = new DashboardsStore()
+// export default store
 
-const trunk = new AsyncTrunk(store, { storage: localStorage, storageKey: 'dashboards' })
-trunk.init()
-
-reaction(
-  () => store.widgets,
-  () => trunk.updateStore(store)
-)
-
-export default store
+export default DashboardsStore
