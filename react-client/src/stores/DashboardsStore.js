@@ -1,9 +1,6 @@
-import { observable, action, reaction } from 'mobx'
+import { observable, action, reaction, computed } from 'mobx'
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import _ from 'lodash'
-import StocksStore from './StocksStore'
-import PairsStore from './PairsStore'
-// import GlobalStore from './GlobalStore'
 
 @version(1)
 class DashboardsStore {
@@ -21,11 +18,12 @@ class DashboardsStore {
     '1': { id: '1', name: 'First', bg: '#ccc', icon: '/img/widgets/008-bone.svg', type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0},
     '2': { id: '2', name: 'Second', bg: '#ccc', icon: '/img/widgets/portfolio.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0},
   }
+  @computed get name() { return this.dashboards[this.dashboardActiveId].name }
+  @computed get stock() { return this.dashboards[this.dashboardActiveId].stock }
+  @computed get stockLowerCase() { return (this.dashboards[this.dashboardActiveId].stock).toLowerCase() }
+  @computed get pair() { return this.dashboards[this.dashboardActiveId].pair }
   @action setDashboard(id) {
     this.dashboardActiveId = id
-    // TODO
-    StocksStore.setStock(this.dashboards[this.dashboardActiveId].stock)
-    PairsStore.setPair(this.dashboards[this.dashboardActiveId].pair)
   }
   @action addDashboard() {
     this.dashboardsCounter += 1
@@ -37,9 +35,7 @@ class DashboardsStore {
   }
 
   @observable counter = 15
-  // @ignore @observable widgetsMarket = [
-  // TODO
-  @observable widgetsMarket = [
+  @ignore @observable widgetsMarket = [
     { id: '0', icon: '/img/widgets/001-increasing-list-order.svg', component: './core_components/Orders/index.js', header: 'Orders asks', data: {type: 'asks'} },
     { id: '1', icon: '/img/widgets/003-sort-by-attributes.svg', component: './core_components/Orders/index.js', header: 'Orders bids', data: {type: 'bids'} },
     { id: '2', icon: '/img/widgets/019-pantheon.svg', component: './core_components/Stocks', header: 'Stocks', data: {} },
@@ -91,5 +87,3 @@ class DashboardsStore {
 
 const store = window.DashboardsStore = new DashboardsStore()
 export default store
-
-// export default DashboardsStore

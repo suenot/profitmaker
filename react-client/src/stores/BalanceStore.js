@@ -1,8 +1,6 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
-// import GlobalStore from './GlobalStore'
-import StocksStore from './StocksStore'
-import PairsStore from './PairsStore'
+import DashboardsStore from './DashboardsStore'
 import _ from 'lodash'
 
 class BalanceStore {
@@ -19,8 +17,8 @@ class BalanceStore {
       if (this.counter > 0) start()
     }, 5000)
   }
-  @computed get stock() {return StocksStore.stock }
-  @computed get pair() {return PairsStore.pair }
+  @computed get stock() {return DashboardsStore.stock }
+  @computed get pair() {return DashboardsStore.pair }
   @observable precision = 8
   @observable balanceTotal = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': []}
   @observable balanceStock = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': []}
@@ -63,7 +61,6 @@ class BalanceStore {
       }
     })
     .catch((error) => {
-      // console.log(error)
     })
   }
 

@@ -1,12 +1,12 @@
-import { observable, action, reaction } from 'mobx'
-import { version, AsyncTrunk, ignore } from 'mobx-sync'
-import _ from 'lodash'
-// import GlobalStore from './GlobalStore'
+import { observable } from 'mobx'
+import { version, AsyncTrunk } from 'mobx-sync'
 
+@version(1)
 class SettingsStore {
-  // constructor(GlobalStore) {
-  //   this.GlobalStore = GlobalStore
-  // }
+  constructor() {
+    const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'settings' })
+    trunk.init()
+  }
   @observable serverBackend = {
     name: 'Server backend',
     value: 'http://api.kupi.network/'

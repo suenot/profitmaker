@@ -36,11 +36,8 @@ import 'react-s-alert/dist/s-alert-css-effects/jelly.css'
 import 'react-s-alert/dist/s-alert-css-effects/stackslide.css'
 
 
-// import GlobalStore from './stores/GlobalStore'
 import DashboardsStore from './stores/DashboardsStore'
 import DrawersStore from './stores/DrawersStore'
-import StocksStore from './stores/StocksStore'
-import PairsStore from './stores/PairsStore'
 
 const drawerWidth = 240
 const styles = theme => ({
@@ -190,7 +187,7 @@ class App extends React.Component {
               </IconButton>
               <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1}}>
                 {/* {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name.toUpperCase()} */}
-                {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name.toUpperCase()} : {StocksStore.stock} : {PairsStore.pair}
+                {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.name.toUpperCase()} : {DashboardsStore.stock} : {DashboardsStore.pair}
               </Typography>
               <IconButton
                 color="inherit"
@@ -290,5 +287,3 @@ App.propTypes = {
 }
 
 export default withStyles(styles)(App)
-
-// export default App

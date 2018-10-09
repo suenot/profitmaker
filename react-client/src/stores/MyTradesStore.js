@@ -1,9 +1,7 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
-// import GlobalStore from './GlobalStore'
-import StocksStore from './StocksStore'
-import PairsStore from './PairsStore'
 import uuidv1 from 'uuid/v1'
+import DashboardsStore from './DashboardsStore'
 
 class MyTradesStore {
   constructor() {
@@ -15,8 +13,8 @@ class MyTradesStore {
       if (this.counter > 0) start()
     }, 5000)
   }
-  @computed get stock() {return StocksStore.stock }
-  @computed get pair() {return PairsStore.pair }
+  @computed get stock() {return DashboardsStore.stock }
+  @computed get pair() {return DashboardsStore.pair }
 
   @observable myTrades = {}
 

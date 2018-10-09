@@ -1,29 +1,17 @@
-// import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
-import _ from 'lodash'
-import StocksStore from './StocksStore'
 import DashboardsStore from './DashboardsStore'
 
-// @version(1)
 class PairsStore {
-  // constructor(GlobalStore) {
-  //   this.GlobalStore = GlobalStore
-  //   const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'pairs' })
-  //   trunk.init()
-  // }
+  constructor() {
+    setInterval(async () => {
+      await this.fetchPairs()
+    }, 1000)
+  }
+  @computed get stock() {return DashboardsStore.stock }
+  @computed get stockLowerCase() {return DashboardsStore.stockLowerCase }
 
-  @computed get stock() {return StocksStore.stock }
-  @computed get stockLowerCase() {return StocksStore.stockLowerCase }
-
-  @observable pair = 'ETH_BTC'
   @observable pairsFilter = ''
-  // @computed get base() {
-  //   return this.pair.split('_')[0]
-  // }
-  // @computed get quote() {
-  //   return this.pair.split('_')[1]
-  // }
 
   @observable pairs = []
 
@@ -37,10 +25,7 @@ class PairsStore {
     this.pairsFilter = _pair
   }
 
-
-
   @action setPair(_pair) {
-    this.pair = _pair
     DashboardsStore.dashboards[ DashboardsStore.dashboardActiveId ].pair = _pair
   }
 
@@ -60,10 +45,3 @@ class PairsStore {
 
 const store = window.PairsStore = new PairsStore()
 export default store
-
-// export default PairsStore
-
-setInterval(async () => {
-  await store.fetchPairs()
-  // await trunk.updateStore(store)
-}, 1000)

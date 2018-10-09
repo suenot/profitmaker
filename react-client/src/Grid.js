@@ -43,7 +43,6 @@ class Grid extends React.Component {
             JSON.stringify(DashboardsStore.dashboardActiveId) !== 'false' &&
             _.map(DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].widgets, (widget) => {
               const Component = require(widget.component+"").default
-              console.log(widget.uid)
               return (
                 <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
                   <div className="widget">

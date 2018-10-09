@@ -1,8 +1,6 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
-// import GlobalStore from './GlobalStore'
-import StocksStore from './StocksStore'
-import PairsStore from './PairsStore'
+import DashboardsStore from './DashboardsStore'
 import Alert from 'react-s-alert'
 
 class OpenOrdersStore {
@@ -15,8 +13,8 @@ class OpenOrdersStore {
       if (this.counter > 0) start()
     }, 5000)
   }
-  @computed get stock() {return StocksStore.stock }
-  @computed get pair() {return PairsStore.pair }
+  @computed get stock() {return DashboardsStore.stock }
+  @computed get pair() {return DashboardsStore.pair }
 
 
   @observable openOrders = {}
@@ -41,7 +39,6 @@ class OpenOrdersStore {
       symbol: symbol,
       stock: stock
     }).then((response) => {
-      // console.log(response.data)
       Alert.success('orderCanceled', {
         position: 'bottom-right',
         effect: 'scale',
@@ -49,7 +46,6 @@ class OpenOrdersStore {
         timeout: 'none'
       })
     }).catch((error) => {
-      // console.log(error.response.data.error)
       Alert.error(error.response.data.error, {
         position: 'bottom-right',
         effect: 'scale',
@@ -58,7 +54,6 @@ class OpenOrdersStore {
       })
     })
   }
-
   counter = 0
   @action count(n) {
     this.counter += n

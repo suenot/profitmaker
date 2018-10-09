@@ -1,15 +1,13 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
-// import GlobalStore from './GlobalStore'
-import StocksStore from './StocksStore'
-import PairsStore from './PairsStore'
+import DashboardsStore from './DashboardsStore'
 import BalanceStore from './BalanceStore'
 import Alert from 'react-s-alert'
 
 
 class CreateOrderStore {
-  @computed get stock() {return StocksStore.stock }
-  @computed get pair() {return PairsStore.pair }
+  @computed get stock() {return DashboardsStore.stock }
+  @computed get pair() {return DashboardsStore.pair }
 
   @computed get availableBuy() {return BalanceStore.availableBuy }
   @computed get availableSell() {return BalanceStore.availableSell }
@@ -65,7 +63,6 @@ class CreateOrderStore {
 
     })
     .catch((error) => {
-      // console.log(error.response.data.error)
       Alert.error(error.response.data.error, {
         position: 'bottom-right',
         effect: 'scale',

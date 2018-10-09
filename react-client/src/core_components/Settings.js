@@ -1,7 +1,6 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import { Input } from 'element-react'
-// import GlobalStore from '../stores/GlobalStore'
 import SettingsStore from '../stores/SettingsStore'
 
 @observer

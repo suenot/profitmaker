@@ -1,24 +1,18 @@
-import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
 import DashboardsStore from './DashboardsStore'
 
 
-@version(1)
 class StocksStore {
-  // constructor(GlobalStore) {
-  //   this.GlobalStore = GlobalStore
-  //   const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'stocks' })
-  //   trunk.init()
-  // }
-  @observable stock = 'BINANCE'
-  @computed get stockLowerCase() {
-    return this.stock.toLowerCase()
+  constructor(){
+    setInterval(async () => {
+      await this.fetchStocks()
+    }, 1000)
   }
 
-  @ignore @observable stocks = []
-  @ignore @observable stocksFilter = ''
+  @observable stocks = []
+  @observable stocksFilter = ''
 
   @action setStocksFilter(_stock) {
     this.stocksFilter = _stock
@@ -48,11 +42,5 @@ class StocksStore {
 }
 
 const store = window.StocksStore = new StocksStore()
+
 export default store
-
-// export default StocksStore
-
-setInterval(async () => {
-  await store.fetchStocks()
-  // await trunk.updateStore(store)
-}, 1000)

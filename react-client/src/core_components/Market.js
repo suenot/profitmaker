@@ -1,8 +1,6 @@
 import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
-
-// import widget from'./Orders/widget.png'
 import DashboardsStore from '../stores/DashboardsStore'
 
 @observer
@@ -36,6 +34,3 @@ class Market extends React.Component {
 }
 
 export default Market
-//
-// {/* <img src={widget} alt=""/> */}
-//
