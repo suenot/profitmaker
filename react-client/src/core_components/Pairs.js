@@ -1,7 +1,8 @@
 import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
-import GlobalStore from '../stores/GlobalStore'
+// import GlobalStore from '../stores/GlobalStore'
+import PairsStore from '../stores/PairsStore'
 
 @observer
 class Pairs extends React.Component {
@@ -15,7 +16,7 @@ class Pairs extends React.Component {
         <table className="simpleTable">
           <tbody>
             {
-              _.map(GlobalStore.pairsComputed.slice(0, 10), (pair) => {
+              _.map(PairsStore.pairsComputed.slice(0, 10), (pair) => {
                 return <tr key={pair}>
                   <td style={colWidth}>
                     <div className="cell" onClick={this.setPair.bind(this, pair)}>
@@ -31,10 +32,10 @@ class Pairs extends React.Component {
     )
   }
   toggleFilter(e) {
-    GlobalStore.setPairsFilter(e.target.value)
+    PairsStore.setPairsFilter(e.target.value)
   }
   setPair(pair) {
-    GlobalStore.setPair(pair)
+    PairsStore.setPair(pair)
   }
 }
 

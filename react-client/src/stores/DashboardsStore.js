@@ -1,18 +1,19 @@
 import { observable, action, reaction } from 'mobx'
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import _ from 'lodash'
+import StocksStore from './StocksStore'
+import PairsStore from './PairsStore'
 // import GlobalStore from './GlobalStore'
 
-// @version(1)
+@version(1)
 class DashboardsStore {
-  constructor(GlobalStore) {
-    this.GlobalStore = GlobalStore
-    // const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'dashboards' })
-    // trunk.init()
-    // reaction(
-    //   () => this.widgets,
-    //   () => trunk.updateStore(this)
-    // )
+  constructor() {
+    const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'dashboards' })
+    trunk.init()
+    reaction(
+      () => this.widgets,
+      () => trunk.updateStore(this)
+    )
   }
   @observable dashboardsCounter = 2
   @observable dashboardActiveId = '1'
@@ -23,8 +24,8 @@ class DashboardsStore {
   @action setDashboard(id) {
     this.dashboardActiveId = id
     // TODO
-    this.GlobalStore.StocksStore.setStock(this.dashboards[this.dashboardActiveId].stock)
-    this.GlobalStore.PairsStore.setPair(this.dashboards[this.dashboardActiveId].pair)
+    StocksStore.setStock(this.dashboards[this.dashboardActiveId].stock)
+    PairsStore.setPair(this.dashboards[this.dashboardActiveId].pair)
   }
   @action addDashboard() {
     this.dashboardsCounter += 1
@@ -57,11 +58,10 @@ class DashboardsStore {
     { id: '15', icon: '/img/widgets/portfolio.svg', component: './core_components/BalanceHistoryArea', header: 'Balance history', data: {total: false} },
   ]
   @action setLayout(layout) {
-    console.log(layout)
     var widgets = _.clone(JSON.parse(JSON.stringify(this.dashboards[this.dashboardActiveId].widgets)))
     for (var i = 0; i<widgets.length; i++) {
       for (var j = 0; j<layout.length; j++) {
-        if (widgets[i].unicId === layout[j].unicId) {
+        if (widgets[i].uid === layout[j].i) {
           widgets[i].x = layout[j].x
           widgets[i].y = layout[j].y
           widgets[i].w = layout[j].w
@@ -89,7 +89,7 @@ class DashboardsStore {
 
 }
 
-// const store = window.DashboardsStore = new DashboardsStore()
-// export default store
+const store = window.DashboardsStore = new DashboardsStore()
+export default store
 
-export default DashboardsStore
+// export default DashboardsStore

@@ -36,8 +36,11 @@ import 'react-s-alert/dist/s-alert-css-effects/jelly.css'
 import 'react-s-alert/dist/s-alert-css-effects/stackslide.css'
 
 
-import GlobalStore from './stores/GlobalStore'
+// import GlobalStore from './stores/GlobalStore'
 import DashboardsStore from './stores/DashboardsStore'
+import DrawersStore from './stores/DrawersStore'
+import StocksStore from './stores/StocksStore'
+import PairsStore from './stores/PairsStore'
 
 const drawerWidth = 240
 const styles = theme => ({
@@ -158,12 +161,12 @@ class App extends React.Component {
 
   render() {
     const { classes } = this.props
-    const Component = require(GlobalStore.drawerRightComponent+"").default
+    const Component = require(DrawersStore.drawerRightComponent+"").default
     return (
       <React.Fragment>
         <style jsx="true">{`
           .${classes.drawerPaperRight} {
-            width: ${GlobalStore.drawerRightWidth}
+            width: ${DrawersStore.drawerRightWidth}
           }
           .${classes.drawerPaperRightClose} {
             width: 0
@@ -186,8 +189,8 @@ class App extends React.Component {
                 <MenuIcon />
               </IconButton>
               <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1}}>
-
-                {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name.toUpperCase()} : {GlobalStore.stock} : {GlobalStore.pair}
+                {/* {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name.toUpperCase()} */}
+                {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name.toUpperCase()} : {StocksStore.stock} : {PairsStore.pair}
               </Typography>
               <IconButton
                 color="inherit"
@@ -241,15 +244,15 @@ class App extends React.Component {
           </Drawer>
           <Drawer
             anchor="right"
-            open={GlobalStore.drawerRightOpen}
+            open={DrawersStore.drawerRightOpen}
             variant="permanent"
             classes={{
-              paper: classNames(classes.drawerPaperRight, !GlobalStore.drawerRightOpen && classes.drawerPaperRightClose),
+              paper: classNames(classes.drawerPaperRight, !DrawersStore.drawerRightOpen && classes.drawerPaperRightClose),
             }}
           >
             <div className="drawer-spacer">
               {
-                React.createElement(Component, {'data': GlobalStore.drawerRightData})
+                React.createElement(Component, {'data': DrawersStore.drawerRightData})
               }
             </div>
           </Drawer>
@@ -262,13 +265,13 @@ class App extends React.Component {
     )
   }
   drawerRightToggle(component, width) {
-    if (GlobalStore.drawerRightComponent === component) {
+    if (DrawersStore.drawerRightComponent === component) {
       // current component
-      GlobalStore.drawerRightToggle()
+      DrawersStore.drawerRightToggle()
     } else {
       // new component
-      if (GlobalStore.drawerRightOpen === false) GlobalStore.drawerRightToggle()
-      GlobalStore.drawerRightSet(component, width)
+      if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
+      DrawersStore.drawerRightSet(component, width)
     }
   }
   setDashboard(id) {

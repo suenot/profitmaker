@@ -32,7 +32,6 @@ class Balance extends React.Component {
           <tbody>
             {
               _.map(balanceData.data, (item) => {
-
                 return (
                   <tr key={item.shortName}>
                     <td>

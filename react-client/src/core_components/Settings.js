@@ -1,7 +1,8 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import { Input } from 'element-react'
-import GlobalStore from '../stores/GlobalStore'
+// import GlobalStore from '../stores/GlobalStore'
+import SettingsStore from '../stores/SettingsStore'
 
 @observer
 class Settings extends React.Component {
@@ -9,20 +10,20 @@ class Settings extends React.Component {
     return (
       <div className="simpleForm">
         <div className="simpleForm-formGroup">
-          <div className="text">{GlobalStore.serverBackend.name}</div>
-          <Input placeholder={GlobalStore.serverBackend.name} value={GlobalStore.serverBackend.value} />
+          <div className="text">{SettingsStore.serverBackend.name}</div>
+          <Input placeholder={SettingsStore.serverBackend.name} value={SettingsStore.serverBackend.value} />
         </div>
         <div className="simpleForm-formGroup">
-          <div className="text">{GlobalStore.terminalBackend.name}</div>
-          <Input placeholder={GlobalStore.terminalBackend.name} value={GlobalStore.terminalBackend.value} />
+          <div className="text">{SettingsStore.terminalBackend.name}</div>
+          <Input placeholder={SettingsStore.terminalBackend.name} value={SettingsStore.terminalBackend.value} />
         </div>
         <div className="simpleForm-formGroup">
-          <div className="text">{GlobalStore.fetchEnabled.name}</div>
-          <Input placeholder={GlobalStore.fetchEnabled.name} value={GlobalStore.fetchEnabled.value} />
+          <div className="text">{SettingsStore.fetchEnabled.name}</div>
+          <Input placeholder={SettingsStore.fetchEnabled.name} value={SettingsStore.fetchEnabled.value} />
         </div>
         <div className="simpleForm-formGroup">
-          <div className="text">{GlobalStore.defaultSetInterval.name}</div>
-          <Input placeholder={GlobalStore.defaultSetInterval.name} value={GlobalStore.defaultSetInterval.value} />
+          <div className="text">{SettingsStore.defaultSetInterval.name}</div>
+          <Input placeholder={SettingsStore.defaultSetInterval.name} value={SettingsStore.defaultSetInterval.value} />
         </div>
       </div>
     )

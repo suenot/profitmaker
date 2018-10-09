@@ -4,9 +4,9 @@ import _ from 'lodash'
 // import GlobalStore from './GlobalStore'
 
 class SettingsStore {
-  constructor(GlobalStore) {
-    this.GlobalStore = GlobalStore
-  }
+  // constructor(GlobalStore) {
+  //   this.GlobalStore = GlobalStore
+  // }
   @observable serverBackend = {
     name: 'Server backend',
     value: 'http://api.kupi.network/'
@@ -25,8 +25,8 @@ class SettingsStore {
   }
 }
 
-// const store = window.SettingsStore = new SettingsStore()
-// export default store
+const store = window.SettingsStore = new SettingsStore()
+export default store
 
-export default SettingsStore
+// export default SettingsStore
 

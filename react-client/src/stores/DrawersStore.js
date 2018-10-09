@@ -4,11 +4,11 @@ import _ from 'lodash'
 // import GlobalStore from './GlobalStore'
 
 class DrawersStore {
-  constructor(GlobalStore) {
-    this.GlobalStore = GlobalStore
-  }
+  // constructor(GlobalStore) {
+  //   this.GlobalStore = GlobalStore
+  // }
   @observable drawerRightOpen = false
-  @observable drawerRightComponent = './core_components/Stocks'
+  @observable drawerRightComponent = './core_components/Empty'
   @observable drawerRightWidth = '0px'
   // @observable drawerRightWidthClosed = 0
   @observable drawerRightData = {}
@@ -21,7 +21,7 @@ class DrawersStore {
   }
 }
 
-// const store = window.DrawersStore = new DrawersStore()
-// export default store
+const store = window.DrawersStore = new DrawersStore()
+export default store
 
-export default DrawersStore
+// export default DrawersStore
