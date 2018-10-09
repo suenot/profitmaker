@@ -20,12 +20,12 @@ class Market extends React.Component {
                 <div className="market-wrapper">
                   <div className="market-main">
                     <h3 className="market-header">{widget.header}</h3>
-                    <p className="market-description">bla-bla-bla</p>
+                    <p className="market-description">{widget.description}</p>
                   </div>
                   <div className="market-actions">
                     <div className="market-actions-autor">
-                      <a href="https://www.facebook.com/decenot">@suenot</a>
-                      <a className="market-actions-git" href="https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Orders.js">
+                      <a href={widget.authorLink}>{widget.author}</a>
+                      <a className="market-actions-git" href={widget.source}>
                         <img src={ghLogo}/>
                       </a>
                     </div>

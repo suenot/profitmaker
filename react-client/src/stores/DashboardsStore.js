@@ -38,22 +38,166 @@ class DashboardsStore {
 
   @observable counter = 15
   @ignore @observable widgetsMarket = [
-    { id: '0', icon: '/img/widgets/001-increasing-list-order.svg', component: './core_components/Orders/Orders.js', header: 'Orders asks', data: {type: 'asks'} },
-    { id: '1', icon: '/img/widgets/003-sort-by-attributes.svg', component: './core_components/Orders/Orders.js', header: 'Orders bids', data: {type: 'bids'} },
-    { id: '2', icon: '/img/widgets/019-pantheon.svg', component: './core_components/Stocks/Stocks.js', header: 'Stocks', data: {} },
-    { id: '3', icon: '/img/widgets/008-bone.svg', component: './core_components/Pairs/Pairs.js', header: 'Pairs', data: {} },
-    { id: '4', icon: '/img/widgets/funding-amounts.svg', component: './core_components/ReactStockcharts/HeikinAshi', header: 'OHLCV', data: {} },
-    { id: '5', icon: '/img/widgets/033-auction.svg', component: './core_components/MyTrades/MyTrades.js', header: 'My trades', data: {} },
-    { id: '6', icon: '/img/widgets/015-viking-ship.svg', component: './core_components/OpenOrders/OpenOrders.js', header: 'Open orders', data: {} },
-    { id: '7', icon: '/img/widgets/010-footprint.svg', component: './core_components/Trades/Trades.js', header: 'Trades', data: {} },
-    { id: '8', icon: '/img/widgets/plus.svg', component: './core_components/CreateOrder/CreateOrder.js', header: 'Limit buy', data: {type: 'buy'} },
-    { id: '9', icon: '/img/widgets/minus.svg', component: './core_components/CreateOrder/CreateOrder.js', header: 'Limit sell', data: {type: 'sell'} },
-    { id: '10', icon: '/img/widgets/portfolio.svg', component: './core_components/Balance/Balance.js', header: 'Total balance', data: {total: true} },
-    { id: '11', icon: '/img/widgets/portfolio.svg', component: './core_components/Balance/Balance.js', header: 'Balance', data: {total: false} },
-    { id: '12', icon: '/img/widgets/portfolio.svg', component: './core_components/BalancePie/BalancePie.js', header: 'Total balance', data: {total: true} },
-    { id: '13', icon: '/img/widgets/portfolio.svg', component: './core_components/BalancePie/BalancePie.js', header: 'Balance', data: {total: false} },
-    { id: '14', icon: '/img/widgets/portfolio.svg', component: './core_components/BalanceHistoryArea/BalanceHistoryArea.js', header: 'Total balance history', data: {total: true} },
-    { id: '15', icon: '/img/widgets/portfolio.svg', component: './core_components/BalanceHistoryArea/BalanceHistoryArea.js', header: 'Balance history', data: {total: false} },
+    {
+      id: '0',
+      component: './core_components/Orders/Orders.js',
+      header: 'Orders asks',
+      description: 'People want to sell coins',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {type: 'asks'}
+    },
+    {
+      id: '1',
+      component: './core_components/Orders/Orders.js',
+      header: 'Orders bids',
+      description: 'People want to buy coins',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {type: 'bids'}
+    },
+    {
+      id: '2',
+      component: './core_components/Stocks/Stocks.js',
+      header: 'Stocks',
+      description: 'List of cryptostocks',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {}
+    },
+    {
+      id: '3',
+      component: './core_components/Pairs/Pairs.js',
+      header: 'Pairs',
+      description: 'Pairs of cryptostock',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {}
+    },
+    {
+      id: '4',
+      component: './core_components/ReactStockcharts/HeikinAshi',
+      header: 'OHLCV',
+      description: 'Open-High-Low-Close-Value candles chart',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {}
+    },
+    {
+      id: '5',
+      component: './core_components/MyTrades/MyTrades.js',
+      header: 'My trades',
+      description: 'History of my trades',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {}
+    },
+    {
+      id: '6',
+      component: './core_components/OpenOrders/OpenOrders.js',
+      header: 'Open orders',
+      description: 'My open orders',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {}
+    },
+    {
+      id: '7',
+      component: './core_components/Trades/Trades.js',
+      header: 'Trades',
+      description: 'People trades',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {}
+    },
+    {
+      id: '8',
+      component: './core_components/CreateOrder/CreateOrder.js',
+      header: 'Limit buy',
+      description: 'Place order to buy',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {type: 'buy'}
+    },
+    {
+      id: '9',
+      component: './core_components/CreateOrder/CreateOrder.js',
+      header: 'Limit sell',
+      description: 'Place order to buy',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {type: 'sell'}
+    },
+    {
+      id: '10',
+      component: './core_components/Balance/Balance.js',
+      header: 'Total balance',
+      description: 'Table view',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {total: true}
+    },
+    {
+      id: '11',
+      component: './core_components/Balance/Balance.js',
+      header: 'Balance',
+      description: 'Table view',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {total: false}
+    },
+    {
+      id: '12',
+      component: './core_components/BalancePie/BalancePie.js',
+      header: 'Total balance',
+      description: 'Pie chart view',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {total: true}
+    },
+    {
+      id: '13',
+      component: './core_components/BalancePie/BalancePie.js',
+      header: 'Balance',
+      description: 'Pie chart view',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {total: false}
+    },
+    {
+      id: '14',
+      component: './core_components/BalanceHistoryArea/BalanceHistoryArea.js',
+      header: 'Total balance history',
+      description: 'Stacked area chart view',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {total: true}
+    },
+    {
+      id: '15',
+      component: './core_components/BalanceHistoryArea/BalanceHistoryArea.js',
+      header: 'Balance history',
+      description: 'Stacked area chart view',
+      author: '#core',
+      authorLink: 'https://github.com/kupi-network/kupi-terminal',
+      source: 'https://github.com/kupi-network/kupi-terminal',
+      data: {total: false}
+    },
   ]
   @action setLayout(layout) {
     var widgets = _.clone(JSON.parse(JSON.stringify(this.dashboards[this.dashboardActiveId].widgets)))
