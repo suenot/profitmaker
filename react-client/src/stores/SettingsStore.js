@@ -12,7 +12,7 @@ class SettingsStore {
     value: 'http://api.kupi.network/'
   }
   @observable terminalBackend = {
-    name: 'Server backend',
+    name: 'Terminal backend',
     value: 'http://localhost:8051/'
   }
   @observable fetchEnabled = {
