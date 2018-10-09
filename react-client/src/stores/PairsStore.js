@@ -1,4 +1,15 @@
+import { version, AsyncTrunk, ignore } from 'mobx-sync'
+import { observable, action, computed } from 'mobx'
+import axios from 'axios'
+import _ from 'lodash'
+
+@version(1)
 class PairsStore {
+  constructor(GlobalStore) {
+    this.GlobalStore = GlobalStore
+    const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'pairs' })
+    trunk.init()
+  }
   @observable pair = 'ETH_BTC'
   @ignore @observable pairsFilter = ''
   @computed get base() {

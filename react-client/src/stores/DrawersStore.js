@@ -1,9 +1,17 @@
+import { observable, action, reaction } from 'mobx'
+import { version, AsyncTrunk, ignore } from 'mobx-sync'
+import _ from 'lodash'
+// import GlobalStore from './GlobalStore'
+
 class DrawersStore {
-  @ignore @observable drawerRightOpen = false
-  @ignore @observable drawerRightComponent = './core_components/Stocks'
-  @ignore @observable drawerRightWidth = '0px'
-  // @ignore @observable drawerRightWidthClosed = 0
-  @ignore @observable drawerRightData = {}
+  constructor(GlobalStore) {
+    this.GlobalStore = GlobalStore
+  }
+  @observable drawerRightOpen = false
+  @observable drawerRightComponent = './core_components/Stocks'
+  @observable drawerRightWidth = '0px'
+  // @observable drawerRightWidthClosed = 0
+  @observable drawerRightData = {}
   @action drawerRightToggle() {
     this.drawerRightOpen = !this.drawerRightOpen
   }

@@ -1,17 +1,18 @@
 import { observable, action, reaction } from 'mobx'
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import _ from 'lodash'
-import GlobalStore from './GlobalStore'
+// import GlobalStore from './GlobalStore'
 
-@version(1)
+// @version(1)
 class DashboardsStore {
-  constructor() {
-    const trunk = new AsyncTrunk(store, { storage: localStorage, storageKey: 'dashboards' })
-    trunk.init()
-    reaction(
-      () => store.widgets,
-      () => trunk.updateStore(store)
-    )
+  constructor(GlobalStore) {
+    this.GlobalStore = GlobalStore
+    // const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'dashboards' })
+    // trunk.init()
+    // reaction(
+    //   () => this.widgets,
+    //   () => trunk.updateStore(this)
+    // )
   }
   @observable dashboardsCounter = 2
   @observable dashboardActiveId = '1'
@@ -21,8 +22,9 @@ class DashboardsStore {
   }
   @action setDashboard(id) {
     this.dashboardActiveId = id
-    GlobalStore.setStock(this.dashboards[this.dashboardActiveId].stock)
-    GlobalStore.setPair(this.dashboards[this.dashboardActiveId].pair)
+    // TODO
+    this.GlobalStore.StocksStore.setStock(this.dashboards[this.dashboardActiveId].stock)
+    this.GlobalStore.PairsStore.setPair(this.dashboards[this.dashboardActiveId].pair)
   }
   @action addDashboard() {
     this.dashboardsCounter += 1
@@ -34,7 +36,9 @@ class DashboardsStore {
   }
 
   @observable counter = 15
-  @ignore @observable widgetsMarket = [
+  // @ignore @observable widgetsMarket = [
+  // TODO
+  @observable widgetsMarket = [
     { id: '0', icon: '/img/widgets/001-increasing-list-order.svg', component: './core_components/Orders/index.js', header: 'Orders asks', data: {type: 'asks'} },
     { id: '1', icon: '/img/widgets/003-sort-by-attributes.svg', component: './core_components/Orders/index.js', header: 'Orders bids', data: {type: 'bids'} },
     { id: '2', icon: '/img/widgets/019-pantheon.svg', component: './core_components/Stocks', header: 'Stocks', data: {} },

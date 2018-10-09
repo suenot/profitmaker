@@ -1,4 +1,15 @@
+import { version, AsyncTrunk, ignore } from 'mobx-sync'
+import { observable, action, computed } from 'mobx'
+import axios from 'axios'
+import _ from 'lodash'
+
+@version(1)
 class StocksStore {
+  constructor(GlobalStore) {
+    this.GlobalStore = GlobalStore
+    const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'stocks' })
+    trunk.init()
+  }
   @observable stock = 'BINANCE'
   @computed get stockLowerCase() {
     return this.stock.toLowerCase()

@@ -1,10 +1,15 @@
 // import { version, AsyncTrunk, ignore } from 'mobx-sync'
 // import { observable, action, computed } from 'mobx'
 // import axios from 'axios'
-import _ from 'lodash'
+// import _ from 'lodash'
 
 // components
 // import Settings from '../core_components/Settings'
+import StocksStore from './StocksStore'
+import PairsStore from './PairsStore'
+import DrawersStore from './DrawersStore'
+import SettingsStore from './SettingsStore'
+import DashboardsStore from './DashboardsStore'
 
 class GlobalStore {
   constructor() {
