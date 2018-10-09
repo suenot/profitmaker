@@ -63,6 +63,7 @@ const fetchOpenOrder = async function(stock, symbol, id, _id='') {
 }
 const getOpenOrders = async function(stock, symbol) {
   try {
+
     return data = await global.MONGO.collection('openOrders').find({'stock': stock, 'symbol': symbol}).toArray()
   } catch (err) {}
 }
