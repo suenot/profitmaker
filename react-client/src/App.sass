@@ -158,15 +158,57 @@ body
 //
 .market
   .market-widget
-    padding: 20px
     height: 200px
     display: flex
     flex-direction: column
     border-bottom: 1px solid #bebebe
+    position: relative
+    background-repeat: no-repeat
+    background-size: contain
+    background-position: left top
+    .market-wrapper
+      background: rgba(0,0,0,0.85)
+      padding: 20px
+      flex: 1 1 auto
+      display: flex
+      flex-direction: column
+      opacity: 0
+      transition: opacify .2s
+    &:hover
+      .market-wrapper
+        opacity: 1
   .market-main
     flex: 1 0 auto
+    .market-header
+      color: #fff
+      font-size: 2em
+      font-weight: 300
+      padding: 0
+      margin: 0 0 0.4em
+    .market-description
+      color: #fff
+      font-size: 1em
+      font-weight: 300
+      margin: 0 0 .8em
   .market-actions
     display: flex
     justify-content: space-between
+    .market-actions-autor
+      flex: 0 0 auto
+      a
+        color: #fff
+        display: inline-block
+        vertical-align: middle
+        text-decoration: none
+      .market-actions-git
+        margin-left: 16px
+        img
+          width: 30px
+          height: auto
+    .market-actions-action
+      flex: 0 0 45%
+      button
+        background: green
+        width: 100%
 
 
