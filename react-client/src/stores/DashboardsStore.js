@@ -22,6 +22,8 @@ class DashboardsStore {
   @computed get stock() { return this.dashboards[this.dashboardActiveId].stock }
   @computed get stockLowerCase() { return (this.dashboards[this.dashboardActiveId].stock).toLowerCase() }
   @computed get pair() { return this.dashboards[this.dashboardActiveId].pair }
+  @computed get icon() { return this.dashboards[this.dashboardActiveId].icon }
+
   @action setDashboard(id) {
     this.dashboardActiveId = id
   }

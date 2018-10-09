@@ -8,7 +8,6 @@ import CssBaseline from '@material-ui/core/CssBaseline'
 import Drawer from '@material-ui/core/Drawer'
 import AppBar from '@material-ui/core/AppBar'
 import Toolbar from '@material-ui/core/Toolbar'
-// import List from '@material-ui/core/List'
 import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import IconButton from '@material-ui/core/IconButton'
@@ -185,6 +184,7 @@ class App extends React.Component {
               >
                 <MenuIcon />
               </IconButton>
+              <img src={DashboardsStore.icon} alt="" width="24px" height="24px"></img> 
               <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1}}>
                 {/* {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name.toUpperCase()} */}
                 {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.name.toUpperCase()} : {DashboardsStore.stock} : {DashboardsStore.pair}
@@ -203,13 +203,13 @@ class App extends React.Component {
               >
                 <AddIcon />
               </IconButton>
-              <IconButton
+              {/* <IconButton
                 color="inherit"
                 aria-label="Settings"
                 onClick={this.deleteDashboard.bind(this, DashboardsStore.dashboardActiveId)}
               >
                 <DeleteIcon />
-              </IconButton>
+              </IconButton> */}
             </Toolbar>
           </AppBar>
           <Drawer
@@ -277,9 +277,9 @@ class App extends React.Component {
   addDashboard() {
     DashboardsStore.addDashboard()
   }
-  deleteDashboard(id) {
-    DashboardsStore.deleteDashboard(id)
-  }
+  // deleteDashboard(id) {
+  //   DashboardsStore.deleteDashboard(id)
+  // }
 }
 
 App.propTypes = {
