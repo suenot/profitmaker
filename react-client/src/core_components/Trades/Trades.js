@@ -2,7 +2,7 @@ import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
 import moment from 'moment'
-import TradesStore from '../stores/TradesStore'
+import TradesStore from '../../stores/TradesStore'
 
 @observer
 class Trades extends React.Component {

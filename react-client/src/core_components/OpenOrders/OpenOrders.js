@@ -3,7 +3,7 @@ import _ from 'lodash'
 import { observer } from 'mobx-react'
 import { Button } from 'element-react'
 import moment from 'moment'
-import OpenOrdersStore from '../stores/OpenOrdersStore'
+import OpenOrdersStore from '../../stores/OpenOrdersStore'
 
 @observer
 class OpenOrders extends React.Component {

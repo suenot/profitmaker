@@ -2,7 +2,7 @@ import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
 // import GlobalStore from '../stores/GlobalStore'
-import PairsStore from '../stores/PairsStore'
+import PairsStore from '../../stores/PairsStore'
 
 @observer
 class Pairs extends React.Component {

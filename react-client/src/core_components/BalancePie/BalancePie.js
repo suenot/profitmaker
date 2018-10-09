@@ -1,8 +1,8 @@
 import React from 'react'
 import { observer } from 'mobx-react'
-import Preloader from './Preloader'
+import Preloader from '../Preloader'
 import ReactEcharts from 'echarts-for-react'
-import BalanceStore from '../stores/BalanceStore'
+import BalanceStore from '../../stores/BalanceStore'
 
 @observer
 class BalancePie extends React.Component {

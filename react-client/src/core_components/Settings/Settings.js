@@ -1,7 +1,7 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import { Input } from 'element-react'
-import SettingsStore from '../stores/SettingsStore'
+import SettingsStore from '../../stores/SettingsStore'
 
 @observer
 class Settings extends React.Component {

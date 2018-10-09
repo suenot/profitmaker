@@ -1,7 +1,7 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import { Input, Button } from 'element-react'
-import CreateOrderStore from '../stores/CreateOrderStore'
+import CreateOrderStore from '../../stores/CreateOrderStore'
 
 @observer
 class CreateOrder extends React.Component {

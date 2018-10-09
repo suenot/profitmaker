@@ -1,7 +1,7 @@
 import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
-import DashboardsStore from '../stores/DashboardsStore'
+import DashboardsStore from '../../stores/DashboardsStore'
 
 @observer
 class Market extends React.Component {

@@ -192,14 +192,14 @@ class App extends React.Component {
               <IconButton
                 color="inherit"
                 aria-label="Settings"
-                onClick={this.drawerRightToggle.bind(this, "./core_components/Settings", "300px")}
+                onClick={this.drawerRightToggle.bind(this, "./core_components/Settings/Settings.js", "300px")}
               >
                 <SettingsIcon />
               </IconButton>
               <IconButton
                 color="inherit"
                 aria-label="Market"
-                onClick={this.drawerRightToggle.bind(this, "./core_components/Market", "432px")}
+                onClick={this.drawerRightToggle.bind(this, "./core_components/Market/Market.js", "432px")}
               >
                 <AddIcon />
               </IconButton>
