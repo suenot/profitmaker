@@ -61,10 +61,36 @@ const fetchOpenOrder = async function(stock, symbol, id, _id='') {
     }
   } catch (err) { console.log(err)}
 }
+
+const marketOpenOrders = async function(stock, symbol) {
+  try {
+    var stockName = stock.toLowerCase()
+    var rateLimit = global.STOCKS[stockName]['rateLimit']
+    await catchHead(rateLimit, stockName)
+    var stockActiveTrades = await global.STOCKS[stockName].fetchOpenOrders(symbol = symbol, since = undefined, limit = undefined, params = {})
+
+    if (stockActiveTrades.length > 0) {
+      for (var data of stockActiveTrades) {
+        // console.log('stockActiveTrade', data)
+        var res = {
+          'stock': stock,
+          'symbol': symbol,
+          'id': data.id,
+          'timestamp': Date.now(),
+          'datetime': new Date(Date.now()),
+          'data': data
+        }
+        await global.MONGO.collection('openOrders').replaceOne({'stock': stock, 'symbol': symbol, 'id': data.id}, res, {upsert: true})
+      }
+    }
+  } catch (err) { console.log(err) }
+}
+
 const getOpenOrders = async function(stock, symbol) {
   try {
-
-    return data = await global.MONGO.collection('openOrders').find({'stock': stock, 'symbol': symbol}).toArray()
+    var data = await global.MONGO.collection('openOrders').find({'stock': stock, 'symbol': symbol}).toArray()
+    marketOpenOrders(stock, symbol)
+    return data
   } catch (err) {}
 }
 exports.openOrders = openOrders
