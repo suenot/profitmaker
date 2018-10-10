@@ -21,7 +21,7 @@ class Trades extends React.Component {
           {
             _.map(TradesStore.trades, (item, i) => {
               return (
-                <tr key={item.uuid}>
+                <tr key={item.id}>
                   <td style={item.side === 'buy'?{color: '#ea0371'}:{color: '#83b327'}}>
                     <span >{item.price}</span>
                   </td>

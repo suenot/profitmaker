@@ -1,7 +1,7 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
-import uuidv1 from 'uuid/v1'
+// import uuidv1 from 'uuid/v1'
 import DashboardsStore from './DashboardsStore'
 import SettingsStore from './SettingsStore'
 
@@ -25,11 +25,10 @@ class TradesStore {
   @action fetchTrades(){
     axios.get(`${this.serverBackend}/${this.stockLowerCase}/trades/${this.pair}`)
     .then((response) => {
-      var data = response.data
-      var trades = _.orderBy(data, ['timestamp'], ['desc'])
-      trades = trades.map(function(trade){
-        return trade.uuid = uuidv1()
-      })
+      var trades = _.orderBy(response.data, ['timestamp'], ['desc'])
+      // trades = trades.map(function(trade){
+      //   return trade.uuid = uuidv1()
+      // })
       this.trades = trades
     })
     .catch(() => {
