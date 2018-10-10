@@ -19,12 +19,12 @@ class Grid extends React.Component {
   }
 
   render() {
-    if (DashboardsStore.dashboardActiveId === '0') {
-      return <div></div>
-    }
+    // if (DashboardsStore.dashboardActiveId === '0') {
+    //   return <div></div>
+    // }
     return (
-      <Router>
-        <GridLayout
+      <div>
+        {/* <GridLayout
           className="layout"
           cols={24}
           rowHeight={12}
@@ -42,7 +42,7 @@ class Grid extends React.Component {
           {
             JSON.stringify(DashboardsStore.dashboardActiveId) !== 'false' &&
             _.map(DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].widgets, (widget) => {
-              const Component = require(widget.component+"").default
+              const Component = require("./"+widget.component).default
               return (
                 <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
                   <div className="widget">
@@ -62,8 +62,18 @@ class Grid extends React.Component {
               )
             })
           }
-        </GridLayout>
-      </Router>
+        </GridLayout> */}
+        {
+          _.map(DashboardsStore.widgetsMarket, (widget) => {
+            const Component = require("./"+widget.component).default
+            return (
+              <div className="widget" key={widget.id} style={{height: '266px', width: '520px', margin: '10px', overflow: 'hidden'}}>
+                { React.createElement(Component, {data: widget.data}) }
+              </div>
+            )
+          })
+        }
+      </div>
     )
   }
 

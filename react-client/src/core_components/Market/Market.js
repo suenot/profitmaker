@@ -1,9 +1,9 @@
+/* eslint-disable import/first */
 import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
 import { Button } from 'element-react'
 import DashboardsStore from '../../stores/DashboardsStore'
-import marketImage from'../Orders/asks.png'
 import ghLogo from'./github-logo.svg'
 @observer
 class Market extends React.Component {
@@ -12,8 +12,15 @@ class Market extends React.Component {
       <div className="market simple">
         {
           _.map(DashboardsStore.widgetsMarket, (widget) => {
+            // import img from widget.img
+            // console.log(widget.img)
+            // var imgPath = (widget.img+"")
+            // var img = require( ""+widget.img+"" )
+            // var img = require('core_components/Orders/Orders.png')
+            // var img = require('../Orders/Orders.png')
+            // console.log(img)
             var style = {
-              backgroundImage: `url(${marketImage})`
+              backgroundImage: `url(${ require( "../../"+widget.img ) })`
             }
             return (
               <div className="market-widget" key={widget.id} style={style}>
@@ -24,8 +31,8 @@ class Market extends React.Component {
                   </div>
                   <div className="market-actions">
                     <div className="market-actions-autor">
-                      <a href={widget.authorLink}>{widget.author}</a>
-                      <a className="market-actions-git" href={widget.source}>
+                      <a href={widget.authorLink} target="_blank">{widget.author}</a>
+                      <a className="market-actions-git" href={widget.source} target="_blank">
                         <img src={ghLogo}/>
                       </a>
                     </div>
