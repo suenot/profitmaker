@@ -1,3 +1,25 @@
+![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/demo.png?raw=true)
+
+## About
+Open source, customized, extendable trading terminal, that supports multiple crypto stocks. 
+
+## features
+- Open source
+- Your api keys stay on your machine, no need to send them anywhere
+- Customized with dashboards and widgets
+- Extendable with users modules
+- Free realtime API (Timeseries will be in immediate future)
+- Framework for creating trading bots
+
+## technologies
+- [React](), [react-grid-layout](https://github.com/STRML/react-grid-layout), [material-ui](https://github.com/mui-org/material-ui)
+- [Vue](), [vue-grid-layout](https://github.com/jbaysolutions/vue-grid-layout), [vuetify](https://github.com/vuetifyjs/vuetify)
+- [Mobx](https://github.com/mobxjs/mobx)
+- [Express](https://github.com/expressjs/express)
+- [Mongo](https://github.com/mongodb/mongo)
+- [CCXT](https://github.com/ccxt/ccxt)
+- [Flaticon](https://www.flaticon.com/)
+
 ## Quick start
 1. Install mongo
 ```
