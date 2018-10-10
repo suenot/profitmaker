@@ -3,7 +3,7 @@
 ## About
 Open source, customized, extendable trading terminal, that supports multiple crypto stocks. 
 
-## features
+## Features
 - Open source
 - Your api keys stay on your machine, no need to send them anywhere
 - Customized with dashboards and widgets
@@ -11,7 +11,7 @@ Open source, customized, extendable trading terminal, that supports multiple cry
 - Free realtime API (Timeseries will be in immediate future)
 - Framework for creating trading bots
 
-## technologies
+## Technologies
 - [React](), [react-grid-layout](https://github.com/STRML/react-grid-layout), [material-ui](https://github.com/mui-org/material-ui)
 - [Vue](), [vue-grid-layout](https://github.com/jbaysolutions/vue-grid-layout), [vuetify](https://github.com/vuetifyjs/vuetify)
 - [Mobx](https://github.com/mobxjs/mobx)
@@ -21,6 +21,8 @@ Open source, customized, extendable trading terminal, that supports multiple cry
 - [Flaticon](https://www.flaticon.com/)
 
 ## Quick start
+0. If you had problems with installing we can help in [voice/text Discrod chat](https://discord.gg/Q77C8v)
+
 1. Install mongo
 ```
 docker volume create kupi-terminal-mongo-volume
