@@ -1,7 +1,7 @@
 ![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/demo.png?raw=true)
 
 ## About
-Open source, customized, extendable trading terminal, that supports multiple crypto stocks. 
+Open source, customized, extendable trading terminal that supports multiple crypto stocks. 
 
 ## Features
 - Open source
