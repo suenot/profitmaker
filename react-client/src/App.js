@@ -22,7 +22,6 @@ import './App.sass'
 import { observer } from 'mobx-react'
 import SettingsIcon from '@material-ui/icons/Settings'
 import AddIcon from '@material-ui/icons/Add'
-import DeleteIcon from '@material-ui/icons/Delete'
 
 import Alert from 'react-s-alert'
 import 'react-s-alert/dist/s-alert-default.css'
