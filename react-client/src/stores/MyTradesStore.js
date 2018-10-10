@@ -2,6 +2,7 @@ import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import uuidv1 from 'uuid/v1'
 import DashboardsStore from './DashboardsStore'
+import SettingsStore from './SettingsStore'
 
 class MyTradesStore {
   constructor() {
@@ -15,11 +16,12 @@ class MyTradesStore {
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get pair() {return DashboardsStore.pair }
+  @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
   @observable myTrades = {}
 
   @action fetchMyTrades(){
-    axios.get(`http://localhost:8051/myTrade/${this.stock}/${this.pair}`)
+    axios.get(`${this.terminalBackend}/myTrade/${this.stock}/${this.pair}`)
     .then((response) => {
       var myTrades = response.data
       myTrades.map(function(trade){

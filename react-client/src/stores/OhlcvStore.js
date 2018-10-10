@@ -1,6 +1,7 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import DashboardsStore from './DashboardsStore'
+import SettingsStore from './SettingsStore'
 
 class OhlcvStore {
   constructor() {
@@ -15,6 +16,7 @@ class OhlcvStore {
   @computed get stock() {return DashboardsStore.stock }
   @computed get stockLowerCase() {return DashboardsStore.stockLowerCase }
   @computed get pair() {return DashboardsStore.pair }
+  @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
   @observable ohlcv = []
 
@@ -40,8 +42,8 @@ class OhlcvStore {
   }
 
   @action async fetchOhlcv() {
-    axios.get(`http://api.kupi.network/${this.stockLowerCase}/ohlcv/${this.pair}`)
-    axios.get(`http://api.kupi.network/${this.stockLowerCase}/ohlcv/${this.pair}`)
+    axios.get(`${this.serverBackend}/${this.stockLowerCase}/ohlcv/${this.pair}`)
+    axios.get(`${this.serverBackend}/${this.stockLowerCase}/ohlcv/${this.pair}`)
     .then((response) => {
       if (!response.data) {
         this.ohlcv = []

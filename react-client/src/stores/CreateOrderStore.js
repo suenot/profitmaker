@@ -1,9 +1,9 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
+import Alert from 'react-s-alert'
 import DashboardsStore from './DashboardsStore'
 import BalanceStore from './BalanceStore'
-import Alert from 'react-s-alert'
-
+import SettingsStore from './SettingsStore'
 
 class CreateOrderStore {
   @computed get stock() {return DashboardsStore.stock }
@@ -11,7 +11,7 @@ class CreateOrderStore {
 
   @computed get availableBuy() {return BalanceStore.availableBuy }
   @computed get availableSell() {return BalanceStore.availableSell }
-
+  @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
 
   @observable createPrice = {'buy': '', 'sell': ''}
@@ -43,7 +43,7 @@ class CreateOrderStore {
       beep: false,
       timeout: 'none'
     })
-    axios.post('http://localhost:8051/createOrder', {
+    axios.post(`${this.terminalBackend}/createOrder`, {
       'stock': this.stock,
       'pair': this.pair,
       'type': type,

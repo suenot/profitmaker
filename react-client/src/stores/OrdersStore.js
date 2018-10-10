@@ -1,6 +1,7 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import DashboardsStore from './DashboardsStore'
+import SettingsStore from './SettingsStore'
 import uuidv1 from 'uuid/v1'
 
 class OrdersStore {
@@ -16,6 +17,7 @@ class OrdersStore {
   @computed get stock() {return DashboardsStore.stock }
   @computed get stockLowerCase() {return DashboardsStore.stockLowerCase }
   @computed get pair() {return DashboardsStore.pair }
+  @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
   @observable orders = {
     'asks': [],
@@ -23,7 +25,7 @@ class OrdersStore {
   }
 
   @action async fetchOrders() {
-    axios.get(`http://api.kupi.network/${this.stockLowerCase}/orders/${this.pair}`)
+    axios.get(`${this.serverBackend}/${this.stockLowerCase}/orders/${this.pair}`)
     .then((response) => {
       var _orders = response.data
       var sumAsks = 0

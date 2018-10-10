@@ -1,6 +1,7 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import DashboardsStore from './DashboardsStore'
+import SettingsStore from './SettingsStore'
 
 class PairsStore {
   constructor() {
@@ -10,6 +11,7 @@ class PairsStore {
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get stockLowerCase() {return DashboardsStore.stockLowerCase }
+  @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
   @observable pairsFilter = ''
 
@@ -30,7 +32,7 @@ class PairsStore {
   }
 
   @action async fetchPairs() {
-    axios.get(`http://api.kupi.network/${this.stockLowerCase}/pairs/`)
+    axios.get(`${this.serverBackend}/${this.stockLowerCase}/pairs/`)
     .then((response) => {
       var pairs = response.data.map((pair) => {
         return pair.split('/').join('_')

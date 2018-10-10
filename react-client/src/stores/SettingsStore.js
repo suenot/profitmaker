@@ -1,4 +1,4 @@
-import { observable } from 'mobx'
+import { observable, action } from 'mobx'
 import { version, AsyncTrunk } from 'mobx-sync'
 
 @version(1)
@@ -9,11 +9,11 @@ class SettingsStore {
   }
   @observable serverBackend = {
     name: 'Server backend',
-    value: 'http://api.kupi.network/'
+    value: 'http://api.kupi.network'
   }
   @observable terminalBackend = {
     name: 'Terminal backend',
-    value: 'http://localhost:8051/'
+    value: 'http://localhost:8051'
   }
   @observable fetchEnabled = {
     name: 'Fetch enabled',
@@ -22,6 +22,19 @@ class SettingsStore {
   @observable defaultSetInterval = {
     name: 'Fetch interval',
     value: '2000'
+  }
+
+  @action setServerBackend(value) {
+    this.serverBackend.value = value
+  }
+  @action setTerminalBackend(value) {
+    this.terminalBackend.value = value
+  }
+  @action setFetchEnabled(value) {
+    this.fetchEnabled.value = value
+  }
+  @action setDefaultSetInterval(value) {
+    this.defaultSetInterval.value = value
   }
 }
 

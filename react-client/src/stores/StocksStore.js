@@ -2,7 +2,7 @@ import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
 import DashboardsStore from './DashboardsStore'
-
+import SettingsStore from './SettingsStore'
 
 class StocksStore {
   constructor(){
@@ -10,6 +10,8 @@ class StocksStore {
       await this.fetchStocks()
     }, 1000)
   }
+
+  @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
   @observable stocks = []
   @observable stocksFilter = ''
@@ -30,7 +32,7 @@ class StocksStore {
   }
 
   @action async fetchStocks() {
-    axios.get('http://api.kupi.network:8051/stocks')
+    axios.get(`${this.serverBackend}/stocks`)
     .then((response) => {
       this.stocks = _.toArray(response.data)
     })

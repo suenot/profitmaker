@@ -17,8 +17,8 @@ class DashboardsStore {
   @observable dashboardsCounter = 2
   @observable dashboardActiveId = '1'
   @observable dashboards = {
-    '1': { id: '1', name: 'First', bg: '#ccc', icon: '/img/widgets/008-bone.svg', type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0},
-    '2': { id: '2', name: 'Second', bg: '#ccc', icon: '/img/widgets/portfolio.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0},
+    '1': { id: '1', name: 'First', bg: '#ccc', icon: '/img/widgets/015-viking-ship.svg', type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0},
+    '2': { id: '2', name: 'Second', bg: '#ccc', icon: '/img/widgets/013-helmet.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0},
   }
   @computed get name() { return this.dashboards[this.dashboardActiveId].name }
   @computed get stock() { return this.dashboards[this.dashboardActiveId].stock }
@@ -45,6 +45,12 @@ class DashboardsStore {
         timeout: 'none'
       })
     }
+  }
+  @action setDashboardName(name) {
+    this.dashboards[this.dashboardActiveId].name = name
+  }
+  @action setDashboardIcon(icon) {
+    this.dashboards[this.dashboardActiveId].icon = icon
   }
 
   @observable counter = 15

@@ -1,7 +1,8 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
-import DashboardsStore from './DashboardsStore'
 import _ from 'lodash'
+import DashboardsStore from './DashboardsStore'
+import SettingsStore from './SettingsStore'
 
 class BalanceStore {
   constructor() {
@@ -17,8 +18,11 @@ class BalanceStore {
       if (this.counter > 0) start()
     }, 5000)
   }
+
   @computed get stock() {return DashboardsStore.stock }
   @computed get pair() {return DashboardsStore.pair }
+  @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
+
   @observable precision = 8
   @observable balanceTotal = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': []}
   @observable balanceStock = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': []}
@@ -38,7 +42,7 @@ class BalanceStore {
   }
 
   @action fetchBalance(stock){
-    axios.get(`http://localhost:8051/balance/${stock}`)
+    axios.get(`${this.terminalBackend}/balance/${stock}`)
     .then(response => {
       if (stock === 'TOTAL') {
         this.balanceTotal = response.data
@@ -52,7 +56,7 @@ class BalanceStore {
   }
 
   @action fetchBalanceHistory(stock){
-    axios.get(`http://localhost:8051/balance/history/${stock}`)
+    axios.get(`${this.terminalBackend}/balance/history/${stock}`)
     .then((response) => {
       if (stock === 'TOTAL') {
         this.balanceHistoryTotal = response.data

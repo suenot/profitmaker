@@ -1,7 +1,8 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
-import DashboardsStore from './DashboardsStore'
 import Alert from 'react-s-alert'
+import DashboardsStore from './DashboardsStore'
+import SettingsStore from './SettingsStore'
 
 class OpenOrdersStore {
   constructor() {
@@ -15,11 +16,11 @@ class OpenOrdersStore {
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get pair() {return DashboardsStore.pair }
-
+  @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
   @observable openOrders = {}
   @action fetchOpenOrders(){
-    axios.get(`http://localhost:8051/openOrders/${this.stock}/${this.pair}`)
+    axios.get(`${this.terminalBackend}/openOrders/${this.stock}/${this.pair}`)
     .then((response) => {
       this.openOrders = response.data
     })
@@ -33,7 +34,7 @@ class OpenOrdersStore {
       beep: false,
       timeout: 'none'
     })
-    axios.post(`http://localhost:8051/cancelOrder/`, {
+    axios.post(`${this.terminalBackend}/cancelOrder/`, {
       id: id,
       _id: _id,
       symbol: symbol,
