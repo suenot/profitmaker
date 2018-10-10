@@ -18,9 +18,6 @@ class Grid extends React.Component {
   }
 
   render() {
-    // if (DashboardsStore.dashboardActiveId === '0') {
-    //   return <div></div>
-    // }
     return (
       <GridLayout
         className="layout"
@@ -61,6 +58,7 @@ class Grid extends React.Component {
           })
         }
       </GridLayout>
+      // HELPER FOR SCREENSHOTS
       // <div>
       //   {
       //     _.map(DashboardsStore.widgetsMarket, (widget) => {

@@ -40,14 +40,14 @@ class Settings extends React.Component {
             <div className="text">Dashboard icon</div>
             <Input placeholder="Dashboard icon" value={DashboardsStore.icon} />
           </div>
-          <Button type="danger" onClick={this.deleteDashboard.bind(this, DashboardsStore.dashboardActiveId)}>Remove dashboard</Button>
+          <Button type="danger" onClick={this.removeDashboard.bind(this, DashboardsStore.dashboardActiveId)}>Remove dashboard</Button>
         </section>
 
       </div>
     )
   }
-  deleteDashboard(id) {
-    DashboardsStore.deleteDashboard(id)
+  removeDashboard(id) {
+    DashboardsStore.removeDashboard(id)
   }
 }
 

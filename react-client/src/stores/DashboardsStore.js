@@ -2,6 +2,7 @@ import { observable, action, reaction, computed } from 'mobx'
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import _ from 'lodash'
 import widgetsMarket from './data/widgetsMarket'
+import Alert from 'react-s-alert'
 
 @version(1)
 class DashboardsStore {
@@ -32,9 +33,18 @@ class DashboardsStore {
     this.dashboardsCounter += 1
     this.dashboards[this.dashboardsCounter+""] = { id: this.dashboardsCounter+"", name: 'Dash', bg: '#ccc', icon: '/img/widgets/010-footprint.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0}
   }
-  @action deleteDashboard(id) {
-    delete this.dashboards[id]
-    this.dashboardActiveId = '0'
+  @action removeDashboard(id) {
+    if (Object.keys(this.dashboards).length > 1) {
+      delete this.dashboards[id]
+      this.dashboardActiveId = Object.keys(this.dashboards)[0]
+    } else {
+      Alert.warning('You must have at least one dashboard', {
+        position: 'bottom-right',
+        effect: 'scale',
+        beep: false,
+        timeout: 'none'
+      })
+    }
   }
 
   @observable counter = 15
