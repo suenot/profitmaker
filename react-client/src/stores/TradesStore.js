@@ -25,7 +25,7 @@ class TradesStore {
   @action fetchTrades(){
     axios.get(`${this.serverBackend}/${this.stockLowerCase}/trades/${this.pair}`)
     .then((response) => {
-      var trades = _.orderBy(response.data, ['timestamp'], ['desc'])
+      var trades = _.orderBy(response.data.slice(0, 20), ['timestamp'], ['desc'])
       // trades = trades.map(function(trade){
       //   return trade.uuid = uuidv1()
       // })
