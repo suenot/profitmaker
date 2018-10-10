@@ -12,8 +12,8 @@ Open source, customized, extendable trading terminal that supports multiple cryp
 - Framework for creating trading bots
 
 ## Technologies
-- [React](), [react-grid-layout](https://github.com/STRML/react-grid-layout), [material-ui](https://github.com/mui-org/material-ui)
-- [Vue](), [vue-grid-layout](https://github.com/jbaysolutions/vue-grid-layout), [vuetify](https://github.com/vuetifyjs/vuetify)
+- [React](https://github.com/facebook/react), [react-grid-layout](https://github.com/STRML/react-grid-layout), [material-ui](https://github.com/mui-org/material-ui)
+- [Vue](https://github.com/vuejs/vue), [vue-grid-layout](https://github.com/jbaysolutions/vue-grid-layout), [vuetify](https://github.com/vuetifyjs/vuetify)
 - [Mobx](https://github.com/mobxjs/mobx)
 - [Express](https://github.com/expressjs/express)
 - [Mongo](https://github.com/mongodb/mongo)
