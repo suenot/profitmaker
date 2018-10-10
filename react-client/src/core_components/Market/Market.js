@@ -12,13 +12,6 @@ class Market extends React.Component {
       <div className="market simple">
         {
           _.map(DashboardsStore.widgetsMarket, (widget) => {
-            // import img from widget.img
-            // console.log(widget.img)
-            // var imgPath = (widget.img+"")
-            // var img = require( ""+widget.img+"" )
-            // var img = require('core_components/Orders/Orders.png')
-            // var img = require('../Orders/Orders.png')
-            // console.log(img)
             var style = {
               backgroundImage: `url(${ require( "../../"+widget.img ) })`
             }
@@ -33,7 +26,7 @@ class Market extends React.Component {
                     <div className="market-actions-autor">
                       <a href={widget.authorLink} target="_blank">{widget.author}</a>
                       <a className="market-actions-git" href={widget.source} target="_blank">
-                        <img src={ghLogo}/>
+                        <img src={ghLogo} alt="github"/>
                       </a>
                     </div>
                     <div className="market-actions-action">

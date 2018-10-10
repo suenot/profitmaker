@@ -57,7 +57,7 @@ export default [
   {
     id: '5',
     component: 'core_components/MyTrades/MyTrades.js',
-    img: 'core_components/Orders/Orders.png',
+    img: 'core_components/MyTrades/MyTrades.png',
     header: 'My trades',
     description: 'History of my trades',
     author: '#core',
@@ -68,7 +68,7 @@ export default [
   {
     id: '6',
     component: 'core_components/OpenOrders/OpenOrders.js',
-    img: 'core_components/Orders/Orders.png',
+    img: 'core_components/OpenOrders/OpenOrders.png',
     header: 'Open orders',
     description: 'My open orders',
     author: '#core',
@@ -79,7 +79,7 @@ export default [
   {
     id: '7',
     component: 'core_components/Trades/Trades.js',
-    img: 'core_components/Orders/Orders.png',
+    img: 'core_components/Trades/Trades.png',
     header: 'Trades',
     description: 'People trades',
     author: '#core',
@@ -112,7 +112,7 @@ export default [
   {
     id: '10',
     component: 'core_components/Balance/Balance.js',
-    img: 'core_components/Orders/Orders.png',
+    img: 'core_components/Balance/Balance.png',
     header: 'Total balance',
     description: 'Table view',
     author: '#core',
@@ -123,7 +123,7 @@ export default [
   {
     id: '11',
     component: 'core_components/Balance/Balance.js',
-    img: 'core_components/Orders/Orders.png',
+    img: 'core_components/Balance/Balance.png',
     header: 'Balance',
     description: 'Table view',
     author: '#core',
@@ -134,7 +134,7 @@ export default [
   {
     id: '12',
     component: 'core_components/BalancePie/BalancePie.js',
-    img: 'core_components/Orders/Orders.png',
+    img: 'core_components/BalancePie/BalancePie.png',
     header: 'Total balance',
     description: 'Pie chart view',
     author: '#core',
@@ -145,7 +145,7 @@ export default [
   {
     id: '13',
     component: 'core_components/BalancePie/BalancePie.js',
-    img: 'core_components/Orders/Orders.png',
+    img: 'core_components/BalancePie/BalancePie.png',
     header: 'Balance',
     description: 'Pie chart view',
     author: '#core',
@@ -156,7 +156,7 @@ export default [
   {
     id: '14',
     component: 'core_components/BalanceHistoryArea/BalanceHistoryArea.js',
-    img: 'core_components/Orders/Orders.png',
+    img: 'core_components/BalanceHistoryArea/BalanceHistoryArea.png',
     header: 'Total balance history',
     description: 'Stacked area chart view',
     author: '#core',
@@ -167,7 +167,7 @@ export default [
   {
     id: '15',
     component: 'core_components/BalanceHistoryArea/BalanceHistoryArea.js',
-    img: 'core_components/Orders/Orders.png',
+    img: 'core_components/BalanceHistoryArea/BalanceHistoryArea.png',
     header: 'Balance history',
     description: 'Stacked area chart view',
     author: '#core',
