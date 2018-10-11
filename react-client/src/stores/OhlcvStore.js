@@ -18,6 +18,7 @@ class OhlcvStore {
   @computed get pair() {return DashboardsStore.pair }
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
+  hash = ''
   @observable ohlcv = []
 
   @computed get ohlcvComputed() {
@@ -43,8 +44,12 @@ class OhlcvStore {
 
   @action async fetchOhlcv() {
     axios.get(`${this.serverBackend}/${this.stockLowerCase}/ohlcv/${this.pair}`)
-    axios.get(`${this.serverBackend}/${this.stockLowerCase}/ohlcv/${this.pair}`)
     .then((response) => {
+      if (this.hash === JSON.stringify(response.data)) {
+        return true
+      }
+      this.hash = JSON.stringify(response.data)
+
       if (!response.data) {
         this.ohlcv = []
       } else {

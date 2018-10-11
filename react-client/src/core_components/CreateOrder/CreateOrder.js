@@ -2,6 +2,7 @@ import React from 'react'
 import { observer } from 'mobx-react'
 import { Input, Button } from 'element-react'
 import CreateOrderStore from '../../stores/CreateOrderStore'
+import BalanceStore from '../../stores/BalanceStore'
 
 @observer
 class CreateOrder extends React.Component {
@@ -34,6 +35,12 @@ class CreateOrder extends React.Component {
   }
   createOrder(type) {
     CreateOrderStore.createOrder(type)
+  }
+  componentDidMount() {
+    BalanceStore.count('balanceStock_counter', 1)
+  }
+  componentWillUnmount() {
+    BalanceStore.count('balanceStock_counter', -1)
   }
 }
 

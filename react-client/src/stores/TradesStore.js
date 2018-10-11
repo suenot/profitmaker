@@ -20,15 +20,17 @@ class TradesStore {
   @computed get pair() {return DashboardsStore.pair }
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
+  hash = ''
   @observable trades = []
 
   @action fetchTrades(){
     axios.get(`${this.serverBackend}/${this.stockLowerCase}/trades/${this.pair}`)
     .then((response) => {
+      if (this.hash === JSON.stringify(response.data)) {
+        return true
+      }
+      this.hash = JSON.stringify(response.data)
       var trades = _.orderBy(response.data.slice(0, 20), ['timestamp'], ['desc'])
-      // trades = trades.map(function(trade){
-      //   return trade.uuid = uuidv1()
-      // })
       this.trades = trades
     })
     .catch(() => {

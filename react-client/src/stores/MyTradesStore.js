@@ -18,11 +18,17 @@ class MyTradesStore {
   @computed get pair() {return DashboardsStore.pair }
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
+  hash = ''
   @observable myTrades = {}
 
   @action fetchMyTrades(){
     axios.get(`${this.terminalBackend}/myTrade/${this.stock}/${this.pair}`)
     .then((response) => {
+      if (this.hash === JSON.stringify(response.data)) {
+        return true
+      }
+      this.hash = JSON.stringify(response.data)
+
       var myTrades = response.data
       myTrades.map(function(trade){
         return trade.uuid = uuidv1()

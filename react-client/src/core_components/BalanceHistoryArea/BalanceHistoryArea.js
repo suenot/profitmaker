@@ -61,10 +61,18 @@ class BalancePie extends React.Component {
     )
   }
   componentDidMount() {
-    BalanceStore.count(1)
+    if (this.props.data.total === true ) {
+      BalanceStore.count('balanceHistoryTotal_counter', 1)
+    } else {
+      BalanceStore.count('balanceHistoryStock_counter', 1)
+    }
   }
   componentWillUnmount() {
-    BalanceStore.count(-1)
+    if (this.props.data.total === true ) {
+      BalanceStore.count('balanceHistoryTotal_counter', -1)
+    } else {
+      BalanceStore.count('balanceHistoryStock_counter', -1)
+    }
   }
 }
 

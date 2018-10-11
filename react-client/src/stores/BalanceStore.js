@@ -6,22 +6,30 @@ import SettingsStore from './SettingsStore'
 
 class BalanceStore {
   constructor() {
-    const start = () => {
+    const fetchBalanceStock = () => {
       this.fetchBalance(this.stock)
-      this.fetchBalance('TOTAL')
-      this.fetchBalanceHistory(this.stock)
-      this.fetchBalanceHistory('TOTAL')
       this.available()
     }
-    start()
+    if (this.balanceTotal_counter > 0) this.fetchBalance('TOTAL')
+    if (this.balanceStock_counter > 0) fetchBalanceStock()
+    if (this.balanceHistoryTotal_counter > 0) this.fetchBalanceHistory('TOTAL')
+    if (this.balanceHistoryStock_counter > 0) this.fetchBalanceHistory(this.stock)
     setInterval(() => {
-      if (this.counter > 0) start()
+      if (this.balanceTotal_counter > 0) this.fetchBalance('TOTAL')
+      if (this.balanceStock_counter > 0) fetchBalanceStock()
+      if (this.balanceHistoryTotal_counter > 0) this.fetchBalanceHistory('TOTAL')
+      if (this.balanceHistoryStock_counter > 0) this.fetchBalanceHistory(this.stock)
     }, 5000)
   }
 
   @computed get stock() {return DashboardsStore.stock }
   @computed get pair() {return DashboardsStore.pair }
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
+
+  fetchBalanceStock_hash = ''
+  fetchBalanceTotal_hash = ''
+  fetchBalanceHistoryStock_hash = ''
+  fetchBalanceHistoryTotal_hash = ''
 
   @observable precision = 8
   @observable balanceTotal = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': []}
@@ -45,8 +53,12 @@ class BalanceStore {
     axios.get(`${this.terminalBackend}/balance/${stock}`)
     .then(response => {
       if (stock === 'TOTAL') {
+        if (this.fetchBalanceTotal_hash === JSON.stringify(response.data)) return true
+        this.fetchBalanceTotal_hash = JSON.stringify(response.data)
         this.balanceTotal = response.data
       } else {
+        if (this.fetchBalanceStock_hash === JSON.stringify(response.data)) return true
+        this.fetchBalanceStock_hash = JSON.stringify(response.data)
         this.balanceStock = response.data
       }
     })
@@ -59,8 +71,12 @@ class BalanceStore {
     axios.get(`${this.terminalBackend}/balance/history/${stock}`)
     .then((response) => {
       if (stock === 'TOTAL') {
+        if (this.fetchBalanceHistoryTotal_hash === JSON.stringify(response.data)) return true
+        this.fetchBalanceHistoryTotal_hash = JSON.stringify(response.data)
         this.balanceHistoryTotal = response.data
       } else {
+        if (this.fetchBalanceHistoryStock_hash === JSON.stringify(response.data)) return true
+        this.fetchBalanceHistoryStock_hash = JSON.stringify(response.data)
         this.balanceHistoryStock = response.data
       }
     })
@@ -68,9 +84,13 @@ class BalanceStore {
     })
   }
 
-  counter = 0
-  @action count(n) {
-    this.counter += n
+  // counters
+  balanceTotal_counter = 0
+  balanceStock_counter = 0
+  balanceHistoryTotal_counter = 0
+  balanceHistoryStock_counter = 0
+  @action count(counterName, n) {
+    this[counterName] += n
   }
 }
 

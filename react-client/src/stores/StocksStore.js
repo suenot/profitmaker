@@ -6,6 +6,7 @@ import SettingsStore from './SettingsStore'
 
 class StocksStore {
   constructor(){
+    this.fetchStocks()
     setInterval(async () => {
       await this.fetchStocks()
     }, 1000)
@@ -13,6 +14,7 @@ class StocksStore {
 
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
+  hash = ''
   @observable stocks = []
   @observable stocksFilter = ''
 
@@ -34,6 +36,10 @@ class StocksStore {
   @action async fetchStocks() {
     axios.get(`${this.serverBackend}/stocks`)
     .then((response) => {
+      if (this.hash === JSON.stringify(response.data)) {
+        return true
+      }
+      this.hash = JSON.stringify(response.data)
       this.stocks = _.toArray(response.data)
     })
     .catch((error) => {

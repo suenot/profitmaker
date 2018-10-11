@@ -5,6 +5,7 @@ import SettingsStore from './SettingsStore'
 
 class PairsStore {
   constructor() {
+    this.fetchPairs()
     setInterval(async () => {
       await this.fetchPairs()
     }, 1000)
@@ -15,6 +16,7 @@ class PairsStore {
 
   @observable pairsFilter = ''
 
+  hash = ''
   @observable pairs = []
 
   @computed get pairsComputed() {
@@ -34,6 +36,10 @@ class PairsStore {
   @action async fetchPairs() {
     axios.get(`${this.serverBackend}/${this.stockLowerCase}/pairs/`)
     .then((response) => {
+      if (this.hash === JSON.stringify(response.data)) {
+        return true
+      }
+      this.hash = JSON.stringify(response.data)
       var pairs = response.data.map((pair) => {
         return pair.split('/').join('_')
       })

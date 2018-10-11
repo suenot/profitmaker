@@ -19,6 +19,7 @@ class OrdersStore {
   @computed get pair() {return DashboardsStore.pair }
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
+  hash = ''
   @observable orders = {
     'asks': [],
     'bids': []
@@ -27,6 +28,10 @@ class OrdersStore {
   @action async fetchOrders() {
     axios.get(`${this.serverBackend}/${this.stockLowerCase}/orders/${this.pair}`)
     .then((response) => {
+      if (this.hash === JSON.stringify(response.data)) {
+        return true
+      }
+      this.hash = JSON.stringify(response.data)
       var _orders = response.data
       var sumAsks = 0
       for( let [key, order] of Object.entries(_orders.asks) ) {

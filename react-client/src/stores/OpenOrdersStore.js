@@ -18,10 +18,16 @@ class OpenOrdersStore {
   @computed get pair() {return DashboardsStore.pair }
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
+  hash = ''
   @observable openOrders = {}
   @action fetchOpenOrders(){
     axios.get(`${this.terminalBackend}/openOrders/${this.stock}/${this.pair}`)
     .then((response) => {
+      if (this.hash === JSON.stringify(response.data)) {
+        return true
+      }
+      this.hash = JSON.stringify(response.data)
+
       this.openOrders = response.data
     })
     .catch((error) => { console.log(error) })
