@@ -15,6 +15,7 @@ import MenuIcon from '@material-ui/icons/Menu'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
+import Button from '@material-ui/core/Button'
 
 import Grid from './Grid'
 import 'element-theme-default'
@@ -53,7 +54,7 @@ const styles = theme => ({
     ...theme.mixins.toolbar,
   },
   appBar: {
-    zIndex: theme.zIndex.drawer + 1,
+    zIndex: 2000,
     transition: theme.transitions.create(['width', 'margin'], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
@@ -133,6 +134,10 @@ const styles = theme => ({
   tableContainer: {
     height: 320,
   },
+
+  button: {
+    margin: theme.spacing.unit,
+  },
 })
 
 
@@ -141,14 +146,6 @@ class App extends React.Component {
   state = {
     open: false,
   }
-
-  // handleDrawerOpen = () => {
-  //   this.setState({ open: true })
-  // }
-
-  // handleDrawerClose = () => {
-  //   this.setState({ open: false })
-  // }
 
   handleDrawerToggle = () => {
     this.setState({ open: !this.state.open })
@@ -183,11 +180,29 @@ class App extends React.Component {
               >
                 <MenuIcon />
               </IconButton>
-              <img src={DashboardsStore.icon} alt="" width="24px" height="24px"></img> 
-              <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1}}>
-                {/* {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name.toUpperCase()} */}
-                {DashboardsStore.dashboardActiveId !== '0' && DashboardsStore.name.toUpperCase()} : {DashboardsStore.stock} : {DashboardsStore.pair}
+              <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "./core_components/Settings/Settings.js", "300px")}>
+                <img src={DashboardsStore.icon} alt="" width="24px" height="24px"></img>  
+                <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
+                  <span>{DashboardsStore.name.toUpperCase()}</span>
+                </Typography>
+              </Button>
+              <Typography variant="title" color="inherit">
+                :
               </Typography>
+              <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "./core_components/Stocks/Stocks.js", "300px")}>
+                <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
+                  {DashboardsStore.stock}
+                </Typography>
+              </Button>
+              <Typography variant="title" color="inherit">
+                :
+              </Typography>
+              <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "./core_components/Pairs/Pairs.js", "300px")}>
+                <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
+                  {DashboardsStore.pair}
+                </Typography>
+              </Button>
+              <div className="spacer"></div>
               <IconButton
                 color="inherit"
                 aria-label="Settings"
@@ -202,13 +217,6 @@ class App extends React.Component {
               >
                 <AddIcon />
               </IconButton>
-              {/* <IconButton
-                color="inherit"
-                aria-label="Settings"
-                onClick={this.deleteDashboard.bind(this, DashboardsStore.dashboardActiveId)}
-              >
-                <DeleteIcon />
-              </IconButton> */}
             </Toolbar>
           </AppBar>
           <Drawer
@@ -240,8 +248,8 @@ class App extends React.Component {
           </Drawer>
           <Drawer
             anchor="right"
+            ModalProps={{ onBackdropClick: this.drawerRightClose, onEscapeKeyDown: this.drawerRightClose, BackdropProps: {invisible: true} }}
             open={DrawersStore.drawerRightOpen}
-            variant="permanent"
             classes={{
               paper: classNames(classes.drawerPaperRight, !DrawersStore.drawerRightOpen && classes.drawerPaperRightClose),
             }}
@@ -252,6 +260,7 @@ class App extends React.Component {
               }
             </div>
           </Drawer>
+
           <main className={classes.content}>
             <div className={classes.appBarSpacer} />
             <Grid />
@@ -259,6 +268,9 @@ class App extends React.Component {
         </div>
       </React.Fragment>
     )
+  }
+  drawerRightClose() {
+    DrawersStore.drawerRightClose()
   }
   drawerRightToggle(component, width) {
     if (DrawersStore.drawerRightComponent === component) {
@@ -276,9 +288,6 @@ class App extends React.Component {
   addDashboard() {
     DashboardsStore.addDashboard()
   }
-  // deleteDashboard(id) {
-  //   DashboardsStore.deleteDashboard(id)
-  // }
 }
 
 App.propTypes = {

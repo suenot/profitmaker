@@ -5,6 +5,9 @@ class DrawersStore {
   @observable drawerRightComponent = './core_components/Empty'
   @observable drawerRightWidth = '0px'
   @observable drawerRightData = {}
+  @action drawerRightClose() {
+    this.drawerRightOpen = false
+  }
   @action drawerRightToggle() {
     this.drawerRightOpen = !this.drawerRightOpen
   }

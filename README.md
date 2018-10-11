@@ -21,7 +21,7 @@ Open source, customized, extendable trading terminal that supports multiple cryp
 - [Flaticon](https://www.flaticon.com/)
 
 ## Quick start
-0. If you had problems with installing we can help in [voice/text Discrod chat](https://discord.gg/Q77C8v)
+0. If you had any problems with installing we can help in [voice/text Discrod chat](https://discord.gg/Q77C8v)
 
 1. Install mongo
 ```
@@ -75,29 +75,30 @@ npm run start
 /ohlcv/:stock/:pair
 ```
 
-## Roadmap of developemnt
+## Plan for developemnt
+
 ### bigdata
 - websocket
-- imporove speed of information from stocks (now it can be in 0.2-10s, depends by stock)
+- improve speed of information from stocks (now it can be in 0.2-30s, depends by stock)
 - ohlcv time_series
 - orders time_series
 - trades time_series
 - more reliability
+
 ### terminal
 - websocket
-- add/remove widgets
-- add/remove dashboards
 - dashboards with color_groups of widgets (2+ stocks on one page)
 - free arbitrage signals (one signal in one hands)
 - free strategies that really works
-- bots
-  - dashboard for monitoring bots work
+- free bots
+  - widgets for monitoring bots work
   - emulator trades based on realtime data
-  - emulator trades based on history
+  - emulator trades based on history (backtesting)
 - i18n language support
 - analytics widgets
 - more stocks
 - tests
+
 ### dex
 - franchise
 - ethereum
@@ -111,16 +112,6 @@ npm run start
   - shorts
 - another blockchains
 - tests
-
-## TODO:
-1. Rerender without triggering window resize
-```js
-onLayoutChange={(layout, layouts) => {
-    this.onLayoutChange(layout, layouts)
-    window.dispatchEvent(new Event('resize'))
-  }
-}
-```
 
 ## Buy me a coffee
 ETH: 0x159d7BD659dd362423E1487c5952ab0f6C79Bec3
