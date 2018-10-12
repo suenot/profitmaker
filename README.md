@@ -10,7 +10,7 @@ Open source, customized, extendable trading terminal that supports multiple cryp
 ![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/structure.png?raw=true)
 
 ## Warning
-Terminal under heavy development. In current version trades processing by routing on client express.js server without authorization. In near future it will be fixed.
+Terminal under heavy development. In current version trades processing by routing on client express.js server without authorization. In near future it will be fixed. But server works on 127.0.0.1 (not in 0.0.0.0) and others computers from internet or lan can't use terminal.
 
 ## Features
 - Open source
