@@ -63,7 +63,11 @@ class CreateOrderStore {
 
     })
     .catch((error) => {
-      Alert.error(error.response.data.error, {
+      var errorMessage = 'Server is not available'
+      try {
+        errorMessage = error.response.data.error
+      } catch(err) {}
+      Alert.error(errorMessage, {
         position: 'bottom-right',
         effect: 'scale',
         beep: false,
