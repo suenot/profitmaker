@@ -24,10 +24,10 @@ class Settings extends React.Component {
             <div className="text">{SettingsStore.fetchEnabled.name}</div>
             <Input placeholder={SettingsStore.fetchEnabled.name} value={SettingsStore.fetchEnabled.value} onChange={this.setFetchEnabled.bind(this)} />
           </div>
-          <div className="simpleForm-formGroup">
+          {/* <div className="simpleForm-formGroup">
             <div className="text">{SettingsStore.defaultSetInterval.name}</div>
             <Input placeholder={SettingsStore.defaultSetInterval.name} value={SettingsStore.defaultSetInterval.value} onChange={this.setDefaultSetInterval.bind(this)} />
-          </div>
+          </div> */}
         </section>
 
         <section className="simpleForm">

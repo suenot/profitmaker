@@ -10,7 +10,7 @@ class OhlcvStore {
     }
     start()
     setInterval(() => {
-      if (this.counter > 0) start()
+      if ( this.counter > 0 && (SettingsStore.fetchEnabled.value === "true") ) start()
     }, 5000)
   }
   @computed get stock() {return DashboardsStore.stock }
@@ -45,9 +45,7 @@ class OhlcvStore {
   @action async fetchOhlcv() {
     axios.get(`${this.serverBackend}/${this.stockLowerCase}/ohlcv/${this.pair}`)
     .then((response) => {
-      if (this.hash === JSON.stringify(response.data)) {
-        return true
-      }
+      if (this.hash === JSON.stringify(response.data)) return true
       this.hash = JSON.stringify(response.data)
 
       if (!response.data) {

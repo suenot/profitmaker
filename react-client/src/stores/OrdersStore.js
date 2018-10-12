@@ -11,8 +11,8 @@ class OrdersStore {
     }
     start()
     setInterval(() => {
-      if (this.counter > 0) start()
-    }, 2000)
+      if ( this.counter > 0 && (SettingsStore.fetchEnabled.value === "true") ) start()
+    }, 1000)
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get stockLowerCase() {return DashboardsStore.stockLowerCase }
@@ -28,9 +28,7 @@ class OrdersStore {
   @action async fetchOrders() {
     axios.get(`${this.serverBackend}/${this.stockLowerCase}/orders/${this.pair}`)
     .then((response) => {
-      if (this.hash === JSON.stringify(response.data)) {
-        return true
-      }
+      if (this.hash === JSON.stringify(response.data)) return true
       this.hash = JSON.stringify(response.data)
       var _orders = response.data
       var sumAsks = 0

@@ -10,15 +10,15 @@ class BalanceStore {
       this.fetchBalance(this.stock)
       this.available()
     }
-    if (this.balanceTotal_counter > 0) this.fetchBalance('TOTAL')
-    if (this.balanceStock_counter > 0) fetchBalanceStock()
-    if (this.balanceHistoryTotal_counter > 0) this.fetchBalanceHistory('TOTAL')
-    if (this.balanceHistoryStock_counter > 0) this.fetchBalanceHistory(this.stock)
+    if (this.balanceTotal_counter > 0 && (SettingsStore.fetchEnabled.value === "true")) this.fetchBalance('TOTAL')
+    if (this.balanceStock_counter > 0 && (SettingsStore.fetchEnabled.value === "true")) fetchBalanceStock()
+    if (this.balanceHistoryTotal_counter > 0 && (SettingsStore.fetchEnabled.value === "true")) this.fetchBalanceHistory('TOTAL')
+    if (this.balanceHistoryStock_counter > 0 && (SettingsStore.fetchEnabled.value === "true")) this.fetchBalanceHistory(this.stock)
     setInterval(() => {
-      if (this.balanceTotal_counter > 0) this.fetchBalance('TOTAL')
-      if (this.balanceStock_counter > 0) fetchBalanceStock()
-      if (this.balanceHistoryTotal_counter > 0) this.fetchBalanceHistory('TOTAL')
-      if (this.balanceHistoryStock_counter > 0) this.fetchBalanceHistory(this.stock)
+      if (this.balanceTotal_counter > 0 && (SettingsStore.fetchEnabled.value === "true")) this.fetchBalance('TOTAL')
+      if (this.balanceStock_counter > 0 && (SettingsStore.fetchEnabled.value === "true")) fetchBalanceStock()
+      if (this.balanceHistoryTotal_counter > 0 && (SettingsStore.fetchEnabled.value === "true")) this.fetchBalanceHistory('TOTAL')
+      if (this.balanceHistoryStock_counter > 0 && (SettingsStore.fetchEnabled.value === "true")) this.fetchBalanceHistory(this.stock)
     }, 5000)
   }
 
