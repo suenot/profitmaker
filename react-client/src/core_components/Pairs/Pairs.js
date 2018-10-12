@@ -16,7 +16,7 @@ class Pairs extends React.Component {
         <table className="simpleTable">
           <tbody>
             {
-              _.map(PairsStore.pairsComputed.slice(0, 10), (pair) => {
+              _.map(PairsStore.pairsComputed, (pair) => {
                 return <tr key={pair}>
                   <td style={colWidth}>
                     <div className="cell" onClick={this.setPair.bind(this, pair)}>

@@ -2,9 +2,10 @@ import { observable, action, reaction, computed } from 'mobx'
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import _ from 'lodash'
 import widgetsMarket from './data/widgetsMarket'
+import widgetsIcons from './data/widgetsIcons'
 import Alert from 'react-s-alert'
 
-@version(1)
+@version(2)
 class DashboardsStore {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'dashboards' })
@@ -17,8 +18,8 @@ class DashboardsStore {
   @observable dashboardsCounter = 2
   @observable dashboardActiveId = '1'
   @observable dashboards = {
-    '1': { id: '1', name: 'First', bg: '#ccc', icon: '/img/widgets/015-viking-ship.svg', type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0},
-    '2': { id: '2', name: 'Second', bg: '#ccc', icon: '/img/widgets/013-helmet.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0},
+    '1': { id: '1', name: 'First', bg: '#ccc', icon: '/img/widgets/viking-ship.svg', type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0},
+    '2': { id: '2', name: 'Second', bg: '#ccc', icon: '/img/widgets/helmet.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0},
   }
   @computed get name() { return this.dashboards[this.dashboardActiveId].name }
   @computed get stock() { return this.dashboards[this.dashboardActiveId].stock }
@@ -31,7 +32,8 @@ class DashboardsStore {
   }
   @action addDashboard() {
     this.dashboardsCounter += 1
-    this.dashboards[this.dashboardsCounter+""] = { id: this.dashboardsCounter+"", name: 'Dash', bg: '#ccc', icon: '/img/widgets/010-footprint.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0}
+    var icon = '/img/widgets/' + _.sample(widgetsIcons)
+    this.dashboards[this.dashboardsCounter+""] = { id: this.dashboardsCounter+"", name: 'Dash', bg: '#ccc', icon: icon, type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0}
   }
   @action removeDashboard(id) {
     if (Object.keys(this.dashboards).length > 1) {
