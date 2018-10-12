@@ -6,6 +6,9 @@ http://demo.kupi.network/
 ## About
 Open source, customized, extendable trading terminal that supports multiple crypto stocks. 
 
+## How it works
+![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/structure.png?raw=true)
+
 ## Features
 - Open source
 - Your api keys stay on your machine, no need to send them anywhere
