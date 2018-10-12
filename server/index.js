@@ -93,6 +93,6 @@ const main = async () => {
 }
 main()
 
-app.listen(8051, '0.0.0.0', () => {
+app.listen(8051, '127.0.0.1', () => {
   console.log('KUPI termintal launched on 8051 port')
 })

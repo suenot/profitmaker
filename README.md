@@ -9,6 +9,9 @@ Open source, customized, extendable trading terminal that supports multiple cryp
 ## How it works
 ![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/structure.png?raw=true)
 
+## Warning
+Terminal under heavy development. In current version trades processing by routing on client express.js server without authorization. In near future it will be fixed.
+
 ## Features
 - Open source
 - Your api keys stay on your machine, no need to send them anywhere
@@ -107,6 +110,11 @@ npm run start
 - i18n language support
 - analytics widgets
 - more stocks
+- docker version
+- app version based on electron
+- online version
+- improve security
+- auditing
 - tests
 
 ### dex
