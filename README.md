@@ -14,7 +14,7 @@ Terminal under heavy development. In current version trades processing by routin
 
 ## Features
 - Open source
-- Your api keys stay on your machine, no need to send them anywhere
+- Your api keys stay on your machine, no need to send its anywhere
 - Customized with dashboards and widgets
 - Extendable with users modules
 - Free realtime API (Timeseries will be in immediate future)
