@@ -1,5 +1,8 @@
 ![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/demo.png?raw=true)
 
+## Demo without user API data
+http://demo.kupi.network/
+
 ## About
 Open source, customized, extendable trading terminal that supports multiple crypto stocks. 
 
