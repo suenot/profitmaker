@@ -182,23 +182,23 @@ class App extends React.Component {
               </IconButton>
               <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "./core_components/Settings/Settings.js", "300px")}>
                 <img src={DashboardsStore.icon} alt="" width="24px" height="24px"></img>  
-                <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
+                <Typography variant="h6" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
                   <span>{DashboardsStore.name.toUpperCase()}</span>
                 </Typography>
               </Button>
-              <Typography variant="title" color="inherit">
+              <Typography variant="h6" color="inherit">
                 :
               </Typography>
               <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "./core_components/Stocks/Stocks.js", "300px")}>
-                <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
+                <Typography variant="h6" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
                   {DashboardsStore.stock}
                 </Typography>
               </Button>
-              <Typography variant="title" color="inherit">
+              <Typography variant="h6" color="inherit">
                 :
               </Typography>
               <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "./core_components/Pairs/Pairs.js", "300px")}>
-                <Typography variant="title" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
+                <Typography variant="h6" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
                   {DashboardsStore.pair}
                 </Typography>
               </Button>
