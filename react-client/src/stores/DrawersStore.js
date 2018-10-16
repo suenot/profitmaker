@@ -2,7 +2,7 @@ import { observable, action } from 'mobx'
 
 class DrawersStore {
   @observable drawerRightOpen = false
-  @observable drawerRightComponent = './core_components/Empty'
+  @observable drawerRightComponent = 'core_components/Empty'
   @observable drawerRightWidth = '0px'
   @observable drawerRightData = {}
   @action drawerRightClose() {

@@ -3,12 +3,14 @@ import _ from 'lodash'
 import React from "react"
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import Clear from '@material-ui/icons/Clear'
+import ClearIcon from '@material-ui/icons/Clear'
+import SettingsIcon from '@material-ui/icons/Settings'
 import { observer } from 'mobx-react'
 import RGL, { WidthProvider } from 'react-grid-layout'
 const GridLayout = WidthProvider(RGL)
 
 import DashboardsStore from './stores/DashboardsStore'
+import DrawersStore from './stores/DrawersStore'
 
 
 @observer
@@ -40,11 +42,12 @@ class Grid extends React.Component {
             const Component = require("./"+widget.component).default
             return (
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
-                <div className="widget">
+                <div className={`widget widget-${widget.name}`}>
                   <div className="widget-header">
                     <span>{widget.header}</span>
                     <div>
-                      <Clear style={{ fontSize: 18 }} onClick={this.removeWidget.bind(this, widget.i)} className="pointer"/>
+                      <SettingsIcon style={{ fontSize: 18 }} onClick={this.drawerRightToggle.bind(this, widget.settings, widget.settingsWidth)} className="pointer"/>
+                      <ClearIcon style={{ fontSize: 18 }} onClick={this.removeWidget.bind(this, widget.i)} className="pointer"/>
                     </div>
                   </div>
                   <div className="widget-body">
@@ -73,7 +76,19 @@ class Grid extends React.Component {
       // </div>
     )
   }
-
+  drawerRightToggle(component, width) {
+    if (DrawersStore.drawerRightComponent === component) {
+      // current component
+      DrawersStore.drawerRightToggle()
+    } else {
+      // new component
+      if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
+      DrawersStore.drawerRightSet(component, width)
+    }
+  }
+  // widgetSettings(settings, settingsWidth) {
+  //   DrawersStore.drawerRightSet(settings, settingsWidth)
+  // }
   removeWidget(id) {
     DashboardsStore.removeWidget(id)
   }
