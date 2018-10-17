@@ -230,7 +230,6 @@ class App extends React.Component {
               <ListItem button>
                 <ListItemText primary="New dashboard" onClick={this.addDashboard.bind(this)}/>
               </ListItem>
-
             </div>
             <Divider />
             {
@@ -273,14 +272,16 @@ class App extends React.Component {
     DrawersStore.drawerRightClose()
   }
   drawerRightToggle(component, width) {
-    if (DrawersStore.drawerRightComponent === component) {
-      // current component
-      DrawersStore.drawerRightToggle()
-    } else {
-      // new component
-      if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
-      DrawersStore.drawerRightSet(component, width)
-    }
+    // if (DrawersStore.drawerRightComponent === component) {
+    //   // current component
+    //   DrawersStore.drawerRightToggle()
+    // } else {
+    //   // new component
+    //   if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
+    //   DrawersStore.drawerRightSet(component, width)
+    // }
+    DrawersStore.drawerRightSet(component, width)
+    DrawersStore.drawerRightToggle()
   }
   setDashboard(id) {
     DashboardsStore.setDashboard(id)
