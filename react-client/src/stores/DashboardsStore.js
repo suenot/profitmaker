@@ -5,7 +5,7 @@ import widgetsMarket from './data/widgetsMarket'
 import widgetsIcons from './data/widgetsIcons'
 import Alert from 'react-s-alert'
 
-@version(2)
+@version(3)
 class DashboardsStore {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'dashboards' })
@@ -54,6 +54,9 @@ class DashboardsStore {
   @action setDashboardIcon(icon) {
     this.dashboards[this.dashboardActiveId].icon = icon
   }
+  @action setCustomHeader(dashboardId, widgetId, value) {
+    _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader = value
+  }
 
   @observable counter = 15
   @ignore @observable widgetsMarket = widgetsMarket
@@ -77,15 +80,22 @@ class DashboardsStore {
     var dashboardName = this.dashboards[this.dashboardActiveId].name
     this.dashboards[this.dashboardActiveId].counter = (parseInt(this.dashboards[this.dashboardActiveId].counter, 10) + 1).toString()
     this.dashboards[this.dashboardActiveId].widgets.push({
-      i: this.dashboards[this.dashboardActiveId].counter+"", uid: dashboardName+'_'+this.dashboards[this.dashboardActiveId].counter, component: widget.component, header: widget.header, data: widget.data, x: 0, y: 0, w: 5, h: 19, minW: 2, minH: 3
+      i: this.dashboards[this.dashboardActiveId].counter+"", uid: dashboardName+'_'+this.dashboards[this.dashboardActiveId].counter, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: 5, h: 19, minW: 2, minH: 3
     })
   }
 
   @action removeWidget(id) {
     this.dashboards[this.dashboardActiveId].widgets = _.filter(this.dashboards[this.dashboardActiveId].widgets, function(item) {
-      return item.i !== id;
+      return item.i !== id
     })
   }
+
+  // @action setNote(dashboardId, widgetId, id) {
+  //   _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data.noteId = id
+  // }
+  // @action getNoteId(dashboardId, widgetId) {
+  //   return _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data.noteId
+  // }
 
 }
 

@@ -3,12 +3,14 @@ import _ from 'lodash'
 import React from "react"
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import Clear from '@material-ui/icons/Clear'
+import ClearIcon from '@material-ui/icons/Clear'
+import SettingsIcon from '@material-ui/icons/Settings'
 import { observer } from 'mobx-react'
 import RGL, { WidthProvider } from 'react-grid-layout'
 const GridLayout = WidthProvider(RGL)
 
 import DashboardsStore from './stores/DashboardsStore'
+import DrawersStore from './stores/DrawersStore'
 
 
 @observer
@@ -38,18 +40,37 @@ class Grid extends React.Component {
           JSON.stringify(DashboardsStore.dashboardActiveId) !== 'false' &&
           _.map(DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].widgets, (widget) => {
             const Component = require("./"+widget.component).default
+            var customHeader = false
+            if (widget.customHeader !== '') {
+              customHeader = widget.customHeader
+            }
+            var dashboardId = DashboardsStore.dashboardActiveId
+            var widgetId = widget.i
+            var noteId = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.noteId
             return (
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
-                <div className="widget">
+                <div className={`widget widget-${widget.name}`}>
                   <div className="widget-header">
-                    <span>{widget.header}</span>
+                    <span>{ customHeader || widget.header}</span>
                     <div>
-                      <Clear style={{ fontSize: 18 }} onClick={this.removeWidget.bind(this, widget.i)} className="pointer"/>
+                      <SettingsIcon style={{ fontSize: 18 }} onClick={this.drawerRightToggle.bind(
+                        this,
+                        widget.settings,
+                        widget.settingsWidth,
+                        {
+                          dashboardId: dashboardId,
+                          widgetId: widgetId,
+                          noteId: noteId
+                        },
+                        DashboardsStore.dashboardActiveId,
+                        widget.i
+                      )} className="pointer"/>
+                      <ClearIcon style={{ fontSize: 18 }} onClick={this.removeWidget.bind(this, widget.i)} className="pointer"/>
                     </div>
                   </div>
                   <div className="widget-body">
                     {
-                      React.createElement(Component, {'data': widget.data})
+                      React.createElement(Component, {'data': {...widget.data, dashboardId: DashboardsStore.dashboardActiveId, widgetId: widget.i} })
                     }
                   </div>
                 </div>
@@ -73,7 +94,21 @@ class Grid extends React.Component {
       // </div>
     )
   }
-
+  drawerRightToggle(component, width, data, dashboardId, widgetId) {
+    // if (DrawersStore.drawerRightComponent === component && (DrawersStore.drawerRightDashboardId !== dashboardId || DrawersStore.drawerRightWidgetId !== widgetId) ) {
+    //   // current component
+    //   DrawersStore.drawerRightToggle()
+    // } else {
+    //   // new component
+    //   if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
+    //   DrawersStore.drawerRightSet(component, width, data, dashboardId, widgetId)
+    // }
+    DrawersStore.drawerRightSet(component, width, data, dashboardId, widgetId)
+    DrawersStore.drawerRightToggle()
+  }
+  // widgetSettings(settings, settingsWidth) {
+  //   DrawersStore.drawerRightSet(settings, settingsWidth)
+  // }
   removeWidget(id) {
     DashboardsStore.removeWidget(id)
   }

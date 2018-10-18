@@ -153,7 +153,7 @@ class App extends React.Component {
 
   render() {
     const { classes } = this.props
-    const Component = require(DrawersStore.drawerRightComponent+"").default
+    const Component = require('./'+DrawersStore.drawerRightComponent+"").default
     return (
       <React.Fragment>
         <style jsx="true">{`
@@ -180,7 +180,7 @@ class App extends React.Component {
               >
                 <MenuIcon />
               </IconButton>
-              <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "./core_components/Settings/Settings.js", "300px")}>
+              <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "300px")}>
                 <img src={DashboardsStore.icon} alt="" width="24px" height="24px"></img>  
                 <Typography variant="h6" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
                   <span>{DashboardsStore.name.toUpperCase()}</span>
@@ -189,7 +189,7 @@ class App extends React.Component {
               <Typography variant="h6" color="inherit">
                 :
               </Typography>
-              <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "./core_components/Stocks/Stocks.js", "300px")}>
+              <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "core_components/Stocks/Stocks.js", "300px")}>
                 <Typography variant="h6" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
                   {DashboardsStore.stock}
                 </Typography>
@@ -197,7 +197,7 @@ class App extends React.Component {
               <Typography variant="h6" color="inherit">
                 :
               </Typography>
-              <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "./core_components/Pairs/Pairs.js", "300px")}>
+              <Button size="medium" className={classes.button} onClick={this.drawerRightToggle.bind(this, "core_components/Pairs/Pairs.js", "300px")}>
                 <Typography variant="h6" color="inherit" noWrap style={{flexGrow: 1, color: 'white'}}>
                   {DashboardsStore.pair}
                 </Typography>
@@ -206,14 +206,14 @@ class App extends React.Component {
               <IconButton
                 color="inherit"
                 aria-label="Settings"
-                onClick={this.drawerRightToggle.bind(this, "./core_components/Settings/Settings.js", "300px")}
+                onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "300px")}
               >
                 <SettingsIcon />
               </IconButton>
               <IconButton
                 color="inherit"
                 aria-label="Market"
-                onClick={this.drawerRightToggle.bind(this, "./core_components/Market/Market.js", "432px")}
+                onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "432px")}
               >
                 <AddIcon />
               </IconButton>
@@ -230,7 +230,6 @@ class App extends React.Component {
               <ListItem button>
                 <ListItemText primary="New dashboard" onClick={this.addDashboard.bind(this)}/>
               </ListItem>
-
             </div>
             <Divider />
             {
@@ -273,14 +272,16 @@ class App extends React.Component {
     DrawersStore.drawerRightClose()
   }
   drawerRightToggle(component, width) {
-    if (DrawersStore.drawerRightComponent === component) {
-      // current component
-      DrawersStore.drawerRightToggle()
-    } else {
-      // new component
-      if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
-      DrawersStore.drawerRightSet(component, width)
-    }
+    // if (DrawersStore.drawerRightComponent === component) {
+    //   // current component
+    //   DrawersStore.drawerRightToggle()
+    // } else {
+    //   // new component
+    //   if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
+    //   DrawersStore.drawerRightSet(component, width)
+    // }
+    DrawersStore.drawerRightSet(component, width)
+    DrawersStore.drawerRightToggle()
   }
   setDashboard(id) {
     DashboardsStore.setDashboard(id)

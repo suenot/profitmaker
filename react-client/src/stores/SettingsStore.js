@@ -6,6 +6,11 @@ class SettingsStore {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'settings' })
     trunk.init()
+    // TODO добавить реакцию на изменение
+    // reaction(
+    //   () => this.widgets,
+    //   () => trunk.updateStore(this)
+    // )
   }
   @observable serverBackend = {
     name: 'Server backend',
