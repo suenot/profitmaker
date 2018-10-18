@@ -5,7 +5,7 @@ import widgetsMarket from './data/widgetsMarket'
 import widgetsIcons from './data/widgetsIcons'
 import Alert from 'react-s-alert'
 
-@version(2)
+@version(3)
 class DashboardsStore {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'dashboards' })
