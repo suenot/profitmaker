@@ -41,7 +41,7 @@ const fetchMyTradesByOne = async function(rateLimit, stockName) {
 
 const tradesHistory = async function(stockName) {
   try {
-    var rateLimit = global.STOCKS[stockName]['rateLimit']
+    var rateLimit = global.STOCKS[stockName]['rateLimit'] + 500
     var stockNameUpper = stockName.toUpperCase()
     if (global.STOCKS[stockName].has['fetchMyTrades']) { // TODO что если биржа убогая
 
