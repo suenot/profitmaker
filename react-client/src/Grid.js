@@ -44,13 +44,27 @@ class Grid extends React.Component {
             if (widget.customHeader !== '') {
               customHeader = widget.customHeader
             }
+            var dashboardId = DashboardsStore.dashboardActiveId
+            var widgetId = widget.i
+            var noteId = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.noteId
             return (
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
                 <div className={`widget widget-${widget.name}`}>
                   <div className="widget-header">
                     <span>{ customHeader || widget.header}</span>
                     <div>
-                      <SettingsIcon style={{ fontSize: 18 }} onClick={this.drawerRightToggle.bind(this, widget.settings, widget.settingsWidth, {dashboardId: DashboardsStore.dashboardActiveId, widgetId: widget.i}, DashboardsStore.dashboardActiveId, widget.i)} className="pointer"/>
+                      <SettingsIcon style={{ fontSize: 18 }} onClick={this.drawerRightToggle.bind(
+                        this,
+                        widget.settings,
+                        widget.settingsWidth,
+                        {
+                          dashboardId: dashboardId,
+                          widgetId: widgetId,
+                          noteId: noteId
+                        },
+                        DashboardsStore.dashboardActiveId,
+                        widget.i
+                      )} className="pointer"/>
                       <ClearIcon style={{ fontSize: 18 }} onClick={this.removeWidget.bind(this, widget.i)} className="pointer"/>
                     </div>
                   </div>

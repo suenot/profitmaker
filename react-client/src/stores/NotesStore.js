@@ -1,58 +1,67 @@
-import { observable, action } from 'mobx'
-// import { version, AsyncTrunk } from 'mobx-sync'
+import { observable, action, reaction } from 'mobx'
+import { version, AsyncTrunk } from 'mobx-sync'
 import Alert from 'react-s-alert'
+import DashboardsStore from './DashboardsStore'
+import _ from 'lodash'
 
-// @version(1)
+@version(1)
 class NotesStore {
   constructor() {
-    // const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'notepad' })
-    // trunk.init()
+    const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'notes' })
+    trunk.init()
+    reaction(
+      () => this.notes,
+      () => trunk.updateStore(this)
+    )
   }
-
   @observable notes = {
     '1': {
       id: '1',
-      name: 'Demo note',
-      text: 'One'
+      name: 'Note 1',
+      text: 'Sample text 1'
     },
     '2': {
       id: '2',
-      name: 'Demo note',
-      text: 'Two'
+      name: 'Note 2',
+      text: 'Sample text 2'
     }
-  }
-  // TODOOOOOOOO: active не катит, т.к. виджетов много на странице
-  @observable noteActiveId = '1'
-  @action setNote(id) {
-    this.noteActiveId = id
   }
   notesCounter = 2
   @action addNote() {
     this.notesCounter += 1
     this.notes[this.notesCounter+""] = {
       id: this.notesCounter+"",
-      name: 'Note',
-      text: 'Sample text',
+      name: 'Note ' + this.notesCounter,
+      text: 'Sample text ' + this.notesCounter,
     }
-    // this.notes[this.notesCounter+""] = {
-    //   id: this.dashboardsCounter+"",
-    //   name: 'Note',
-    //   text: 'Sample text',
-    // }
   }
-  // @action removeDashboard(id) {
-  //   if (Object.keys(this.notes).length > 1) {
-  //     delete this.notes[id]
-  //     this.noteActiveId = Object.keys(this.notes)[0]
-  //   } else {
-  //     Alert.warning('You must have at least one note', {
-  //       position: 'bottom-right',
-  //       effect: 'scale',
-  //       beep: false,
-  //       timeout: 'none'
-  //     })
-  //   }
-  // }
+  @action setName(noteId, value) {
+    this.notes[noteId].name = value
+  }
+  @action getName(noteId) {
+    return this.notes[noteId].name
+  }
+  @action setText(noteId, value) {
+    this.notes[noteId].text = value
+  }
+  @action removeNote(id) {
+    if (Object.keys(this.notes).length > 1) {
+      delete this.notes[id]
+    } else {
+      Alert.warning('You must have at least one note', {
+        position: 'bottom-right',
+        effect: 'scale',
+        beep: false,
+        timeout: 'none'
+      })
+    }
+  }
+  @action setNote(dashboardId, widgetId, id) {
+    _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.noteId = id
+  }
+  @action getNoteId(dashboardId, widgetId) {
+    return _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.noteId
+  }
 }
 
 const store = window.NotesStore = new NotesStore()

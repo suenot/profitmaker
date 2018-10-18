@@ -54,6 +54,9 @@ class DashboardsStore {
   @action setDashboardIcon(icon) {
     this.dashboards[this.dashboardActiveId].icon = icon
   }
+  @action setCustomHeader(dashboardId, widgetId, value) {
+    _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader = value
+  }
 
   @observable counter = 15
   @ignore @observable widgetsMarket = widgetsMarket
@@ -86,6 +89,13 @@ class DashboardsStore {
       return item.i !== id
     })
   }
+
+  // @action setNote(dashboardId, widgetId, id) {
+  //   _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data.noteId = id
+  // }
+  // @action getNoteId(dashboardId, widgetId) {
+  //   return _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data.noteId
+  // }
 
 }
 
