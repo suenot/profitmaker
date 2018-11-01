@@ -175,18 +175,40 @@ body
     background-size: contain
     background-position: left top
     .market-wrapper
-      background: rgba(0,0,0,0.85)
+      background: rgba(0,0,0,0.7)
       padding: 20px
       flex: 1 1 auto
       display: flex
       flex-direction: column
-      opacity: 0
-      transition: opacify .2s
+      transition: all .2s
+      justify-content: center
+      text-align: center
+      align-items: center
+      .market-main
+        flex: 0 0 auto
+      p, .market-actions
+        display: none
+      .market-header
+        text-align: center
+        padding: 10px
     &:hover
       .market-wrapper
-        opacity: 1
+        background: rgba(0,0,0,0.85)
+        justify-content: flex-start
+        text-align: left
+        align-items: normal
+      .market-main
+        flex: 1 0 auto
+      p
+        display: block
+      .market-actions
+        display: flex
+      .market-header
+        background: none
+        text-align: center
+        padding: 0
   .market-main
-    flex: 1 0 auto
+    //   flex: 1 0 auto
     .market-header
       color: #fff
       font-size: 2em
@@ -201,6 +223,7 @@ body
   .market-actions
     display: flex
     justify-content: space-between
+    align-items: flex-end
     .market-actions-autor
       flex: 0 0 auto
       a
@@ -213,12 +236,6 @@ body
         img
           width: 30px
           height: auto
-    .market-actions-action
-      flex: 0 0 45%
-      button
-        background: green
-        width: 100%
-
 // aside
 .sections
   .section

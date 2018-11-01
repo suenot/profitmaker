@@ -2,7 +2,8 @@
 import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
-import { Button } from 'element-react'
+import Button from '@material-ui/core/Button'
+import AddIcon from '@material-ui/icons/Add'
 import DashboardsStore from '../../stores/DashboardsStore'
 import ghLogo from'./github-logo.svg'
 @observer
@@ -30,7 +31,10 @@ class Market extends React.Component {
                       </a>
                     </div>
                     <div className="market-actions-action">
-                      <Button type='success' onClick={this.addWidget.bind(this, widget)}>Add</Button>
+                      {/* <Button type='success' onClick={this.addWidget.bind(this, widget)}>Add</Button> */}
+                      <Button variant="fab" color="secondary" aria-label="Add" onClick={this.addWidget.bind(this, widget)}>
+                        <AddIcon />
+                      </Button>
                     </div>
                   </div>
                 </div>
