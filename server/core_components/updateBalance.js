@@ -21,7 +21,7 @@ const updateBalance = async function(privateKeys, ethPockets, timeout) {
 const updateStocksBalance = async function(stockName) {
   if (!global.COINMARKETCAP) { return false }
   try {
-    var rateLimit = global.STOCKS[stockName]['rateLimit']
+    var rateLimit = global.STOCKS[stockName]['rateLimit'] + 700
     var stockNameUpper = stockName.toUpperCase()
     await catchHead(rateLimit, stockName)
     var data = await global.STOCKS[stockName].fetch_balance()
