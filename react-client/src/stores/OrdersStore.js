@@ -11,7 +11,7 @@ class OrdersStore {
     }
     start()
     setInterval(() => {
-      if ( this.counter > 0 && (SettingsStore.fetchEnabled.value === "true") ) start()
+      if ( this.counter > 0 && (SettingsStore.fetchEnabled.value) ) start()
     }, 1000)
   }
   @computed get stock() {return DashboardsStore.stock }

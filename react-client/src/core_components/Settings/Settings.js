@@ -1,71 +1,131 @@
 import React from 'react'
 import { observer } from 'mobx-react'
-import { Input, Button } from 'element-react'
+import TextField from '@material-ui/core/TextField'
+import Typography from '@material-ui/core/Typography'
+import Divider from '@material-ui/core/Divider'
+import Button from '@material-ui/core/Button'
+import FormGroup from '@material-ui/core/FormGroup'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import Switch from '@material-ui/core/Switch'
+import IconButton from '@material-ui/core/IconButton'
+import InputAdornment from '@material-ui/core/InputAdornment'
+import ImageIcon from '@material-ui/icons/Image'
+
 import SettingsStore from '../../stores/SettingsStore'
 import DashboardsStore from '../../stores/DashboardsStore'
+import DrawersStore from '../../stores/DrawersStore'
+
 
 @observer
 class Settings extends React.Component {
   render() {
     return (
       <div>
-
-        <section className="simpleForm">
-          <h4>Global settings</h4>
-          <div className="simpleForm-formGroup">
-            <div className="text">{SettingsStore.serverBackend.name}</div>
-            <Input placeholder={SettingsStore.serverBackend.name} value={SettingsStore.serverBackend.value} onChange={this.setServerBackend.bind(this)} />
+        <div className="simpleForm">
+          <div className="section">
+            <form noValidate autoComplete="off">
+              <Typography variant="h6" gutterBottom>Global settings</Typography>
+              <TextField
+                className="form-item"
+                label={SettingsStore.serverBackend.name}
+                value={SettingsStore.serverBackend.value}
+                onChange={this.setServerBackend.bind(this)}
+                variant="outlined"
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                className="form-item"
+                label={SettingsStore.terminalBackend.name}
+                value={SettingsStore.terminalBackend.value}
+                onChange={this.setTerminalBackend.bind(this)}
+                variant="outlined"
+                fullWidth
+                margin="dense"
+              />
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={SettingsStore.fetchEnabled.value}
+                      onChange={this.setFetchEnabled.bind(this)}
+                      value=""
+                    />
+                  }
+                  label={SettingsStore.fetchEnabled.value ? SettingsStore.fetchEnabled.name + ' enabled' : SettingsStore.fetchEnabled.name + ' disabled' }
+                />
+              </FormGroup>
+            </form>
           </div>
-          <div className="simpleForm-formGroup">
-            <div className="text">{SettingsStore.terminalBackend.name}</div>
-            <Input placeholder={SettingsStore.terminalBackend.name} value={SettingsStore.terminalBackend.value} onChange={this.setTerminalBackend.bind(this)} />
+        </div>
+        <Divider />
+        <div className="simpleForm">
+          <div className="section">
+            <form noValidate autoComplete="off">
+              <Typography variant="h6" gutterBottom>Dashboard settings</Typography>
+              <TextField
+                className="form-item"
+                label="Dashboard name"
+                value={DashboardsStore.name}
+                onChange={this.setDashboardName.bind(this)}
+                variant="outlined"
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                className="form-item"
+                label="Dashboard icon"
+                value={DashboardsStore.icon}
+                onChange={this.setDashboardIcon.bind(this)}
+                variant="outlined"
+                fullWidth
+                margin="dense"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment variant="filled" position="end">
+                      <IconButton
+                        aria-label="Icons list"
+                        onClick={this.drawerRightSet.bind(this, "core_components/Settings/IconsList.js", "300px")}
+                      >
+                        <ImageIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+              />
+              <Button className="form-item" variant="contained" color="secondary" onClick={this.removeDashboard.bind(this, DashboardsStore.dashboardActiveId)}>
+                Remove dashboard
+              </Button>
+            </form>
           </div>
-          <div className="simpleForm-formGroup">
-            <div className="text">{SettingsStore.fetchEnabled.name}</div>
-            <Input placeholder={SettingsStore.fetchEnabled.name} value={SettingsStore.fetchEnabled.value} onChange={this.setFetchEnabled.bind(this)} />
-          </div>
-          {/* <div className="simpleForm-formGroup">
-            <div className="text">{SettingsStore.defaultSetInterval.name}</div>
-            <Input placeholder={SettingsStore.defaultSetInterval.name} value={SettingsStore.defaultSetInterval.value} onChange={this.setDefaultSetInterval.bind(this)} />
-          </div> */}
-        </section>
-
-        <section className="simpleForm">
-          <h4>Dashboard settings</h4>
-          <div className="simpleForm-formGroup">
-            <div className="text">Dashboard name</div>
-            <Input placeholder="Dashboard name" value={DashboardsStore.name} onChange={this.setDashboardName.bind(this)} />
-          </div>
-          <div className="simpleForm-formGroup">
-            <div className="text">Dashboard icon</div>
-            <Input placeholder="Dashboard icon" value={DashboardsStore.icon} onChange={this.setDashboardIcon.bind(this)} />
-          </div>
-          <Button type="danger" onClick={this.removeDashboard.bind(this, DashboardsStore.dashboardActiveId)}>Remove dashboard</Button>
-        </section>
-
+        </div>
       </div>
     )
   }
-  setServerBackend(value) {
-    SettingsStore.setServerBackend(value)
+  drawerRightSet(component, width) {
+    DrawersStore.drawerRightSet(component, width)
+    // DrawersStore.drawerRightToggle()
   }
-  setTerminalBackend(value) {
-    SettingsStore.setTerminalBackend(value)
+  setServerBackend(event) {
+    SettingsStore.setServerBackend(event.target.value)
   }
-  setFetchEnabled(value) {
-    SettingsStore.setFetchEnabled(value)
+  setTerminalBackend(event) {
+    SettingsStore.setTerminalBackend(event.target.value)
   }
-  setDefaultSetInterval(value) {
-    SettingsStore.setDefaultSetInterval(value)
+  setFetchEnabled() {
+    SettingsStore.setFetchEnabled()
   }
-  removeDashboard(id) {
-    DashboardsStore.removeDashboard(id)
+  setDefaultSetInterval(event) {
+    SettingsStore.setDefaultSetInterval(event.target.value)
   }
-  setDashboardName(name) {
-    DashboardsStore.setDashboardName(name)
+  removeDashboard(event) {
+    DashboardsStore.removeDashboard(event.target.value)
   }
-  setDashboardIcon(icon) {
-    DashboardsStore.setDashboardIcon(icon)
+  setDashboardName(event) {
+    DashboardsStore.setDashboardName(event.target.value)
+  }
+  setDashboardIcon(event) {
+    DashboardsStore.setDashboardIcon(event.target.value)
   }
 }
 

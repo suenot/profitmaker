@@ -1,8 +1,9 @@
 import React from 'react'
 import { observer } from 'mobx-react'
-import { Input, Button } from 'element-react'
+import { Input } from 'element-react'
 import CreateOrderStore from '../../stores/CreateOrderStore'
 import BalanceStore from '../../stores/BalanceStore'
+import Button from '@material-ui/core/Button'
 
 @observer
 class CreateOrder extends React.Component {
@@ -26,7 +27,10 @@ class CreateOrder extends React.Component {
           <div className="text">Total</div>
           <Input placeholder="Total" value={CreateOrderStore.createTotal[type]} onChange={this.changeValue.bind(this, 'total', type)} append={CreateOrderStore.pair.split('_')[1]}/>
         </div>
-        <Button type={type === 'buy' ? 'success' : 'danger'} onClick={this.createOrder.bind(this, type)}>{type}</Button>
+        {/* <Button type={type === 'buy' ? 'success' : 'danger'} >{type}</Button> */}
+        <Button variant="contained" color="secondary" className={'btn-'+type} onClick={this.createOrder.bind(this, type)}>
+          {type}
+        </Button>
       </div>
     )
   }

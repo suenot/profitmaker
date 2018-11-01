@@ -31,7 +31,6 @@ class Market extends React.Component {
                       </a>
                     </div>
                     <div className="market-actions-action">
-                      {/* <Button type='success' onClick={this.addWidget.bind(this, widget)}>Add</Button> */}
                       <Button variant="fab" color="secondary" aria-label="Add" onClick={this.addWidget.bind(this, widget)}>
                         <AddIcon />
                       </Button>

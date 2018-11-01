@@ -21,8 +21,8 @@ class SettingsStore {
     value: 'http://localhost:8051'
   }
   @observable fetchEnabled = {
-    name: 'Fetch enabled',
-    value: 'true'
+    name: 'Fetch',
+    value: true
   }
   @observable defaultSetInterval = {
     name: 'Fetch interval',
@@ -35,8 +35,8 @@ class SettingsStore {
   @action setTerminalBackend(value) {
     this.terminalBackend.value = value
   }
-  @action setFetchEnabled(value) {
-    this.fetchEnabled.value = value
+  @action setFetchEnabled() {
+    this.fetchEnabled.value = !this.fetchEnabled.value
   }
   @action setDefaultSetInterval(value) {
     this.defaultSetInterval.value = value
