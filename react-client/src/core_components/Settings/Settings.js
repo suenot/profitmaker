@@ -118,8 +118,9 @@ class Settings extends React.Component {
   setDefaultSetInterval(event) {
     SettingsStore.setDefaultSetInterval(event.target.value)
   }
-  removeDashboard(event) {
-    DashboardsStore.removeDashboard(event.target.value)
+  removeDashboard(id, event) {
+    console.log(event)
+    DashboardsStore.removeDashboard(id)
   }
   setDashboardName(event) {
     DashboardsStore.setDashboardName(event.target.value)
