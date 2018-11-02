@@ -280,8 +280,6 @@ class App extends React.Component {
       if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
       DrawersStore.drawerRightSet(component, width)
     }
-    // DrawersStore.drawerRightSet(component, width)
-    // DrawersStore.drawerRightToggle()
   }
   setDashboard(id) {
     DashboardsStore.setDashboard(id)

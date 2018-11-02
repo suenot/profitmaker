@@ -3,6 +3,7 @@ import Chart from './Chart'
 import Preloader from '../../Preloader'
 import { observer } from 'mobx-react'
 import OhlcvStore from '../../../stores/OhlcvStore'
+import './theme.sass'
 
 @observer
 export default class ChartComponent extends React.Component {
@@ -10,13 +11,14 @@ export default class ChartComponent extends React.Component {
 		if (!OhlcvStore.ohlcvComputed || (JSON.stringify(OhlcvStore.ohlcvComputed) === '[]') ) {
 			return <Preloader />
 		} else {
+      var {dashboardId, widgetId} = this.props.data
 			var ordersJSON = JSON.parse( JSON.stringify(OhlcvStore.ohlcvComputed) )
 			ordersJSON = ordersJSON.map(function(order){
 				order.date = new Date(order.date)
 				return order
 			})
 			return (
-				<Chart type="hybrid" data={ordersJSON} />
+          <Chart type="hybrid" data={ordersJSON} dashboardId={dashboardId} widgetId={widgetId} />
 			)
 		}
   }

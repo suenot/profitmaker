@@ -5,7 +5,10 @@ import TextField from '@material-ui/core/TextField'
 import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
+import Button from '@material-ui/core/Button'
+
 import DashboardsStore from '../../../stores/DashboardsStore'
+
 
 const styles = theme => ({
   container: {
@@ -43,10 +46,10 @@ class Settings extends React.Component {
     const { classes } = this.props
     var {dashboardId, widgetId} = this.props.data
     return (
-      <div className="sections">
-        <div className="section">
-          <form className={classes.container + ' section-body'} noValidate autoComplete="off">
-            <Typography variant="h6" gutterBottom>Widget settings</Typography>
+      <div>
+        <div className="section-body">
+          <form className={classes.container} noValidate autoComplete="off">
+            <Typography variant="h6" gutterBottom>Widget name</Typography>
             <TextField
               id="outlined-name"
               label="Name"
@@ -56,8 +59,27 @@ class Settings extends React.Component {
               fullWidth
             />
           </form>
-          <Divider />
         </div>
+        <Divider />
+        <div className="section-body">
+          <Typography variant="h6" gutterBottom>Timeframes</Typography>
+          <div className="react-stockcharts-timeframes">
+            <Button variant="outlined" size="small" color="primary">1m</Button>
+            <Button variant="text" size="small" color="primary">3m</Button>
+            <Button variant="text" size="small" color="primary">5m</Button>
+            <Button variant="text" size="small" color="primary">15m</Button>
+            <Button variant="text" size="small" color="primary">30m</Button>
+            <Button variant="text" size="small" color="primary">1H</Button>
+            <Button variant="text" size="small" color="primary">2H</Button>
+            <Button variant="text" size="small" color="primary">4H</Button>
+            <Button variant="text" size="small" color="primary">6H</Button>
+            <Button variant="text" size="small" color="primary">12H</Button>
+            <Button variant="text" size="small" color="primary">1D</Button>
+            <Button variant="text" size="small" color="primary">1W</Button>
+            <Button variant="text" size="small" color="primary">1M</Button>
+          </div>
+        </div>
+        <Divider />
       </div>
     )
   }
