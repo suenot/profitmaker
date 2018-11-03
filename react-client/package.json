@@ -40,6 +40,7 @@
     "html-webpack-plugin": "2.29.0",
     "identicon.js": "^2.3.2",
     "jest": "20.0.4",
+    "list-react-files": "^0.2.0",
     "localforage": "^1.7.2",
     "lodash": "^4.17.10",
     "mobx": "^5.0.3",

@@ -20,7 +20,6 @@ app.use(cors())
 const signale = require('signale')
 
 
-
 let db
 
 
@@ -65,6 +64,12 @@ var {cancelOrder} = require('./core_components/cancelOrder')
 
 
 const main = async () => {
+  // var fs = require('fs')
+  // fs.readdir('../react-client/src/core_components', function(err, files) {
+  //     console.log(files)
+  // })
+  // return true
+
   try { global.MONGO = await startMongo() } catch(err) { console.log(err) }
   try {
 

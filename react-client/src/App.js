@@ -34,6 +34,7 @@ import 'react-s-alert/dist/s-alert-css-effects/genie.css'
 import 'react-s-alert/dist/s-alert-css-effects/jelly.css'
 import 'react-s-alert/dist/s-alert-css-effects/stackslide.css'
 
+// import listReactFiles from 'list-react-files'
 
 import DashboardsStore from './stores/DashboardsStore'
 import DrawersStore from './stores/DrawersStore'
@@ -152,6 +153,11 @@ class App extends React.Component {
   }
 
   render() {
+    // listReactFiles(__dirname).then(files => console.log(files))
+    // var fs = require('fs')
+    // fs.readdir('.', function(err, files) {
+    //     console.log(files)
+    // })
     const { classes } = this.props
     const Component = require('./'+DrawersStore.drawerRightComponent+"").default
     return (
