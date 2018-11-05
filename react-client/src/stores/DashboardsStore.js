@@ -2,7 +2,6 @@ import { observable, action, reaction, computed } from 'mobx'
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import _ from 'lodash'
 import axios from 'axios'
-import widgetsMarket from './data/widgetsMarket'
 import widgetsIcons from './data/widgetsIcons'
 import Alert from 'react-s-alert'
 
@@ -71,7 +70,7 @@ class DashboardsStore {
     axios.get(`${this.terminalBackend}/widgets/`)
     .then((response) => {
       if (response.data.length === 0) {
-        this.widgetsMarket = widgetsMarket
+        this.widgetsMarket = []
       } else {
         this.widgetsMarket = response.data
       }
