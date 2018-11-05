@@ -61,15 +61,7 @@ var {getMyTrades} = require('./core_components/getMyTrades')
 var {createOrder} = require('./core_components/createOrder')
 var {cancelOrder} = require('./core_components/cancelOrder')
 
-
-
 const main = async () => {
-  // var fs = require('fs')
-  // fs.readdir('../react-client/src/core_components', function(err, files) {
-  //     console.log(files)
-  // })
-  // return true
-
   try { global.MONGO = await startMongo() } catch(err) { console.log(err) }
   try {
 

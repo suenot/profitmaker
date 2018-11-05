@@ -44,6 +44,9 @@ class Market extends React.Component {
       </div>
     )
   }
+  componentWillMount() {
+    DashboardsStore.fetchWidgets()
+  }
   addWidget(widget) {
     DashboardsStore.addWidget(widget)
   }

@@ -1,9 +1,13 @@
 import { observable, action, reaction, computed } from 'mobx'
 import { version, AsyncTrunk, ignore } from 'mobx-sync'
 import _ from 'lodash'
+import axios from 'axios'
 import widgetsMarket from './data/widgetsMarket'
 import widgetsIcons from './data/widgetsIcons'
 import Alert from 'react-s-alert'
+
+import SettingsStore from './SettingsStore'
+
 
 @version(3)
 class DashboardsStore {
@@ -15,6 +19,7 @@ class DashboardsStore {
       () => trunk.updateStore(this)
     )
   }
+  @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
   @observable dashboardsCounter = 2
   @observable dashboardActiveId = '1'
   @observable dashboards = {
@@ -59,7 +64,25 @@ class DashboardsStore {
   }
 
   @observable counter = 15
-  @ignore @observable widgetsMarket = widgetsMarket
+
+  @ignore @observable widgetsMarket = []
+  @action fetchWidgets(){
+    console.log(`${this.terminalBackend}/widgets/`)
+    axios.get(`${this.terminalBackend}/widgets/`)
+    .then((response) => {
+      if (response.data.length === 0) {
+        this.widgetsMarket = widgetsMarket
+      } else {
+        this.widgetsMarket = response.data
+      }
+    })
+    .catch(() => {
+      this.trades = []
+    })
+  }
+
+
+
   @action setLayout(layout) {
     var widgets = _.clone(JSON.parse(JSON.stringify(this.dashboards[this.dashboardActiveId].widgets)))
     for (var i = 0; i<widgets.length; i++) {

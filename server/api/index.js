@@ -12,10 +12,18 @@ var {getTrades} = require('../core_components/updateTradesRaw')
 var getMyTrades = require('../core_components/getMyTrades')
 var createOrder = require('../core_components/createOrder')
 var cancelOrder = require('../core_components/cancelOrder')
+var widgets = require('../core_components/widgets')
 
 var router = express.Router()
 
-// balance (pie chart)
+router.get('/widgets', function (req, res) {
+  try {
+    res.json(widgets())
+  } catch (err) {
+    res.status(500).send({ error: 'fetch widgets' + ' failed!' })
+  }
+})
+
 router.get('/balance/:stock', function (req, res) {
   try {
     var stock = req.params.stock
@@ -25,7 +33,7 @@ router.get('/balance/:stock', function (req, res) {
     res.json(balance)
   } catch (err) {
     res.status(500).send({ error: 'balance get ' + stock + ' failed!' })
-    console.log('balance ERROR', err)
+    // console.log('balance ERROR', err)
   }
 })
 
@@ -36,7 +44,7 @@ router.get('/balance/history/:stock/', async function (req, res) {
       res.json(result)
   } catch (err) {
       res.status(500).send({ error: 'balance history get ' + stock + ' failed!' })
-      console.log('balance history ERROR', err)
+      // console.log('balance history ERROR', err)
   }
 })
 
@@ -48,7 +56,7 @@ router.get('/openOrders/:stock/:pair', async function (req, res) {
       res.json(data)
   } catch (err) {
       res.status(500).send({ error: 'openOrders get ' + stock + ' ' + pair + ' failed!' })
-      console.log('openOrders ERROR', err)
+      // console.log('openOrders ERROR', err)
   }
 })
 
@@ -59,7 +67,7 @@ router.get('/myTrades/:stock/:pair', function (req, res) {
       res.json(global.TRADESHISTORY[stock][pair])
   } catch (err) {
       res.status(500).send({ error: 'myTrades get ' + stock + ' ' + pair + ' failed!' })
-      console.log('myTrades ERROR', err)
+      // console.log('myTrades ERROR', err)
   }
 })
 
@@ -82,7 +90,7 @@ router.post('/cancelOrder', async function(req, res) {
       res.json(result)
   } catch (err) {
       var errorS = serializeError(err).message
-      console.log(errorS)
+      // console.log(errorS)
       res.status(500).send({error: errorS})
   }
 })
@@ -94,7 +102,7 @@ router.post('/createOrder', async function(req, res) {
   } catch (err) {
       console.log('trade error')
       var errorS = serializeError(err).message
-      console.log(errorS)
+      // console.log(errorS)
       res.status(500).send({error: errorS})
   }
 })
@@ -117,7 +125,7 @@ router.get('/stocks', async function (req, res) {
       res.json(stocks)
   } catch (err) {
       res.status(500).send({ error: 'function getStocks failed!' })
-      console.log('getStocks ERROR', err)
+      // console.log('getStocks ERROR', err)
   }
 })
 
@@ -128,7 +136,7 @@ router.get('/pairs/:stock', async function (req, res) {
       res.json(pairs)
   } catch (err) {
       res.status(500).send({ error: 'function getPairs get ' + stock + ' failed!' })
-      console.log('getPairs ERROR', err)
+      // console.log('getPairs ERROR', err)
   }
 })
 
@@ -140,7 +148,7 @@ router.get('/orders/:stock/:pair', async function (req, res) {
       res.json(orders)
   } catch (err) {
       res.status(500).send({ error: 'function getOrderBook get ' + stock + ' ' + pair + ' failed!' })
-      console.log('getOrderBook ERROR', err)
+      // console.log('getOrderBook ERROR', err)
   }
 })
 
@@ -152,7 +160,7 @@ router.get('/ohlcv/:stock/:pair', async function (req, res) {
       res.json(ohlcv)
   } catch (err) {
       res.status(500).send({ error: 'function getOHLCV get ' + stock + ' ' + pair + ' failed!' })
-      console.log('getOHLCV ERROR', err)
+      // console.log('getOHLCV ERROR', err)
   }
 })
 
