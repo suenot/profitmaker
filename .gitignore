@@ -8,6 +8,9 @@
 
 # user files
 server/user_components/
+client/user_components/
+react-client/user_components/
+vue-client/user_components/
 
 
 # dependencies

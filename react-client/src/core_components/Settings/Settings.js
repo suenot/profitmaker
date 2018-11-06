@@ -21,8 +21,7 @@ class Settings extends React.Component {
   render() {
     return (
       <div>
-        <div className="simpleForm">
-          <div className="section">
+        <div className="section-body">
             <form noValidate autoComplete="off">
               <Typography variant="h6" gutterBottom>Global settings</Typography>
               <TextField
@@ -57,48 +56,46 @@ class Settings extends React.Component {
               </FormGroup>
             </form>
           </div>
+        <Divider />
+        <div className="section-body">
+          <form noValidate autoComplete="off">
+            <Typography variant="h6" gutterBottom>Dashboard settings</Typography>
+            <TextField
+              className="form-item"
+              label="Dashboard name"
+              value={DashboardsStore.name}
+              onChange={this.setDashboardName.bind(this)}
+              variant="outlined"
+              fullWidth
+              margin="dense"
+            />
+            <TextField
+              className="form-item"
+              label="Dashboard icon"
+              value={DashboardsStore.icon}
+              onChange={this.setDashboardIcon.bind(this)}
+              variant="outlined"
+              fullWidth
+              margin="dense"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment variant="filled" position="end">
+                    <IconButton
+                      aria-label="Icons list"
+                      onClick={this.drawerRightSet.bind(this, "core_components/Settings/IconsList.js", "300px")}
+                    >
+                      <ImageIcon />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+            />
+            <Button className="form-item" fullWidth variant="contained" color="secondary" onClick={this.removeDashboard.bind(this, DashboardsStore.dashboardActiveId)}>
+              Remove dashboard
+            </Button>
+          </form>
         </div>
         <Divider />
-        <div className="simpleForm">
-          <div className="section">
-            <form noValidate autoComplete="off">
-              <Typography variant="h6" gutterBottom>Dashboard settings</Typography>
-              <TextField
-                className="form-item"
-                label="Dashboard name"
-                value={DashboardsStore.name}
-                onChange={this.setDashboardName.bind(this)}
-                variant="outlined"
-                fullWidth
-                margin="dense"
-              />
-              <TextField
-                className="form-item"
-                label="Dashboard icon"
-                value={DashboardsStore.icon}
-                onChange={this.setDashboardIcon.bind(this)}
-                variant="outlined"
-                fullWidth
-                margin="dense"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment variant="filled" position="end">
-                      <IconButton
-                        aria-label="Icons list"
-                        onClick={this.drawerRightSet.bind(this, "core_components/Settings/IconsList.js", "300px")}
-                      >
-                        <ImageIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  )
-                }}
-              />
-              <Button className="form-item" variant="contained" color="secondary" onClick={this.removeDashboard.bind(this, DashboardsStore.dashboardActiveId)}>
-                Remove dashboard
-              </Button>
-            </form>
-          </div>
-        </div>
       </div>
     )
   }
