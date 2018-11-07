@@ -5,6 +5,8 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import ClearIcon from '@material-ui/icons/Clear'
 import SettingsIcon from '@material-ui/icons/Settings'
+import FullscreenIcon from '@material-ui/icons/Fullscreen'
+// import FullscreenExitIcon from '@material-ui/icons/FullscreenExit'
 import { observer } from 'mobx-react'
 import RGL, { WidthProvider } from 'react-grid-layout'
 const GridLayout = WidthProvider(RGL)
@@ -15,6 +17,17 @@ import DrawersStore from './stores/DrawersStore'
 
 @observer
 class Grid extends React.Component {
+  fullscreenTransformOld = ''
+  state = {
+    fullscreenTransformOld: '',
+  }
+  // constructor(props) {
+	// 	super(props)
+	// 	this.state = {
+  //     fullscreenTransformOld: '',
+  //     draggable: true
+	// 	}
+	// }
   onLayoutChange(layout) {
     DashboardsStore.setLayout(layout)
   }
@@ -34,7 +47,7 @@ class Grid extends React.Component {
           }
         }
         draggableCancel="input,textarea"
-        draggableHandle=".widget-header"
+        draggableHandle=".draggable-header"
       >
         {
           JSON.stringify(DashboardsStore.dashboardActiveId) !== 'false' &&
@@ -50,9 +63,11 @@ class Grid extends React.Component {
             return (
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
                 <div className={`widget widget-${widget.name}`}>
-                  <div className="widget-header">
+                  <div className='widget-header draggable-header'>
                     <span>{ customHeader || widget.header}</span>
                     <div>
+                      <FullscreenIcon style={{ fontSize: 18 }} onClick={this.fullscreen.bind(this)} className="pointer"/>
+                      {/* <FullscreenIcon style={{ fontSize: 18 }} onClick={this.fullscreen} className="pointer"/> */}
                       <SettingsIcon style={{ fontSize: 18 }} onClick={this.drawerRightToggle.bind(
                         this,
                         widget.settings,
@@ -94,6 +109,26 @@ class Grid extends React.Component {
       // </div>
     )
   }
+  fullscreen(event) {
+    event.preventDefault()
+    var item = event.target.closest('.react-grid-item')
+    if (item.classList.contains('fullscreen')) {
+      // TODO: заменить state обычной переменной у класса
+      // item.style.setProperty('transform', this.state.fullscreenTransformOld)
+      item.style.setProperty('transform', this.fullscreenTransformOld)
+    } else {
+      // TODO: заменить state обычной переменной у класса
+      // this.setState({
+      //   fullscreenTransformOld: window.getComputedStyle(item).getPropertyValue('transform'),
+      // })
+      this.fullscreenTransformOld = window.getComputedStyle(item).getPropertyValue('transform')
+    }
+    item.classList.toggle('fullscreen')
+    item.querySelector('.widget-header').classList.toggle('draggable-header')
+    setTimeout(function() {
+      window.dispatchEvent(new Event('resize'))
+    }, 400)
+  }
   drawerRightToggle(component, width, data, dashboardId, widgetId) {
     // if (DrawersStore.drawerRightComponent === component && (DrawersStore.drawerRightDashboardId !== dashboardId || DrawersStore.drawerRightWidgetId !== widgetId) ) {
     //   // current component
@@ -113,4 +148,5 @@ class Grid extends React.Component {
     DashboardsStore.removeWidget(id)
   }
 }
+
 export default Grid
