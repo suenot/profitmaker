@@ -12,6 +12,7 @@ import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import IconButton from '@material-ui/core/IconButton'
 import MenuIcon from '@material-ui/icons/Menu'
+import ChatIcon from '@material-ui/icons/Chat'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
@@ -209,6 +210,13 @@ class App extends React.Component {
                 </Typography>
               </Button>
               <div className="spacer"></div>
+              <IconButton
+                color="inherit"
+                aria-label="Settings"
+                onClick={this.drawerRightToggle.bind(this, "core_components/Socials/Socials.js", "300px")}
+              >
+                <ChatIcon />
+              </IconButton>
               <IconButton
                 color="inherit"
                 aria-label="Settings"
