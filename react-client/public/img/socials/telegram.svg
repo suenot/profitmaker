@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="24px" height="22px" viewBox="0 0 24 22" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 48.2 (47327) - http://www.bohemiancoding.com/sketch -->
+    <title>telegram</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="telegram" fill-rule="nonzero">
+            <path d="M9.028,19.837 C8.314,19.837 8.435,19.566 8.189,18.888 L6.086,11.968 L22.263,2.37" id="Shape" fill="#2388B9"></path>
+            <path d="M9.028,19.837 C9.58,19.837 9.823,19.585 10.133,19.284 L13.074,16.427 L9.403,14.213" id="Shape" fill="#2388B9"></path>
+            <path d="M9.403,14.213 L18.293,20.781 C19.308,21.341 20.041,21.052 20.293,19.839 L23.913,2.786 C24.285,1.299 23.349,0.627 22.379,1.066 L1.125,9.263 C-0.325,9.845 -0.318,10.655 0.861,11.016 L6.316,12.716 L18.94,4.753 C19.535,4.393 20.083,4.586 19.634,4.985" id="Shape" fill="#2CA5E0"></path>
+        </g>
+    </g>
+</svg>
