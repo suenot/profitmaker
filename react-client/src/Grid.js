@@ -71,8 +71,8 @@ class Grid extends React.Component {
                         },
                         DashboardsStore.dashboardActiveId,
                         widget.i
-                      )} className="pointer"/>
-                      <ClearIcon style={{ fontSize: 18 }} onClick={this.removeWidget.bind(this, widget.i)} className="pointer"/>
+                      )} className="pointer settings-icon"/>
+                      <ClearIcon style={{ fontSize: 18 }} onClick={this.removeWidget.bind(this, widget.i)} className="pointer clear-icon"/>
                     </div>
                   </div>
                   <div className="widget-body">
@@ -116,6 +116,8 @@ class Grid extends React.Component {
     }, 200)
     item.querySelector('.fullscreen-exit-icon').classList.toggle('hide')
     item.querySelector('.fullscreen-icon').classList.toggle('hide')
+    item.querySelector('.settings-icon').classList.toggle('hide')
+    item.querySelector('.clear-icon').classList.toggle('hide')
   }
   drawerRightToggle(component, width, data, dashboardId, widgetId) {
     DrawersStore.drawerRightSet(component, width, data, dashboardId, widgetId)
