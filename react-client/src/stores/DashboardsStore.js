@@ -62,6 +62,8 @@ class DashboardsStore {
     _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader = value
   }
   @action setWidgetData(dashboardId, widgetId, key, value) {
+    if (value === 'true') value = true
+    if (value === 'false') value = false
     _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data[key] = value
   }
 
