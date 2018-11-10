@@ -61,6 +61,9 @@ class DashboardsStore {
   @action setCustomHeader(dashboardId, widgetId, value) {
     _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader = value
   }
+  @action setWidgetData(dashboardId, widgetId, key, value) {
+    _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data[key] = value
+  }
 
   @observable counter = 15
 
