@@ -32,6 +32,7 @@ import { last } from "react-stockcharts/lib/utils"
 
 import Button from '@material-ui/core/Button'
 
+import _ from 'lodash'
 import DrawersStore from 'stores/DrawersStore'
 
 class HeikinAshi extends React.Component {
@@ -80,12 +81,25 @@ class HeikinAshi extends React.Component {
 		} = xScaleProvider(calculatedData)
 
 		const start = xAccessor(last(data))
-		const end = xAccessor(data[Math.max(0, data.length - 150)])
+    const end = xAccessor(data[Math.max(0, data.length - 150)])
+    // const end = xAccessor(data[Math.max(0, data.length - 150)])
 		const xExtents = [start, end]
 
     // const {dashboardId, widgetId} = this.props
     const {dashboardId, widgetId, timeframe} = this.props._data
 
+    console.log(this.props.data)
+    console.log(data)
+    console.log(width)
+    console.log(height)
+    console.log(ratio)
+    console.log(xScale)
+    console.log(displayXAccessor)
+    console.log(xExtents)
+    console.log(xScale.range())
+
+    // const chartWidth = _.last(xScale.range()) - _.head(xScale.range())
+    // console.log(chartWidth)
 		return (
       <div>
         <Button variant="outlined" size="small" color="primary" className="react-stockcharts-timeframe"
@@ -103,6 +117,7 @@ class HeikinAshi extends React.Component {
           {timeframe || '-'}
         </Button>
         <ChartCanvas
+          id={`${dashboardId}_${widgetId}`}
           height={height}
           ratio={ratio}
           width={width-5}
@@ -115,7 +130,7 @@ class HeikinAshi extends React.Component {
           displayXAccessor={displayXAccessor}
           xExtents={xExtents}
         >
-          <Chart id={1}
+          <Chart id={`${dashboardId}_${widgetId}_1`}
             yExtents={[d => [d.high, d.low], ema20.accessor(), ema50.accessor()]}
             padding={{ top: 10, bottom: 10 }}
           >
@@ -168,7 +183,7 @@ class HeikinAshi extends React.Component {
             />
 
           </Chart>
-          <Chart id={2}
+          <Chart id={`${dashboardId}_${widgetId}_2`}
             yExtents={[d => d.volume, smaVolume50.accessor()]}
             height={150} origin={(w, h) => [0, h - 150]}
           >
@@ -205,6 +220,7 @@ class HeikinAshi extends React.Component {
 }
 
 HeikinAshi.propTypes = {
+  id: PropTypes.string.isRequired,
 	data: PropTypes.array.isRequired,
 	width: PropTypes.number.isRequired,
 	height: PropTypes.number.isRequired,

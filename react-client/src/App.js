@@ -106,6 +106,7 @@ const styles = theme => ({
     // width: drawerWidth,
     width: drawerWidth,
     // width: drawerRightWidth,
+    zIndex: 5000,
     transition: theme.transitions.create('width', {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
@@ -159,6 +160,7 @@ class App extends React.Component {
     // fs.readdir('.', function(err, files) {
     //     console.log(files)
     // })
+    // localStorage.debug = "react-stockcharts:*"
     const { classes } = this.props
     const Component = require('./'+DrawersStore.drawerRightComponent+"").default
     return (

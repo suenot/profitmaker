@@ -37,7 +37,8 @@ class DashboardsStore {
   @action addDashboard() {
     this.dashboardsCounter += 1
     var icon = '/img/widgets/' + _.sample(widgetsIcons)
-    this.dashboards[this.dashboardsCounter+""] = { id: this.dashboardsCounter+"", name: 'Dash', bg: '#ccc', icon: icon, type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0}
+    this.dashboards[this.dashboardsCounter+""] = { id: this.dashboardsCounter+"", name: 'Untitled', bg: '#ccc', icon: icon, type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0}
+    // window.dispatchEvent(new Event('resize'))
   }
   @action removeDashboard(id) {
     if (Object.keys(this.dashboards).length > 1) {
@@ -109,6 +110,9 @@ class DashboardsStore {
     this.dashboards[this.dashboardActiveId].widgets.push({
       i: this.dashboards[this.dashboardActiveId].counter+"", uid: dashboardName+'_'+this.dashboards[this.dashboardActiveId].counter, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: 5, h: 19, minW: 2, minH: 3
     })
+    // setTimeout(function(){
+    //   window.dispatchEvent(new Event('resize'))
+    // },200)
   }
 
   @action removeWidget(id) {
