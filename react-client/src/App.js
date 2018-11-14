@@ -298,7 +298,12 @@ class App extends React.Component {
     }
   }
   setDashboard(id) {
+    // this.forceUpdate()
     DashboardsStore.setDashboard(id)
+    console.log('SET DASHBOARD')
+    // setTimeout(() => {
+    //   this.forceUpdate()
+    // }, 200)
   }
   addDashboard() {
     DashboardsStore.addDashboard()

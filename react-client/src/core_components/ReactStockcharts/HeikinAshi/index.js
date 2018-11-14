@@ -5,14 +5,11 @@ import { observer } from 'mobx-react'
 import './theme.sass'
 
 import OhlcvStore from 'stores/OhlcvStore'
-import DashboardsStore from 'stores/DashboardsStore'
 
 @observer
 export default class ChartComponent extends React.Component {
 	render() {
     var {dashboardId, widgetId, stock, pair, timeframe} = this.props.data
-    stock = stock !== '' ? stock : DashboardsStore.stock
-    pair = pair !== '' ? pair : DashboardsStore.pair
     var key = `${stock}--${pair}--${timeframe}`
     if (
       OhlcvStore.ohlcvComputed === undefined ||
@@ -21,7 +18,6 @@ export default class ChartComponent extends React.Component {
       JSON.parse( JSON.stringify(OhlcvStore.ohlcvComputed[key]) ).length < 3 ) {
 			return <Preloader />
 		} else {
-      window.dispatchEvent(new Event('resize')) // ???
       var ordersJSON = JSON.parse( JSON.stringify(OhlcvStore.ohlcvComputed[key]) )
 			ordersJSON = ordersJSON.map(function(order){
 				order.date = new Date(order.date)
@@ -35,16 +31,20 @@ export default class ChartComponent extends React.Component {
   }
 
   componentWillMount() {
-    OhlcvStore.count(1, this.props.data.stock, this.props.data.pair, this.props.data.timeframe)
+    var {stock, pair, timeframe} = this.props.data
+    OhlcvStore.count(1, stock, pair, timeframe)
   }
   componentWillUnmount() {
-    OhlcvStore.count(-1, this.props.data.stock, this.props.data.pair, this.props.data.timeframe)
+    var {stock, pair, timeframe} = this.props.data
+    OhlcvStore.count(-1, stock, pair, timeframe)
   }
   componentWillUpdate() {
-    OhlcvStore.count(-1, this.props.data.stock, this.props.data.pair, this.props.data.timeframe)
+    var {stock, pair, timeframe} = this.props.data
+    OhlcvStore.count(-1, stock, pair, timeframe)
   }
   componentDidUpdate() {
-    OhlcvStore.count(1, this.props.data.stock, this.props.data.pair, this.props.data.timeframe)
+    var {stock, pair, timeframe} = this.props.data
+    OhlcvStore.count(1, stock, pair, timeframe)
   }
 
 }

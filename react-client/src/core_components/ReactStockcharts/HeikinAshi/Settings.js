@@ -30,7 +30,7 @@ class Settings extends React.Component {
 
             <TextField
               id="outlined-name"
-              label="Custom stock"
+              label="Stock"
               value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stock}
               onChange={this.setWidgetData.bind(this, 'stock', 'value')}
               variant="outlined"
@@ -40,7 +40,7 @@ class Settings extends React.Component {
 
             <TextField
               id="outlined-name"
-              label="Custom pair"
+              label="Pair"
               value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.pair}
               onChange={this.setWidgetData.bind(this, 'pair', 'value')}
               variant="outlined"
@@ -73,12 +73,12 @@ class Settings extends React.Component {
   }
   changeCustomHeader(e) {
     var {dashboardId, widgetId} = this.props.data
-    DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value)
+    DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value.trim())
   }
   setWidgetData(key, attr, e) {
     var {dashboardId, widgetId} = this.props.data
     var value = e.target[attr]
-    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value)
+    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim())
   }
 }
 

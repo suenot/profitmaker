@@ -1,5 +1,5 @@
 import { observable, action, reaction, computed } from 'mobx'
-import { version, AsyncTrunk, ignore } from 'mobx-sync'
+import { version, AsyncTrunk } from 'mobx-sync'
 import _ from 'lodash'
 import axios from 'axios'
 import widgetsIcons from './data/widgetsIcons'
@@ -26,7 +26,9 @@ class DashboardsStore {
     '2': { id: '2', name: 'Second', bg: '#ccc', icon: '/img/widgets/helmet.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0},
   }
   @computed get name() { return this.dashboards[this.dashboardActiveId].name }
-  @computed get stock() { return this.dashboards[this.dashboardActiveId].stock }
+  @computed get stock() {
+    return this.dashboards[this.dashboardActiveId].stock
+  }
   @computed get stockLowerCase() { return (this.dashboards[this.dashboardActiveId].stock).toLowerCase() }
   @computed get pair() { return this.dashboards[this.dashboardActiveId].pair }
   @computed get icon() { return this.dashboards[this.dashboardActiveId].icon }
@@ -38,7 +40,6 @@ class DashboardsStore {
     this.dashboardsCounter += 1
     var icon = '/img/widgets/' + _.sample(widgetsIcons)
     this.dashboards[this.dashboardsCounter+""] = { id: this.dashboardsCounter+"", name: 'Untitled', bg: '#ccc', icon: icon, type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0}
-    // window.dispatchEvent(new Event('resize'))
   }
   @action removeDashboard(id) {
     if (Object.keys(this.dashboards).length > 1) {
@@ -70,12 +71,12 @@ class DashboardsStore {
 
   @observable counter = 15
 
-  @ignore @observable widgetsMarket = []
+  @observable widgetsMarket = []
   @action fetchWidgets(){
     axios.get(`${this.terminalBackend}/widgets/`)
     .then((response) => {
       if (response.data.length === 0) {
-        this.widgetsMarket = []
+        // this.widgetsMarket = []
       } else {
         this.widgetsMarket = response.data
       }
@@ -104,10 +105,10 @@ class DashboardsStore {
   }
 
   @action addWidget(widget) {
-    var dashboardName = this.dashboards[this.dashboardActiveId].name
+    var activeDashboard = this.dashboardActiveId
     this.dashboards[this.dashboardActiveId].counter = (parseInt(this.dashboards[this.dashboardActiveId].counter, 10) + 1).toString()
     this.dashboards[this.dashboardActiveId].widgets.push({
-      i: this.dashboards[this.dashboardActiveId].counter+"", uid: dashboardName+'_'+this.dashboards[this.dashboardActiveId].counter, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: 5, h: 19, minW: 2, minH: 3
+      i: this.dashboards[this.dashboardActiveId].counter+"", uid: activeDashboard+'_'+this.dashboards[this.dashboardActiveId].counter, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: 5, h: 19, minW: 2, minH: 3
     })
   }
 

@@ -11,6 +11,6 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/ReactStockcharts/HeikinAshi/index.js',
-    data: {stock: '', pair: '', timeframe: '15m'}
+    data: {stock: 'BINANCE', pair: 'ETH_BTC', timeframe: '1m'}
   }
 ]
