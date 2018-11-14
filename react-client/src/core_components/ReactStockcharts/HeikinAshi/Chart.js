@@ -82,24 +82,8 @@ class HeikinAshi extends React.Component {
 
 		const start = xAccessor(last(data))
     const end = xAccessor(data[Math.max(0, data.length - 150)])
-    // const end = xAccessor(data[Math.max(0, data.length - 150)])
 		const xExtents = [start, end]
-
-    // const {dashboardId, widgetId} = this.props
     const {dashboardId, widgetId, timeframe} = this.props._data
-
-    console.log(this.props.data)
-    console.log(data)
-    console.log(width)
-    console.log(height)
-    console.log(ratio)
-    console.log(xScale)
-    console.log(displayXAccessor)
-    console.log(xExtents)
-    console.log(xScale.range())
-
-    // const chartWidth = _.last(xScale.range()) - _.head(xScale.range())
-    // console.log(chartWidth)
 		return (
       <div>
         <Button variant="outlined" size="small" color="primary" className="react-stockcharts-timeframe"
@@ -233,6 +217,5 @@ HeikinAshi.defaultProps = {
 }
 
 HeikinAshi = fitDimensions(HeikinAshi)
-// HeikinAshi = fitWidth(HeikinAshi)
 
 export default HeikinAshi

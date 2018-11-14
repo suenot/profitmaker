@@ -32,7 +32,6 @@ class Grid extends React.Component {
         rowHeight={12}
         layout={DashboardsStore.widgets}
         onLayoutChange={(layout) => {
-            console.log('onLayoutChange')
             this.onLayoutChange(layout)
             setTimeout(function() {
               window.dispatchEvent(new Event('resize'))

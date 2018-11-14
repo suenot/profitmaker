@@ -4,25 +4,18 @@ import DashboardsStore from './DashboardsStore'
 import SettingsStore from './SettingsStore'
 import _ from 'lodash'
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 class OhlcvStore {
   constructor() {
-    const start = (stock, pair, timeframe) => {
-      this.fetchOhlcv(stock, pair, timeframe)
-    }
-    // start(timeframe) // TODO: Don't know timeframe at this moment
-    setInterval(() => {
-      console.log('interval')
-      console.log(this.activeTimeframes)
+    const start = () => {
       _.forEach(this.activeTimeframes, (counter, key) => {
         var [stock, pair, timeframe] = key.split('--')
-        console.log(stock, pair, timeframe, counter)
-        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) start(stock, pair, timeframe)
+        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOhlcv(stock, pair, timeframe)
       })
-    }, 5000)
+    }
+    // start()
+    setInterval(() => {
+      start()
+    }, 4000)
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get stockLowerCase() {return DashboardsStore.stockLowerCase }
@@ -77,18 +70,12 @@ class OhlcvStore {
   activeTimeframes = {}
 
   @action count(n, stock, pair, timeframe) {
-    console.log('count')
     stock = stock !== '' ? stock : this.stock
     pair = pair !== '' ? pair : this.pair
     var key = `${stock}--${pair}--${timeframe}`
     if (!this.ohlcv[key]) this.ohlcv[key] = []
     if (!this.activeTimeframes[key]) this.activeTimeframes[key] = 0
-    // if (this.activeTimeframes[key] === 0) {
-    //   await sleep(2000)
-    // }
-    // window.dispatchEvent(new Event('resize'))
     this.activeTimeframes[key] += n
-    console.log('count', `${stock}--${pair}--${timeframe}`, this.activeTimeframes[`${stock}--${pair}--${timeframe}`])
 
     if (this.activeTimeframes[key] === 0) {
       delete this.activeTimeframes[key]

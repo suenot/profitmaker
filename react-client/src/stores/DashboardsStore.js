@@ -72,7 +72,6 @@ class DashboardsStore {
 
   @ignore @observable widgetsMarket = []
   @action fetchWidgets(){
-    console.log(`${this.terminalBackend}/widgets/`)
     axios.get(`${this.terminalBackend}/widgets/`)
     .then((response) => {
       if (response.data.length === 0) {
@@ -110,9 +109,6 @@ class DashboardsStore {
     this.dashboards[this.dashboardActiveId].widgets.push({
       i: this.dashboards[this.dashboardActiveId].counter+"", uid: dashboardName+'_'+this.dashboards[this.dashboardActiveId].counter, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: 5, h: 19, minW: 2, minH: 3
     })
-    // setTimeout(function(){
-    //   window.dispatchEvent(new Event('resize'))
-    // },200)
   }
 
   @action removeWidget(id) {
@@ -120,14 +116,6 @@ class DashboardsStore {
       return item.i !== id
     })
   }
-
-  // @action setNote(dashboardId, widgetId, id) {
-  //   _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data.noteId = id
-  // }
-  // @action getNoteId(dashboardId, widgetId) {
-  //   return _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data.noteId
-  // }
-
 }
 
 const store = window.DashboardsStore = new DashboardsStore()
