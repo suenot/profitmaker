@@ -1,34 +1,34 @@
 /* eslint-disable */
-import React from "react";
-import PropTypes from "prop-types";
+import React from "react"
+import PropTypes from "prop-types"
 
-import { format } from "d3-format";
-import { timeFormat } from "d3-time-format";
+import { format } from "d3-format"
+import { timeFormat } from "d3-time-format"
 
-import { ChartCanvas, Chart } from "react-stockcharts";
+import { ChartCanvas, Chart } from "react-stockcharts"
 import {
 	BarSeries,
 	AreaSeries,
 	CandlestickSeries,
 	LineSeries,
-} from "react-stockcharts/lib/series";
-import { XAxis, YAxis } from "react-stockcharts/lib/axes";
+} from "react-stockcharts/lib/series"
+import { XAxis, YAxis } from "react-stockcharts/lib/axes"
 import {
 	CrossHairCursor,
 	EdgeIndicator,
 	CurrentCoordinate,
 	MouseCoordinateX,
 	MouseCoordinateY,
-} from "react-stockcharts/lib/coordinates";
+} from "react-stockcharts/lib/coordinates"
 
-import { discontinuousTimeScaleProvider } from "react-stockcharts/lib/scale";
+import { discontinuousTimeScaleProvider } from "react-stockcharts/lib/scale"
 import {
 	OHLCTooltip,
 	MovingAverageTooltip,
-} from "react-stockcharts/lib/tooltip";
-import { ema, heikinAshi, sma } from "react-stockcharts/lib/indicator";
-import { fitDimensions } from "react-stockcharts/lib/helper";
-import { last } from "react-stockcharts/lib/utils";
+} from "react-stockcharts/lib/tooltip"
+import { ema, heikinAshi, sma } from "react-stockcharts/lib/indicator"
+import { fitDimensions } from "react-stockcharts/lib/helper"
+import { last } from "react-stockcharts/lib/utils"
 
 import Button from '@material-ui/core/Button'
 
@@ -48,42 +48,44 @@ class HeikinAshi extends React.Component {
     DrawersStore.drawerRightToggle()
   }
 	render() {
-		const ha = heikinAshi();
+		const ha = heikinAshi()
 		const ema20 = ema()
 			.id(0)
 			.options({ windowSize: 20 })
-			.merge((d, c) => { d.ema20 = c; })
-			.accessor(d => d.ema20);
+			.merge((d, c) => { d.ema20 = c })
+			.accessor(d => d.ema20)
 
 		const ema50 = ema()
 			.id(2)
 			.options({ windowSize: 50 })
-			.merge((d, c) => { d.ema50 = c; })
-			.accessor(d => d.ema50);
+			.merge((d, c) => { d.ema50 = c })
+			.accessor(d => d.ema50)
 
 		const smaVolume50 = sma()
 			.id(3)
 			.options({ windowSize: 50, sourcePath: "volume" })
-			.merge((d, c) => { d.smaVolume50 = c; })
-			.accessor(d => d.smaVolume50);
+			.merge((d, c) => { d.smaVolume50 = c })
+			.accessor(d => d.smaVolume50)
 
-		const { type, data: initialData, width, height, ratio } = this.props;
+		const { type, data: initialData, width, height, ratio } = this.props
 
-		const calculatedData = smaVolume50(ema50(ema20(ha(initialData))));
+		const calculatedData = smaVolume50(ema50(ema20(ha(initialData))))
 		const xScaleProvider = discontinuousTimeScaleProvider
-			.inputDateAccessor(d => d.date);
+			.inputDateAccessor(d => d.date)
 		const {
 			data,
 			xScale,
 			xAccessor,
 			displayXAccessor,
-		} = xScaleProvider(calculatedData);
+		} = xScaleProvider(calculatedData)
 
-		const start = xAccessor(last(data));
-		const end = xAccessor(data[Math.max(0, data.length - 150)]);
-		const xExtents = [start, end];
+		const start = xAccessor(last(data))
+		const end = xAccessor(data[Math.max(0, data.length - 150)])
+		const xExtents = [start, end]
 
-    const {dashboardId, widgetId} = this.props
+    // const {dashboardId, widgetId} = this.props
+    const {dashboardId, widgetId, timeframe} = this.props._data
+
 		return (
       <div>
         <Button variant="outlined" size="small" color="primary" className="react-stockcharts-timeframe"
@@ -98,7 +100,7 @@ class HeikinAshi extends React.Component {
             dashboardId,
             widgetId
           )}>
-          1m
+          {timeframe || '-'}
         </Button>
         <ChartCanvas
           height={height}
@@ -208,13 +210,13 @@ HeikinAshi.propTypes = {
 	height: PropTypes.number.isRequired,
 	ratio: PropTypes.number.isRequired,
 	type: PropTypes.oneOf(["svg", "hybrid"]).isRequired,
-};
+}
 
 HeikinAshi.defaultProps = {
 	type: "svg",
-};
+}
 
-HeikinAshi = fitDimensions(HeikinAshi);
-// HeikinAshi = fitWidth(HeikinAshi);
+HeikinAshi = fitDimensions(HeikinAshi)
+// HeikinAshi = fitWidth(HeikinAshi)
 
-export default HeikinAshi;
+export default HeikinAshi

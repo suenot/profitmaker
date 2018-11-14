@@ -51,7 +51,7 @@ class Grid extends React.Component {
             }
             var dashboardId = DashboardsStore.dashboardActiveId
             var widgetId = widget.i
-            var noteId = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.noteId
+            var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
             return (
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
                 <div className={`widget widget-${widget.name}`}>
@@ -67,10 +67,10 @@ class Grid extends React.Component {
                         {
                           dashboardId: dashboardId,
                           widgetId: widgetId,
-                          noteId: noteId
+                          ...data
                         },
-                        DashboardsStore.dashboardActiveId,
-                        widget.i
+                        // DashboardsStore.dashboardActiveId,
+                        // widget.i
                       )} className="pointer settings-icon"/>
                       <ClearIcon style={{ fontSize: 18 }} onClick={this.removeWidget.bind(this, widget.i)} className="pointer clear-icon"/>
                     </div>
