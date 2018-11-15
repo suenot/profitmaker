@@ -11,9 +11,9 @@ import IconButton from '@material-ui/core/IconButton'
 import InputAdornment from '@material-ui/core/InputAdornment'
 import ImageIcon from '@material-ui/icons/Image'
 
-import SettingsStore from '../../stores/SettingsStore'
-import DashboardsStore from '../../stores/DashboardsStore'
-import DrawersStore from '../../stores/DrawersStore'
+import SettingsStore from 'stores/SettingsStore'
+import DashboardsStore from 'stores/DashboardsStore'
+import DrawersStore from 'stores/DrawersStore'
 
 
 @observer

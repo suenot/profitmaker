@@ -7,7 +7,8 @@ import Switch from '@material-ui/core/Switch'
 import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
-import DashboardsStore from '../../stores/DashboardsStore'
+
+import DashboardsStore from 'stores/DashboardsStore'
 
 @observer
 class Settings extends React.Component {
@@ -26,21 +27,30 @@ class Settings extends React.Component {
               onChange={this.changeCustomHeader.bind(this)}
               variant="outlined"
               fullWidth
+              className="mb-16"
             />
-            <br />
-            <br />
             <FormGroup>
               <FormControlLabel
-                control={
+              className="mb-16"
+              control={
                   <Switch
                     checked={total}
-                    onChange={this.toggleWidgetData.bind(this, 'total')}
+                    onChange={this.setWidgetData.bind(this, 'total', 'checked')}
                     value=""
                   />
                 }
                 label={total ? 'All stocks' : 'Current stock' }
               />
             </FormGroup>
+            <TextField
+              id="outlined-name"
+              label="Stock"
+              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stock}
+              onChange={this.setWidgetData.bind(this, 'stock', 'value')}
+              variant="outlined"
+              fullWidth
+              className={total ? 'hide' : ''}
+            />
           </form>
         </div>
         <Divider />
@@ -51,9 +61,10 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value)
   }
-  toggleWidgetData(key, e) {
+  setWidgetData(key, attr, e) {
     var {dashboardId, widgetId} = this.props.data
-    DashboardsStore.setWidgetData(dashboardId, widgetId, key, e.target.checked)
+    var value = e.target[attr]
+    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value)
   }
 }
 
