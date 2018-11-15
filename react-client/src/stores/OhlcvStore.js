@@ -7,6 +7,11 @@ import _ from 'lodash'
 class OhlcvStore {
   constructor() {
     const start = () => {
+      // TODO
+      // if (this.counters[key] === 0) {
+      //   delete this.counters[key]
+      //   delete this.ohlcv[key]
+      // }
       _.forEach(this.counters, (counter, key) => {
         var [stock, pair, timeframe] = key.split('--')
         if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOhlcv(stock, pair, timeframe)
