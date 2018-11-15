@@ -1,6 +1,6 @@
 import React from 'react'
 import Chart from './Chart'
-import Preloader from '../../Preloader'
+import Preloader from '../Preloader'
 import { observer } from 'mobx-react'
 import './theme.sass'
 

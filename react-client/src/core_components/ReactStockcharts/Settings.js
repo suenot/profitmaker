@@ -6,7 +6,7 @@ import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import Button from '@material-ui/core/Button'
 
-import DashboardsStore from '../../../stores/DashboardsStore'
+import DashboardsStore from 'stores/DashboardsStore'
 
 @observer
 class Settings extends React.Component {
