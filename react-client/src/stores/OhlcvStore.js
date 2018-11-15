@@ -7,9 +7,7 @@ import _ from 'lodash'
 class OhlcvStore {
   constructor() {
     const start = () => {
-      // console.log('START')
-      // console.log(this.activeTimeframes)
-      _.forEach(this.activeTimeframes, (counter, key) => {
+      _.forEach(this.counters, (counter, key) => {
         var [stock, pair, timeframe] = key.split('--')
         if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOhlcv(stock, pair, timeframe)
       })
@@ -24,7 +22,8 @@ class OhlcvStore {
   @computed get pair() {return DashboardsStore.pair }
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
-  hash = ''
+  // hash = ''
+  hashes = {}
   @observable ohlcv = {
     // 'stock--pair--timeframe': []
   }
@@ -55,8 +54,10 @@ class OhlcvStore {
     var key = `${stock}--${pair}--${timeframe}`
     axios.get(`${this.serverBackend}/${stockLowerCase}/candles/${pair}/${timeframe}`)
     .then((response) => {
-      // if (this.hash === JSON.stringify(response.data)) return true
-      // this.hash = JSON.stringify(response.data)
+
+      if (this.hashes[key] === JSON.stringify(response.data)) return true
+      this.hashes[key] = JSON.stringify(response.data)
+
       if (!response.data) {
         this.ohlcv[key] = []
       } else {
@@ -68,13 +69,13 @@ class OhlcvStore {
     })
   }
 
-  activeTimeframes = {}
+  counters = {}
 
   @action count(n, stock, pair, timeframe) {
     var key = `${stock}--${pair}--${timeframe}`
     if (this.ohlcv[key] === undefined) this.ohlcv[key] = []
-    if (this.activeTimeframes[key] === undefined) this.activeTimeframes[key] = 0
-    this.activeTimeframes[key] += n
+    if (this.counters[key] === undefined) this.counters[key] = 0
+    this.counters[key] += n
   }
 }
 

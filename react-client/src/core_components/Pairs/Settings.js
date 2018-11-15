@@ -54,6 +54,15 @@ class Settings extends React.Component {
               onChange={this.changeCustomHeader.bind(this)}
               variant="outlined"
               fullWidth
+              className="mb-16"
+            />
+            <TextField
+              id="outlined-name"
+              label="Stock"
+              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stock}
+              onChange={this.setWidgetData.bind(this, 'stock', 'value')}
+              variant="outlined"
+              fullWidth
             />
           </form>
           <Divider />
@@ -64,6 +73,11 @@ class Settings extends React.Component {
   changeCustomHeader(e) {
     var {dashboardId, widgetId} = this.props.data
     DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value)
+  }
+  setWidgetData(key, attr, e) {
+    var {dashboardId, widgetId} = this.props.data
+    var value = e.target[attr]
+    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim())
   }
 }
 

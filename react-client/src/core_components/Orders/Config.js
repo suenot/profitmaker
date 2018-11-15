@@ -11,7 +11,7 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Orders/Orders.js',
-    data: {type: 'asks'}
+    data: {stock: 'BINANCE', pair: 'ETH_BTC', type: 'asks'}
   },
   {
     name: 'orders',
@@ -25,6 +25,6 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Orders/Orders.js',
-    data: {type: 'bids'}
+    data: {stock: 'BINANCE', pair: 'ETH_BTC', type: 'bids'}
   }
 ]

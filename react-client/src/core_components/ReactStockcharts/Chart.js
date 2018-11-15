@@ -89,7 +89,7 @@ class HeikinAshi extends React.Component {
         <Button variant="outlined" size="small" color="primary" className="react-stockcharts-timeframe"
           onClick={this.drawerRightToggle.bind(
             this,
-            "core_components/ReactStockcharts/HeikinAshi/Settings.js",
+            "core_components/ReactStockcharts/Settings.js",
             "300px",
             {
               dashboardId: dashboardId,

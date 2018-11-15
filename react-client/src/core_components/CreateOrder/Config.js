@@ -11,7 +11,7 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/CreateOrder/CreateOrder.js',
-    data: {type: 'buy'}
+    data: {stock: 'BINANCE', pair: 'ETH_BTC', type: 'buy'}
   },
   {
     name: 'create-order',
@@ -25,6 +25,6 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/CreateOrder/CreateOrder.js',
-    data: {type: 'sell'}
+    data: {stock: 'BINANCE', pair: 'ETH_BTC', type: 'sell'}
   }
 ]

@@ -11,6 +11,6 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Pairs/Pairs.js',
-    data: {}
+    data: {stock: 'BINANCE'}
   }
 ]

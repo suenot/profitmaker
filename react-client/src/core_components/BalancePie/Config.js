@@ -11,7 +11,7 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/BalancePie/BalancePie.js',
-    data: {total: true}
+    data: {stock: 'BINANCE', pair: 'ETH_BTC', total: true}
   },
   {
     name: 'balance-pie',
@@ -25,6 +25,6 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/BalancePie/BalancePie.js',
-    data: {total: false}
+    data: {stock: 'BINANCE', pair: 'ETH_BTC', total: false}
   }
 ]
