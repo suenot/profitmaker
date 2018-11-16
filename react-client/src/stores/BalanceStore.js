@@ -6,19 +6,35 @@ import SettingsStore from './SettingsStore'
 
 class BalanceStore {
   constructor() {
-    const fetchBalanceStock = () => {
-      this.fetchBalance(this.stock)
-      this.available()
+    // const fetchBalanceStock = () => {
+    //   this.fetchBalance(this.stock)
+    //   this.available()
+    // }
+    // if (this.balanceTotal_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalance('TOTAL')
+    // if (this.balanceStock_counter > 0 && (SettingsStore.fetchEnabled.value)) fetchBalanceStock()
+    // if (this.balanceHistoryTotal_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalanceHistory('TOTAL')
+    // if (this.balanceHistoryStock_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalanceHistory(this.stock)
+    // setInterval(() => {
+    //   if (this.balanceTotal_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalance('TOTAL')
+    //   if (this.balanceStock_counter > 0 && (SettingsStore.fetchEnabled.value)) fetchBalanceStock()
+    //   if (this.balanceHistoryTotal_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalanceHistory('TOTAL')
+    //   if (this.balanceHistoryStock_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalanceHistory(this.stock)
+    // }, 5000)
+    const start = () => {
+      _.forEach(this.counters, (counter, key) => {
+        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) {
+          var [type, stock] = key.split('--')
+          if (type === 'table' || type === 'pie') {
+            this.fetchBalance(stock, key)
+          } else if (type === 'history') {
+            this.fetchBalanceHistory(stock, key)
+          }
+        }
+      })
     }
-    if (this.balanceTotal_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalance('TOTAL')
-    if (this.balanceStock_counter > 0 && (SettingsStore.fetchEnabled.value)) fetchBalanceStock()
-    if (this.balanceHistoryTotal_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalanceHistory('TOTAL')
-    if (this.balanceHistoryStock_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalanceHistory(this.stock)
+    start()
     setInterval(() => {
-      if (this.balanceTotal_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalance('TOTAL')
-      if (this.balanceStock_counter > 0 && (SettingsStore.fetchEnabled.value)) fetchBalanceStock()
-      if (this.balanceHistoryTotal_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalanceHistory('TOTAL')
-      if (this.balanceHistoryStock_counter > 0 && (SettingsStore.fetchEnabled.value)) this.fetchBalanceHistory(this.stock)
+      start()
     }, 5000)
   }
 
@@ -26,16 +42,18 @@ class BalanceStore {
   @computed get pair() {return DashboardsStore.pair }
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
-  fetchBalanceStock_hash = ''
-  fetchBalanceTotal_hash = ''
-  fetchBalanceHistoryStock_hash = ''
-  fetchBalanceHistoryTotal_hash = ''
+  // fetchBalanceStock_hash = ''
+  // fetchBalanceTotal_hash = ''
+  // fetchBalanceHistoryStock_hash = ''
+  // fetchBalanceHistoryTotal_hash = ''
+  hashes = {}
 
   @observable precision = 8
-  @observable balanceTotal = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': []}
-  @observable balanceStock = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': []}
-  @observable balanceHistoryTotal = []
-  @observable balanceHistoryStock = []
+  balance = {}
+  // @observable balanceTotal = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': []}
+  // @observable balanceStock = {'totalBTC': 0, 'totalUSD': 0, 'datetime': 0, 'data': []}
+  // @observable balanceHistoryTotal = []
+  // @observable balanceHistoryStock = []
 
   @observable availableBuy = 0
   @observable availableSell = 0
@@ -49,48 +67,61 @@ class BalanceStore {
     this.availableSell = availableSell ? availableSell.free : 0
   }
 
-  @action fetchBalance(stock){
+  @action fetchBalance(stock, key){
     axios.get(`${this.terminalBackend}/balance/${stock}`)
     .then(response => {
-      if (stock === 'TOTAL') {
-        if (this.fetchBalanceTotal_hash === JSON.stringify(response.data)) return true
-        this.fetchBalanceTotal_hash = JSON.stringify(response.data)
-        this.balanceTotal = response.data
-      } else {
-        if (this.fetchBalanceStock_hash === JSON.stringify(response.data)) return true
-        this.fetchBalanceStock_hash = JSON.stringify(response.data)
-        this.balanceStock = response.data
-      }
+      if (this.hashes[key] === JSON.stringify(response.data)) return true
+      this.hashes[key] = JSON.stringify(response.data)
+      this.balance[key] = response.data
+      // if (stock === 'TOTAL') {
+      //   if (this.fetchBalanceTotal_hash === JSON.stringify(response.data)) return true
+      //   this.fetchBalanceTotal_hash = JSON.stringify(response.data)
+      //   this.balanceTotal = response.data
+      // } else {
+      //   if (this.fetchBalanceStock_hash === JSON.stringify(response.data)) return true
+      //   this.fetchBalanceStock_hash = JSON.stringify(response.data)
+      //   this.balanceStock = response.data
+      // }
     })
     .catch(error => {
       // console.log(error)
     })
   }
 
-  @action fetchBalanceHistory(stock){
+  @action fetchBalanceHistory(stock, key){
     axios.get(`${this.terminalBackend}/balance/history/${stock}`)
     .then((response) => {
-      if (stock === 'TOTAL') {
-        if (this.fetchBalanceHistoryTotal_hash === JSON.stringify(response.data)) return true
-        this.fetchBalanceHistoryTotal_hash = JSON.stringify(response.data)
-        this.balanceHistoryTotal = response.data
-      } else {
-        if (this.fetchBalanceHistoryStock_hash === JSON.stringify(response.data)) return true
-        this.fetchBalanceHistoryStock_hash = JSON.stringify(response.data)
-        this.balanceHistoryStock = response.data
-      }
+      if (this.hashes[key] === JSON.stringify(response.data)) return true
+      this.hashes[key] = JSON.stringify(response.data)
+      this.balance[key] = response.data
+      // if (stock === 'TOTAL') {
+      //   if (this.fetchBalanceHistoryTotal_hash === JSON.stringify(response.data)) return true
+      //   this.fetchBalanceHistoryTotal_hash = JSON.stringify(response.data)
+      //   this.balanceHistoryTotal = response.data
+      // } else {
+      //   if (this.fetchBalanceHistoryStock_hash === JSON.stringify(response.data)) return true
+      //   this.fetchBalanceHistoryStock_hash = JSON.stringify(response.data)
+      //   this.balanceHistoryStock = response.data
+      // }
     })
     .catch((error) => {
     })
   }
 
   // counters
-  balanceTotal_counter = 0
-  balanceStock_counter = 0
-  balanceHistoryTotal_counter = 0
-  balanceHistoryStock_counter = 0
-  @action count(counterName, n) {
-    this[counterName] += n
+  // balanceTotal_counter = 0
+  // balanceStock_counter = 0
+  // balanceHistoryTotal_counter = 0
+  // balanceHistoryStock_counter = 0
+  // @action count(counterName, n) {
+  //   this[counterName] += n
+  // }
+  counters = {}
+  @action count(n, data) {
+    var key = `${data.type}--${data.stock}`
+    if (this.orders[key] === undefined) this.orders[key] = []
+    if (this.counters[key] === undefined) this.counters[key] = 0
+    this.counters[key] += n
   }
 }
 

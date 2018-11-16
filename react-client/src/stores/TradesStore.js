@@ -2,43 +2,59 @@ import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
 // import uuidv1 from 'uuid/v1'
+
 import DashboardsStore from './DashboardsStore'
 import SettingsStore from './SettingsStore'
 
 class TradesStore {
   constructor() {
     const start = () => {
-      this.fetchTrades()
+      _.forEach(this.counters, (counter, key) => {
+        var [stock, pair] = key.split('--')
+        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchTrades(stock, pair)
+      })
     }
     start()
     setInterval(() => {
-      if ( this.counter > 0 && (SettingsStore.fetchEnabled.value) ) start()
+      start()
     }, 5000)
+    // const start = () => {
+    //   this.fetchTrades()
+    // }
+    // start()
+    // setInterval(() => {
+    //   if ( this.counter > 0 && (SettingsStore.fetchEnabled.value) ) start()
+    // }, 5000)
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get stockLowerCase() {return DashboardsStore.stockLowerCase }
   @computed get pair() {return DashboardsStore.pair }
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
-  hash = ''
-  @observable trades = []
+  hashes = {}
+  @observable trades = {} // []
 
-  @action fetchTrades(){
-    axios.get(`${this.serverBackend}/${this.stockLowerCase}/trades/${this.pair}`)
+  @action fetchTrades(stock, pair){
+    var stockLowerCase = stock.toLowerCase()
+    var key = `${stock}--${pair}`
+    axios.get(`${this.serverBackend}/${stockLowerCase}/trades/${this.pair}`)
     .then((response) => {
-      if (this.hash === JSON.stringify(response.data)) return true
-      this.hash = JSON.stringify(response.data)
+      if (this.hashes[key] === JSON.stringify(response.data)) return true
+      this.hashes[key] = JSON.stringify(response.data)
       var trades = _.orderBy(response.data.slice(0, 20), ['timestamp'], ['desc'])
-      this.trades = trades
+      this.trades[key] = trades
     })
     .catch(() => {
-      this.trades = []
+      this.trades[key] = []
     })
   }
 
-  counter = 0
-  @action count(n) {
-    this.counter += n
+  counters = {}
+  @action count(n, data) {
+    var key = `${data.stock}--${data.pair}`
+    if (this.orders[key] === undefined) this.orders[key] = []
+    if (this.counters[key] === undefined) this.counters[key] = 0
+    this.counters[key] += n
   }
 }
 

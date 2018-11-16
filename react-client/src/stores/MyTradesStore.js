@@ -1,46 +1,62 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import uuidv1 from 'uuid/v1'
+import _ from 'lodash'
+
 import DashboardsStore from './DashboardsStore'
 import SettingsStore from './SettingsStore'
 
 class MyTradesStore {
   constructor() {
     const start = () => {
-      this.fetchMyTrades()
+      _.forEach(this.counters, (counter, key) => {
+        var [stock, pair] = key.split('--')
+        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchMyTrades(stock, pair)
+      })
     }
     start()
     setInterval(() => {
-      if ( this.counter > 0 && (SettingsStore.fetchEnabled.value) ) start()
+      start()
     }, 5000)
+    // const start = () => {
+    //   this.fetchMyTrades()
+    // }
+    // start()
+    // setInterval(() => {
+    //   if ( this.counter > 0 && (SettingsStore.fetchEnabled.value) ) start()
+    // }, 5000)
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get pair() {return DashboardsStore.pair }
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
-  hash = ''
+  hashes = {}
   @observable myTrades = {}
 
-  @action fetchMyTrades(){
-    axios.get(`${this.terminalBackend}/myTrade/${this.stock}/${this.pair}`)
+  @action fetchMyTrades(stock, pair){
+    var key = `${stock}--${pair}`
+    axios.get(`${this.terminalBackend}/myTrade/${stock}/${pair}`)
     .then((response) => {
-      if (this.hash === JSON.stringify(response.data)) return true
-      this.hash = JSON.stringify(response.data)
+      if (this.hashes[key] === JSON.stringify(response.data)) return true
+      this.hashes[key] = JSON.stringify(response.data)
 
       var myTrades = response.data
       myTrades.map(function(trade){
         return trade.uuid = uuidv1()
       })
-      this.myTrades = myTrades
+      this.myTrades[key] = myTrades
     })
     .catch((error) => {
-      this.myTrades = {}
+      this.myTrades[key] = {}
     })
   }
 
-  counter = 0
-  @action count(n) {
-    this.counter += n
+  counters = {}
+  @action count(n, data) {
+    var key = `${data.stock}--${data.pair}`
+    if (this.orders[key] === undefined) this.orders[key] = []
+    if (this.counters[key] === undefined) this.counters[key] = 0
+    this.counters[key] += n
   }
 }
 

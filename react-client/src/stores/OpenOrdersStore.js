@@ -1,35 +1,51 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import Alert from 'react-s-alert'
+import _ from 'lodash'
+
 import DashboardsStore from './DashboardsStore'
 import SettingsStore from './SettingsStore'
 
 class OpenOrdersStore {
   constructor() {
+    // const start = () => {
+    //   this.fetchOpenOrders()
+    // }
+    // start()
+    // setInterval(() => {
+    //   if ( this.counter > 0 && (SettingsStore.fetchEnabled.value) ) start()
+    // }, 5000)
     const start = () => {
-      this.fetchOpenOrders()
+      _.forEach(this.counters, (counter, key) => {
+        var [stock, pair] = key.split('--')
+        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOpenOrders(stock, pair)
+      })
     }
     start()
     setInterval(() => {
-      if ( this.counter > 0 && (SettingsStore.fetchEnabled.value) ) start()
+      start()
     }, 5000)
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get pair() {return DashboardsStore.pair }
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
-  hash = ''
+  hashes = {}
   @observable openOrders = {}
-  @action fetchOpenOrders(){
-    axios.get(`${this.terminalBackend}/openOrders/${this.stock}/${this.pair}`)
-    .then((response) => {
-      if (this.hash === JSON.stringify(response.data)) return true
-      this.hash = JSON.stringify(response.data)
 
-      this.openOrders = response.data
+  @action fetchOpenOrders(stock, pair){
+    var key = `${stock}--${pair}`
+    axios.get(`${this.terminalBackend}/openOrders/${stock}/${pair}`)
+    .then((response) => {
+      if (this.hashes[key] === JSON.stringify(response.data)) return true
+      this.hashes[key] = JSON.stringify(response.data)
+      this.openOrders[key] = response.data
     })
-    .catch((error) => { console.log(error) })
+    .catch((error) => {
+      console.log(error)
+    })
   }
+
   @action cancelOrder(id, symbol, _id, stock) {
     var cancelMsg = stock + ': '+ symbol + ' canceling #' + id
     Alert.warning(cancelMsg, {
@@ -59,9 +75,12 @@ class OpenOrdersStore {
       })
     })
   }
-  counter = 0
-  @action count(n) {
-    this.counter += n
+  counters = {}
+  @action count(n, data) {
+    var key = `${data.stock}--${data.pair}`
+    if (this.orders[key] === undefined) this.orders[key] = []
+    if (this.counters[key] === undefined) this.counters[key] = 0
+    this.counters[key] += n
   }
 }
 

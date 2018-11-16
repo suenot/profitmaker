@@ -1,18 +1,14 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
-import DashboardsStore from './DashboardsStore'
-import SettingsStore from './SettingsStore'
 import uuidv1 from 'uuid/v1'
 import _ from 'lodash'
+
+import DashboardsStore from './DashboardsStore'
+import SettingsStore from './SettingsStore'
 
 class OrdersStore {
   constructor() {
     const start = () => {
-      // TODO
-      // if (this.counters[key] === 0) {
-      //   delete this.counters[key]
-      //   delete this.ohlcv[key]
-      // }
       _.forEach(this.counters, (counter, key) => {
         var [stock, pair] = key.split('--')
         if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOrders(stock, pair)
@@ -48,8 +44,8 @@ class OrdersStore {
     var key = `${stock}--${pair}`
     axios.get(`${this.serverBackend}/${stockLowerCase}/orders/${pair}`)
     .then((response) => {
-      if (this.hash === JSON.stringify(response.data)) return true
-      this.hash = JSON.stringify(response.data)
+      if (this.hashes[key] === JSON.stringify(response.data)) return true
+      this.hashes[key] = JSON.stringify(response.data)
       var _orders = response.data
       var sumAsks = 0
       for( let [key, order] of Object.entries(_orders.asks) ) {
@@ -99,7 +95,6 @@ class OrdersStore {
     if (this.orders[key] === undefined) this.orders[key] = []
     if (this.counters[key] === undefined) this.counters[key] = 0
     this.counters[key] += n
-
   }
 }
 
