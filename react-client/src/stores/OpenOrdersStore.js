@@ -24,7 +24,7 @@ class OpenOrdersStore {
     start()
     setInterval(() => {
       start()
-    }, 5000)
+    }, 1000)
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get pair() {return DashboardsStore.pair }
@@ -42,6 +42,7 @@ class OpenOrdersStore {
       this.openOrders[key] = response.data
     })
     .catch((error) => {
+      this.openOrders[key] = []
       console.log(error)
     })
   }
@@ -78,7 +79,7 @@ class OpenOrdersStore {
   counters = {}
   @action count(n, data) {
     var key = `${data.stock}--${data.pair}`
-    if (this.orders[key] === undefined) this.orders[key] = []
+    if (this.openOrders[key] === undefined) this.openOrders[key] = []
     if (this.counters[key] === undefined) this.counters[key] = 0
     this.counters[key] += n
   }
