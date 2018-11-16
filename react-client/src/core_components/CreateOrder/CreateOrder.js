@@ -40,11 +40,17 @@ class CreateOrder extends React.Component {
   createOrder(type) {
     CreateOrderStore.createOrder(type)
   }
-  componentDidMount() {
-    BalanceStore.count('balanceStock_counter', 1)
+  componentWillMount() {
+    BalanceStore.count(1, this.props.data, 'balanceStock_counter')
   }
   componentWillUnmount() {
-    BalanceStore.count('balanceStock_counter', -1)
+    BalanceStore.count(-1, this.props.data, 'balanceStock_counter')
+  }
+  componentWillUpdate() {
+    BalanceStore.count(-1, this.props.data, 'balanceStock_counter')
+  }
+  componentDidUpdate() {
+    BalanceStore.count(1, this.props.data, 'balanceStock_counter')
   }
 }
 

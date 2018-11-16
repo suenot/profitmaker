@@ -36,11 +36,17 @@ class Trades extends React.Component {
       </div>
     )
   }
-  componentDidMount() {
-    TradesStore.count(1)
+  componentWillMount() {
+    TradesStore.count(1, this.props.data)
   }
   componentWillUnmount() {
-    TradesStore.count(-1)
+    TradesStore.count(-1, this.props.data)
+  }
+  componentWillUpdate() {
+    TradesStore.count(-1, this.props.data)
+  }
+  componentDidUpdate() {
+    TradesStore.count(1, this.props.data)
   }
 }
 

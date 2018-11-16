@@ -63,11 +63,17 @@ class OpenOrders extends React.Component {
   cancelOrder(id, symbol, _id, stock, e) {
     OpenOrdersStore.cancelOrder(id, symbol, _id, stock)
   }
-  componentDidMount() {
-    OpenOrdersStore.count(1)
+  componentWillMount() {
+    OpenOrdersStore.count(1, this.props.data)
   }
   componentWillUnmount() {
-    OpenOrdersStore.count(-1)
+    OpenOrdersStore.count(-1, this.props.data)
+  }
+  componentWillUpdate() {
+    OpenOrdersStore.count(-1, this.props.data)
+  }
+  componentDidUpdate() {
+    OpenOrdersStore.count(1, this.props.data)
   }
 }
 
