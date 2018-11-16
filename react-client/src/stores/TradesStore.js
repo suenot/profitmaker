@@ -52,7 +52,7 @@ class TradesStore {
   counters = {}
   @action count(n, data) {
     var key = `${data.stock}--${data.pair}`
-    if (this.orders[key] === undefined) this.orders[key] = []
+    if (this.trades[key] === undefined) this.trades[key] = []
     if (this.counters[key] === undefined) this.counters[key] = 0
     this.counters[key] += n
   }
