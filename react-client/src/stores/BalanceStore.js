@@ -34,8 +34,8 @@ class BalanceStore {
     }, 2000)
   }
 
-  @computed get stock() {return DashboardsStore.stock }
-  @computed get pair() {return DashboardsStore.pair }
+  // @computed get stock() {return DashboardsStore.stock }
+  // @computed get pair() {return DashboardsStore.pair }
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
   // fetchBalanceStock_hash = ''
