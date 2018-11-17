@@ -63,8 +63,8 @@ class App extends React.Component {
             {
               _.map(DashboardsStore.dashboards, (dashboard) => {
                 return (
-                  <div>
-                    <ListItem button key={dashboard.id} selected={dashboard.id === DashboardsStore.dashboardActiveId} onClick={this.setDashboard.bind(this, dashboard.id)}>
+                  <div key={dashboard.id}>
+                    <ListItem button selected={dashboard.id === DashboardsStore.dashboardActiveId} onClick={this.setDashboard.bind(this, dashboard.id)}>
                       <ListItemIcon>
                         <img src={dashboard.icon} width="24px" height="24px" alt={dashboard.name}></img>
                       </ListItemIcon>

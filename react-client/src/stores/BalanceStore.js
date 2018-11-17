@@ -24,18 +24,14 @@ class BalanceStore {
       _.forEach(this.counters, (counter, key) => {
         if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) {
           var [type, stock] = key.split('--')
-          if (type === 'table' || type === 'pie') {
-            this.fetchBalance(stock, key)
-          } else if (type === 'history') {
-            this.fetchBalanceHistory(stock, key)
-          }
+          this.fetchBalance(stock, key, type)
         }
       })
     }
     start()
     setInterval(() => {
       start()
-    }, 5000)
+    }, 2000)
   }
 
   @computed get stock() {return DashboardsStore.stock }
@@ -67,46 +63,29 @@ class BalanceStore {
     this.availableSell = availableSell ? availableSell.free : 0
   }
 
-  @action fetchBalance(stock, key){
-    axios.get(`${this.terminalBackend}/balance/${stock}`)
+  @action fetchBalance(stock, key, type){
+    axios.get(`${this.terminalBackend}/balance/${type}/${stock}`)
     .then(response => {
       if (this.hashes[key] === JSON.stringify(response.data)) return true
       this.hashes[key] = JSON.stringify(response.data)
       this.balance[key] = response.data
-      // if (stock === 'TOTAL') {
-      //   if (this.fetchBalanceTotal_hash === JSON.stringify(response.data)) return true
-      //   this.fetchBalanceTotal_hash = JSON.stringify(response.data)
-      //   this.balanceTotal = response.data
-      // } else {
-      //   if (this.fetchBalanceStock_hash === JSON.stringify(response.data)) return true
-      //   this.fetchBalanceStock_hash = JSON.stringify(response.data)
-      //   this.balanceStock = response.data
-      // }
     })
     .catch(error => {
-      // console.log(error)
+      this.balance[key] = {}
     })
   }
 
-  @action fetchBalanceHistory(stock, key){
-    axios.get(`${this.terminalBackend}/balance/history/${stock}`)
-    .then((response) => {
-      if (this.hashes[key] === JSON.stringify(response.data)) return true
-      this.hashes[key] = JSON.stringify(response.data)
-      this.balance[key] = response.data
-      // if (stock === 'TOTAL') {
-      //   if (this.fetchBalanceHistoryTotal_hash === JSON.stringify(response.data)) return true
-      //   this.fetchBalanceHistoryTotal_hash = JSON.stringify(response.data)
-      //   this.balanceHistoryTotal = response.data
-      // } else {
-      //   if (this.fetchBalanceHistoryStock_hash === JSON.stringify(response.data)) return true
-      //   this.fetchBalanceHistoryStock_hash = JSON.stringify(response.data)
-      //   this.balanceHistoryStock = response.data
-      // }
-    })
-    .catch((error) => {
-    })
-  }
+  // @action fetchBalanceHistory(stock, key){
+  //   axios.get(`${this.terminalBackend}/balance/history/${type}/${stock}`)
+  //   .then((response) => {
+  //     if (this.hashes[key] === JSON.stringify(response.data)) return true
+  //     this.hashes[key] = JSON.stringify(response.data)
+  //     this.balance[key] = response.data
+  //   })
+  //   .catch((error) => {
+  //     this.balance[key] = {}
+  //   })
+  // }
 
   // counters
   // balanceTotal_counter = 0
@@ -118,8 +97,9 @@ class BalanceStore {
   // }
   counters = {}
   @action count(n, data) {
-    var key = `${data.type}--${data.stock}`
-    if (this.orders[key] === undefined) this.orders[key] = []
+    const {type, stock} = data
+    var key = `${type}--${stock}`
+    if (this.balance[key] === undefined) this.balance[key] = {}
     if (this.counters[key] === undefined) this.counters[key] = 0
     this.counters[key] += n
   }

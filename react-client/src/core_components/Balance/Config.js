@@ -11,7 +11,7 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Balance/Balance.js',
-    data: {stock: 'BINANCE', total: true, type: 'table'}
+    data: {stock: 'TOTAL', stockTemp: 'BINANCE', total: true, type: 'now'}
   },
   {
     name: 'balance-table',
@@ -25,6 +25,6 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Balance/Balance.js',
-    data: {stock: 'BINANCE', total: false, type: 'table'}
+    data: {stock: 'BINANCE', stockTemp: 'BINANCE', total: false, type: 'now'}
   }
 ]

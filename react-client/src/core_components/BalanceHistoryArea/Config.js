@@ -11,7 +11,7 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/BalanceHistoryArea/BalanceHistoryArea.js',
-    data: {stock: 'BINANCE', total: true, type: 'history'}
+    data: {stock: 'TOTAL', stockTemp: 'BINANCE', total: true, type: 'history'}
   },
   {
     name: 'balance-history-area',
@@ -25,6 +25,6 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/BalanceHistoryArea/BalanceHistoryArea.js',
-    data: {stock: 'BINANCE', total: false, type: 'history'}
+    data: {stock: 'BINANCE', stockTemp: 'BINANCE', total: false, type: 'history'}
   }
 ]

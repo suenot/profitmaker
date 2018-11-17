@@ -2,23 +2,27 @@ import React from 'react'
 import { observer } from 'mobx-react'
 import Preloader from '../Preloader'
 import ReactEcharts from 'echarts-for-react'
-import BalanceStore from '../../stores/BalanceStore'
+
+import BalanceStore from 'stores/BalanceStore'
 
 @observer
 class BalancePie extends React.Component {
   render() {
-    const {data} = this.props
-    const {total} = data
-    var balanceData = total ? BalanceStore['balanceTotal'] : BalanceStore['balanceStock']
+    const {type, stock} = this.props.data
+    const key = `${type}--${stock}`
+    if (
+        BalanceStore.balance[key] === undefined
+        || JSON.stringify(BalanceStore.balance[key]) === '{}'
+        || JSON.stringify(BalanceStore.balance[key].data) === '[]'
+      ) {
+      return <Preloader />
+    }
     var legendData = []
     var seriesData = []
     var selected = {}
-    var totalUSD = balanceData.totalUSD
+    var totalUSD = BalanceStore.balance[key].totalUSD
     var otherUSD = 0
-    if (JSON.stringify(balanceData.data) === '[]') {
-      return <Preloader />
-    }
-    balanceData.data.forEach(function(coin){
+    BalanceStore.balance[key].data.forEach(function(coin){
       if (coin.totalUSD !== 0) {
         if ( (coin.totalUSD/totalUSD*100 ) > 5) {
           seriesData.push({
@@ -86,32 +90,20 @@ class BalancePie extends React.Component {
     )
   }
   componentDidMount() {
-    if (this.props.data.total === true ) {
-      BalanceStore.count(1, 'balanceTotal_counter')
-    } else {
-      BalanceStore.count(1, 'balanceStock_counter')
-    }
+    BalanceStore.count(1, this.props.data)
+    // TODO: fix thix hack
+    setTimeout(()=>{
+      this.forceUpdate()
+    }, 2000)
   }
   componentDidUpdate() {
-    if (this.props.data.total === true ) {
-      BalanceStore.count(1, 'balanceTotal_counter')
-    } else {
-      BalanceStore.count(1, 'balanceStock_counter')
-    }
+    BalanceStore.count(1, this.props.data)
   }
   componentWillUnmount() {
-    if (this.props.data.total === true ) {
-      BalanceStore.count(-1, 'balanceTotal_counter')
-    } else {
-      BalanceStore.count(-1, 'balanceStock_counter')
-    }
+    BalanceStore.count(-1, this.props.data)
   }
   componentWillUpdate() {
-    if (this.props.data.total === true ) {
-      BalanceStore.count(-1, 'balanceTotal_counter')
-    } else {
-      BalanceStore.count(-1, 'balanceStock_counter')
-    }
+    BalanceStore.count(-1, this.props.data)
   }
 }
 

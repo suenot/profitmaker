@@ -24,7 +24,7 @@ router.get('/widgets', function (req, res) {
   }
 })
 
-router.get('/balance/:stock', function (req, res) {
+router.get('/balance/now/:stock', function (req, res) {
   try {
     var stock = req.params.stock
     var balance = global.BALANCE[stock]

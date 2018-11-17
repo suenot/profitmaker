@@ -37,7 +37,7 @@ class TradesStore {
   @action fetchTrades(stock, pair){
     var stockLowerCase = stock.toLowerCase()
     var key = `${stock}--${pair}`
-    axios.get(`${this.serverBackend}/${stockLowerCase}/trades/${this.pair}`)
+    axios.get(`${this.serverBackend}/${stockLowerCase}/trades/${pair}`)
     .then((response) => {
       if (this.hashes[key] === JSON.stringify(response.data)) return true
       this.hashes[key] = JSON.stringify(response.data)

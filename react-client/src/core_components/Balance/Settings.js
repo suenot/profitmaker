@@ -35,7 +35,7 @@ class Settings extends React.Component {
               control={
                   <Switch
                     checked={total}
-                    onChange={this.setWidgetData.bind(this, 'total', 'checked')}
+                    onChange={this.setTotal.bind(this)}
                     value=""
                   />
                 }
@@ -46,7 +46,9 @@ class Settings extends React.Component {
               id="outlined-name"
               label="Stock"
               value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stock}
-              onChange={this.setWidgetData.bind(this, 'stock', 'value')}
+              onChange={
+                this.setStock.bind(this)
+              }
               variant="outlined"
               fullWidth
               className={total ? 'hide' : ''}
@@ -61,10 +63,20 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value)
   }
-  setWidgetData(key, attr, e) {
+  setTotal(e) {
     var {dashboardId, widgetId} = this.props.data
-    var value = e.target[attr]
-    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value)
+    DashboardsStore.setWidgetData(dashboardId, widgetId, 'total', e.target.checked)
+    if (e.target.checked) {
+      DashboardsStore.setWidgetData(dashboardId, widgetId, 'stock', 'TOTAL')
+    } else {
+      var stockTemp = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stockTemp
+      DashboardsStore.setWidgetData(dashboardId, widgetId, 'stock', stockTemp)
+    }
+  }
+  setStock(e) {
+    var {dashboardId, widgetId} = this.props.data
+    DashboardsStore.setWidgetData(dashboardId, widgetId, 'stock', e.target.value)
+    DashboardsStore.setWidgetData(dashboardId, widgetId, 'stockTemp', e.target.value)
   }
 }
 
