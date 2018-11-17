@@ -1,7 +1,6 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import Button from '@material-ui/core/Button'
-import Preloader from '../Preloader'
 import TextField from '@material-ui/core/TextField'
 import InputAdornment from '@material-ui/core/InputAdornment'
 
@@ -13,12 +12,11 @@ class CreateOrder extends React.Component {
   render() {
     const {stock, pair, type} = this.props.data
     const key = `${stock}--${pair}--${type}`
-    console.log(JSON.stringify(CreateOrderStore.form[key]))
     if (CreateOrderStore.form[key] === undefined) this.initForm(key)
     return (
       <div className="simpleForm">
         <div className="createOrder-header">
-          Available: {(type === 'buy' ? CreateOrderStore.availableBuy : CreateOrderStore.availableSell).toFixed(8)} {type === 'buy' ? pair.split('_')[1] : pair.split('_')[0]}
+          Available: {(type === 'buy' ? BalanceStore.available(stock, pair).buy : BalanceStore.available(stock, pair).sell).toFixed(8)} {type === 'buy' ? pair.split('_')[1] : pair.split('_')[0]}
         </div>
         <div className="simpleForm-formGroup">
           <TextField
