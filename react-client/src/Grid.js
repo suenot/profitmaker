@@ -127,6 +127,13 @@ class Grid extends React.Component {
   removeWidget(id) {
     DashboardsStore.removeWidget(id)
   }
+  componentDidMount() {
+    document.title = DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name
+  }
+  componentDidUpdate() {
+    document.title = DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name
+  }
+
 }
 
 export default Grid

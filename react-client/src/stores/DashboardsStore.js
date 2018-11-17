@@ -35,6 +35,7 @@ class DashboardsStore {
 
   @action setDashboard(id) {
     this.dashboardActiveId = id
+    // document.title = this.dashboards[this.dashboardActiveId].name
   }
   @action addDashboard() {
     this.dashboardsCounter += 1
