@@ -71,7 +71,9 @@ class DashboardsStore {
   }
   @action setWidgetsData(key, value) {
     for (let i = 0; i<this.dashboards[this.dashboardActiveId].widgets.length; i++) {
-      this.dashboards[this.dashboardActiveId].widgets[i].data[key] = value
+      if (this.dashboards[this.dashboardActiveId].widgets[i].data[key] !== undefined) {
+        this.dashboards[this.dashboardActiveId].widgets[i].data[key] = value
+      }
     }
   }
 
