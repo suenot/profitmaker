@@ -25,6 +25,7 @@ class Grid extends React.Component {
   }
 
   render() {
+    console.log('GRID')
     return (
       <GridLayout
         className="layout"
