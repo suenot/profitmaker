@@ -35,7 +35,7 @@ class CreateOrderStore {
 
   @action createOrder(stock, pair, type) {
     var key = `${stock}--${pair}--${type}`
-    var createMsg = 'creating ' + type + ' order on ' + stock + ': '+ pair + ' price: '+this.form['price'][type] + ' amount: ' + this.form['amount'][type]
+    var createMsg = 'creating ' + type + ' order on ' + stock + ': '+ pair + ' price: '+this.form[key]['price'] + ' amount: ' + this.form[key]['amount']
     Alert.warning(createMsg, {
       position: 'bottom-right',
       effect: 'scale',
