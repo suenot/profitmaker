@@ -24,7 +24,7 @@ class OpenOrdersStore {
     start()
     setInterval(() => {
       start()
-    }, 1000)
+    }, 10000)
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get pair() {return DashboardsStore.pair }

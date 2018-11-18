@@ -1,8 +1,9 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
+import _ from 'lodash'
+
 import DashboardsStore from './DashboardsStore'
 import SettingsStore from './SettingsStore'
-import _ from 'lodash'
 
 class PairsStore {
   constructor() {

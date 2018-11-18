@@ -69,6 +69,11 @@ class DashboardsStore {
     if (value === 'false') value = false
     _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data[key] = value
   }
+  @action setWidgetsData(key, value) {
+    for (let i = 0; i<this.dashboards[this.dashboardActiveId].widgets.length; i++) {
+      this.dashboards[this.dashboardActiveId].widgets[i][key] = value
+    }
+  }
 
   @observable counter = 15
 
@@ -109,7 +114,7 @@ class DashboardsStore {
     var activeDashboard = this.dashboardActiveId
     this.dashboards[this.dashboardActiveId].counter = (parseInt(this.dashboards[this.dashboardActiveId].counter, 10) + 1).toString()
     this.dashboards[this.dashboardActiveId].widgets.push({
-      i: this.dashboards[this.dashboardActiveId].counter+"", uid: activeDashboard+'_'+this.dashboards[this.dashboardActiveId].counter, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: 5, h: 19, minW: 2, minH: 3
+      i: this.dashboards[this.dashboardActiveId].counter+"", uid: activeDashboard+'_'+this.dashboards[this.dashboardActiveId].counter, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: widget.w || 7, h: widget.h || 20, minW: 2, minH: 3
     })
   }
 

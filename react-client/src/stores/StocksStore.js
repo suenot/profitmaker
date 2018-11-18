@@ -1,6 +1,7 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
+
 import DashboardsStore from './DashboardsStore'
 import SettingsStore from './SettingsStore'
 
@@ -31,6 +32,13 @@ class StocksStore {
   @action setStock(stock) {
     this.stock = stock
     DashboardsStore.dashboards[ DashboardsStore.dashboardActiveId ].stock = stock
+    DashboardsStore.setWidgetsData('stock', stock)
+    // var widgets = DashboardsStore.dashboards[ DashboardsStore.dashboardActiveId ].widgets
+    // console.log(widgets)
+    // _.forEach(widgets, (widget)=>{
+    //   // console.log(widget)
+    //   widget.stock = stock
+    // })
   }
 
   @action async fetchStocks() {

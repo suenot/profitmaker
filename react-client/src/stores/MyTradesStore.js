@@ -17,7 +17,7 @@ class MyTradesStore {
     start()
     setInterval(() => {
       start()
-    }, 5000)
+    }, 15000)
     // const start = () => {
     //   this.fetchMyTrades()
     // }

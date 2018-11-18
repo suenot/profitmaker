@@ -16,6 +16,7 @@ class OhlcvStore {
         var [stock, pair, timeframe] = key.split('--')
         if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOhlcv(stock, pair, timeframe)
       })
+
     }
     start()
     setInterval(() => {

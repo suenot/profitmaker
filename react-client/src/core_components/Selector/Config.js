@@ -11,6 +11,8 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Selector/Selector.js',
-    data: {stock: 'BINANCE'}
+    data: {group: 'ALL'},
+    w: 7,
+    h: 4
   }
 ]
