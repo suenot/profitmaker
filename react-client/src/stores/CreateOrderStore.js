@@ -13,11 +13,6 @@ class CreateOrderStore {
   @computed get availableSell() {return BalanceStore.availableSell }
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
-
-  // @observable createPrice = {'buy': '', 'sell': ''}
-  // @observable createAmount = {'buy': '', 'sell': ''}
-  // @observable createTotal = {'buy': '', 'sell': ''}
-
   @observable form = {}
 
   @action createChange(stock, pair, type, field, value) {
@@ -36,20 +31,6 @@ class CreateOrderStore {
       var amount = (parseFloat(this.form[key]['total']) / parseFloat(this.form[key]['price'])).toFixed(8)
       this.form[key]['amount'] = amount !== 'NaN' ? amount : ''
     }
-
-    // if (field === 'price') {
-    //   this.createPrice[type] = value
-    //   total = (parseFloat(this.createPrice[type]) * parseFloat(this.createAmount[type])).toFixed(8)
-    //   this.createTotal[type] = total !== 'NaN' ? total : ''
-    // } else if (field === 'amount') {
-    //   this.createAmount[type] = value
-    //   total = (parseFloat(this.createPrice[type]) * parseFloat(this.createAmount[type])).toFixed(8)
-    //   this.createTotal[type] = (total !== 'NaN') ? total : ''
-    // } else if (field === 'total') {
-    //   this.createTotal[type] = value
-    //   var amount = (parseFloat(this.createTotal[type]) / parseFloat(this.createPrice[type])).toFixed(8)
-    //   this.createAmount[type] = amount !== 'NaN' ? amount : ''
-    // }
   }
 
   @action createOrder(stock, pair, type) {
@@ -99,28 +80,22 @@ class CreateOrderStore {
     })
   }
 
-  @action setPrice(price) {
-    // const {stock, pair, type} = this.props.data
-    // this.createPrice['buy'] = price
-    // this.createPrice['sell'] = price
-    this.form['price']['buy'] = price
-    this.form['price']['sell'] = price
+  @action setPrice(price, key) {
+    if (this.form[key] === undefined) this.form[key] = { price: "", amount: "", total: ""}
+    this.form[key]['price'] = price
+    this.form[key]['price'] = price
   }
 
-  @action setAmount(amount) {
-    // const {stock, pair, type} = this.props.data
-    // this.createAmount['buy'] = amount
-    // this.createAmount['sell'] = amount
-    this.form['amount']['buy'] = amount
-    this.form['amount']['sell'] = amount
+  @action setAmount(amount, key) {
+    if (this.form[key] === undefined) this.form[key] = { price: "", amount: "", total: ""}
+    this.form[key]['amount'] = amount
+    this.form[key]['amount'] = amount
   }
 
-  @action setTotal(total) {
-    // const {stock, pair, type} = this.props.data
-    // this.createTotal['buy'] = total.toFixed(8)
-    // this.createTotal['sell'] = total.toFixed(8)
-    this.form['total']['buy'] = total.toFixed(8)
-    this.form['total']['sell'] = total.toFixed(8)
+  @action setTotal(total, key) {
+    if (this.form[key] === undefined) this.form[key] = { price: "", amount: "", total: ""}
+    this.form[key]['total'] = total.toFixed(8)
+    this.form[key]['total'] = total.toFixed(8)
   }
 
   @action initForm(key) {
