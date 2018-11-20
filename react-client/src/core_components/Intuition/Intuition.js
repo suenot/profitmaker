@@ -41,7 +41,7 @@ class Intuition extends React.Component {
             {
               _.map(Store.signals, (signal) => {
                 return (
-                  <tr key="signal.id" onClick={this.addWidget.bind(this, widget)}>
+                  <tr key={signal.id} onClick={this.addWidget.bind(this, widget)}>
                     <td>{signal.action}</td>
                     <td>{signal.pair}</td>
                     <td>{signal.stockFrom}</td>
