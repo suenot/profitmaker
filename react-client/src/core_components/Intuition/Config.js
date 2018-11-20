@@ -11,6 +11,6 @@ module.exports = [
     author: '#core',
     authorLink: 'https://github.com/kupi-network/kupi-terminal',
     source: 'https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Inutuition/Inutuition.js',
-    data: {}
+    data: {url: '', key: ''}
   }
 ]

@@ -1,8 +1,10 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import _ from 'lodash'
+import moment from 'moment'
 
 import DashboardsStore from 'stores/DashboardsStore'
+import Store from './Store'
 
 @observer
 class Intuition extends React.Component {
@@ -26,51 +28,43 @@ class Intuition extends React.Component {
         <table className="simpleTable">
           <thead>
             <tr>
-              <th className="simpleTable-header">Type</th>
+              <th className="simpleTable-header">Action</th>
               <th className="simpleTable-header">Pair</th>
               <th className="simpleTable-header">From</th>
               <th className="simpleTable-header">To</th>
               <th className="simpleTable-header">%</th>
-              <th className="simpleTable-header">Total</th>
-              <th className="simpleTable-header">Profit</th>
+              <th className="simpleTable-header">Profit/Total</th>
               <th className="simpleTable-header">Lifetime</th>
             </tr>
           </thead>
           <tbody>
-            <tr onClick={this.addWidget.bind(this, widget)}>
-              <td>-</td>
-              <td>ETH_BTC</td>
-              <td>-</td>
-              <td>-</td>
-              <td>10%</td>
-              <td>$10000</td>
-              <td>$1000</td>
-              <td>2 minutes</td>
-            </tr>
-            <tr onClick={this.addWidget.bind(this, widget)}>
-              <td>-</td>
-              <td>ETH_BTC</td>
-              <td>-</td>
-              <td>-</td>
-              <td>10%</td>
-              <td>$10000</td>
-              <td>$1000</td>
-              <td>2 minutes</td>
-            </tr>
-            <tr onClick={this.addWidget.bind(this, widget)}>
-              <td>-</td>
-              <td>ETH_BTC</td>
-              <td>-</td>
-              <td>-</td>
-              <td>10%</td>
-              <td>$10000</td>
-              <td>$1000</td>
-              <td>2 minutes</td>
-            </tr>
+            {
+              _.map(Store.signals, (signal) => {
+                return (
+                  <tr key="signal.id" onClick={this.addWidget.bind(this, widget)}>
+                    <td>{signal.action}</td>
+                    <td>{signal.pair}</td>
+                    <td>{signal.stockFrom}</td>
+                    <td>{signal.stockTo}</td>
+                    <td>{signal.percent.toFixed(2)}%</td>
+                    <td>{signal.profit.toFixed(2)}/{signal.total.toFixed(2)} USD</td>
+                    <td>{moment(signal.timestamp).format('DD.MM.YY HH:mm:ss')}</td>
+                  </tr>
+                )
+              })
+            }
           </tbody>
         </table>
       </div>
     )
+  }
+  componentDidMount() {
+    console.log('mount')
+    Store.mount(this.props.data.url)
+  }
+  componentWillUnmount() {
+    console.log('unmount')
+    Store.unmount()
   }
   addWidget(widget) {
     DashboardsStore.addWidget(widget)
