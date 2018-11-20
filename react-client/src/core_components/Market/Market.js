@@ -4,8 +4,10 @@ import _ from 'lodash'
 import { observer } from 'mobx-react'
 import Button from '@material-ui/core/Button'
 import AddIcon from '@material-ui/icons/Add'
-import DashboardsStore from '../../stores/DashboardsStore'
 import ghLogo from'./github-logo.svg'
+
+import DashboardsStore from 'stores/DashboardsStore'
+
 @observer
 class Market extends React.Component {
   render() {

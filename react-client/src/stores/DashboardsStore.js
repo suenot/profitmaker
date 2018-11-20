@@ -71,7 +71,9 @@ class DashboardsStore {
   }
   @action setWidgetsData(key, value) {
     for (let i = 0; i<this.dashboards[this.dashboardActiveId].widgets.length; i++) {
-      this.dashboards[this.dashboardActiveId].widgets[i][key] = value
+      if (this.dashboards[this.dashboardActiveId].widgets[i].data[key] !== undefined) {
+        this.dashboards[this.dashboardActiveId].widgets[i].data[key] = value
+      }
     }
   }
 
@@ -114,7 +116,7 @@ class DashboardsStore {
     var activeDashboard = this.dashboardActiveId
     this.dashboards[this.dashboardActiveId].counter = (parseInt(this.dashboards[this.dashboardActiveId].counter, 10) + 1).toString()
     this.dashboards[this.dashboardActiveId].widgets.push({
-      i: this.dashboards[this.dashboardActiveId].counter+"", uid: activeDashboard+'_'+this.dashboards[this.dashboardActiveId].counter, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: widget.w || 7, h: widget.h || 20, minW: 2, minH: 3
+      i: this.dashboards[this.dashboardActiveId].counter+"", uid: activeDashboard+'_'+this.dashboards[this.dashboardActiveId].counter, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: widget.w || 7, h: widget.h || 15, minW: 2, minH: 3
     })
   }
 
