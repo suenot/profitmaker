@@ -9,7 +9,6 @@ class Store {
     this.intervalId = setInterval(()=>{
       axios.get(`${url}`)
         .then((response) => {
-          console.log(response.data)
           if (this.hash === JSON.stringify(response.data)) {
             return true
           }

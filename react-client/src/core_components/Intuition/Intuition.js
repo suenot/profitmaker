@@ -59,11 +59,9 @@ class Intuition extends React.Component {
     )
   }
   componentDidMount() {
-    console.log('mount')
     Store.mount(this.props.data.url)
   }
   componentWillUnmount() {
-    console.log('unmount')
     Store.unmount()
   }
   addWidget(widget) {
