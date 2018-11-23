@@ -23,7 +23,7 @@ class DashboardsStore {
   @observable dashboardActiveId = '1'
   @observable dashboards = {
     '1': { id: '1', name: 'First', bg: '#ccc', icon: '/img/widgets/viking-ship.svg', type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0},
-    '2': { id: '2', name: 'Second', bg: '#ccc', icon: '/img/widgets/helmet.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0},
+    '2': { id: '2', name: 'Second', bg: '#ccc', icon: '/img/widgets/helmet.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0}
   }
   @computed get name() { return this.dashboards[this.dashboardActiveId].name }
   @computed get stock() {

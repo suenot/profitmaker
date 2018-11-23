@@ -33,7 +33,8 @@ class Intuition extends React.Component {
               <th className="simpleTable-header">From</th>
               <th className="simpleTable-header">To</th>
               <th className="simpleTable-header">%</th>
-              <th className="simpleTable-header">Profit/Total</th>
+              <th className="simpleTable-header">Profit</th>
+              <th className="simpleTable-header">Total</th>
               <th className="simpleTable-header">Lifetime</th>
             </tr>
           </thead>
@@ -46,9 +47,10 @@ class Intuition extends React.Component {
                     <td>{signal.pair}</td>
                     <td>{signal.stockFrom}</td>
                     <td>{signal.stockTo}</td>
-                    <td>{signal.percent.toFixed(2)}%</td>
-                    <td>{signal.profit.toFixed(2)}/{signal.total.toFixed(2)} USD</td>
-                    <td>{moment(signal.timestamp).format('DD.MM.YY HH:mm:ss')}</td>
+                    <td>{signal.percent ? signal.percent.toFixed(2) : 0}%</td>
+                    <td>{signal.profit ? signal.profit.toFixed(2) : 0} USD</td>
+                    <td>{signal.total ? signal.total.toFixed(2): 0} USD</td>
+                    <td>{signal.timestamp ? moment(signal.timestamp).format('DD.MM.YY HH:mm:ss') : ''}</td>
                   </tr>
                 )
               })

@@ -1,0 +1,15 @@
+{
+    "parser": "babel-eslint",
+    "parserOptions": {
+        "ecmaFeatures": { "legacyDecorators": true }
+    },
+    "rules": {
+      "arrow-body-style": "off",
+      "default-case": "off",
+      "no-param-reassign": "off",
+      "no-shadow": "off",
+      "no-underscore-dangle": "off",
+      "no-use-before-define": "off",
+      "yoda": "off"
+    }
+  }
