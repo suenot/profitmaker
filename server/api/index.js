@@ -12,17 +12,21 @@ var {getTrades} = require('../core_components/updateTradesRaw')
 var getMyTrades = require('../core_components/getMyTrades')
 var createOrder = require('../core_components/createOrder')
 var cancelOrder = require('../core_components/cancelOrder')
-var widgets = require('../core_components/widgets')
+// var widgets = require('../core_components/widgets')
 
 var router = express.Router()
 
-router.get('/widgets', function (req, res) {
-  try {
-    res.json(widgets())
-  } catch (err) {
-    res.status(500).send({ error: 'fetch widgets' + ' failed!' })
-  }
+app.get('/', (req, res) => {
+  res.json('https://github.com/kupi-network/kupi-terminal')
 })
+
+// router.get('/widgets', function (req, res) {
+//   try {
+//     res.json(widgets())
+//   } catch (err) {
+//     res.status(500).send({ error: 'fetch widgets' + ' failed!' })
+//   }
+// })
 
 router.get('/balance/now/:stock', function (req, res) {
   try {
