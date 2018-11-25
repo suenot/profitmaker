@@ -16,7 +16,7 @@ var cancelOrder = require('../core_components/cancelOrder')
 
 var router = express.Router()
 
-app.get('/', (req, res) => {
+router.get('/', (req, res) => {
   res.json('https://github.com/kupi-network/kupi-terminal')
 })
 
