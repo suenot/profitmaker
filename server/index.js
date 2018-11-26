@@ -81,8 +81,8 @@ const main = async () => {
       app.use('/user_components', userApi)
     } catch(err) { console.log(err) }
     try {
-      var userComponents = require('./user_components')
-      userComponents()
+      // var userComponents = require('./user_components')
+      // userComponents()
     } catch(err) { console.log(err) }
 
 
@@ -90,6 +90,6 @@ const main = async () => {
 }
 main()
 
-app.listen(8051, '127.0.0.1', () => {
+app.listen(8051, '0.0.0.0', () => {
   console.log('KUPI termintal launched on 8051 port')
 })

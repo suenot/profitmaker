@@ -11,18 +11,18 @@ services:
   #     - /react-client/node_modules
   #   command: yarn start
 
-  # server:
-  #   build: ./server
-  #   volumes:
-  #     - ./:/app
-  #     - /app/server/node_modules
-  #   links:
-  #       - kupi-terminal-mongo
-  #   depends_on:
-  #       - kupi-terminal-mongo
-  #   ports:
-  #     - 8051:8051
-  #   command: yarn start
+  server:
+    build: ./server
+    volumes:
+      - ./:/app
+      - /app/server/node_modules
+    links:
+        - kupi-terminal-mongo
+    depends_on:
+        - kupi-terminal-mongo
+    ports:
+      - 8051:8051
+    command: yarn start
 
   kupi-terminal-mongo:
     image: mongo:latest
@@ -31,8 +31,8 @@ services:
       # MONGO_LOG_DIR: /tmp/null
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
-    volumes:
-      - ./data/db:/data/db
+    # volumes:
+    #   - ./data/db:/data/db
     ports:
       - 27017:27017
     # command: mongod --smallfiles --logpath=/dev/null # --quiet
