@@ -1,0 +1,16 @@
+[
+  {
+    "name": "iframe",
+    "component": "core_components/Iframe/Iframe.js",
+    "settings": "core_components/Iframe/Settings.js",
+    "settingsWidth": "300px",
+    "img": "core_components/Iframe/Iframe.png",
+    "header": "Iframe",
+    "customHeader": "",
+    "description": "",
+    "author": "#core",
+    "authorLink": "https://github.com/kupi-network/kupi-terminal",
+    "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Iframe/Iframe.js",
+    "data": {"url": "http://dolphin.bi/apps/x/top-ico/index.html"}
+  }
+]

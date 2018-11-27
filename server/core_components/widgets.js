@@ -14,7 +14,7 @@ const widgets = function() {
           getFiles(subpath, files)
         } else {
           var filePath = path.join(searchPath, file)
-          if (filePath.includes('Config.js')) {
+          if (filePath.includes('Config.json')) {
             files.push(filePath)
           }
         }
@@ -23,11 +23,13 @@ const widgets = function() {
   getFiles(searchPath, files)
   files = _.orderBy(files, ['name'], ['asc'])
   _.forEach(files, function(file){
-    var widgets = require('../'+file)
-    _.forEach(widgets, function(widget){
-      componentsConfig.push({id: id+"", ...widget})
-      id += 1
-    })
+    try {
+      var widgets = JSON.parse( fs.readFileSync(file) )
+      _.forEach(widgets, function(widget){
+        componentsConfig.push({id: id+"", ...widget})
+        id += 1
+      })
+    } catch(err) {console.log(err)}
   })
   id = 0
   return componentsConfig
