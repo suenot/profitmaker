@@ -12,16 +12,16 @@
     "lodash": "^4.17.10",
     "moment": "^2.18.1",
     "mongodb": "^2.2.31",
-    "nodemon": "^1.12.1",
     "serialize-error": "^2.1.0",
     "signale": "^1.3.0"
   },
   "scripts": {
-    "start": "node index.js",
-    "docker": "DOCKER=DOCKER node index.js",
+    "start": "./node_modules/nodemon/bin/nodemon.js index.js",
+    "docker": "DOCKER=DOCKER ./node_modules/nodemon/bin/nodemon.js index.js",
     "test": "jest --watch"
   },
   "devDependencies": {
-    "jest": "^23.6.0"
+    "jest": "^23.6.0",
+    "nodemon": "^1.18.7"
   }
 }

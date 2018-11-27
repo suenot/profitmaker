@@ -1,29 +1,29 @@
 version: '3.1'
 
 services:
-  # kupi-terminal-client:
-  #   build: ./react-client
-  #   ports:
-  #     - 127.0.0.1:3000:3000
-  #   volumes:
-  #     - ./react-client:/react-client
-  #     - /react-client/node_modules
-  #   command: yarn start
+  kupi-terminal-client:
+    build: ./react-client
+    ports:
+      - 127.0.0.1:3000:3000
+    volumes:
+      - ./react-client:/react-client
+      - /react-client/node_modules
+    command: yarn start
 
-  # kupi-terminal-server:
-  #   build: ./server
-  #   volumes:
-  #     - ./:/app
-  #     - /app/server/node_modules
-  #     - /app/react-client/node_modules
-  #   links:
-  #       - kupi-terminal-mongo
-  #   depends_on:
-  #       - kupi-terminal-mongo
-  #   ports:
-  #     - 127.0.0.1:8051:8051
-  #   command: yarn docker
-  #   # sh -c 'npm i && node server.js'
+  kupi-terminal-server:
+    build: ./server
+    volumes:
+      - ./:/app
+      - /app/server/node_modules
+      - /app/react-client/node_modules
+    links:
+        - kupi-terminal-mongo
+    depends_on:
+        - kupi-terminal-mongo
+    ports:
+      - 127.0.0.1:8051:8051
+    command: yarn docker
+    # sh -c 'npm i && node server.js'
 
   kupi-terminal-mongo:
     image: mongo:latest
