@@ -32,8 +32,8 @@ services:
     environment:
       # MONGO_DATA_DIR: /tmp/db
       # MONGO_LOG_DIR: /tmp/null
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}root
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}example
+      MONGO_INITDB_ROOT_USERNAME: root #${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: example #${MONGO_PASSWORD}
     volumes:
       # - ./data/db:/data/db
       - kupi-terminal-mongo-volume:/data/db

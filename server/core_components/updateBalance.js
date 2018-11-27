@@ -6,12 +6,16 @@ var calculateCoin = require('../../utils').calculateCoin
 
 const updateBalance = async function(privateKeys, ethPockets, timeout) {
     while (true) {
-      for (let [stockName, stock] of Object.entries(privateKeys)) {
-        await updateStocksBalance(stockName)
-      }
-      for (let [stockName, stock] of Object.entries(ethPockets)) {
-        await updateETHBalance(stockName, stock)
-      }
+      try {
+        for (let [stockName, stock] of Object.entries(privateKeys)) {
+          await updateStocksBalance(stockName)
+        }
+      } catch(err) { console.log(err) }
+      try {
+        for (let [stockName, stock] of Object.entries(ethPockets)) {
+          await updateETHBalance(stockName, stock)
+        }
+      } catch(err) {}
       await updateTotal()
       await writeTotal()
       await sleep(timeout)

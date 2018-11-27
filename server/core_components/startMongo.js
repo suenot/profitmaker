@@ -1,15 +1,12 @@
 var MongoClient = require('mongodb').MongoClient
 const mongoConf = require('../../private/mongo.json').mongo
 var localMongoUrl = ''
-console.log('BEFORE DOCKER')
 if (process.env.DOCKER === 'DOCKER') {
   localMongoUrl = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.dockerHost+':'+mongoConf.port+'/'+mongoConf.db+'?authSource=admin'
   console.log(localMongoUrl)
-  console.log('DOCKER')
 } else {
   localMongoUrl = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.host+':'+mongoConf.port+'/'+mongoConf.db+'?authSource=admin'
   console.log(localMongoUrl)
-  console.log('NOT DOCKER')
 }
 const startMongo = async function() {
     try {

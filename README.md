@@ -30,6 +30,11 @@ Terminal under heavy development. In current version trades processing by routin
 - [Flaticon](https://www.flaticon.com/)
 
 ## Quick start
+Installing with docker:
+```docker-compose up```
+
+Or full installation:
+
 0. If you had any problems with installing we can help in [voice/text Discrod chat](https://discord.gg/Q77C8v)
 
 1. Install [nodejs](https://nodejs.org/en/)
