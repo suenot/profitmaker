@@ -18,6 +18,7 @@
   },
   "scripts": {
     "start": "node index.js",
+    "docker": "DOCKER=DOCKER node index.js",
     "test": "jest --watch"
   },
   "devDependencies": {
