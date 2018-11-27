@@ -27,13 +27,19 @@ services:
 
   kupi-terminal-mongo:
     image: mongo:latest
+    # env_file:
+    #  - ./Docker/api/api.env
     environment:
       # MONGO_DATA_DIR: /tmp/db
       # MONGO_LOG_DIR: /tmp/null
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
-    # volumes:
-    #   - ./data/db:/data/db
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}example
+    volumes:
+      # - ./data/db:/data/db
+      - kupi-terminal-mongo-volume:/data/db
     ports:
       - 127.0.0.1:27017:27017
     # command: mongod --smallfiles --logpath=/dev/null # --quiet
+
+volumes:
+  kupi-terminal-mongo-volume:
