@@ -31,6 +31,10 @@ Terminal under heavy development. In current version trades processing by routin
 
 ## Quick start
 Installing with docker:
+```
+export DOCKER_CLIENT_TIMEOUT=120
+export COMPOSE_HTTP_TIMEOUT=120
+```
 ```docker-compose up```
 
 Or full installation:
@@ -42,7 +46,7 @@ Or full installation:
 2. Install mongo
 ```
 docker volume create kupi-terminal-mongo-volume
-docker run --name kupi-terminal-mongo -p 27017:27017 -v kupi-terminal-mongo-volume:/data/db -d mongo
+docker run --name kupi-terminal-mongo -p 28319:27017 -v kupi-terminal-mongo-volume:/data/db -d mongo
 ```
 
 3. Copy ignored by default files and fill stocks private keys in ```./private/keys.json```

@@ -93,9 +93,7 @@ router.post('/cancelOrder', async function(req, res) {
       var result = await cancelOrder(req.body)
       res.json(result)
   } catch (err) {
-      var errorS = serializeError(err).message
-      // console.log(errorS)
-      res.status(500).send({error: errorS})
+      res.status(500).send({error: serializeError(err).message})
   }
 })
 
