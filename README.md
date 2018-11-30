@@ -30,43 +30,12 @@ Terminal under heavy development. In current version trades processing by routin
 - [Flaticon](https://www.flaticon.com/)
 
 ## Quick start
-Installing with docker:
-```
-export DOCKER_CLIENT_TIMEOUT=120
-export COMPOSE_HTTP_TIMEOUT=120
-```
-```docker-compose up```
+[Install with docker](https://github.com/kupi-network/kupi-terminal/blob/master/INSTALL_WITH_DOCKER.md)
 
-Or full installation:
+[Install manually](https://github.com/kupi-network/kupi-terminal/blob/master/INSTALL_MANUALLY.md)
 
-0. If you had any problems with installing we can help in [voice/text Discrod chat](https://discord.gg/Q77C8v)
+If you had any problems with installing we can help in [voice/text Discrod chat](https://discord.gg/Q77C8v)
 
-1. Install [nodejs](https://nodejs.org/en/)
-
-2. Install mongo
-```
-docker volume create kupi-terminal-mongo-volume
-docker run --name kupi-terminal-mongo -p 28319:27017 -v kupi-terminal-mongo-volume:/data/db -d mongo
-```
-
-3. Copy ignored by default files and fill stocks private keys in ```./private/keys.json```
-```
-cp -R ./defaults/. ./
-```
-
-4. Run terminal-server
-```
-cd server
-npm install
-npm run start
-``` 
-
-5. Run terminal-frontend
-```
-cd react-client
-npm install
-npm run start
-```
 
 ## API:
 #### server api:

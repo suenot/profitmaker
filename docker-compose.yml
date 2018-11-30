@@ -1,10 +1,21 @@
 version: '3.1'
 
 services:
+  kupi-terminal-mongo:
+    image: mongo:latest
+    env_file:
+     - ./private/mongo.env
+    volumes:
+      - ./private/mongo/db:/data/db
+      # - kupi-terminal-mongo-volume:/data/db
+    ports:
+      - 127.0.0.1:8049:27017
+    # command: mongod --smallfiles --logpath=/dev/null # --quiet
+
   kupi-terminal-client:
     build: ./react-client
     ports:
-      - 127.0.0.1:3000:3000
+      - 127.0.0.1:8050:8050
     volumes:
       - ./react-client:/react-client
       - /react-client/node_modules
@@ -25,16 +36,7 @@ services:
     command: yarn docker
     # sh -c 'npm i && node server.js'
 
-  kupi-terminal-mongo:
-    image: mongo:latest
-    env_file:
-     - ./private/mongo.env
-    volumes:
-      - ./private/mongo/db:/data/db
-      # - kupi-terminal-mongo-volume:/data/db
-    ports:
-      - 127.0.0.1:27017:27017
-    # command: mongod --smallfiles --logpath=/dev/null # --quiet
+
 
 # volumes:
 #   kupi-terminal-mongo-volume:
