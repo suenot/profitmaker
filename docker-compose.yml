@@ -2,7 +2,7 @@ version: '3.1'
 
 services:
   kupi-terminal-mongo:
-    image: mongo:latest
+    image: mongo:3
     env_file:
      - ./private/mongo.env
     volumes:
