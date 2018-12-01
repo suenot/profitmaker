@@ -9,7 +9,7 @@ services:
       - ./private/mongo/db:/data/db
       # - kupi-terminal-mongo-volume:/data/db
     ports:
-      - 127.0.0.1:8049:27017
+      - 127.0.0.1:27017:27017
     # command: mongod --smallfiles --logpath=/dev/null # --quiet
 
   kupi-terminal-client:
@@ -31,6 +31,7 @@ services:
         - kupi-terminal-mongo
     depends_on:
         - kupi-terminal-mongo
+        - kupi-terminal-client
     ports:
       - 127.0.0.1:8051:8051
     command: yarn docker
