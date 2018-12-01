@@ -1,6 +1,8 @@
 var MongoClient = require('mongodb').MongoClient
 const mongoConf = require('../../private/mongo.json').mongo
 var localMongoUrl = ''
+var {sleep} = require('../../utils')
+
 if (process.env.DOCKER === 'DOCKER') {
   localMongoUrl = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.dockerHost+':'+mongoConf.port+'/'+mongoConf.db+'?authSource=admin'
   console.log(localMongoUrl)
@@ -9,16 +11,19 @@ if (process.env.DOCKER === 'DOCKER') {
   console.log(localMongoUrl)
 }
 const startMongo = async function() {
+  while(true) {
     try {
-        var db = await MongoClient.connect(localMongoUrl, {
-          uri_decode_auth: true
-        })
-        console.log('Получилось подключиться к монге')
-        return db
+      var db = await MongoClient.connect(localMongoUrl, {
+        uri_decode_auth: true
+      })
+      console.log('Получилось подключиться к монге')
+      return db
     } catch (err) {
-        console.log('Не получилось подключиться к монге')
-        console.log(err)
+      console.log('Не получилось подключиться к монге')
+      console.log(err)
     }
+    await sleep(1000)
+  }
 }
 
 module.exports = startMongo
