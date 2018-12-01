@@ -20,7 +20,7 @@ const startMongo = async function() {
       return db
     } catch (err) {
       console.log('Не получилось подключиться к монге')
-      console.log(err)
+      // console.log(err)
     }
     await sleep(1000)
   }
