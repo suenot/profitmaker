@@ -1,15 +1,19 @@
 ## Install with docker
 
-1. Copy ignored by default files and fill stocks private keys in ```./private/keys.json```
+1. Copy ignored by default files
 ```
 cp -R ./defaults/. ./
 ```
 
-2. Set global variables
+2. Fill stocks private keys in ```./private/keys.json```
+
+3. Set mongo password in ```./private/mongo.json``` and ```./private/mongo.env```
+
+4. Set global variables (optionally)
 ```
 export DOCKER_CLIENT_TIMEOUT=120
 export COMPOSE_HTTP_TIMEOUT=120
 ```
 
-3. Build and run containers
+5. Build and run containers
 ```docker-compose up```
