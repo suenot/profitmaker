@@ -51,8 +51,8 @@ class Grid extends React.Component {
             }
             var dashboardId = DashboardsStore.dashboardActiveId
             var widgetId = widget.i
-            var stock = widget.data.stock
-            var pair = widget.data.pair
+            var stock = widget.data.stock !== undefined ? widget.data.stock : ''
+            var pair = widget.data.pair !== undefined ? widget.data.pair : ''
             var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
             return (
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
