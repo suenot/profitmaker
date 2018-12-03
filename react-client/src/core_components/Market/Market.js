@@ -2,7 +2,7 @@
 import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
-import Button from '@material-ui/core/Button'
+import Fab from '@material-ui/core/Fab'
 import AddIcon from '@material-ui/icons/Add'
 import ghLogo from'./github-logo.svg'
 import List from '@material-ui/core/List'
@@ -22,7 +22,7 @@ class Market extends React.Component {
             {
               _.map(DashboardsStore.categories, (category) => {
                 return (
-                  <ListItem button onClick={this.selectCategory.bind(this)}>
+                  <ListItem key={category} button onClick={this.selectCategory.bind(this)}>
                     <ListItemText primary={category} />
                   </ListItem>
                 )
@@ -55,9 +55,9 @@ class Market extends React.Component {
                         </a>
                       </div>
                       <div className="market-actions-action">
-                        <Button variant="fab" color="secondary" aria-label="Add" onClick={this.addWidget.bind(this, widget)}>
+                        <Fab color="secondary" aria-label="Add" onClick={this.addWidget.bind(this, widget)}>
                           <AddIcon />
-                        </Button>
+                        </Fab>
                       </div>
                     </div>
                   </div>
