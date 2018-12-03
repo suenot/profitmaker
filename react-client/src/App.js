@@ -80,7 +80,7 @@ class App extends React.Component {
               <ListItem button>
                 <ListItemIcon
                   aria-label="Connect with us"
-                  onClick={this.drawerRightToggle.bind(this, "core_components/Socials/Socials.js", "300px")}
+                  onClick={this.drawerRightToggle.bind(this, "core_components/Socials/Socials.js", "320px")}
                 >
                   <ChatIcon />
                 </ListItemIcon>
@@ -89,7 +89,7 @@ class App extends React.Component {
               <ListItem button>
                 <ListItemIcon
                   aria-label="Settings"
-                  onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "300px")}
+                  onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "320px")}
                 >
                   <SettingsIcon />
                 </ListItemIcon>
@@ -98,7 +98,7 @@ class App extends React.Component {
               <ListItem button>
                 <ListItemIcon
                   aria-label="Widgets market"
-                  onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "432px")}
+                  onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "320px")}
                 >
                   <AddIcon />
                 </ListItemIcon>

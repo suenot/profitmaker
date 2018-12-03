@@ -80,6 +80,7 @@ class DashboardsStore {
   @observable counter = 15
 
   @observable widgetsMarket = []
+  @observable category = ''
   @action fetchWidgets(){
     axios.get(`${this.terminalBackend}/widgets/`)
     .then((response) => {
@@ -93,6 +94,30 @@ class DashboardsStore {
       this.trades = []
     })
   }
+  @action selectCategory(category) {
+    this.category = category.toLowerCase()
+  }
+  @computed get widgetsMarketFitered() {
+    return _.filter(this.widgetsMarket, (widget)=>{
+      if ( _.includes(widget.categories, this.category) ) return true
+      return false
+    })
+  }
+  @computed get categories() {
+    var categories = new Set()
+    _.forEach(this.widgetsMarket, (widget)=>{
+      _.forEach(widget.categories, (category)=>{
+        categories.add(category)
+      })
+    })
+    return Array.from(categories)
+  }
+  // @action widgetsMarketFiter(category) {
+  //   return _.filter(this.widgetsMarket, (widget)=>{
+  //     if ( _.includes(widget.categories, category) ) return true
+  //     return false
+  //   })
+  // }
 
 
 
