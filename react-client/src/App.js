@@ -9,7 +9,8 @@ import ChatIcon from '@material-ui/icons/Chat'
 import AddToQueueIcon from '@material-ui/icons/AddToQueue'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
-import AddIcon from '@material-ui/icons/AddCircle'
+import AddIcon from '@material-ui/icons/Add'
+import Fab from '@material-ui/core/Fab'
 
 import Grid from './Grid'
 import 'element-theme-default'
@@ -46,6 +47,9 @@ class App extends React.Component {
         `}</style>
         <CssBaseline />
         <div>
+          <Fab className="fab" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "320px")}>
+            <AddIcon />
+          </Fab>
           <Alert stack={{limit: 3}} />
           <Drawer
             variant="permanent"
@@ -92,15 +96,6 @@ class App extends React.Component {
                   onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "320px")}
                 >
                   <SettingsIcon />
-                </ListItemIcon>
-              </ListItem>
-              <Divider />
-              <ListItem button>
-                <ListItemIcon
-                  aria-label="Widgets market"
-                  onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "320px")}
-                >
-                  <AddIcon />
                 </ListItemIcon>
               </ListItem>
             </div>
