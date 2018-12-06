@@ -4,7 +4,7 @@
     "component": "core_components/Intuition/Intuition.js",
     "settings": "core_components/Intuition/Settings.js",
     "settingsWidth": "300px",
-    "img": "core_components/Note/Note.png",
+    "img": "core_components/Intuition/Intuition.png",
     "header": "Intuition",
     "customHeader": "",
     "description": "",

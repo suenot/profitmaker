@@ -4,7 +4,7 @@
     "component": "core_components/Selector/Selector.js",
     "settings": "core_components/Selector/Settings.js",
     "settingsWidth": "300px",
-    "img": "core_components/Note/Note.png",
+    "img": "core_components/Selector/Selector.png",
     "header": "Selector",
     "customHeader": "",
     "description": "",

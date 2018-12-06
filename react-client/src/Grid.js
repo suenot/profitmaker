@@ -93,7 +93,7 @@ class Grid extends React.Component {
       //     _.map(DashboardsStore.widgetsMarket, (widget) => {
       //       const Component = require("./"+widget.component).default
       //       return (
-      //         <div className="widget" key={widget.id} style={{height: '266px', width: '520px', margin: '10px', overflow: 'hidden'}}>
+      //         <div className="widget" key={widget.id} style={{height: '402px', width: '642px', margin: '10px', overflow: 'hidden', float: 'left'}}>
       //           { React.createElement(Component, {data: widget.data}) }
       //         </div>
       //       )
