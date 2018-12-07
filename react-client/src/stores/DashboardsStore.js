@@ -22,8 +22,7 @@ class DashboardsStore {
   @observable dashboardsCounter = 2
   @observable dashboardActiveId = '1'
   @observable dashboards = {
-    '1': { id: '1', name: 'First', bg: '#ccc', icon: '/img/widgets/viking-ship.svg', type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0},
-    '2': { id: '2', name: 'Second', bg: '#ccc', icon: '/img/widgets/helmet.svg', type: 'terminal', stock: 'LIQUI', pair: 'LTC_BTC', widgets: [], counter: 0}
+    '1': {"id":"1","name":"First","bg":"#ccc","icon":"/img/widgets/viking-ship.svg","type":"terminal","stock":"BINANCE","pair":"ETH_BTC","widgets":[{"i":"1","uid":"1_1","name":"selector","component":"core_components/Selector/Selector.js","settings":"core_components/Selector/Settings.js","settingsWidth":"300px","header":"Selector","customHeader":"","data":{"group":"ALL"},"x":0,"y":0,"w":7,"h":4,"minW":2,"minH":3}],"counter":"1"},
   }
   @computed get name() { return this.dashboards[this.dashboardActiveId].name }
   @computed get stock() {
@@ -41,6 +40,8 @@ class DashboardsStore {
     this.dashboardsCounter += 1
     var icon = '/img/widgets/' + _.sample(widgetsIcons)
     this.dashboards[this.dashboardsCounter+""] = { id: this.dashboardsCounter+"", name: 'Untitled', bg: '#ccc', icon: icon, type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0}
+    this.addWidget({"name":"selector","component":"core_components/Selector/Selector.js","settings":"core_components/Selector/Settings.js","settingsWidth":"300px","img":"core_components/Selector/Selector.png","header":"Selector","customHeader":"","description":"","author":"#core","authorLink":"https://github.com/kupi-network/kupi-terminal","source":"https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Selector/Selector.js","data":{"group":"ALL"},"categories":["utils"],"w":7,"h":4}, this.dashboardsCounter)
+
   }
   @action removeDashboard(id) {
     if (Object.keys(this.dashboards).length > 1) {
@@ -137,11 +138,12 @@ class DashboardsStore {
     this.dashboards[this.dashboardActiveId].widgets = widgets
   }
 
-  @action addWidget(widget) {
-    var activeDashboard = this.dashboardActiveId
-    this.dashboards[this.dashboardActiveId].counter = (parseInt(this.dashboards[this.dashboardActiveId].counter, 10) + 1).toString()
-    this.dashboards[this.dashboardActiveId].widgets.push({
-      i: this.dashboards[this.dashboardActiveId].counter+"", uid: activeDashboard+'_'+this.dashboards[this.dashboardActiveId].counter, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: widget.w || 7, h: widget.h || 15, minW: 2, minH: 3
+  @action addWidget(widget, _dashboardId) {
+    var dashboardId = _dashboardId || this.dashboardActiveId
+    // var activeDashboard = this.dashboardActiveId
+    this.dashboards[dashboardId].counter = (parseInt(this.dashboards[dashboardId].counter, 10) + 1).toString()
+    this.dashboards[dashboardId].widgets.push({
+      i: this.dashboards[dashboardId].counter+"", uid: dashboardId+'_'+this.dashboards[dashboardId].counter, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: widget.w || 7, h: widget.h || 15, minW: 2, minH: 3
     })
   }
 
