@@ -3,7 +3,9 @@
 # private
 /private/
 /react-client/private/
+/react-client/public/_img/
 /vue-client/private/
+/vue-client/public/_img/
 /server/private/
 
 # user files

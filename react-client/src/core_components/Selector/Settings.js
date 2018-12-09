@@ -4,6 +4,9 @@ import TextField from '@material-ui/core/TextField'
 import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
+import InputAdornment from '@material-ui/core/InputAdornment'
+import 'rc-color-picker/assets/index.css'
+import ColorPicker from 'rc-color-picker'
 
 import DashboardsStore from 'stores/DashboardsStore'
 
@@ -25,6 +28,22 @@ class Settings extends React.Component {
               fullWidth
               className="mb-16"
             />
+            <TextField
+              id="outlined-name"
+              label="Group"
+              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.group}
+              onChange={this.setWidgetData.bind(this, 'group', 'value')}
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment variant="filled" position="end">
+                    <ColorPicker color={'#0F0'} mode="RGB" onChange={this.changeHandler.bind(this)} placement="bottomRight" />
+                  </InputAdornment>
+                )
+              }}
+            />
           </form>
         </div>
         <Divider />
@@ -34,6 +53,14 @@ class Settings extends React.Component {
   changeCustomHeader(e) {
     var {dashboardId, widgetId} = this.props.data
     DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value)
+  }
+  setWidgetData(key, attr, e) {
+    var {dashboardId, widgetId} = this.props.data
+    var value = e.target[attr]
+    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value)
+  }
+  changeHandler(colors) {
+    console.log(colors)
   }
 }
 

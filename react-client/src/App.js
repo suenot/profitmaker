@@ -104,8 +104,8 @@ class App extends React.Component {
           </Drawer>
           <Drawer
             anchor="right"
-            // variant="permanent"
-            ModalProps={{ onBackdropClick: this.drawerRightClose, onEscapeKeyDown: this.drawerRightClose, BackdropProps: {invisible: true} }}
+            variant="persistent"
+            // ModalProps={{ onBackdropClick: this.drawerRightClose, onEscapeKeyDown: this.drawerRightClose, BackdropProps: {invisible: true} }}
             open={DrawersStore.drawerRightOpen}
             className="drawer-right"
             classes={{

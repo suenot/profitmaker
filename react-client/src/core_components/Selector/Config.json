@@ -11,7 +11,7 @@
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Selector/Selector.js",
-    "data": {"group": "ALL"},
+    "data": {"group": "", "groupColor": ""},
     "categories": ["utils"],
     "w": 7,
     "h": 4

@@ -46,6 +46,16 @@ class Settings extends React.Component {
               variant="outlined"
               fullWidth
             />
+
+            <TextField
+              id="outlined-name"
+              label="Group"
+              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.group}
+              onChange={this.setWidgetData.bind(this, 'group', 'value')}
+              variant="outlined"
+              fullWidth
+              margin="normal"
+            />
           </form>
         </div>
         <Divider />
