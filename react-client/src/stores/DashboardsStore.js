@@ -70,9 +70,12 @@ class DashboardsStore {
     if (value === 'false') value = false
     _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data[key] = value
   }
-  @action setWidgetsData(key, value) {
-    for (let i = 0; i<this.dashboards[this.dashboardActiveId].widgets.length; i++) {
-      if (this.dashboards[this.dashboardActiveId].widgets[i].data[key] !== undefined) {
+  @action setWidgetsData(key, value, group) {
+    var dashboard = this.dashboards[this.dashboardActiveId]
+    for (let i = 0; i<dashboard.widgets.length; i++) {
+      // TODO: ALL groups
+      var widget = dashboard.widgets[i]
+      if (widget.data[key] !== undefined && widget.data.group === group) {
         this.dashboards[this.dashboardActiveId].widgets[i].data[key] = value
       }
     }
@@ -152,6 +155,35 @@ class DashboardsStore {
       return item.i !== id
     })
   }
+
+  @action setGroup(dashboardId, widgetId, group) {
+    var widgets = this.dashboards[dashboardId].widgets
+    // _.forEach(widgets, (widget)=>{
+    //   if (widget.data.group === group && widget.id !== widgetId) {
+    //     this.setWidgetData(dashboardId, widgetId, 'groupColor', widget.data.groupColor)
+    //     return true
+    //   }
+    // })
+    // this.setWidgetData(dashboardId, widgetId, 'groupColor', undefined)
+
+    for (let i=0; i<widgets.length; i++) {
+      let widget = widgets[i]
+      if (widget.data.group === group && widget.i !== widgetId) {
+        this.setWidgetData(dashboardId, widgetId, 'groupColor', widget.data.groupColor)
+        return true
+      }
+    }
+    this.setWidgetData(dashboardId, widgetId, 'groupColor', '#000000')
+  }
+  @action setGroupColor(dashboardId, group, color) {
+    var widgets = _.cloneDeep(this.dashboards[dashboardId].widgets)
+    _.map(widgets, (widget) => {
+      if (widget.data.group === group) widget.data.groupColor = color
+      return widget
+    })
+    this.dashboards[dashboardId].widgets = widgets
+  }
+
 }
 
 const store = window.DashboardsStore = new DashboardsStore()

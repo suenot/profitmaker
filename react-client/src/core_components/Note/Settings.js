@@ -1,6 +1,5 @@
 import React from 'react'
 import { observer } from 'mobx-react'
-import { withStyles } from '@material-ui/core/styles'
 import TextField from '@material-ui/core/TextField'
 import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
@@ -12,39 +11,10 @@ import _ from 'lodash'
 import IconButton from '@material-ui/core/IconButton'
 import CloseIcon from '@material-ui/icons/Close'
 import AddIcon from '@material-ui/icons/Add'
-import DashboardsStore from '../../stores/DashboardsStore'
-import NotesStore from '../../stores/NotesStore'
 import './Note.sass'
 
-const styles = theme => ({
-  container: {
-    display: 'flex',
-    flexWrap: 'wrap',
-  },
-  typographyButton: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    margin: '0 4px 0 24px',
-  },
-  list: {
-    padding: 0
-  },
-  formControl: {
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit,
-    width: '100%'
-  },
-  selectEmpty: {
-    marginTop: theme.spacing.unit * 4,
-  },
-  dense: {
-    marginTop: 16,
-  },
-  menu: {
-    width: 200,
-  },
-})
+import DashboardsStore from 'stores/DashboardsStore'
+import NotesStore from 'stores/NotesStore'
 
 @observer
 class Settings extends React.Component {
@@ -53,43 +23,41 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     var noteId = NotesStore.getNoteId(dashboardId, widgetId)
     return (
-      <div className="sections">
-        <div className="section">
-          <form className={classes.container + ' section-body'} noValidate autoComplete="off">
-            <Typography variant="h6" gutterBottom>Widget settings</Typography>
-            <TextField
-              id="outlined-name"
-              label="Name"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader}
-              onChange={this.changeCustomHeader.bind(this)}
-              variant="outlined"
-              fullWidth
-            />
-          </form>
-          <Divider />
-          <Typography variant="h6" className={classes.typographyButton}>
-            <span>Notes</span>
-            <IconButton className={classes.button} component="span" onClick={this.addNote.bind(this)}>
-              <AddIcon />
-            </IconButton>
-          </Typography>
-          <List component="nav" className={classes.list}>
-            {
-              _.map(NotesStore.notes, (note) => {
-                return (
-                  <ListItem button selected={note.id === noteId} onClick={this.setNote.bind(this, note.id)} key={note.id}>
-                    <ListItemText primary={note.name} />
-                    <ListItemSecondaryAction>
-                      <IconButton aria-label="Delete" onClick={this.removeNote.bind(this, note.id)}>
-                        <CloseIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                )
-              })
-            }
-          </List>
-        </div>
+      <div>
+        <form className={classes.container + ' section-body'} noValidate autoComplete="off">
+          <Typography variant="h6" gutterBottom>Widget settings</Typography>
+          <TextField
+            id="outlined-name"
+            label="Name"
+            value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader}
+            onChange={this.changeCustomHeader.bind(this)}
+            variant="outlined"
+            fullWidth
+          />
+        </form>
+        <Divider />
+        <Typography variant="h6" className={classes.typographyButton}>
+          <span>Notes</span>
+          <IconButton className={classes.button} component="span" onClick={this.addNote.bind(this)}>
+            <AddIcon />
+          </IconButton>
+        </Typography>
+        <List component="nav" className={classes.list}>
+          {
+            _.map(NotesStore.notes, (note) => {
+              return (
+                <ListItem button selected={note.id === noteId} onClick={this.setNote.bind(this, note.id)} key={note.id}>
+                  <ListItemText primary={note.name} />
+                  <ListItemSecondaryAction>
+                    <IconButton aria-label="Delete" onClick={this.removeNote.bind(this, note.id)}>
+                      <CloseIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              )
+            })
+          }
+        </List>
       </div>
     )
   }
@@ -114,4 +82,4 @@ class Settings extends React.Component {
   }
 }
 
-export default withStyles(styles)(Settings)
+export default Settings

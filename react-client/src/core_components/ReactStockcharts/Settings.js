@@ -12,7 +12,12 @@ import DashboardsStore from 'stores/DashboardsStore'
 class Settings extends React.Component {
   render() {
     var {dashboardId, widgetId} = this.props.data
-    var timeframe = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.timeframe
+    var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
+    var customHeader = widget.customHeader
+    var stock = widget.data.stock
+    var pair = widget.data.pair
+    var timeframe = widget.data.timeframe
+    var group = widget.data.group
     return (
       <div>
         <div className="section-body">
@@ -21,7 +26,7 @@ class Settings extends React.Component {
             <TextField
               id="outlined-name"
               label="Name"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader}
+              value={customHeader}
               onChange={this.changeCustomHeader.bind(this)}
               variant="outlined"
               fullWidth
@@ -31,7 +36,7 @@ class Settings extends React.Component {
             <TextField
               id="outlined-name"
               label="Stock"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stock}
+              value={stock}
               onChange={this.setWidgetData.bind(this, 'stock', 'value')}
               variant="outlined"
               fullWidth
@@ -41,7 +46,7 @@ class Settings extends React.Component {
             <TextField
               id="outlined-name"
               label="Pair"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.pair}
+              value={pair}
               onChange={this.setWidgetData.bind(this, 'pair', 'value')}
               variant="outlined"
               fullWidth
@@ -50,8 +55,8 @@ class Settings extends React.Component {
             <TextField
               id="outlined-name"
               label="Group"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.group}
-              onChange={this.setWidgetData.bind(this, 'group', 'value')}
+              value={group}
+              onChange={this.setGroup.bind(this, dashboardId, widgetId)}
               variant="outlined"
               fullWidth
               margin="normal"
@@ -83,12 +88,18 @@ class Settings extends React.Component {
   }
   changeCustomHeader(e) {
     var {dashboardId, widgetId} = this.props.data
-    DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value.trim())
+    var value = e.target[attr].trim()
+    DashboardsStore.setCustomHeader(dashboardId, widgetId, value)
   }
   setWidgetData(key, attr, e) {
     var {dashboardId, widgetId} = this.props.data
-    var value = e.target[attr]
-    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim())
+    var value = e.target[attr].trim()
+    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value)
+  }
+  setGroup(dashboardId, widgetId, e) {
+    var value = e.target.value.trim()
+    DashboardsStore.setWidgetData(dashboardId, widgetId, 'group', value)
+    DashboardsStore.setGroup(dashboardId, widgetId, value)
   }
 }
 

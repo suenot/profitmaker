@@ -1,7 +1,9 @@
 import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
-import StocksStore from '../../stores/StocksStore'
+
+import StocksStore from 'stores/StocksStore'
+import DashboardsStore from 'stores/DashboardsStore'
 
 @observer
 class Stocks extends React.Component {
@@ -27,7 +29,8 @@ class Stocks extends React.Component {
     StocksStore.setStocksFilter(e.target.value)
   }
   setStock(stock) {
-    StocksStore.setStock(stock)
+    var group = this.props.data.group
+    DashboardsStore.setWidgetsData('stock', stock, group)
   }
 }
 

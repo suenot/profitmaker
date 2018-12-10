@@ -2,15 +2,11 @@
 import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
-// import GlobalStore from '../stores/GlobalStore'
-import PairsStore from '../../stores/PairsStore'
+import PairsStore from 'stores/PairsStore'
 
 @observer
 class Pairs extends React.Component {
   render() {
-    var colWidth = {
-      width: 180
-    }
     return (
       <div>
         <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
@@ -19,7 +15,7 @@ class Pairs extends React.Component {
             {
               _.map(PairsStore.pairsComputed, (pair) => {
                 return <tr key={pair}>
-                  <td style={colWidth}>
+                  <td>
                     <div className="cell" onClick={this.setPair.bind(this, pair)}>
                       {pair}
                     </div>
@@ -36,7 +32,9 @@ class Pairs extends React.Component {
     PairsStore.setPairsFilter(e.target.value)
   }
   setPair(pair) {
-    PairsStore.setPair(pair)
+    var group = this.props.data.group
+    // PairsStore.setPair(pair)
+    DashboardsStore.setWidgetsData('pair', pair, group)
   }
 }
 

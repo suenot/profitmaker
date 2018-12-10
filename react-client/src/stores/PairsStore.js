@@ -29,12 +29,13 @@ class PairsStore {
     this.pairsFilter = _pair
   }
 
-  @action setPair(pair) {
-    DashboardsStore.dashboards[ DashboardsStore.dashboardActiveId ].pair = pair
-    DashboardsStore.setWidgetsData('pair', pair)
-  }
+  // @action setPair(pair) {
+  //   DashboardsStore.dashboards[ DashboardsStore.dashboardActiveId ].pair = pair
+  //   DashboardsStore.setWidgetsData('pair', pair)
+  // }
 
   @action async fetchPairs() {
+    // TODO
     axios.get(`${this.serverBackend}/${this.stockLowerCase}/pairs/`)
     .then((response) => {
       if (this.hash === JSON.stringify(response.data)) {

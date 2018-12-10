@@ -14,6 +14,10 @@ import DashboardsStore from 'stores/DashboardsStore'
 class Settings extends React.Component {
   render() {
     var {dashboardId, widgetId} = this.props.data
+    var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
+    var customHeader = widget.customHeader
+    var group = widget.data.group
+    var groupColor = widget.data.groupColor
     return (
       <div>
         <div className="section-body">
@@ -22,24 +26,25 @@ class Settings extends React.Component {
             <TextField
               id="outlined-name"
               label="Name"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader}
+              value={customHeader}
               onChange={this.changeCustomHeader.bind(this)}
               variant="outlined"
               fullWidth
               className="mb-16"
             />
+            {/* // onChange={this.setWidgetData.bind(this, 'group', 'value')} */}
             <TextField
               id="outlined-name"
               label="Group"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.group}
-              onChange={this.setWidgetData.bind(this, 'group', 'value')}
+              value={group}
+              onChange={this.setGroup.bind(this, dashboardId, widgetId)}
               variant="outlined"
               fullWidth
               margin="normal"
               InputProps={{
                 endAdornment: (
                   <InputAdornment variant="filled" position="end">
-                    <ColorPicker color={'#0F0'} mode="RGB" onChange={this.changeHandler.bind(this)} placement="bottomRight" />
+                    <ColorPicker color={groupColor} mode="RGB" onChange={this.setGroupColor.bind(this, dashboardId, group)} placement="bottomRight" />
                   </InputAdornment>
                 )
               }}
@@ -59,8 +64,15 @@ class Settings extends React.Component {
     var value = e.target[attr]
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value)
   }
-  changeHandler(colors) {
-    console.log(colors)
+  setGroupColor(dashboardId, group, e) {
+    var color = e.color
+    DashboardsStore.setGroupColor(dashboardId, group, color)
+    // DashboardsStore.setWidgetData(dashboardId, widgetId, key, value)
+  }
+  setGroup(dashboardId, widgetId, e) {
+    var value = e.target.value.trim()
+    DashboardsStore.setWidgetData(dashboardId, widgetId, 'group', value)
+    DashboardsStore.setGroup(dashboardId, widgetId, value)
   }
 }
 

@@ -56,7 +56,7 @@ class Grid extends React.Component {
             var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
             return (
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
-                <div className={`widget widget-${widget.name}`} style={{borderColor: widget.groupColor || 'rgba(0, 0, 0, 0.12)'}}>
+                <div className={`widget widget-${widget.name}`} style={{borderColor: widget.data.groupColor || 'rgba(0, 0, 0, 0.12)'}}>
                   <div className='widget-header draggable-header'>
                     <span>{ customHeader || widget.header}</span>
                     <span>{ stock || '' }{ pair ? `:${pair}` : '' }</span>

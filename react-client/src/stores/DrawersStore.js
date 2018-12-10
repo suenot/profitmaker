@@ -25,8 +25,8 @@ class DrawersStore {
     this.drawerRightComponent = component
     this.drawerRightDashboardId = dashboardId || ''
     this.drawerRightWidgetId = widgetId || ''
-    this.drawerRightWidth = width
-    this.drawerRightData = data
+    this.drawerRightWidth = width || '320px'
+    this.drawerRightData = data || {}
   }
 }
 
