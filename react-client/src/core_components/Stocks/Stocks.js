@@ -32,6 +32,18 @@ class Stocks extends React.Component {
     var group = this.props.data.group
     DashboardsStore.setWidgetsData('stock', stock, group)
   }
+  componentWillMount() {
+    StocksStore.count(1, this.props.data)
+  }
+  componentWillUnmount() {
+    StocksStore.count(-1, this.props.data)
+  }
+  componentWillUpdate() {
+    StocksStore.count(-1, this.props.data)
+  }
+  componentDidUpdate() {
+    StocksStore.count(1, this.props.data)
+  }
 }
 
 export default Stocks

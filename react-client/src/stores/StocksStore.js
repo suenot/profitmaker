@@ -55,6 +55,11 @@ class StocksStore {
       console.log(error)
     })
   }
+
+  counter = 0
+  @action count(n) {
+    this.counter += n
+  }
 }
 
 const store = window.StocksStore = new StocksStore()

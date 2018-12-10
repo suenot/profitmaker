@@ -17,7 +17,7 @@ class Selector extends React.Component {
             {stock}
           </Typography>
         </Button>
-        <Button size="medium" onClick={this.drawerRightToggle.bind(this, "core_components/Pairs/Pairs.js", "300px", {"group": group})}>
+        <Button size="medium" onClick={this.drawerRightToggle.bind(this, "core_components/Pairs/Pairs.js", "300px", {"group": group, "stock": stock})}>
           <Typography variant="h6" color="inherit" noWrap>
             {pair}
           </Typography>
