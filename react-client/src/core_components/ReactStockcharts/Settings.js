@@ -5,8 +5,11 @@ import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import Button from '@material-ui/core/Button'
+import CloseIcon from '@material-ui/icons/Close'
+
 
 import DashboardsStore from 'stores/DashboardsStore'
+import DrawersStore from 'stores/DrawersStore'
 
 @observer
 class Settings extends React.Component {
@@ -19,10 +22,14 @@ class Settings extends React.Component {
     var timeframe = widget.data.timeframe
     var group = widget.data.group
     return (
-      <div>
+      <div class="drawer">
+        <div className="drawer-title">
+          <div className="drawer-title-text">Widget settings</div>
+          <CloseIcon className="pointer" onClick={this.drawerRightClose.bind(this)} />
+        </div>
+        <Divider />
         <div className="section-body">
           <form noValidate autoComplete="off">
-            <Typography variant="h6" gutterBottom>Widget name</Typography>
             <TextField
               id="outlined-name"
               label="Name"
@@ -64,8 +71,10 @@ class Settings extends React.Component {
           </form>
         </div>
         <Divider />
+        <div className="drawer-title">
+          <div className="drawer-title-text">Timeframes</div>
+        </div>
         <div className="section-body">
-          <Typography variant="h6" gutterBottom>Timeframes</Typography>
           <div className="react-stockcharts-timeframes">
             <Button variant={timeframe==='1m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>1m</Button>
             <Button variant={timeframe==='3m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>3m</Button>
@@ -100,6 +109,9 @@ class Settings extends React.Component {
     var value = e.target.value.trim()
     DashboardsStore.setWidgetData(dashboardId, widgetId, 'group', value)
     DashboardsStore.setGroup(dashboardId, widgetId, value)
+  }
+  drawerRightClose() {
+    DrawersStore.drawerRightClose()
   }
 }
 
