@@ -70,7 +70,12 @@ class App extends React.Component {
               _.map(DashboardsStore.dashboards, (dashboard) => {
                 return (
                   <div key={dashboard.id}>
-                    <ListItem data-tip={dashboard.name} button selected={dashboard.id === DashboardsStore.dashboardActiveId} onClick={this.setDashboard.bind(this, dashboard.id)}>
+                    <ListItem
+                      button
+                      data-tip={dashboard.name}
+                      onClick={this.setDashboard.bind(this, dashboard.id)}
+                      className={"list-item " + (dashboard.id === DashboardsStore.dashboardActiveId ? "selected" : "")}
+                    >
                       <ListItemIcon>
                         <img src={dashboard.icon} width="24px" height="24px" alt={dashboard.name}></img>
                       </ListItemIcon>
@@ -105,7 +110,6 @@ class App extends React.Component {
           <Drawer
             anchor="right"
             variant="persistent"
-            // ModalProps={{ onBackdropClick: this.drawerRightClose, onEscapeKeyDown: this.drawerRightClose, BackdropProps: {invisible: true} }}
             open={DrawersStore.drawerRightOpen}
             className="drawer-right"
             classes={{

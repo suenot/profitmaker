@@ -11,7 +11,7 @@
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Trades/Trades.js",
-    "data": {"stock": "BINANCE", "pair": "ETH_BTC"},
-    "categories": ["trades"]
+    "data": {"stock": "BINANCE", "pair": "ETH_BTC", "group": "", "groupColor": ""},
+    "categories": ["Trades"]
   }
 ]

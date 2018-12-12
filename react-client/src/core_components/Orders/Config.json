@@ -11,8 +11,8 @@
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Orders/Orders.js",
-    "data": {"stock": "BINANCE", "pair": "ETH_BTC", "type": "asks"},
-    "categories": ["orders"]
+    "data": {"stock": "BINANCE", "pair": "ETH_BTC", "type": "asks", "group": "", "groupColor": ""},
+    "categories": ["Orders"]
   },
   {
     "name": "orders",
@@ -26,7 +26,7 @@
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Orders/Orders.js",
-    "data": {"stock": "BINANCE", "pair": "ETH_BTC", "type": "bids"},
-    "categories": ["orders"]
+    "data": {"stock": "BINANCE", "pair": "ETH_BTC", "type": "bids", "group": "", "groupColor": ""},
+    "categories": ["Orders"]
   }
 ]

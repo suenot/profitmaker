@@ -99,7 +99,7 @@ class DashboardsStore {
     })
   }
   @action selectCategory(category) {
-    this.category = category.toLowerCase()
+    this.category = category
   }
   @computed get widgetsMarketFitered() {
     return _.filter(this.widgetsMarket, (widget)=>{

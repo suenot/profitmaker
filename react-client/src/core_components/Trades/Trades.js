@@ -4,7 +4,7 @@ import { observer } from 'mobx-react'
 import moment from 'moment'
 import Preloader from '../Preloader'
 
-import TradesStore from '../../stores/TradesStore'
+import TradesStore from 'stores/TradesStore'
 
 @observer
 class Trades extends React.Component {

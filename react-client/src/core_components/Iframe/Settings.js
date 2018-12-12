@@ -1,36 +1,44 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import TextField from '@material-ui/core/TextField'
-import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
+import CloseIcon from '@material-ui/icons/Close'
+
 import DashboardsStore from 'stores/DashboardsStore'
+import DrawersStore from 'stores/DrawersStore'
 
 @observer
 class Settings extends React.Component {
   render() {
     var {dashboardId, widgetId} = this.props.data
+    var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
+    var customHeader = widget.customHeader
+    var {url} = widget.data
     return (
-      <div>
+      <div className="drawer">
+        <div className="drawer-title">
+          <div className="drawer-title-text">Widget settings</div>
+          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+        </div>
+        <Divider />
         <form className='section-body' noValidate autoComplete="off">
-          <Typography variant="h6" gutterBottom>Widget settings</Typography>
           <TextField
             id="outlined-name"
             label="Name"
-            value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader}
+            value={customHeader}
             onChange={this.changeCustomHeader.bind(this)}
             variant="outlined"
             fullWidth
-            margin="normal"
+            className="mb-16"
           />
           <TextField
             id="outlined-name"
             label="Url"
-            value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.url}
+            value={url}
             onChange={this.setWidgetData.bind(this, 'url', 'value')}
             variant="outlined"
             fullWidth
-            margin="normal"
           />
         </form>
         <Divider />
@@ -45,6 +53,9 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     var value = e.target[attr]
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value)
+  }
+  drawerRightClose() {
+    DrawersStore.drawerRightClose()
   }
 }
 

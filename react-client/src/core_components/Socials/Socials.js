@@ -4,6 +4,9 @@ import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
 import Divider from '@material-ui/core/Divider'
+import CloseIcon from '@material-ui/icons/Close'
+
+import DrawersStore from 'stores/DrawersStore'
 
 class Settings extends React.Component {
   openLink(link, type, event) {
@@ -12,7 +15,11 @@ class Settings extends React.Component {
   }
   render() {
     return (
-      <div>
+      <div className="drawer">
+        <div className="drawer-title">
+          <div className="drawer-title-text">Contact us</div>
+          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+        </div>
         <List component="nav">
 
           <ListItem button onClick={this.openLink.bind(this, 'https://discord.gg/2PtuMAg', '_blank')}>
@@ -54,6 +61,9 @@ class Settings extends React.Component {
         <Divider />
       </div>
     )
+  }
+  drawerRightClose() {
+    DrawersStore.drawerRightClose()
   }
 }
 

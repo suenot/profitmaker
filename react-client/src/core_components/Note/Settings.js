@@ -15,49 +15,50 @@ import './Note.sass'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import NotesStore from 'stores/NotesStore'
+import DrawersStore from 'stores/DrawersStore'
 
 @observer
 class Settings extends React.Component {
   render() {
-    const { classes } = this.props
     var {dashboardId, widgetId} = this.props.data
+    var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
+    var customHeader = widget.customHeader
     var noteId = NotesStore.getNoteId(dashboardId, widgetId)
     return (
-      <div>
-        <form className={classes.container + ' section-body'} noValidate autoComplete="off">
-          <Typography variant="h6" gutterBottom>Widget settings</Typography>
+      <div className="drawer">
+        <div className="drawer-title">
+          <div className="drawer-title-text">Widget settings</div>
+          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+        </div>
+        <Divider />
+        <form className="section-body" noValidate autoComplete="off">
           <TextField
             id="outlined-name"
             label="Name"
-            value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader}
+            value={customHeader}
             onChange={this.changeCustomHeader.bind(this)}
             variant="outlined"
             fullWidth
           />
         </form>
         <Divider />
-        <Typography variant="h6" className={classes.typographyButton}>
-          <span>Notes</span>
-          <IconButton className={classes.button} component="span" onClick={this.addNote.bind(this)}>
-            <AddIcon />
-          </IconButton>
-        </Typography>
-        <List component="nav" className={classes.list}>
+        <div className="drawer-subtitle">
+          <div className="drawer-subtitle-text">Notes</div>
+          <AddIcon onClick={this.addNote.bind(this)} className="pointer" />
+        </div>
+        <List component="nav" className="drawer-list">
           {
             _.map(NotesStore.notes, (note) => {
               return (
-                <ListItem button selected={note.id === noteId} onClick={this.setNote.bind(this, note.id)} key={note.id}>
-                  <ListItemText primary={note.name} />
-                  <ListItemSecondaryAction>
-                    <IconButton aria-label="Delete" onClick={this.removeNote.bind(this, note.id)}>
-                      <CloseIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
+                <ListItem button onClick={this.setNote.bind(this, note.id)} key={note.id} className={"drawer-list-item list-item " + (note.id === noteId ? "selected" : "")}>
+                  <ListItemText primary={note.name} className="drawer-list-item-text" />
+                  <CloseIcon onClick={this.removeNote.bind(this, note.id)} className="drawer-list-item-icon" />
                 </ListItem>
               )
             })
           }
         </List>
+        <Divider />
       </div>
     )
   }
@@ -79,6 +80,9 @@ class Settings extends React.Component {
   }
   removeNote(id) {
     NotesStore.removeNote(id)
+  }
+  drawerRightClose() {
+    DrawersStore.drawerRightClose()
   }
 }
 

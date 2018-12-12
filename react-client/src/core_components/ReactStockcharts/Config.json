@@ -11,9 +11,7 @@
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/ReactStockcharts/index.js",
-    "data": {"stock": "BINANCE", "pair": "ETH_BTC", "timeframe": "1m"},
-    "categories": ["trades"],
-    "group": "",
-    "groupColor": ""
+    "data": {"stock": "BINANCE", "pair": "ETH_BTC", "timeframe": "1m", "group": "", "groupColor": ""},
+    "categories": ["Trades", "Candles"]
   }
 ]

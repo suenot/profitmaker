@@ -1,12 +1,10 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import TextField from '@material-ui/core/TextField'
-import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import Button from '@material-ui/core/Button'
 import CloseIcon from '@material-ui/icons/Close'
-
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -17,17 +15,13 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
     var customHeader = widget.customHeader
-    var stock = widget.data.stock
-    var pair = widget.data.pair
-    var timeframe = widget.data.timeframe
-    var group = widget.data.group
+    var {stock, pair, timeframe, group} = widget.data
     return (
-      <div class="drawer">
+      <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Widget settings</div>
-          <CloseIcon className="pointer" onClick={this.drawerRightClose.bind(this)} />
+          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
         </div>
-        <Divider />
         <div className="section-body">
           <form noValidate autoComplete="off">
             <TextField
@@ -57,6 +51,7 @@ class Settings extends React.Component {
               onChange={this.setWidgetData.bind(this, 'pair', 'value')}
               variant="outlined"
               fullWidth
+              className="mb-16"
             />
 
             <TextField
@@ -66,7 +61,6 @@ class Settings extends React.Component {
               onChange={this.setGroup.bind(this, dashboardId, widgetId)}
               variant="outlined"
               fullWidth
-              margin="normal"
             />
           </form>
         </div>

@@ -2,14 +2,23 @@
 import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
+import CloseIcon from '@material-ui/icons/Close'
+import Divider from '@material-ui/core/Divider'
+
 import PairsStore from 'stores/PairsStore'
+import DrawersStore from 'stores/DrawersStore'
 
 @observer
 class Pairs extends React.Component {
   render() {
     var stock = this.props.data.stock
     return (
-      <div>
+      <div className="drawer">
+        <div className="drawer-title">
+          <div className="drawer-title-text">Pairs on {stock}</div>
+          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+        </div>
+        <Divider />
         <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
         <table className="simpleTable">
           <tbody>
@@ -48,6 +57,9 @@ class Pairs extends React.Component {
   }
   componentDidUpdate() {
     PairsStore.count(1, this.props.data)
+  }
+  drawerRightClose() {
+    DrawersStore.drawerRightClose()
   }
 }
 
