@@ -158,6 +158,19 @@ class DashboardsStore {
       return item.i !== id
     })
   }
+  removeWidgetWithData(key, value) {
+    DrawersStore.drawerRightSet('core_components/Empty', '0px')
+    DrawersStore.drawerRightClose()
+    var dashboards = _.cloneDeep(this.dashboards)
+    _.forEach(dashboards, (dashboard, i)=>{
+      var _dashboard = _.cloneDeep(dashboard)
+      _dashboard.widgets = _.filter(_dashboard.widgets, function(widget) {
+        return widget.data[key] !== value
+      })
+      dashboards[i] = _dashboard
+    })
+    this.dashboards = dashboards
+  }
 
   @action setGroup(dashboardId, widgetId, group) {
     var widgets = this.dashboards[dashboardId].widgets

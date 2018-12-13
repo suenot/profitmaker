@@ -1,14 +1,11 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import TextField from '@material-ui/core/TextField'
-import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
-import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import ListItemText from '@material-ui/core/ListItemText'
 import _ from 'lodash'
-import IconButton from '@material-ui/core/IconButton'
 import CloseIcon from '@material-ui/icons/Close'
 import AddIcon from '@material-ui/icons/Add'
 import './Note.sass'
@@ -52,7 +49,7 @@ class Settings extends React.Component {
               return (
                 <ListItem button onClick={this.setNote.bind(this, note.id)} key={note.id} className={"drawer-list-item list-item " + (note.id === noteId ? "selected" : "")}>
                   <ListItemText primary={note.name} className="drawer-list-item-text" />
-                  <CloseIcon onClick={this.removeNote.bind(this, note.id)} className="drawer-list-item-icon" />
+                  <CloseIcon onClick={this.removeNote.bind(this, note.id, noteId)} className="drawer-list-item-icon" />
                 </ListItem>
               )
             })
@@ -78,8 +75,10 @@ class Settings extends React.Component {
   addNote() {
     NotesStore.addNote()
   }
-  removeNote(id) {
-    NotesStore.removeNote(id)
+  removeNote(id, noteId, e) {
+    e.preventDefault()
+    e.stopPropagation()
+    NotesStore.removeNote(id, noteId)
   }
   drawerRightClose() {
     DrawersStore.drawerRightClose()
