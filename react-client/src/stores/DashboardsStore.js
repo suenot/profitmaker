@@ -6,6 +6,7 @@ import widgetsIcons from './data/widgetsIcons'
 import Alert from 'react-s-alert'
 
 import SettingsStore from './SettingsStore'
+import DrawersStore from './DrawersStore'
 
 
 @version(3)
@@ -151,6 +152,8 @@ class DashboardsStore {
   }
 
   @action removeWidget(id) {
+    DrawersStore.drawerRightSet('core_components/Empty', '0px')
+    DrawersStore.drawerRightClose()
     this.dashboards[this.dashboardActiveId].widgets = _.filter(this.dashboards[this.dashboardActiveId].widgets, function(item) {
       return item.i !== id
     })
