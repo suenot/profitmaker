@@ -87,7 +87,7 @@ class DashboardsStore {
   @observable widgetsMarket = []
   @observable category = ''
   @action fetchWidgets(){
-    axios.get(`${this.terminalBackend}/widgets/`)
+    axios.get(`${this.terminalBackend}/widgets/react`)
     .then((response) => {
       if (response.data.length === 0) {
         // this.widgetsMarket = []
