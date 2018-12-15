@@ -2,8 +2,8 @@ var fs = require('fs')
 var path = require('path')
 const _ = require('lodash')
 
-const widgets = function() {
-  var searchPath = '../react-client/src'
+const widgets = function(folder) {
+  var searchPath = `../${folder}/src`
   var files = []
   var componentsConfig = []
   var id = 0
