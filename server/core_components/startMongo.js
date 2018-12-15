@@ -13,9 +13,7 @@ if (process.env.DOCKER === 'DOCKER') {
 const startMongo = async function() {
   while(true) {
     try {
-      var db = await MongoClient.connect(localMongoUrl, {
-        uri_decode_auth: true
-      })
+      var db = await MongoClient.connect(localMongoUrl)
       console.log('Получилось подключиться к монге')
       return db
     } catch (err) {
