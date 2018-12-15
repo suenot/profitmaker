@@ -1,7 +1,7 @@
 {
   "mongo": {
     "host": "localhost",
-    "dockerHost": "kupi-terminal-mongo",
+    "dockerHost": "kupi-mongo",
     "port": "27017",
     "username": "root",
     "password": "j0vy43LXsWD4N2E8Z2JFRCZmb_EXAMPLE",
