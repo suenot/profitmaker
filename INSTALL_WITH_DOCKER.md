@@ -16,4 +16,5 @@ export COMPOSE_HTTP_TIMEOUT=120
 ```
 
 5. Build and run containers
-```docker-compose up```
+```docker-compose up``` # for react version
+```docker-compose -f docker-compose-vue.yml up``` # for vue version
