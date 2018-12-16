@@ -76,7 +76,7 @@ class DashboardsStore {
     for (let i = 0; i<dashboard.widgets.length; i++) {
       // TODO: ALL groups
       var widget = dashboard.widgets[i]
-      if (widget.data[key] !== undefined && widget.data.group === group) {
+      if (widget.data[key] !== undefined && ((widget.data.group === group) || (group === ""))) {
         this.dashboards[this.dashboardActiveId].widgets[i].data[key] = value
       }
     }
