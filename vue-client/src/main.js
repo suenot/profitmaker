@@ -5,6 +5,7 @@ import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
 import VCharts from 'v-charts'
 
+
 Vue.use(Vuetify, {
   theme: {
     primary: '#3f51b5',
@@ -13,6 +14,7 @@ Vue.use(Vuetify, {
     error: '#b71c1c'
   }
 })
+
 Vue.use(VCharts)
 
 Vue.config.productionTip = false
