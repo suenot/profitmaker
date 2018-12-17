@@ -10,6 +10,7 @@ import AddToQueueIcon from '@material-ui/icons/AddToQueue'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import AddIcon from '@material-ui/icons/Add'
+import KeyIcon from '@material-ui/icons/VpnKey'
 import Fab from '@material-ui/core/Fab'
 import ReactTooltip from 'react-tooltip'
 
@@ -87,6 +88,15 @@ class App extends React.Component {
             }
             <div className="spacer"></div>
             <div>
+            <Divider />
+              <ListItem button data-tip="API keys">
+                <ListItemIcon
+                  aria-label="API keys"
+                  onClick={this.drawerRightToggle.bind(this, "core_components/Keys/Keys.js", "320px")}
+                >
+                  <KeyIcon />
+                </ListItemIcon>
+              </ListItem>
               <Divider />
               <ListItem button data-tip="Contact us">
                 <ListItemIcon
