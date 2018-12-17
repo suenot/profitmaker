@@ -1,74 +1,47 @@
 import React from 'react'
 import { observer } from 'mobx-react'
-import { withStyles } from '@material-ui/core/styles'
 import TextField from '@material-ui/core/TextField'
-import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
-import DashboardsStore from '../../stores/DashboardsStore'
+import CloseIcon from '@material-ui/icons/Close'
 
-
-const styles = theme => ({
-  container: {
-    display: 'flex',
-    flexWrap: 'wrap',
-  },
-  typographyButton: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    margin: '0 4px 0 24px',
-  },
-  list: {
-    padding: 0
-  },
-  formControl: {
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit,
-    width: '100%'
-  },
-  selectEmpty: {
-    marginTop: theme.spacing.unit * 4,
-  },
-  dense: {
-    marginTop: 16,
-  },
-  menu: {
-    width: 200,
-  },
-});
+import DashboardsStore from 'stores/DashboardsStore'
+import DrawersStore from 'stores/DrawersStore'
 
 @observer
 class Settings extends React.Component {
   render() {
-    const { classes } = this.props
     var {dashboardId, widgetId} = this.props.data
+    var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
+    var customHeader = widget.customHeader
+    var {url} = widget.data
     return (
-      <div className="sections">
-        <div className="section">
-          <form className={classes.container + ' section-body'} noValidate autoComplete="off">
-            <Typography variant="h6" gutterBottom>Widget settings</Typography>
-            <TextField
-              id="outlined-name"
-              label="Name"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader}
-              onChange={this.changeCustomHeader.bind(this)}
-              variant="outlined"
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              id="outlined-name"
-              label="Url"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.url}
-              onChange={this.changeUrl.bind(this)}
-              variant="outlined"
-              fullWidth
-              margin="normal"
-            />
-          </form>
-          <Divider />
+      <div className="drawer">
+        <div className="drawer-title">
+          <div className="drawer-title-text">Widget settings</div>
+          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
         </div>
+        <Divider />
+        <form className='section-body' noValidate autoComplete="off">
+          <TextField
+            id="outlined-name"
+            label="Name"
+            value={customHeader}
+            onChange={this.changeCustomHeader.bind(this)}
+            variant="outlined"
+            fullWidth
+            className="mb-16"
+          />
+          <TextField
+            id="outlined-name"
+            label="Url"
+            value={url}
+            onChange={this.setWidgetData.bind(this, 'url', 'value')}
+            variant="outlined"
+            fullWidth
+          />
+        </form>
+        <Divider />
       </div>
     )
   }
@@ -76,11 +49,14 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value)
   }
-  changeUrl(e) {
+  setWidgetData(key, attr, e) {
     var {dashboardId, widgetId} = this.props.data
-    _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.url = e.target.value
-    // DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value)
+    var value = e.target[attr]
+    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value)
+  }
+  drawerRightClose() {
+    DrawersStore.drawerRightClose()
   }
 }
 
-export default withStyles(styles)(Settings)
+export default Settings

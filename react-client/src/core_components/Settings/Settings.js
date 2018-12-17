@@ -1,7 +1,6 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import TextField from '@material-ui/core/TextField'
-import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import Button from '@material-ui/core/Button'
 import FormGroup from '@material-ui/core/FormGroup'
@@ -10,6 +9,7 @@ import Switch from '@material-ui/core/Switch'
 import IconButton from '@material-ui/core/IconButton'
 import InputAdornment from '@material-ui/core/InputAdornment'
 import ImageIcon from '@material-ui/icons/Image'
+import CloseIcon from '@material-ui/icons/Close'
 
 import SettingsStore from 'stores/SettingsStore'
 import DashboardsStore from 'stores/DashboardsStore'
@@ -20,10 +20,14 @@ import DrawersStore from 'stores/DrawersStore'
 class Settings extends React.Component {
   render() {
     return (
-      <div>
+      <div className="drawer">
+        <div className="drawer-title">
+          <div className="drawer-title-text">Global settings</div>
+          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+        </div>
+        <Divider />
         <div className="section-body">
             <form noValidate autoComplete="off">
-              <Typography variant="h6" gutterBottom>Global settings</Typography>
               <TextField
                 className="form-item"
                 label={SettingsStore.serverBackend.name}
@@ -57,9 +61,12 @@ class Settings extends React.Component {
             </form>
           </div>
         <Divider />
+        <div className="drawer-title">
+          <div className="drawer-title-text">Dashboard settings</div>
+        </div>
+        <Divider />
         <div className="section-body">
           <form noValidate autoComplete="off">
-            <Typography variant="h6" gutterBottom>Dashboard settings</Typography>
             <TextField
               className="form-item"
               label="Dashboard name"
@@ -124,6 +131,9 @@ class Settings extends React.Component {
   }
   setDashboardIcon(event) {
     DashboardsStore.setDashboardIcon(event.target.value)
+  }
+  drawerRightClose() {
+    DrawersStore.drawerRightClose()
   }
 }
 

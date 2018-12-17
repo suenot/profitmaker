@@ -19,6 +19,13 @@
   color: rgba(0, 0, 0, 0.54)
 // end utils
 
+// fab
+.fab
+  position: fixed !important
+  cursor: pointer
+  right: 16px
+  bottom: 16px
+
 // alert
 .s-alert-wrapper
   z-index: 3000
@@ -202,13 +209,50 @@ body
   //   tr
   //     background: linear-gradient(to right, #ffffff 0%,#ffffff 60%,#7db9e8 60%,#7db9e8 100%)
 
-//
+// drawer
+.drawer-title
+  display: flex
+  justify-content: space-between
+  align-items: center
+  height: 48px
+  padding: 16px
+  background: #efefef
+  .drawer-title-text
+    font-size: 16px
+.drawer-subtitle
+  display: flex
+  justify-content: space-between
+  align-items: center
+  padding: 16px
+  height: 48px
+  background: #efefef
+  .drawer-subtitle-text
+.drawer-list
+  padding: 0 !important
+.drawer-list-item
+  padding: 11px 16px !important
+.drawer-list-item-text
+.drawer-list-item-icon
+
+
+.list-item.selected
+  box-shadow: -1px 0px 0px 0px #049bfd inset
+  background: none
+.drawer-list-item.selected
+  box-shadow: 1px 0px 0px 0px #049bfd inset
+
+
 .market
+  display: flex
+  .categories, .widgets
+    flex: 1 0 100%
+  .categories
+    text-transform: capitalize
   .market-widget
     height: 200px
     display: flex
     flex-direction: column
-    border-bottom: 1px solid #bebebe
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12)
     position: relative
     background-repeat: no-repeat
     background-size: contain
@@ -280,7 +324,7 @@ body
 .section
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
 .section-body
-  margin: 20px 20px 20px 24px
+  margin: 16px
 
 // .buttons-group-2
 //   width: 100%
@@ -327,3 +371,7 @@ body
     border-radius: 0
   button+button
     border-left: 1px solid rgba(0, 0, 0, 0.12)
+
+// rc-color
+.rc-color-picker
+  z-index: 5000 !important

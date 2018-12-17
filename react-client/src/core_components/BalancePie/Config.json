@@ -11,7 +11,8 @@
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/BalancePie/BalancePie.js",
-    "data": {"stock": "TOTAL", "stockTemp": "BINANCE", "total": true, "type": "now"}
+    "data": {"stock": "TOTAL", "stockTemp": "BINANCE", "total": true, "type": "now", "group": "", "groupColor": ""},
+    "categories": ["Balance"]
   },
   {
     "name": "balance-pie",
@@ -25,6 +26,7 @@
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/BalancePie/BalancePie.js",
-    "data": {"stock": "BINANCE", "stockTemp": "BINANCE", "total": false, "type": "now"}
+    "data": {"stock": "BINANCE", "stockTemp": "BINANCE", "total": false, "type": "now", "group": "", "groupColor": ""},
+    "categories": ["Balance"]
   }
 ]

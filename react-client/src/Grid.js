@@ -56,7 +56,7 @@ class Grid extends React.Component {
             var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
             return (
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
-                <div className={`widget widget-${widget.name}`}>
+                <div className={`widget widget-${widget.name}`} style={{borderTopColor: widget.data.groupColor || 'rgba(0, 0, 0, 0.12)'}}>
                   <div className='widget-header draggable-header'>
                     <span>{ customHeader || widget.header}</span>
                     <span>{ stock || '' }{ pair ? `:${pair}` : '' }</span>
@@ -93,7 +93,7 @@ class Grid extends React.Component {
       //     _.map(DashboardsStore.widgetsMarket, (widget) => {
       //       const Component = require("./"+widget.component).default
       //       return (
-      //         <div className="widget" key={widget.id} style={{height: '266px', width: '520px', margin: '10px', overflow: 'hidden'}}>
+      //         <div className="widget" key={widget.id} style={{height: '402px', width: '642px', margin: '10px', overflow: 'hidden', float: 'left'}}>
       //           { React.createElement(Component, {data: widget.data}) }
       //         </div>
       //       )

@@ -1,27 +1,33 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import TextField from '@material-ui/core/TextField'
-import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import Button from '@material-ui/core/Button'
+import CloseIcon from '@material-ui/icons/Close'
 
 import DashboardsStore from 'stores/DashboardsStore'
+import DrawersStore from 'stores/DrawersStore'
 
 @observer
 class Settings extends React.Component {
   render() {
     var {dashboardId, widgetId} = this.props.data
-    var timeframe = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.timeframe
+    var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
+    var customHeader = widget.customHeader
+    var {stock, pair, timeframe, group} = widget.data
     return (
-      <div>
+      <div className="drawer">
+        <div className="drawer-title">
+          <div className="drawer-title-text">Widget settings</div>
+          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+        </div>
         <div className="section-body">
           <form noValidate autoComplete="off">
-            <Typography variant="h6" gutterBottom>Widget name</Typography>
             <TextField
               id="outlined-name"
               label="Name"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader}
+              value={customHeader}
               onChange={this.changeCustomHeader.bind(this)}
               variant="outlined"
               fullWidth
@@ -31,7 +37,7 @@ class Settings extends React.Component {
             <TextField
               id="outlined-name"
               label="Stock"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stock}
+              value={stock}
               onChange={this.setWidgetData.bind(this, 'stock', 'value')}
               variant="outlined"
               fullWidth
@@ -41,16 +47,28 @@ class Settings extends React.Component {
             <TextField
               id="outlined-name"
               label="Pair"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.pair}
+              value={pair}
               onChange={this.setWidgetData.bind(this, 'pair', 'value')}
+              variant="outlined"
+              fullWidth
+              className="mb-16"
+            />
+
+            <TextField
+              id="outlined-name"
+              label="Group"
+              value={group}
+              onChange={this.setGroup.bind(this, dashboardId, widgetId)}
               variant="outlined"
               fullWidth
             />
           </form>
         </div>
         <Divider />
+        <div className="drawer-title">
+          <div className="drawer-title-text">Timeframes</div>
+        </div>
         <div className="section-body">
-          <Typography variant="h6" gutterBottom>Timeframes</Typography>
           <div className="react-stockcharts-timeframes">
             <Button variant={timeframe==='1m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>1m</Button>
             <Button variant={timeframe==='3m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>3m</Button>
@@ -73,12 +91,21 @@ class Settings extends React.Component {
   }
   changeCustomHeader(e) {
     var {dashboardId, widgetId} = this.props.data
-    DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value.trim())
+    var value = e.target[attr].trim()
+    DashboardsStore.setCustomHeader(dashboardId, widgetId, value)
   }
   setWidgetData(key, attr, e) {
     var {dashboardId, widgetId} = this.props.data
-    var value = e.target[attr]
-    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim())
+    var value = e.target[attr].trim()
+    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value)
+  }
+  setGroup(dashboardId, widgetId, e) {
+    var value = e.target.value.trim()
+    DashboardsStore.setWidgetData(dashboardId, widgetId, 'group', value)
+    DashboardsStore.setGroup(dashboardId, widgetId, value)
+  }
+  drawerRightClose() {
+    DrawersStore.drawerRightClose()
   }
 }
 

@@ -1,8 +1,10 @@
 import { observable, action, reaction } from 'mobx'
 import { version, AsyncTrunk } from 'mobx-sync'
 import Alert from 'react-s-alert'
-import DashboardsStore from './DashboardsStore'
 import _ from 'lodash'
+
+import DashboardsStore from 'stores/DashboardsStore'
+// import DrawersStore from 'stores/DrawersStore'
 
 @version(1)
 class NotesStore {
@@ -44,8 +46,11 @@ class NotesStore {
   @action setText(noteId, value) {
     this.notes[noteId].text = value
   }
-  @action removeNote(id) {
+  @action removeNote(id, noteId) {
     if (Object.keys(this.notes).length > 1) {
+      if (noteId === id) {
+        DashboardsStore.removeWidgetWithData('noteId', id)
+      }
       delete this.notes[id]
     } else {
       Alert.warning('You must have at least one note', {

@@ -7,8 +7,11 @@ import Switch from '@material-ui/core/Switch'
 import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
+import CloseIcon from '@material-ui/icons/Close'
+import IconButton from '@material-ui/core/IconButton'
 
 import DashboardsStore from 'stores/DashboardsStore'
+import DrawersStore from 'stores/DrawersStore'
 
 @observer
 class Settings extends React.Component {
@@ -77,6 +80,14 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     DashboardsStore.setWidgetData(dashboardId, widgetId, 'stock', e.target.value)
     DashboardsStore.setWidgetData(dashboardId, widgetId, 'stockTemp', e.target.value)
+  }
+  setGroup(dashboardId, widgetId, e) {
+    var value = e.target.value.trim()
+    DashboardsStore.setWidgetData(dashboardId, widgetId, 'group', value)
+    DashboardsStore.setGroup(dashboardId, widgetId, value)
+  }
+  drawerRightClose() {
+    DrawersStore.drawerRightClose()
   }
 }
 

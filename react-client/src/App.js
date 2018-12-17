@@ -9,7 +9,9 @@ import ChatIcon from '@material-ui/icons/Chat'
 import AddToQueueIcon from '@material-ui/icons/AddToQueue'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
-import AddIcon from '@material-ui/icons/AddCircle'
+import AddIcon from '@material-ui/icons/Add'
+import Fab from '@material-ui/core/Fab'
+import ReactTooltip from 'react-tooltip'
 
 import Grid from './Grid'
 import 'element-theme-default'
@@ -46,7 +48,11 @@ class App extends React.Component {
         `}</style>
         <CssBaseline />
         <div>
-          <Alert stack={{limit: 3}} />
+          <Fab className="fab" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "320px")}>
+            <AddIcon />
+          </Fab>
+          <Alert stack={{limit: 5}} />
+          <ReactTooltip place="right" effect="solid" />
           <Drawer
             variant="permanent"
             className="drawer-left"
@@ -54,7 +60,7 @@ class App extends React.Component {
               paper: classNames('drawer-left'),
             }}
           >
-            <ListItem button>
+            <ListItem button data-tip="New dashboard">
               <ListItemIcon onClick={this.addDashboard.bind(this)}>
                 <AddToQueueIcon />
               </ListItemIcon>
@@ -64,7 +70,12 @@ class App extends React.Component {
               _.map(DashboardsStore.dashboards, (dashboard) => {
                 return (
                   <div key={dashboard.id}>
-                    <ListItem button selected={dashboard.id === DashboardsStore.dashboardActiveId} onClick={this.setDashboard.bind(this, dashboard.id)}>
+                    <ListItem
+                      button
+                      data-tip={dashboard.name}
+                      onClick={this.setDashboard.bind(this, dashboard.id)}
+                      className={"list-item " + (dashboard.id === DashboardsStore.dashboardActiveId ? "selected" : "")}
+                    >
                       <ListItemIcon>
                         <img src={dashboard.icon} width="24px" height="24px" alt={dashboard.name}></img>
                       </ListItemIcon>
@@ -77,38 +88,28 @@ class App extends React.Component {
             <div className="spacer"></div>
             <div>
               <Divider />
-              <ListItem button>
+              <ListItem button data-tip="Contact us">
                 <ListItemIcon
-                  aria-label="Connect with us"
-                  onClick={this.drawerRightToggle.bind(this, "core_components/Socials/Socials.js", "300px")}
+                  aria-label="Contact us"
+                  onClick={this.drawerRightToggle.bind(this, "core_components/Socials/Socials.js", "320px")}
                 >
                   <ChatIcon />
                 </ListItemIcon>
               </ListItem>
               <Divider />
-              <ListItem button>
+              <ListItem button data-tip="Settings">
                 <ListItemIcon
                   aria-label="Settings"
-                  onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "300px")}
+                  onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "320px")}
                 >
                   <SettingsIcon />
-                </ListItemIcon>
-              </ListItem>
-              <Divider />
-              <ListItem button>
-                <ListItemIcon
-                  aria-label="Widgets market"
-                  onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "432px")}
-                >
-                  <AddIcon />
                 </ListItemIcon>
               </ListItem>
             </div>
           </Drawer>
           <Drawer
             anchor="right"
-            // variant="permanent"
-            ModalProps={{ onBackdropClick: this.drawerRightClose, onEscapeKeyDown: this.drawerRightClose, BackdropProps: {invisible: true} }}
+            variant="persistent"
             open={DrawersStore.drawerRightOpen}
             className="drawer-right"
             classes={{

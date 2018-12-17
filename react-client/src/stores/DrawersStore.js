@@ -1,6 +1,14 @@
 import { observable, action } from 'mobx'
 
 class DrawersStore {
+  constructor() {
+    document.onkeyup = (e) => {
+      if (e.keyCode==27) {
+        this.drawerRightClose()
+      }
+    }
+  }
+
   @observable drawerRightOpen = false
   @observable drawerRightComponent = 'core_components/Empty'
   @observable drawerRightDashboardId = ''
@@ -17,8 +25,8 @@ class DrawersStore {
     this.drawerRightComponent = component
     this.drawerRightDashboardId = dashboardId || ''
     this.drawerRightWidgetId = widgetId || ''
-    this.drawerRightWidth = width
-    this.drawerRightData = data
+    this.drawerRightWidth = width || '320px'
+    this.drawerRightData = data || {}
   }
 }
 

@@ -4,14 +4,15 @@
     "component": "core_components/Selector/Selector.js",
     "settings": "core_components/Selector/Settings.js",
     "settingsWidth": "300px",
-    "img": "core_components/Note/Note.png",
+    "img": "core_components/Selector/Selector.png",
     "header": "Selector",
     "customHeader": "",
     "description": "",
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Selector/Selector.js",
-    "data": {"group": "ALL"},
+    "data": {"stock": "BINANCE", "pair": "ETH_BTC", "group": "", "groupColor": ""},
+    "categories": ["Utils"],
     "w": 7,
     "h": 4
   }

@@ -17,20 +17,6 @@ Vue.use(Vuetify, {
 
 Vue.use(VCharts)
 
-// import {observable, isObservable, toJS} from 'mobx'
-// import VueMobx from 'vue-mobx'
-// Vue.use(VueMobx, {
-//     toJS: toJS, // must
-//     isObservable: isObservable, // must
-//     observable: observable,  // optional
-// });
-
-
-// import Movue from 'movue'
-// import * as mobx from 'mobx'
-// Vue.use(Movue, mobx)
-
-
 Vue.config.productionTip = false
 
 new Vue({

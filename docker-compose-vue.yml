@@ -12,25 +12,16 @@ services:
       - 127.0.0.1:27017:27017
     # command: mongod --smallfiles --logpath=/dev/null # --quiet
 
-  kupi-react:
-    build: ./react-client
+  kupi-vue:
+    # build: ./vue-client
+    image: node:8-alpine
     ports:
-      - 127.0.0.1:8050:8050
+      - 127.0.0.1:8080:8080
     volumes:
-      - ./react-client:/react-client
-      - /react-client/node_modules
-    command: yarn start
-
-  # vue:
-  #   # build: ./vue-client
-  #   image: node:8-alpine
-  #   ports:
-  #     - 127.0.0.1:8080:8080
-  #   volumes:
-  #     - ./vue-client:/vue-client
-  #     # - /vue-client/node_modules
-  #   working_dir: /vue-client
-  #   command: sh -c 'yarn && yarn start' # yarn start
+      - ./vue-client:/vue-client
+      # - /vue-client/node_modules
+    working_dir: /vue-client
+    command: sh -c 'yarn && yarn start' # yarn start
 
   kupi-server:
     build: ./server
@@ -43,7 +34,7 @@ services:
         - kupi-mongo
     depends_on:
         - kupi-mongo
-        - kupi-react
+        - kupi-vue
     ports:
       - 127.0.0.1:8051:8051
     command: yarn docker

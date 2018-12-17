@@ -20,9 +20,15 @@ router.get('/', (req, res) => {
   res.json('https://github.com/kupi-network/kupi-terminal')
 })
 
-router.get('/widgets', function (req, res) {
+router.get('/widgets/:framework', function (req, res) {
   try {
-    res.json(widgets())
+    if (req.params.framework === 'react') {
+      res.json(widgets('react-client'))
+    } else if (req.params.framework === 'vue') {
+      res.json(widgets('vue-client'))
+    } else {
+      res.status(500).send({ error: 'wrong framework name' })
+    }
   } catch (err) {
     res.status(500).send({ error: 'fetch widgets' + ' failed!' })
   }
