@@ -13,6 +13,7 @@
     "axios": "^0.18.0",
     "bignumber.js": "^7.2.1",
     "echarts": "^4.1.0",
+    "element-ui": "^2.4.11",
     "http": "^0.0.0",
     "identicon.js": "^2.3.2",
     "mobx": "^5.1.0",
