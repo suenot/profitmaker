@@ -147,7 +147,6 @@ class App extends React.Component {
     DrawersStore.drawerRightClose()
   }
   drawerRightToggle(component, width, e) {
-    console.log(e)
     e.preventDefault()
     if (DrawersStore.drawerRightComponent === component) {
       // current component
