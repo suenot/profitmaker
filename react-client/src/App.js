@@ -61,8 +61,8 @@ class App extends React.Component {
               paper: classNames('drawer-left'),
             }}
           >
-            <ListItem button data-tip="New dashboard">
-              <ListItemIcon onClick={this.addDashboard.bind(this)}>
+            <ListItem button data-tip="New dashboard" onClick={this.addDashboard.bind(this)}>
+              <ListItemIcon>
                 <AddToQueueIcon />
               </ListItemIcon>
             </ListItem>
@@ -78,7 +78,7 @@ class App extends React.Component {
                       className={"list-item " + (dashboard.id === DashboardsStore.dashboardActiveId ? "selected" : "")}
                     >
                       <ListItemIcon>
-                        <img src={dashboard.icon} width="24px" height="24px" alt={dashboard.name}></img>
+                        <img src={dashboard.icon} width="24px" height="24px" alt=""></img>
                       </ListItemIcon>
                     </ListItem>
                     <Divider />
@@ -89,29 +89,32 @@ class App extends React.Component {
             <div className="spacer"></div>
             <div>
             <Divider />
-              <ListItem button data-tip="API keys">
-                <ListItemIcon
-                  aria-label="API keys"
-                  onClick={this.drawerRightToggle.bind(this, "core_components/Keys/Keys.js", "320px")}
-                >
+              <ListItem
+                button
+                data-tip="API keys"
+                onClick={this.drawerRightToggle.bind(this, "core_components/Keys/Keys.js", "320px")}
+              >
+                <ListItemIcon aria-label="API keys">
                   <KeyIcon />
                 </ListItemIcon>
               </ListItem>
               <Divider />
-              <ListItem button data-tip="Contact us">
-                <ListItemIcon
-                  aria-label="Contact us"
-                  onClick={this.drawerRightToggle.bind(this, "core_components/Socials/Socials.js", "320px")}
+              <ListItem
+                button
+                data-tip="Contact us"
+                onClick={this.drawerRightToggle.bind(this, "core_components/Socials/Socials.js", "320px")}
                 >
+                <ListItemIcon aria-label="Contact us">
                   <ChatIcon />
                 </ListItemIcon>
               </ListItem>
               <Divider />
-              <ListItem button data-tip="Settings">
-                <ListItemIcon
-                  aria-label="Settings"
-                  onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "320px")}
-                >
+              <ListItem
+                button
+                data-tip="Settings"
+                onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "320px")}
+              >
+                <ListItemIcon aria-label="Settings">
                   <SettingsIcon />
                 </ListItemIcon>
               </ListItem>
@@ -143,7 +146,9 @@ class App extends React.Component {
   drawerRightClose() {
     DrawersStore.drawerRightClose()
   }
-  drawerRightToggle(component, width) {
+  drawerRightToggle(component, width, e) {
+    console.log(e)
+    e.preventDefault()
     if (DrawersStore.drawerRightComponent === component) {
       // current component
       DrawersStore.drawerRightToggle()

@@ -33,6 +33,7 @@
 
 <script>
 import { GridLayout, GridItem } from 'vue-grid-layout'
+
 export default {
   data () {
     this.chartSettings = {
