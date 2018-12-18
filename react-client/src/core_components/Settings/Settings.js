@@ -29,7 +29,7 @@ class Settings extends React.Component {
         <div className="section-body">
             <form noValidate autoComplete="off">
               <TextField
-                className="form-item"
+                className="mb-16"
                 label={SettingsStore.serverBackend.name}
                 value={SettingsStore.serverBackend.value}
                 onChange={this.setServerBackend.bind(this)}
@@ -38,7 +38,7 @@ class Settings extends React.Component {
                 margin="dense"
               />
               <TextField
-                className="form-item"
+                className="mb-16"
                 label={SettingsStore.terminalBackend.name}
                 value={SettingsStore.terminalBackend.value}
                 onChange={this.setTerminalBackend.bind(this)}
@@ -68,7 +68,7 @@ class Settings extends React.Component {
         <div className="section-body">
           <form noValidate autoComplete="off">
             <TextField
-              className="form-item"
+              className="mb-16"
               label="Dashboard name"
               value={DashboardsStore.name}
               onChange={this.setDashboardName.bind(this)}
@@ -77,7 +77,7 @@ class Settings extends React.Component {
               margin="dense"
             />
             <TextField
-              className="form-item"
+              className="mb-16"
               label="Dashboard icon"
               value={DashboardsStore.icon}
               onChange={this.setDashboardIcon.bind(this)}
@@ -97,7 +97,7 @@ class Settings extends React.Component {
                 )
               }}
             />
-            <Button className="form-item" fullWidth variant="contained" color="secondary" onClick={this.removeDashboard.bind(this, DashboardsStore.dashboardActiveId)}>
+            <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.removeDashboard.bind(this, DashboardsStore.dashboardActiveId)}>
               Remove dashboard
             </Button>
           </form>
