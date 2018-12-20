@@ -49,7 +49,7 @@ class App extends React.Component {
         `}</style>
         <CssBaseline />
         <div>
-          <Fab className="fab" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "320px")}>
+          <Fab className="fab drawer-right-toggle" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "320px")}>
             <AddIcon />
           </Fab>
           <Alert stack={{limit: 5}} />
