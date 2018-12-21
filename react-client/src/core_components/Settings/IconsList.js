@@ -1,20 +1,26 @@
 import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
-import Typography from '@material-ui/core/Typography'
 import IconButton from '@material-ui/core/IconButton'
+import CloseIcon from '@material-ui/icons/Close'
+import Divider from '@material-ui/core/Divider'
 
-import widgetsIcons from '../../stores/data/widgetsIcons'
-import DashboardsStore from '../../stores/DashboardsStore'
+import widgetsIcons from 'stores/data/widgetsIcons'
+import DashboardsStore from 'stores/DashboardsStore'
+import DrawersStore from 'stores/DrawersStore'
 
 
 @observer
 class Settings extends React.Component {
   render() {
     return (
-      <div>
+      <div className="drawer">
+        <div className="drawer-title">
+          <div className="drawer-title-text">Set icon</div>
+          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+        </div>
+        <Divider />
         <div className="simpleForm">
-          <Typography variant="h6" gutterBottom>Set icon</Typography>
           <div className="icons-list">
             {
               _.map(widgetsIcons, (icon) => {
@@ -33,6 +39,9 @@ class Settings extends React.Component {
   setDashboardIcon(icon) {
     DashboardsStore.setDashboardIcon(`/img/widgets/${icon}`)
     // DrawersStore.drawerRightSet("core_components/Settings/Settings.js", "300px")
+  }
+  drawerRightClose() {
+    DrawersStore.drawerRightClose()
   }
 }
 
