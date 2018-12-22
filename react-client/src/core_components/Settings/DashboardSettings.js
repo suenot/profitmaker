@@ -22,47 +22,8 @@ class Settings extends React.Component {
     return (
       <div className="drawer">
         <div className="drawer-title">
-          <div className="drawer-title-text">Global settings</div>
-          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
-        </div>
-        <Divider />
-        <div className="section-body">
-            <form noValidate autoComplete="off">
-              <TextField
-                className="mb-16"
-                label={SettingsStore.serverBackend.name}
-                value={SettingsStore.serverBackend.value}
-                onChange={this.setServerBackend.bind(this)}
-                variant="outlined"
-                fullWidth
-                margin="dense"
-              />
-              <TextField
-                className="mb-16"
-                label={SettingsStore.terminalBackend.name}
-                value={SettingsStore.terminalBackend.value}
-                onChange={this.setTerminalBackend.bind(this)}
-                variant="outlined"
-                fullWidth
-                margin="dense"
-              />
-              <FormGroup>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={SettingsStore.fetchEnabled.value}
-                      onChange={this.setFetchEnabled.bind(this)}
-                      value=""
-                    />
-                  }
-                  label={SettingsStore.fetchEnabled.value ? SettingsStore.fetchEnabled.name + ' enabled' : SettingsStore.fetchEnabled.name + ' disabled' }
-                />
-              </FormGroup>
-            </form>
-          </div>
-        <Divider />
-        <div className="drawer-title">
           <div className="drawer-title-text">Dashboard settings</div>
+          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
         </div>
         <Divider />
         <div className="section-body">

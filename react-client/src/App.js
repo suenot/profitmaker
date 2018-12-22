@@ -49,9 +49,6 @@ class App extends React.Component {
         `}</style>
         <CssBaseline />
         <div>
-          <Fab className="fab drawer-right-toggle" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "320px")}>
-            <AddIcon />
-          </Fab>
           <Alert stack={{limit: 5}} />
           <ReactTooltip place="right" effect="solid" />
           <Drawer
@@ -112,13 +109,37 @@ class App extends React.Component {
               <ListItem
                 button
                 data-tip="Settings"
-                onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "320px")}
+                onClick={this.drawerRightToggle.bind(this, "core_components/Settings/GlobalSettings.js", "320px")}
               >
                 <ListItemIcon aria-label="Settings">
                   <SettingsIcon />
                 </ListItemIcon>
               </ListItem>
             </div>
+          </Drawer>
+          <Drawer
+            anchor="right"
+            variant="persistent"
+            open="true"
+            className="drawer-dashboard"
+            classes={{
+              paper: classNames('drawer-dashboard'),
+            }}
+          >
+            <ListItem button data-tip="Add widget" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "320px")} className="add-widget-btn">
+              <ListItemIcon>
+                <AddIcon />
+              </ListItemIcon>
+            </ListItem>
+            <Divider className="divider"/>
+            <div className="spacer"></div>
+            <Divider className="divider"/>
+            <ListItem button data-tip="Dashboard settings" onClick={this.drawerRightToggle.bind(this, "core_components/Settings/DashboardSettings.js", "320px")}>
+              <ListItemIcon>
+                <SettingsIcon />
+              </ListItemIcon>
+            </ListItem>
+            <Divider className="divider"/>
           </Drawer>
           <Drawer
             anchor="right"
