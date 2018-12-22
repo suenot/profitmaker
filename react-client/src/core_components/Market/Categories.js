@@ -38,6 +38,7 @@ class Market extends React.Component {
     )
   }
   selectCategory(e) {
+    DashboardsStore.selectCategory(e.target.textContent)
     DrawersStore.drawerRightSet("core_components/Market/Widgets.js", "320px")
   }
   componentWillMount() {

@@ -126,20 +126,19 @@ class App extends React.Component {
               paper: classNames('drawer-dashboard'),
             }}
           >
+            <div className="spacer"></div>
+            <Divider className="divider"/>
             <ListItem button data-tip="Add widget" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px")} className="add-widget-btn">
               <ListItemIcon>
                 <AddIcon />
               </ListItemIcon>
             </ListItem>
             <Divider className="divider"/>
-            <div className="spacer"></div>
-            <Divider className="divider"/>
             <ListItem button data-tip="Dashboard settings" onClick={this.drawerRightToggle.bind(this, "core_components/Settings/DashboardSettings.js", "320px")}>
               <ListItemIcon>
                 <SettingsIcon />
               </ListItemIcon>
             </ListItem>
-            <Divider className="divider"/>
           </Drawer>
           <Drawer
             anchor="right"
