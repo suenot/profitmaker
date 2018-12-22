@@ -39,7 +39,7 @@ class Settings extends React.Component {
     )
   }
   backToSettings() {
-    DrawersStore.drawerRightSet("core_components/Settings/Settings.js", "300px")
+    DrawersStore.drawerRightSet("core_components/Settings/DashboardSettings.js", "320px")
   }
   setDashboardIcon(icon) {
     DashboardsStore.setDashboardIcon(`/img/widgets/${icon}`)

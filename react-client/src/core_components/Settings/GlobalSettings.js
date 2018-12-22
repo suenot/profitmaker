@@ -60,10 +60,10 @@ class Settings extends React.Component {
       </div>
     )
   }
-  drawerRightSet(component, width) {
-    DrawersStore.drawerRightSet(component, width)
-    // DrawersStore.drawerRightToggle()
-  }
+  // drawerRightSet(component, width) {
+  //   DrawersStore.drawerRightSet(component, width)
+  //   // DrawersStore.drawerRightToggle()
+  // }
   setServerBackend(event) {
     SettingsStore.setServerBackend(event.target.value)
   }

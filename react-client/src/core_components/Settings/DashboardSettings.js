@@ -50,7 +50,7 @@ class Settings extends React.Component {
                   <InputAdornment variant="filled" position="end">
                     <IconButton
                       aria-label="Icons list"
-                      onClick={this.drawerRightSet.bind(this, "core_components/Settings/IconsList.js", "300px")}
+                      onClick={this.drawerRightSet.bind(this, "core_components/Settings/IconsList.js", "320px")}
                     >
                       <ImageIcon />
                     </IconButton>

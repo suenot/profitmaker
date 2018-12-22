@@ -126,7 +126,7 @@ class App extends React.Component {
               paper: classNames('drawer-dashboard'),
             }}
           >
-            <ListItem button data-tip="Add widget" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Market.js", "320px")} className="add-widget-btn">
+            <ListItem button data-tip="Add widget" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px")} className="add-widget-btn">
               <ListItemIcon>
                 <AddIcon />
               </ListItemIcon>
