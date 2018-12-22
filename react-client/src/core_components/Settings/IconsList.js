@@ -3,6 +3,7 @@ import _ from 'lodash'
 import { observer } from 'mobx-react'
 import IconButton from '@material-ui/core/IconButton'
 import CloseIcon from '@material-ui/icons/Close'
+import ArrowBackIcon from '@material-ui/icons/ArrowBackIos'
 import Divider from '@material-ui/core/Divider'
 
 import widgetsIcons from 'stores/data/widgetsIcons'
@@ -16,6 +17,7 @@ class Settings extends React.Component {
     return (
       <div className="drawer">
         <div className="drawer-title">
+          <ArrowBackIcon onClick={this.backToSettings.bind(this)} className="pointer" />
           <div className="drawer-title-text">Set icon</div>
           <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
         </div>
@@ -35,6 +37,9 @@ class Settings extends React.Component {
         </div>
       </div>
     )
+  }
+  backToSettings() {
+    DrawersStore.drawerRightSet("core_components/Settings/Settings.js", "300px")
   }
   setDashboardIcon(icon) {
     DashboardsStore.setDashboardIcon(`/img/widgets/${icon}`)
