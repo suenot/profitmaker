@@ -94,12 +94,12 @@ class Settings extends React.Component {
                       <FormControlLabel
                         control={
                           <Switch
-                            // checked={JSON.parse(key.enabled)}
+                            checked={JSON.parse(key.enabled)}
                             onChange={this.toggleKeyData.bind(this, key.id, 'enabled')}
                             value={JSON.parse(key.enabled)}
                           />
                         }
-                        label="On"
+                        label={JSON.parse(key.enabled) ? 'Enabled' : 'Disabled'}
                       />
                     </FormGroup>
                     <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.removeKey.bind(this, key.id)}>

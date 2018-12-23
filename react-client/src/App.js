@@ -120,7 +120,7 @@ class App extends React.Component {
           <Drawer
             anchor="right"
             variant="persistent"
-            open="true"
+            open={true}
             className="drawer-dashboard"
             classes={{
               paper: classNames('drawer-dashboard'),

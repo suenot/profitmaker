@@ -1,5 +1,6 @@
 import { observable, action, reaction } from 'mobx'
 import { version, AsyncTrunk } from 'mobx-sync'
+import uuidv1 from 'uuid/v1'
 
 @version(1)
 class SettingsStore {
@@ -63,36 +64,19 @@ class SettingsStore {
   }
 
 
-  @observable keys = [
-    // {
-    //   name: 'My binance key 1',
-    //   stock: 'binance',
-    //   publicKey: '',
-    //   privateKey: '',
-    //   proxy: '',
-    //   enabled: false
-    // },
-    // {
-    //   name: 'My binance key 2',
-    //   stock: 'binance',
-    //   publicKey: '',
-    //   privateKey: '',
-    //   proxy: '',
-    //   enabled: false
-    // }
-  ]
+  @observable keys = []
   @action setKeyData(id, key, value) {
-    // var keyIndex = _.findIndex(this.keys, ['name', name])
-    this.keys[id][key] = value
+    var index = _.findIndex(this.keys, ['id', id])
+    this.keys[index][key] = value || ''
   }
   @action toggleKeyData(id, key) {
-    // var keyIndex = _.findIndex(this.keys, ['name', name])
-    this.keys[id][key] = !this.keys[id][key]
+    var index = _.findIndex(this.keys, ['id', id])
+    this.keys[index][key] = !this.keys[index][key]
   }
-  @observable counter = 0
+  // @observable counter = 0
   @action addKey() {
     this.keys.push({
-      id: this.counter,
+      id: uuidv1(),
       name: 'Undefined key',
       stock: 'binance',
       publicKey: '',
@@ -100,13 +84,16 @@ class SettingsStore {
       proxy: '',
       enabled: false
     })
-    this.counter += 1
+    // this.counter += 1
   }
   @action removeKey(id) {
+    console.log(JSON.stringify(this.keys))
     this.keys = _.filter(this.keys, (key)=>{
       if (key.id !== id) return true
       return false
     })
+    console.log(JSON.stringify(this.keys))
+
   }
 }
 
