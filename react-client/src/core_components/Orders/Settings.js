@@ -70,7 +70,7 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value)
   }
-  setWidgetData(key, attr, fn e) {
+  setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
     var value = e.target[attr]
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim(), fn)
