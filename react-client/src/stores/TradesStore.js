@@ -55,6 +55,9 @@ class TradesStore {
     if (this.trades[key] === undefined) this.trades[key] = []
     if (this.counters[key] === undefined) this.counters[key] = 0
     this.counters[key] += n
+    if (this.counters[key] === 0) {
+      delete this.counters[key]
+    }
   }
 }
 

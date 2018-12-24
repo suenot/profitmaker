@@ -95,6 +95,9 @@ class OrdersStore {
     if (this.orders[key] === undefined) this.orders[key] = []
     if (this.counters[key] === undefined) this.counters[key] = 0
     this.counters[key] += n
+    if (this.counters[key] === 0) {
+      delete this.counters[key]
+    }
   }
 }
 

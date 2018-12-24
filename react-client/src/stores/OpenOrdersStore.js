@@ -82,6 +82,9 @@ class OpenOrdersStore {
     if (this.openOrders[key] === undefined) this.openOrders[key] = []
     if (this.counters[key] === undefined) this.counters[key] = 0
     this.counters[key] += n
+    if (this.counters[key] === 0) {
+      delete this.counters[key]
+    }
   }
 }
 
