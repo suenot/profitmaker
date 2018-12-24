@@ -2,7 +2,7 @@
   {
     "name": "balance-table",
     "component": "core_components/Balance/Balance.js",
-    "setting": "core_components/Balance/Settings.js",
+    "settings": "core_components/Balance/Settings.js",
     "settingsWidth": "300px",
     "img": "core_components/Balance/Balance.png",
     "header": "Total balance",

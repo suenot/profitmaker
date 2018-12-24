@@ -37,7 +37,7 @@ class Settings extends React.Component {
               id="outlined-name"
               label="Stock"
               value={stock}
-              onChange={this.setWidgetData.bind(this, 'stock', 'value')}
+              onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
               variant="outlined"
               fullWidth
               className="mb-16"
@@ -46,7 +46,7 @@ class Settings extends React.Component {
               id="outlined-name"
               label="Pair"
               value={pair}
-              onChange={this.setWidgetData.bind(this, 'pair', 'value')}
+              onChange={this.setWidgetData.bind(this, 'pair', 'value', 'toUpperCase')}
               variant="outlined"
               fullWidth
               className="mb-16"
@@ -79,10 +79,10 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value)
   }
-  setWidgetData(key, attr, e) {
+  setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
     var value = e.target[attr]
-    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim())
+    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim(), fn)
   }
   setGroup(dashboardId, widgetId, e) {
     var value = e.target.value.trim()

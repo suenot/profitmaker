@@ -4,11 +4,9 @@ import TextField from '@material-ui/core/TextField'
 import FormGroup from '@material-ui/core/FormGroup'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Switch from '@material-ui/core/Switch'
-import Typography from '@material-ui/core/Typography'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import CloseIcon from '@material-ui/icons/Close'
-import IconButton from '@material-ui/core/IconButton'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -19,10 +17,14 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     var total = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.total
     return (
-      <div>
+      <div className="drawer">
+        <div className="drawer-title">
+          <div className="drawer-title-text">Widget settings</div>
+          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+        </div>
+        <Divider />
         <div className="section-body">
           <form noValidate autoComplete="off">
-            <Typography variant="h6" gutterBottom>Widget settings</Typography>
             <TextField
               id="outlined-name"
               label="Name"
@@ -49,9 +51,7 @@ class Settings extends React.Component {
               id="outlined-name"
               label="Stock"
               value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stock}
-              onChange={
-                this.setStock.bind(this)
-              }
+              onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
               variant="outlined"
               fullWidth
               className={total ? 'hide' : ''}
@@ -76,10 +76,15 @@ class Settings extends React.Component {
       DashboardsStore.setWidgetData(dashboardId, widgetId, 'stock', stockTemp)
     }
   }
-  setStock(e) {
+  // setStock(e) {
+  //   var {dashboardId, widgetId} = this.props.data
+  //   DashboardsStore.setWidgetData(dashboardId, widgetId, 'stock', e.target.value)
+  //   DashboardsStore.setWidgetData(dashboardId, widgetId, 'stockTemp', e.target.value)
+  // }
+  setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
-    DashboardsStore.setWidgetData(dashboardId, widgetId, 'stock', e.target.value)
-    DashboardsStore.setWidgetData(dashboardId, widgetId, 'stockTemp', e.target.value)
+    var value = e.target[attr]
+    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value, fn)
   }
   setGroup(dashboardId, widgetId, e) {
     var value = e.target.value.trim()

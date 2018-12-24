@@ -29,7 +29,7 @@ class Settings extends React.Component {
               id="outlined-name"
               label="Stock"
               value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stock}
-              onChange={this.setWidgetData.bind(this, 'stock', 'value')}
+              onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
               variant="outlined"
               fullWidth
             />
@@ -43,10 +43,10 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value)
   }
-  setWidgetData(key, attr, e) {
+  setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
     var value = e.target[attr]
-    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim())
+    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim(), fn)
   }
 }
 

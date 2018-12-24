@@ -66,9 +66,10 @@ class DashboardsStore {
   @action setCustomHeader(dashboardId, widgetId, value) {
     _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader = value
   }
-  @action setWidgetData(dashboardId, widgetId, key, value) {
+  @action setWidgetData(dashboardId, widgetId, key, value, fn) {
     if (value === 'true') value = true
     if (value === 'false') value = false
+    if (fn === 'toUpperCase') value = value.toUpperCase()
     _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data[key] = value
   }
   @action setWidgetsData(key, value, group) {
