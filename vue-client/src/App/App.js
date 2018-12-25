@@ -61,17 +61,29 @@
 
 
 export default {
-  data() {
-    return {
-      isCollapse: true
-    };
-  },
+  data: () => ({
+    dialog: false,
+    drawer: null,
+    drawerRight: null,
+    newId: '3',
+    dashboards: {
+      '1': { id: '1', icon: '/img/widgets/invention.svg', text: 'Intuition' },
+      '2': { id: '2', icon: '/img/widgets/invention.svg', text: 'Refactuiton' }
+    }
+  }),
   methods: {
-    handleOpen(key, keyPath) {
-      console.log(key, keyPath);
+    openDashboard: function(id) {
+      console.log(id)
     },
-    handleClose(key, keyPath) {
-      console.log(key, keyPath);
+    addDashboard: function() {
+      this.$set(this.dashboards, this.newId, { id: this.newId, icon: 'view_module', text: 'Refactuiton2' })
+      this.newId = (parseInt(this.newId)+1).toString()
+    },
+    editDashboard: function() {
+      this.drawerRight = !this.drawerRight
+    },
+    removeDashboard: function(id) {
+      this.$delete(this.dashboards, id)
     }
   }
 }
