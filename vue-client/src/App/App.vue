@@ -2,11 +2,13 @@
   <div>
     <div class="aside">
       <ul>
-        <li @click="addDashboard()"><v-icon>home</v-icon></li>
+        <li @click="state.addDashboard()"><v-icon>add_to_queue</v-icon></li>
         <li
-          v-for="(dashboard, i) in dashboards"
-          :key="i"
-          @click="openDashboard(dashboard.id)"
+          v-for="dashboard in state.dashboards"
+          :key="dashboard.id"
+          @click.left="state.openDashboard(dashboard.id)"
+          @click.right="state.removeDashboard(dashboard.id)"
+          :class="dashboard.id === state.dashboardActiveId ? 'active' : ''"
         >
           <img :src="dashboard.icon" alt="">
         </li>

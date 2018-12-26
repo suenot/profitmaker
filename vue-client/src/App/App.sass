@@ -28,6 +28,14 @@
       display: flex
       justify-content: center
       align-items: center
+      position: relative
+      &.active:after
+        display: block
+        content: ''
+        position: absolute
+        right: -1px
+        border-right: 1px solid #049bfd
+        height: 100%
       img
         width: 24px
         height: 24px

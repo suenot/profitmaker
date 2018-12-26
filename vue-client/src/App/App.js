@@ -59,31 +59,31 @@
 //   }
 // }
 
+import { observer } from 'mobx-vue'
 
-export default {
+import DashboardsStore from '../stores/DashboardsStore'
+export default observer({
   data: () => ({
-    dialog: false,
-    drawer: null,
-    drawerRight: null,
-    newId: '3',
-    dashboards: {
-      '1': { id: '1', icon: '/img/widgets/invention.svg', text: 'Intuition' },
-      '2': { id: '2', icon: '/img/widgets/invention.svg', text: 'Refactuiton' }
+      dialog: false,
+      drawer: null,
+      drawerRight: null,
+      newId: '3',
+      state: DashboardsStore
     }
-  }),
+  ),
   methods: {
-    openDashboard: function(id) {
-      console.log(id)
-    },
-    addDashboard: function() {
-      this.$set(this.dashboards, this.newId, { id: this.newId, icon: 'view_module', text: 'Refactuiton2' })
-      this.newId = (parseInt(this.newId)+1).toString()
-    },
-    editDashboard: function() {
-      this.drawerRight = !this.drawerRight
-    },
-    removeDashboard: function(id) {
-      this.$delete(this.dashboards, id)
-    }
-  }
-}
+    // openDashboard: function(id) {
+    //   this.$router.push({ name: 'Dashboard', params: { DashboardId: id } })
+    //   console.log(id)
+    // },
+    // addDashboard: function() {
+    //   this
+    // }
+    // editDashboard: function() {
+    //   this.drawerRight = !this.drawerRight
+    // },
+    // removeDashboard: function(id) {
+    //   this.$delete(this.dashboards, id)
+    // }
+  },
+})

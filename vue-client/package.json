@@ -12,10 +12,12 @@
     "axios": "^0.18.0",
     "echarts": "^4.2.0-rc.2",
     "mobx": "^5.8.0",
+    "mobx-sync": "^1.1.1",
     "mobx-vue": "^2.0.8",
     "v-charts": "^1.19.0",
     "vue": "^2.5.17",
     "vue-grid-layout": "^2.3.2",
+    "vue-mobx": "^2.0.0",
     "vue-router": "^3.0.1",
     "vuetify": "^1.3.14"
   },

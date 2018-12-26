@@ -1,11 +1,9 @@
 import Vue from 'vue'
 import App from './App/App.vue'
 import router from './router'
+
 import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
-import VCharts from 'v-charts'
-
-
 Vue.use(Vuetify, {
   theme: {
     primary: '#3f51b5',
@@ -15,6 +13,7 @@ Vue.use(Vuetify, {
   }
 })
 
+import VCharts from 'v-charts'
 Vue.use(VCharts)
 
 Vue.config.productionTip = false
