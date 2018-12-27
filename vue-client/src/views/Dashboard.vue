@@ -1,15 +1,20 @@
 <template>
-  <!-- <div> -->
-    <!-- {{state.dashboard}} -->
-    <grid-layout v-if="state.dashboard.widgets.length !== 0"
-      :layout="state.dashboard.widgets || []"
+  <div>
+    <!-- {{widgets}}
+    <br />
+    <br /> -->
+    <!-- {{state.widgets}} -->
+    <grid-layout v-if="widgets.length !== 0"
+      :layout="widgets"
       :col-num="12"
       :row-height="30"
       :is-draggable="true"
       :is-resizable="true"
       :margin="[10, 10]"
-      :use-css-transforms="true">
-      <grid-item v-for="widget in (state.dashboard.widgets || [])"
+      :use-css-transforms="true"
+      @layout-updated="layoutUpdatedEvent"
+      >
+      <grid-item v-for="widget in widgets"
         :x="widget.x"
         :y="widget.y"
         :w="widget.w"
@@ -24,15 +29,13 @@
             <div class="title">Title</div>
           </div>
           <div class="widget-body">
-            <button @click="addWidget">addWidget</button>
-            <!-- <component :is="widget.component" :key="widget.i" :data="chartData" :settings="chartSettings" :height="(widget.h*40-40)+'px'"></component> -->
+            <!-- <button @click="addWidget">addWidget</button> -->
             <component :is="widget.component" :key="widget.i" :height="(widget.h*40-40)+'px'"></component>
-            <!-- some -->
           </div>
         </div>
       </grid-item>
     </grid-layout>
-  <!-- </div> -->
+  </div>
 </template>
 
 
@@ -40,28 +43,36 @@
 import { GridLayout, GridItem } from 'vue-grid-layout'
 import Chart from '../components/Chart.vue'
 
-import { observer } from 'mobx-vue'
+import { observer, toJS } from 'mobx-vue'
 
 import DashboardsStore from '../stores/DashboardsStore'
 export default observer({
   data () {
     return {
       counter: '1',
-      state: DashboardsStore
-      // widgets: [
-      //   {"component": "Chart", "x":0,"y":0,"w":2,"h":2,"i":"0"},
-      //   {"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i":"1"}
-      // ],
+      state: DashboardsStore,
+      // widgets: DashboardsStore.widgets
+      widgets: []
     }
   },
   components: { GridLayout, GridItem, Chart },
+  mounted: function() {
+    setTimeout(()=>{
+      this.widgets = JSON.parse(JSON.stringify(DashboardsStore.widgets))
+    }, 200)
+  },
   methods: {
     resizedEvent: () => {
       window.dispatchEvent(new Event('resize'))
     },
-    addWidget: function() {
-      this.counter = (parseInt(this.counter)+1).toString()
-      this.widgets.push({"component": "ve-candle", "x":2,"y":0,"w":2,"h":4,"i": this.counter})
+    // addWidget: function() {
+    //   this.counter = (parseInt(this.counter)+1).toString()
+    //   this.widgets.push({"component": "ve-candle", "x":2,"y":0,"w":2,"h":4,"i": this.counter})
+    // },
+    layoutUpdatedEvent: function(newLayout){
+      // this.state.dashboards[this.state.dashboardActiveIndex].widgets = JSON.parse(JSON.stringify(newLayout))
+      // console.log(JSON.stringify(newLayout))
+      this.state.updateWidgets(newLayout)
     }
   }
 })
@@ -73,7 +84,7 @@ export default observer({
   margin: 0 -10px 30px
   min-width: 100%
 .vue-grid-item
-  border: 1px solid #ddd
+  border: 1px solid #eee
 
 
 .widget
