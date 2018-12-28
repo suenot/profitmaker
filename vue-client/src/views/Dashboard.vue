@@ -10,9 +10,10 @@
       :row-height="30"
       :is-draggable="true"
       :is-resizable="true"
-      :margin="[10, 10]"
+      :margin="[borderless ? -1 : 10, borderless ? -1 : 10]"
       :use-css-transforms="true"
       @layout-updated="layoutUpdatedEvent"
+      :class="borderless ? 'borderless' : ''"
       >
       <grid-item v-for="widget in widgets"
         :x="widget.x"
@@ -49,6 +50,7 @@ import DashboardsStore from '../stores/DashboardsStore'
 export default observer({
   data () {
     return {
+      borderless: false,
       counter: '1',
       state: DashboardsStore,
       // widgets: DashboardsStore.widgets
@@ -65,10 +67,10 @@ export default observer({
     resizedEvent: () => {
       window.dispatchEvent(new Event('resize'))
     },
-    // addWidget: function() {
-    //   this.counter = (parseInt(this.counter)+1).toString()
-    //   this.widgets.push({"component": "ve-candle", "x":2,"y":0,"w":2,"h":4,"i": this.counter})
-    // },
+    addWidget: function() {
+      this.counter = (parseInt(this.counter)+1).toString()
+      this.widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": this.counter})
+    },
     layoutUpdatedEvent: function(newLayout){
       // this.state.dashboards[this.state.dashboardActiveIndex].widgets = JSON.parse(JSON.stringify(newLayout))
       // console.log(JSON.stringify(newLayout))
@@ -81,10 +83,9 @@ export default observer({
 <style lang="sass">
 .vue-grid-layout
   width: 100%
-  margin: 0 -10px 30px
+  // margin: 0 -10px 30px
+  margin: 0px 10px 0px 0px
   min-width: 100%
-.vue-grid-item
-  border: 1px solid #eee
 
 
 .widget
@@ -93,19 +94,21 @@ export default observer({
   max-width: 100%
   max-height: 100%
   background: #fff
-  border: 1px solid #484747
+  border: 1px solid rgba(0, 0, 0, 0.12)
   display: flex
   flex-direction: column
   .widget-header
     display: flex
     justify-content: space-between
     align-items: center
-    background: #484747
-    color: white
     height: 20px
     flex: 0 0 20px
+    font-size: 14px
   .widget-body
     flex: 1 1 auto
     overflow-y: auto
     overflow-x: hidden
+.borderless
+  .widget-header
+    display: none
 </style>
