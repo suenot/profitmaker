@@ -27,6 +27,7 @@ class Grid extends React.Component {
   render() {
     return (
       <GridLayout
+        margin={[-1, -1]}
         className="layout"
         cols={24}
         rowHeight={12}
@@ -56,7 +57,8 @@ class Grid extends React.Component {
             var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
             return (
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
-                <div className={`widget widget-${widget.name}`} style={{borderTopColor: widget.data.groupColor || 'rgba(0, 0, 0, 0.12)'}}>
+                <div className={`widget widget-${widget.name}`}>
+                  <div className="widget-group-color" style={{background: widget.data.groupColor || 'transparent'}}></div>
                   <div className='widget-header draggable-header'>
                     <span>{ customHeader || widget.header}</span>
                     <span>{ stock || '' }{ pair ? `:${pair}` : '' }</span>

@@ -64,10 +64,17 @@ body
   max-width: 100%
   max-height: 100%
   background: #fff
-  border: 1px solid rgba(0, 0, 0, 0.12)
+  border: 1px solid rgba(0, 0, 0, 0.12) // #e2e2e2// black // rgba(0, 0, 0, 0.12)
   display: flex
   flex-direction: column
   position: relative
+
+.widget-group-color
+  position: absolute
+  top: 0
+  z-index: 2
+  width: 100%
+  height: 1px
 
 .widget-header
   display: flex
@@ -182,10 +189,19 @@ body
 .simpleTable
   border: none
   border-spacing: 0px
-  border-collapse: separate
+  border-collapse: collapse
   width: 100%
   tr:hover td
     background: rgba(0,0,0,.03)
+  tr
+    th, td
+      &:first-child
+        border-left: none
+      &:last-child
+        border-right: none
+    &:last-child
+      th, td
+        border-bottom: none
   th, td
     padding: 4px 6px
     white-space: nowrap
@@ -197,7 +213,7 @@ body
   td
     font-weight: 300
     font-size: 12px
-    box-shadow: 0 0 0.5px #bebebe
+    border: 1px solid rgba(0, 0, 0, 0.12)
     text-align: right
     &:nth-child(1)
       text-align: left
@@ -399,3 +415,21 @@ body
   right: 4px !important
 .expansion-panel-details
   padding: 0 16px 0 16px !important
+
+// scroll
+// .widget-body::-webkit-scrollbar
+//   width: 12px
+
+// .widget-body::-webkit-scrollbar-track
+//   -webkit-box-shadow: none
+//   box-shadow: none
+//   border-right: none
+//   margin-right: -1px
+
+// .widget-body::-webkit-scrollbar-thumb
+//   -webkit-border-radius: 10px
+//   border-radius: 10px
+//   background: rgba(255,0,0,0.8)
+//   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5)
+// .widget-body::-webkit-scrollbar-thumb:window-inactive
+//   background: rgba(255,0,0,0.4)
