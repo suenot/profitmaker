@@ -62,8 +62,9 @@ class Settings extends React.Component {
   changeCustomHeader(e) {
     var {dashboardId, widgetId} = this.props.data
     var noteId = NotesStore.getNoteId(dashboardId, widgetId)
-    DashboardsStore.setCustomHeader(dashboardId, widgetId, e.target.value)
-    NotesStore.setName(noteId, e.target.value)
+    var value = e.target.value.trim()
+    DashboardsStore.setCustomHeader(dashboardId, widgetId, value)
+    NotesStore.setName(noteId, value)
   }
   setNote(noteId) {
     var {dashboardId, widgetId} = this.props.data

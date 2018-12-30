@@ -70,19 +70,19 @@ class Settings extends React.Component {
         </div>
         <div className="section-body">
           <div className="react-stockcharts-timeframes">
-            <Button variant={timeframe==='1m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>1m</Button>
-            <Button variant={timeframe==='3m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>3m</Button>
-            <Button variant={timeframe==='5m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>5m</Button>
-            <Button variant={timeframe==='15m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>15m</Button>
-            <Button variant={timeframe==='30m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>30m</Button>
-            <Button variant={timeframe==='1H'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>1H</Button>
-            <Button variant={timeframe==='2H'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>2H</Button>
-            <Button variant={timeframe==='4H'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>4H</Button>
-            <Button variant={timeframe==='6H'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>6H</Button>
-            <Button variant={timeframe==='12H'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>12H</Button>
-            <Button variant={timeframe==='D'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>D</Button>
-            <Button variant={timeframe==='W'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>W</Button>
-            <Button variant={timeframe==='M'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText')}>M</Button>
+            <Button variant={timeframe==='1m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>1m</Button>
+            <Button variant={timeframe==='3m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>3m</Button>
+            <Button variant={timeframe==='5m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>5m</Button>
+            <Button variant={timeframe==='15m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>15m</Button>
+            <Button variant={timeframe==='30m'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>30m</Button>
+            <Button variant={timeframe==='1H'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>1H</Button>
+            <Button variant={timeframe==='2H'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>2H</Button>
+            <Button variant={timeframe==='4H'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>4H</Button>
+            <Button variant={timeframe==='6H'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>6H</Button>
+            <Button variant={timeframe==='12H'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>12H</Button>
+            <Button variant={timeframe==='D'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>D</Button>
+            <Button variant={timeframe==='W'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>W</Button>
+            <Button variant={timeframe==='M'?'outlined':'text'} size="small" color="primary" onClick={this.setWidgetData.bind(this, 'timeframe', 'innerText', undefined)}>M</Button>
           </div>
         </div>
         <Divider />
@@ -91,10 +91,11 @@ class Settings extends React.Component {
   }
   changeCustomHeader(e) {
     var {dashboardId, widgetId} = this.props.data
-    var value = e.target[attr].trim()
+    var value = e.target.value.trim()
     DashboardsStore.setCustomHeader(dashboardId, widgetId, value)
   }
   setWidgetData(key, attr, fn, e) {
+    console.log(e)
     var {dashboardId, widgetId} = this.props.data
     var value = e.target[attr].trim()
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value, fn)
