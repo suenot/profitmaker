@@ -60,6 +60,15 @@ class DashboardsStore {
     this.dashboardActiveId = id
   }
 
+  @action addWidget() {
+    // this.dashboardsCounter += 1
+    var counter = this.dashboards[this.dashboardActiveIndex].counter
+    counter = (parseInt(counter)+1).toString()
+    var counter = this.dashboards[this.dashboardActiveIndex].counter = counter
+    this.dashboards[this.dashboardActiveIndex].widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": counter})
+    // this.dashboards.push({ id: uuidv1(), name: 'Untitled', icon: '/img/widgets/sentiments.svg', widgets: [], counter: '0' })
+  }
+
 }
 
 const store = window.DashboardsStore = new DashboardsStore()

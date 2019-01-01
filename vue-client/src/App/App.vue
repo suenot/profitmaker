@@ -12,7 +12,7 @@
         >
           <img :src="dashboard.icon" alt="">
         </li>
-        <li @click="state.addDashboard()"><v-icon>add</v-icon></li>
+        <li @click="addWidget()"><v-icon>add</v-icon></li>
       </ul>
     </div>
     <div class="main">

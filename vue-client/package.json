@@ -16,6 +16,7 @@
     "mobx-vue": "^2.0.8",
     "v-charts": "^1.19.0",
     "vue": "^2.5.17",
+    "vue-bus": "^1.2.0",
     "vue-grid-layout": "^2.3.2",
     "vue-mobx": "^2.0.0",
     "vue-router": "^3.0.1",

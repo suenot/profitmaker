@@ -1,9 +1,9 @@
 <template>
   <div>
-    <!-- {{widgets}}
+    {{widgets}}
     <br />
-    <br /> -->
-    <!-- {{state.widgets}} -->
+    <br />
+    {{state.widgets}}
     <grid-layout v-if="widgets.length !== 0"
       :layout="widgets"
       :col-num="12"
@@ -32,6 +32,7 @@
           <div class="widget-body">
             <!-- <button @click="addWidget">addWidget</button> -->
             <component :is="widget.component" :key="widget.i" :height="(widget.h*40-40)+'px'"></component>
+            <!-- v-bind="item.props" -->
           </div>
         </div>
       </grid-item>
@@ -43,6 +44,7 @@
 <script>
 import { GridLayout, GridItem } from 'vue-grid-layout'
 import Chart from '../components/Chart.vue'
+import uuidv1 from 'uuid/v1'
 
 import { observer, toJS } from 'mobx-vue'
 
@@ -50,19 +52,42 @@ import DashboardsStore from '../stores/DashboardsStore'
 export default observer({
   data () {
     return {
-      borderless: false,
+      borderless: true,
       counter: '1',
       state: DashboardsStore,
       // widgets: DashboardsStore.widgets
       widgets: []
     }
   },
-  components: { GridLayout, GridItem, Chart },
+  components: { GridLayout, GridItem },
+  created: function() {
+
+  },
   mounted: function() {
+    console.log('MOUNTED')
     setTimeout(()=>{
       this.widgets = JSON.parse(JSON.stringify(DashboardsStore.widgets))
     }, 200)
+
+    this.$bus.on('addWidget', () => {
+      console.log('addWidget')
+      console.log(this.widgets)
+      this.widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": uuidv1()})
+    })
   },
+  // computed: {
+  //   computedWidgets() {
+  //     state.widgets
+  //   }
+  // },
+  // watch: {
+  //   state: function (val) {
+  //     console.log('WATCH')
+  //     console.log(val)
+  //     console.log('storeWidgets changed')
+  //     this.widgets = val
+  //   },
+  // },
   methods: {
     resizedEvent: () => {
       window.dispatchEvent(new Event('resize'))
@@ -108,7 +133,4 @@ export default observer({
     flex: 1 1 auto
     overflow-y: auto
     overflow-x: hidden
-.borderless
-  .widget-header
-    display: none
 </style>

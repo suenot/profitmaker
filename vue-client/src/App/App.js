@@ -58,7 +58,6 @@
 //     }
 //   }
 // }
-
 import { observer } from 'mobx-vue'
 
 import DashboardsStore from '../stores/DashboardsStore'
@@ -85,5 +84,8 @@ export default observer({
     // removeDashboard: function(id) {
     //   this.$delete(this.dashboards, id)
     // }
+    addWidget: function() {
+      this.$bus.emit('addWidget')
+    }
   },
 })
