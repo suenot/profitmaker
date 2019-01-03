@@ -70,7 +70,11 @@ export default observer({
       console.log('addWidget')
       console.log(this.widgets)
       this.widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": uuidv1()})
+      this.layoutUpdatedEvent()
     })
+  },
+  beforeDestroy() {
+    this.$bus.off('addWidget')
   },
   // computed: {
   //   computedWidgets() {
@@ -93,10 +97,11 @@ export default observer({
       this.counter = (parseInt(this.counter)+1).toString()
       this.widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": this.counter})
     },
-    layoutUpdatedEvent: function(newLayout){
+    layoutUpdatedEvent: function(){
       // this.state.dashboards[this.state.dashboardActiveIndex].widgets = JSON.parse(JSON.stringify(newLayout))
       // console.log(JSON.stringify(newLayout))
-      this.state.updateWidgets(newLayout)
+      // console.log('layoutUpdatedEvent')
+      this.state.updateWidgets(this.widgets, this.$route.params.id)
     }
   }
 })

@@ -42,8 +42,9 @@ class DashboardsStore {
   @computed get dashboardActiveIndex() {
     return _.findIndex(this.dashboards, ['id', this.dashboardActiveId])
   }
-  @action updateWidgets(newLayout) {
-    this.dashboards[this.dashboardActiveIndex].widgets = JSON.parse(JSON.stringify(newLayout))
+  @action updateWidgets(newLayout, dashboardActiveId) {
+    var dashboardActiveIndex = _.findIndex(this.dashboards, ['id', dashboardActiveId])
+    this.dashboards[dashboardActiveIndex].widgets = JSON.parse(JSON.stringify(newLayout))
     // this.dashboards.push({ id: this.dashboardsCounter+"", text: 'Untitled', icon: '/img/widgets/invention.svg'})
   }
 
