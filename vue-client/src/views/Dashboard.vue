@@ -1,9 +1,5 @@
 <template>
   <div>
-    {{widgets}}
-    <br />
-    <br />
-    {{state.widgets}}
     <grid-layout v-if="widgets.length !== 0"
       :layout="widgets"
       :col-num="12"
@@ -66,7 +62,8 @@ export default observer({
   mounted: function() {
     console.log('MOUNTED')
     setTimeout(()=>{
-      this.widgets = JSON.parse(JSON.stringify(DashboardsStore.widgets))
+      var dashboardActiveIndex = _.findIndex(DashboardsStore.dashboards, ['id', this.$route.params.id])
+      this.widgets = JSON.parse(JSON.stringify(DashboardsStore.dashboards[dashboardActiveIndex].widgets))
     }, 200)
 
     this.$bus.on('addWidget', () => {

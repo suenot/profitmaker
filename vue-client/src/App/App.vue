@@ -6,9 +6,9 @@
         <li
           v-for="dashboard in state.dashboards"
           :key="dashboard.id"
-          @click.left="state.openDashboard(dashboard.id)"
+          @click.left="openDashboard(dashboard.id)"
           @click.right="state.removeDashboard(dashboard.id)"
-          :class="dashboard.id === state.dashboardActiveId ? 'active' : ''"
+          :class="dashboard.id === dashboardActiveId ? 'active' : ''"
         >
           <img :src="dashboard.icon" alt="">
         </li>

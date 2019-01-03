@@ -67,14 +67,17 @@ export default observer({
       drawer: null,
       drawerRight: null,
       newId: '3',
-      state: DashboardsStore
+      state: DashboardsStore,
+      dashboardActiveId: '1'
     }
   ),
   methods: {
-    // openDashboard: function(id) {
-    //   this.$router.push({ name: 'Dashboard', params: { DashboardId: id } })
-    //   console.log(id)
-    // },
+    openDashboard: function(id) {
+      this.$router.push({ name: 'Dashboard', params: { id: id } })
+      this.dashboardActiveId = id
+      // console.log(this.$route)
+      // console.log(id)
+    },
     // addDashboard: function() {
     //   this
     // }

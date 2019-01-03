@@ -8,10 +8,10 @@ Vue.use(Router)
 export default new Router({
   routes: [
     {
-      path: '/',
+      path: '/dashboard/:id',
       name: 'Dashboard',
       component: Dashboard,
-      props: true,
+      // props: true,
       meta: { reuse: false }
     }
   ]

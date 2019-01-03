@@ -35,10 +35,10 @@ class DashboardsStore {
     var dashboardActiveIndex = _.findIndex(this.dashboards, ['id', this.dashboardActiveId])
     return this.dashboards[dashboardActiveIndex]
   }
-  @computed get widgets() {
-    // var dashboardActiveIndex = _.findIndex(this.dashboards, ['id', this.dashboardActiveId])
-    return this.dashboards[this.dashboardActiveIndex].widgets
-  }
+  // @computed get widgets(id) {
+  //   // var dashboardActiveIndex = _.findIndex(this.dashboards, ['id', this.dashboardActiveId])
+  //   return this.dashboards[this.dashboardActiveIndex].widgets
+  // }
   @computed get dashboardActiveIndex() {
     return _.findIndex(this.dashboards, ['id', this.dashboardActiveId])
   }
