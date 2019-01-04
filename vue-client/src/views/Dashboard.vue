@@ -23,12 +23,11 @@
         @resized="resizedEvent">
         <div class="widget">
           <div class="widget-header">
-            <div class="title">Title</div>
+            <!-- <div class="title">Title</div> -->
+            <div class="options"><v-icon>more_horiz</v-icon></div>
           </div>
           <div class="widget-body">
-            <!-- <button @click="addWidget">addWidget</button> -->
             <component :is="widget.component" :key="widget.i" :height="(widget.h*40-40)+'px'"></component>
-            <!-- v-bind="item.props" -->
           </div>
         </div>
       </grid-item>
@@ -51,7 +50,6 @@ export default observer({
       borderless: true,
       counter: '1',
       state: DashboardsStore,
-      // widgets: DashboardsStore.widgets
       widgets: []
     }
   },
@@ -60,15 +58,15 @@ export default observer({
 
   },
   mounted: function() {
-    console.log('MOUNTED')
     setTimeout(()=>{
       var dashboardActiveIndex = _.findIndex(DashboardsStore.dashboards, ['id', this.$route.params.id])
       this.widgets = JSON.parse(JSON.stringify(DashboardsStore.dashboards[dashboardActiveIndex].widgets))
     }, 200)
+    setTimeout(()=>{
+      this.resizedEvent()
+    }, 200)
 
     this.$bus.on('addWidget', () => {
-      console.log('addWidget')
-      console.log(this.widgets)
       this.widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": uuidv1()})
       this.layoutUpdatedEvent()
     })
@@ -76,19 +74,6 @@ export default observer({
   beforeDestroy() {
     this.$bus.off('addWidget')
   },
-  // computed: {
-  //   computedWidgets() {
-  //     state.widgets
-  //   }
-  // },
-  // watch: {
-  //   state: function (val) {
-  //     console.log('WATCH')
-  //     console.log(val)
-  //     console.log('storeWidgets changed')
-  //     this.widgets = val
-  //   },
-  // },
   methods: {
     resizedEvent: () => {
       window.dispatchEvent(new Event('resize'))
@@ -98,9 +83,6 @@ export default observer({
       this.widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": this.counter})
     },
     layoutUpdatedEvent: function(){
-      // this.state.dashboards[this.state.dashboardActiveIndex].widgets = JSON.parse(JSON.stringify(newLayout))
-      // console.log(JSON.stringify(newLayout))
-      // console.log('layoutUpdatedEvent')
       this.state.updateWidgets(this.widgets, this.$route.params.id)
     }
   }
@@ -110,10 +92,8 @@ export default observer({
 <style lang="sass">
 .vue-grid-layout
   width: 100%
-  // margin: 0 -10px 30px
   margin: 0px 10px 0px 0px
   min-width: 100%
-
 
 .widget
   width: 100%
@@ -131,8 +111,25 @@ export default observer({
     height: 20px
     flex: 0 0 20px
     font-size: 14px
+  .options
+    height: 42px
+    width: 42px
+    background: white
+    position: absolute !important
+    right: 0
+    top: 0
+    display: flex
+    justify-content: center
+    // border-left: 1px solid rgba(0, 0, 0, 0.12)
+    // border-bottom: 1px solid rgba(0, 0, 0, 0.12)
+    border: 1px solid rgba(0, 0, 0, 0.12)
+    cursor: pointer
   .widget-body
     flex: 1 1 auto
     overflow-y: auto
     overflow-x: hidden
+
+.vue-resizable-handle
+  height: 42px !important
+  width: 42px !important
 </style>

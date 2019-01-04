@@ -23,25 +23,21 @@ class DashboardsStore {
       () => this.dashboards,
       () => {
         trunk.updateStore(this)
-        console.log('***')
       }
     )
   }
 
-  @observable dashboardActiveId = '1'
+  // @observable dashboardActiveId = '1'
 
 
   @computed get dashboard() {
     var dashboardActiveIndex = _.findIndex(this.dashboards, ['id', this.dashboardActiveId])
     return this.dashboards[dashboardActiveIndex]
   }
-  // @computed get widgets(id) {
-  //   // var dashboardActiveIndex = _.findIndex(this.dashboards, ['id', this.dashboardActiveId])
-  //   return this.dashboards[this.dashboardActiveIndex].widgets
+
+  // @computed get dashboardActiveIndex() {
+  //   return _.findIndex(this.dashboards, ['id', this.dashboardActiveId])
   // }
-  @computed get dashboardActiveIndex() {
-    return _.findIndex(this.dashboards, ['id', this.dashboardActiveId])
-  }
   @action updateWidgets(newLayout, dashboardActiveId) {
     var dashboardActiveIndex = _.findIndex(this.dashboards, ['id', dashboardActiveId])
     this.dashboards[dashboardActiveIndex].widgets = JSON.parse(JSON.stringify(newLayout))
@@ -61,14 +57,14 @@ class DashboardsStore {
     this.dashboardActiveId = id
   }
 
-  @action addWidget() {
-    // this.dashboardsCounter += 1
-    var counter = this.dashboards[this.dashboardActiveIndex].counter
-    counter = (parseInt(counter)+1).toString()
-    var counter = this.dashboards[this.dashboardActiveIndex].counter = counter
-    this.dashboards[this.dashboardActiveIndex].widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": counter})
-    // this.dashboards.push({ id: uuidv1(), name: 'Untitled', icon: '/img/widgets/sentiments.svg', widgets: [], counter: '0' })
-  }
+  // @action addWidget() {
+  //   // this.dashboardsCounter += 1
+  //   var counter = this.dashboards[this.dashboardActiveIndex].counter
+  //   counter = (parseInt(counter)+1).toString()
+  //   var counter = this.dashboards[this.dashboardActiveIndex].counter = counter
+  //   this.dashboards[this.dashboardActiveIndex].widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": counter})
+  //   // this.dashboards.push({ id: uuidv1(), name: 'Untitled', icon: '/img/widgets/sentiments.svg', widgets: [], counter: '0' })
+  // }
 
 }
 
