@@ -10,7 +10,7 @@
 .divider
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
 
-.aside
+.aside-left
   width: 72px
   max-width: 72px
   border-right: 1px solid rgba(0, 0, 0, 0.12)
@@ -39,5 +39,16 @@
       img
         width: 24px
         height: 24px
+.aside-right
+  width: 320px
+  display: none
+  position: fixed
+  right: 0
+  top: 0
+  height: 100%
+  border-left: 1px solid rgba(0, 0, 0, 0.12)
+  background: #fff
+  &.active
+    display: block
 .main
   margin-left: 72px

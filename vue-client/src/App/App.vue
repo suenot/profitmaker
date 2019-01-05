@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="aside">
+    <div class="aside-left">
       <ul>
         <li @click="state.addDashboard()"><v-icon>add_to_queue</v-icon></li>
         <li
@@ -17,6 +17,9 @@
     </div>
     <div class="main">
        <router-view :key="$route.path" />
+    </div>
+    <div class="aside-right">
+      aside-right
     </div>
   </div>
 </template>
