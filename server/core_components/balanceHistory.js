@@ -77,7 +77,7 @@ const balanceHistory = async function(stock) {
     _.forEach(Array.from(BALANCE_HISTORY_COINS_RESULT), function(coin){
       SERIES.push({
         name: coin,
-        type:'line',
+        type: 'line',
         stack: '',
         areaStyle: {normal: {}},
         data: BALANCE_HISTORY_USD[coin]

@@ -59,22 +59,24 @@ class Grid extends React.Component {
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
                 <div className={`widget widget-${widget.name}`}>
                   <div className="widget-group-color" style={{background: widget.data.groupColor || 'transparent'}}></div>
-                  <div className='widget-header draggable-header'>
+                  <div className='widget-header draggable-header compact grabbable' compact>
                     <span>{ customHeader || widget.header}</span>
                     <span>{ stock || '' }{ pair ? `:${pair}` : '' }</span>
                     <div>
                       <FullscreenExitIcon style={{ fontSize: 18 }} onClick={this.fullscreen.bind(this)} className="pointer fullscreen-exit-icon hide"/>
                       <FullscreenIcon style={{ fontSize: 18 }} onClick={this.fullscreen.bind(this)} className="pointer fullscreen-icon"/>
-                      <SettingsIcon style={{ fontSize: 18 }} onClick={this.drawerRightToggle.bind(
-                        this,
-                        widget.settings,
-                        widget.settingsWidth,
-                        {
-                          dashboardId: dashboardId,
-                          widgetId: widgetId,
-                          ...data
-                        }
-                      )} className="pointer settings-icon"/>
+                      <div className="pointer settings-icon">
+                        <SettingsIcon style={{ fontSize: 18 }} onClick={this.drawerRightToggle.bind(
+                          this,
+                          widget.settings,
+                          widget.settingsWidth,
+                          {
+                            dashboardId: dashboardId,
+                            widgetId: widgetId,
+                            ...data
+                          }
+                        )}/>
+                      </div>
                       <ClearIcon style={{ fontSize: 18 }} onClick={this.removeWidget.bind(this, widget.i)} className="pointer clear-icon"/>
                     </div>
                   </div>

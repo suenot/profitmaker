@@ -24,7 +24,9 @@ class StocksStore {
   }
 
   @computed get stocksComputed() {
+    // console.log(this.stocks)
     return this.stocks.filter((stock) => {
+      // console.log(stock)
       return stock.name.toLowerCase().indexOf( this.stocksFilter.toLowerCase() ) !== -1
     })
   }
