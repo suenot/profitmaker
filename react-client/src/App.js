@@ -58,8 +58,8 @@ class App extends React.Component {
               paper: classNames('drawer-left'),
             }}
           >
-            <ListItem button data-tip="New dashboard" onClick={this.addDashboard.bind(this)}>
-              <ListItemIcon>
+            <ListItem button data-tip="New dashboard" onClick={this.addDashboard.bind(this)} className="list-item">
+              <ListItemIcon className="item-icon">
                 <AddToQueueIcon />
               </ListItemIcon>
             </ListItem>
@@ -74,7 +74,7 @@ class App extends React.Component {
                       onClick={this.setDashboard.bind(this, dashboard.id)}
                       className={"list-item " + (dashboard.id === DashboardsStore.dashboardActiveId ? "selected" : "")}
                     >
-                      <ListItemIcon>
+                      <ListItemIcon className="item-icon">
                         <img src={dashboard.icon} width="24px" height="24px" alt=""></img>
                       </ListItemIcon>
                     </ListItem>
@@ -90,8 +90,9 @@ class App extends React.Component {
                 button
                 data-tip="API keys"
                 onClick={this.drawerRightToggle.bind(this, "core_components/Keys/Keys.js", "320px")}
+                className="list-item"
               >
-                <ListItemIcon aria-label="API keys">
+                <ListItemIcon aria-label="API keys" className="item-icon">
                   <KeyIcon />
                 </ListItemIcon>
               </ListItem>
@@ -100,8 +101,9 @@ class App extends React.Component {
                 button
                 data-tip="Contact us"
                 onClick={this.drawerRightToggle.bind(this, "core_components/Socials/Socials.js", "320px")}
+                className="list-item"
                 >
-                <ListItemIcon aria-label="Contact us">
+                <ListItemIcon aria-label="Contact us" className="item-icon">
                   <ChatIcon />
                 </ListItemIcon>
               </ListItem>
@@ -110,8 +112,9 @@ class App extends React.Component {
                 button
                 data-tip="Settings"
                 onClick={this.drawerRightToggle.bind(this, "core_components/Settings/GlobalSettings.js", "320px")}
+                className="list-item"
               >
-                <ListItemIcon aria-label="Settings">
+                <ListItemIcon aria-label="Settings" className="item-icon">
                   <SettingsIcon />
                 </ListItemIcon>
               </ListItem>
@@ -128,14 +131,14 @@ class App extends React.Component {
           >
             <div className="spacer"></div>
             <Divider className="divider"/>
-            <ListItem button data-tip="Add widget" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px")} className="add-widget-btn">
-              <ListItemIcon>
+            <ListItem button data-tip="Add widget" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px")} className="add-widget-btn list-item">
+              <ListItemIcon className="item-icon">
                 <AddIcon />
               </ListItemIcon>
             </ListItem>
             <Divider className="divider"/>
-            <ListItem button data-tip="Dashboard settings" onClick={this.drawerRightToggle.bind(this, "core_components/Settings/DashboardSettings.js", "320px")}>
-              <ListItemIcon>
+            <ListItem button data-tip="Dashboard settings" onClick={this.drawerRightToggle.bind(this, "core_components/Settings/DashboardSettings.js", "320px")} className="list-item">
+              <ListItemIcon className="item-icon">
                 <SettingsIcon />
               </ListItemIcon>
             </ListItem>

@@ -23,7 +23,7 @@ class DashboardsStore {
   @observable dashboardsCounter = 2
   @observable dashboardActiveId = '1'
   @observable dashboards = {
-    '1': {"id":"1","name":"First","bg":"#ccc","icon":"/img/widgets/viking-ship.svg","type":"terminal","stock":"BINANCE","pair":"ETH_BTC","widgets":[{"i":"1","uid":"1_1","name":"selector","component":"core_components/Selector/Selector.js","settings":"core_components/Selector/Settings.js","settingsWidth":"300px","header":"Selector","customHeader":"","data":{"stock": "BINANCE", "pair": "ETH_BTC", "group":"", "groupColor": ""},"x":0,"y":0,"w":7,"h":4,"minW":2,"minH":3}],"counter":"1"},
+    '1': {"id":"1","name":"First","bg":"#ccc","icon":"/img/widgets/viking-ship.svg","type":"terminal","stock":"BINANCE","pair":"ETH_BTC","widgets":[{"i":"1","uid":"1_1","name":"selector","component":"core_components/Selector/Selector.js","settings":"core_components/Selector/Settings.js","settingsWidth":"300px","header":"Selector","customHeader":"","data":{"stock": "BINANCE", "pair": "ETH_BTC", "group":"", "groupColor": ""},"x":0,"y":0,"w":7,"h":5,"minW":2,"minH":3}],"counter":"1"},
   }
   @computed get name() { return this.dashboards[this.dashboardActiveId].name }
   @computed get stock() {
@@ -41,7 +41,7 @@ class DashboardsStore {
     this.dashboardsCounter += 1
     var icon = '/img/widgets/' + _.sample(widgetsIcons)
     this.dashboards[this.dashboardsCounter+""] = { id: this.dashboardsCounter+"", name: 'Untitled', bg: '#ccc', icon: icon, type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: [], counter: 0}
-    this.addWidget({"name":"selector","component":"core_components/Selector/Selector.js","settings":"core_components/Selector/Settings.js","settingsWidth":"300px","img":"core_components/Selector/Selector.png","header":"Selector","customHeader":"","description":"","author":"#core","authorLink":"https://github.com/kupi-network/kupi-terminal","source":"https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Selector/Selector.js","data":{"stock": "BINANCE", "pair": "ETH_BTC", "group":"", "groupColor": "" },"categories":["utils"],"w":7,"h":4}, this.dashboardsCounter)
+    this.addWidget({"name":"selector","component":"core_components/Selector/Selector.js","settings":"core_components/Selector/Settings.js","settingsWidth":"300px","img":"core_components/Selector/Selector.png","header":"Selector","customHeader":"","description":"","author":"#core","authorLink":"https://github.com/kupi-network/kupi-terminal","source":"https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Selector/Selector.js","data":{"stock": "BINANCE", "pair": "ETH_BTC", "group":"", "groupColor": "" },"categories":["utils"],"w":7,"h":5}, this.dashboardsCounter)
 
   }
   @action removeDashboard(id) {
