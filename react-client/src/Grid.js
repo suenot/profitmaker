@@ -11,6 +11,7 @@ import { observer } from 'mobx-react'
 import RGL, { WidthProvider } from 'react-grid-layout'
 const GridLayout = WidthProvider(RGL)
 
+import SettingsStore from './stores/SettingsStore'
 import DashboardsStore from './stores/DashboardsStore'
 import DrawersStore from './stores/DrawersStore'
 
@@ -55,18 +56,21 @@ class Grid extends React.Component {
             var stock = widget.data.stock !== undefined ? widget.data.stock : ''
             var pair = widget.data.pair !== undefined ? widget.data.pair : ''
             var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
+            var compact = SettingsStore.compactWidgetsHeader ? 'compact' : ''
             return (
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
                 <div className={`widget widget-${widget.name}`}>
                   <div className="widget-group-color" style={{background: widget.data.groupColor || 'transparent'}}></div>
-                  <div className='widget-header draggable-header compact grabbable'>
-                    <span>{ customHeader || widget.header}</span>
-                    <span>{ stock || '' }{ pair ? `:${pair}` : '' }</span>
-                    <div>
-                      <FullscreenExitIcon style={{ fontSize: 18 }} onClick={this.fullscreen.bind(this)} className="pointer fullscreen-exit-icon hide"/>
-                      <FullscreenIcon style={{ fontSize: 18 }} onClick={this.fullscreen.bind(this)} className="pointer fullscreen-icon"/>
-                      <div className="pointer settings-icon">
-                        <SettingsIcon style={{ fontSize: 18 }} onClick={this.drawerRightToggle.bind(
+                  <div className={'widget-header draggable-header grabbable ' + compact}>
+                    <span>{ customHeader || widget.header} ({ stock || '' }{ pair ? `:${pair}` : '' })</span>
+                    <div className="widget-icons">
+                      <div className="pointer widget-icon fullscreen-exit-icon hide" onClick={this.fullscreen.bind(this)}>
+                        <FullscreenExitIcon style={{ fontSize: 18 }}/>
+                      </div>
+                      <div className="pointer widget-icon fullscreen-icon" onClick={this.fullscreen.bind(this)}>
+                        <FullscreenIcon style={{ fontSize: 18 }}/>
+                      </div>
+                      <div className="pointer widget-icon settings-icon" onClick={this.drawerRightToggle.bind(
                           this,
                           widget.settings,
                           widget.settingsWidth,
@@ -75,9 +79,12 @@ class Grid extends React.Component {
                             widgetId: widgetId,
                             ...data
                           }
-                        )}/>
+                        )}>
+                        <SettingsIcon style={{ fontSize: 18 }}/>
                       </div>
-                      <ClearIcon style={{ fontSize: 18 }} onClick={this.removeWidget.bind(this, widget.i)} className="pointer clear-icon"/>
+                      <div className="pointer widget-icon clear-icon" onClick={this.removeWidget.bind(this, widget.i)}>
+                        <ClearIcon style={{ fontSize: 18 }}/>
+                      </div>
                     </div>
                   </div>
                   <div className="widget-body">

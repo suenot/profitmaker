@@ -97,30 +97,36 @@ body
   justify-content: space-between
   align-items: center
   flex: 0 0 32px
-  padding: 0px 10px
+  padding-left: 10px
+  display: flex
+  flex-direction: row
+  justify-content: space-between
   svg
     cursor: pointer
+  .widget-icons
+    background: white
+    flex: 0 1 auto
+    display: flex
+  .widget-icon
+    padding: 7px
+    display: block
+    &:hover
+      background-color: rgba(0, 0, 0, 0.08)
+    svg
+      display: block
   &.compact
-    height: 5px
+    display: none
+    position: absolute
+    z-index: 10
+    background: white
+    width: 100%
     flex: 0 0 auto
     @media (hover: none)
       height: 33px
-    svg, span
-      display: none
-    .settings-icon
-      border-right: 1px solid rgba(0, 0, 0, 0.12)
-      border-bottom: 1px solid rgba(0, 0, 0, 0.12)
-      padding: 7px
-      display: block
-      position: absolute
-      left: 0px
-      z-index: 5
-      top: 0
-      background: white
-      &:hover
-        background-color: rgba(0, 0, 0, 0.08)
-      svg
-        display: block
+    .widget-icons
+      display: flex
+.widget:hover .widget-header.compact
+  display: flex
 
 .widget-body
   flex: 1 1 auto

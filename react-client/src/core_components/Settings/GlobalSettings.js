@@ -54,6 +54,18 @@ class Settings extends React.Component {
                   label={SettingsStore.fetchEnabled.value ? SettingsStore.fetchEnabled.name + ' enabled' : SettingsStore.fetchEnabled.name + ' disabled' }
                 />
               </FormGroup>
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={SettingsStore.compactWidgetsHeader}
+                      onChange={this.setCompactWidgetsHeader.bind(this)}
+                      value=""
+                    />
+                  }
+                  label={SettingsStore.compactWidgetsHeader ? 'Headers on hover' : 'Static headers' }
+                />
+              </FormGroup>
             </form>
           </div>
         <Divider />
@@ -75,6 +87,9 @@ class Settings extends React.Component {
   }
   setDefaultSetInterval(event) {
     SettingsStore.setDefaultSetInterval(event.target.value)
+  }
+  setCompactWidgetsHeader() {
+    SettingsStore.setCompactWidgetsHeader()
   }
   removeDashboard(id, event) {
     console.log(event)

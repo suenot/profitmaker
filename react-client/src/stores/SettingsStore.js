@@ -27,6 +27,10 @@ class SettingsStore {
       () => this.defaultSetInterval,
       () => trunk.updateStore(this)
     )
+    reaction(
+      () => this.compactWidgetsHeader,
+      () => trunk.updateStore(this)
+    )
     // TODO добавить реакцию на изменение
     // reaction(
     //   () => this.widgets,
@@ -49,6 +53,7 @@ class SettingsStore {
     name: 'Fetch interval',
     value: '2000'
   }
+  @observable compactWidgetsHeader = true
 
   @action setServerBackend(value) {
     this.serverBackend.value = value
@@ -61,6 +66,9 @@ class SettingsStore {
   }
   @action setDefaultSetInterval(value) {
     this.defaultSetInterval.value = value
+  }
+  @action setCompactWidgetsHeader() {
+    this.compactWidgetsHeader = !this.compactWidgetsHeader
   }
 
 
