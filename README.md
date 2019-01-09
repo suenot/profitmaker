@@ -38,16 +38,17 @@ If you had any problems with installing we can help in [voice/text Discrod chat]
 
 
 ## API:
-#### server api:
-```http://api.kupi.network/```
+#### Server api:
+Server: [http://api.kupi.network/](http://api.kupi.network/)
+
+Swagger: [try api online](https://app.swaggerhub.com/apis/soloviofff/kupi.network/1.0.0#/)
 ```
-/coinmarketcap
 /stocks
 /binance/pairs
-/binance/orders
 /binance/orders/ETH_BTC
-/binance/candles/ETH_BTC/1m // timeframes: ['1m', '3m', '5m', '15m', '30m', '1H', '2H', '4H', '6H', '12H', 'D', 'W', 'M']
 /binance/trades/ETH_BTC
+/binance/candles/ETH_BTC/1m // timeframes: ['1m', '3m', '5m', '15m', '30m', '1H', '2H', '4H', '6H', '12H', 'D', 'W', 'M']
+/coinmarketcap
 ```
 
 #### terminal server api:
