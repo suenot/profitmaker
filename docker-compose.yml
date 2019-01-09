@@ -13,13 +13,14 @@ services:
     # command: mongod --smallfiles --logpath=/dev/null # --quiet
 
   kupi-react:
-    build: ./react-client
+    image: node:8-alpine
     ports:
       - 127.0.0.1:8050:8050
     volumes:
       - ./react-client:/react-client
-      - /react-client/node_modules
-    command: yarn start
+      # - /vue-client/node_modules
+    working_dir: /react-client
+    command: sh -c 'yarn && yarn start' # yarn start
 
   # vue:
   #   # build: ./vue-client

@@ -14,7 +14,10 @@ cp -R ./defaults/. ./
 export DOCKER_CLIENT_TIMEOUT=120
 export COMPOSE_HTTP_TIMEOUT=120
 ```
+5. Install node modules
+```cd react-client && npm i``` # for react verison
+```cd vue-client && npm i``` # for vue verison
 
-5. Build and run containers
+6. Build and run containers
 ```docker-compose up``` # for react version
 ```docker-compose -f docker-compose-vue.yml up``` # for vue version
