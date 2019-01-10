@@ -1,7 +1,7 @@
 ![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/demo.png?raw=true)
 
 ## Demo without user API data
-http://demo.kupi.network/
+[http://demo.kupi.network/](http://demo.kupi.network/)
 
 ## About
 Open source, customized, extendable trading terminal that supports multiple crypto stocks. 
@@ -63,10 +63,10 @@ Swagger: [try api online](https://app.swaggerhub.com/apis/soloviofff/kupi.networ
 
 ## Plan for developemnt
 
-### bigdata
+### api
 - websocket
 - improve speed of information from stocks (now it can be in 0.2-30s, depends by stock)
-- ohlcv time_series
+- candles time_series
 - orders time_series
 - trades time_series
 - more reliability
@@ -105,4 +105,4 @@ Swagger: [try api online](https://app.swaggerhub.com/apis/soloviofff/kupi.networ
 - tests
 
 ## Buy me a coffee
-ETH: 0x159d7BD659dd362423E1487c5952ab0f6C79Bec3
+ETH: [0x159d7BD659dd362423E1487c5952ab0f6C79Bec3](https://etherscan.io/address/0x159d7BD659dd362423E1487c5952ab0f6C79Bec3)
