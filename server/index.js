@@ -27,8 +27,8 @@ let db
 //globals start
 ///////////////
 global.MONGO
-global.COINMARKETCAP
-global.BALANCE
+global.COINMARKETCAP = {}
+global.BALANCE = {}
 global.STOCKS
 global.MARKETS
 global.sleepUntil = {}
