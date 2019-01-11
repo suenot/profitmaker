@@ -13,6 +13,7 @@ var getMyTrades = require('../core_components/getMyTrades')
 var createOrder = require('../core_components/createOrder')
 var cancelOrder = require('../core_components/cancelOrder')
 var widgets = require('../core_components/widgets')
+const serializeError = require('serialize-error')
 
 var router = express.Router()
 
@@ -30,7 +31,7 @@ router.get('/widgets/:framework', function (req, res) {
       res.status(500).send({ error: 'wrong framework name' })
     }
   } catch (err) {
-    res.status(500).send({ error: 'fetch widgets' + ' failed!' })
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
@@ -42,133 +43,116 @@ router.get('/balance/now/:stock', function (req, res) {
     balance.data = _.orderBy(balance.data, ['totalUSD'], ['desc'])
     res.json(balance)
   } catch (err) {
-    res.status(500).send({ error: 'balance get ' + stock + ' failed!' })
-    // console.log('balance ERROR', err)
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
 router.get('/balance/history/:stock/', async function (req, res) {
   try {
-      var stock = req.params.stock
-      var result = await balanceHistory(stock)
-      res.json(result)
+    var stock = req.params.stock
+    var result = await balanceHistory(stock)
+    res.json(result)
   } catch (err) {
-      res.status(500).send({ error: 'balance history get ' + stock + ' failed!' })
-      // console.log('balance history ERROR', err)
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
 router.get('/openOrders/:stock/:pair', async function (req, res) {
   try {
-      var stock = req.params.stock
-      var symbol = req.params.pair.split('_').join('/')
-      var data = await getOpenOrders(stock, symbol)
-      res.json(data)
+    var stock = req.params.stock
+    var symbol = req.params.pair.split('_').join('/')
+    var data = await getOpenOrders(stock, symbol)
+    res.json(data)
   } catch (err) {
-      res.status(500).send({ error: 'openOrders get ' + stock + ' ' + pair + ' failed!' })
-      // console.log('openOrders ERROR', err)
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
 router.get('/myTrades/:stock/:pair', function (req, res) {
   try {
-      var stock = req.params.stock
-      var pair = req.params.pair.split('_').join('/')
-      res.json(global.TRADESHISTORY[stock][pair])
+    var stock = req.params.stock
+    var pair = req.params.pair.split('_').join('/')
+    res.json(global.TRADESHISTORY[stock][pair])
   } catch (err) {
-      res.status(500).send({ error: 'myTrades get ' + stock + ' ' + pair + ' failed!' })
-      // console.log('myTrades ERROR', err)
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
 router.get('/myTrade/:stock/:pair', async function (req, res) {
   try {
-      var stock = req.params.stock.toLowerCase()
-      var pair = req.params.pair.split('_').join('/')
-      var result = await getMyTrades(stock, pair)
-      res.json(result)
+    var stock = req.params.stock.toLowerCase()
+    var pair = req.params.pair.split('_').join('/')
+    var result = await getMyTrades(stock, pair)
+    res.json(result)
   } catch (err) {
-      res.status(500).send({ error: 'myTrade get ' + stock + ' ' + pair + ' failed!' })
-      console.log('myTrades ERROR', err)
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
 router.post('/cancelOrder', async function(req, res) {
   try {
-      console.log(req.body)
-      var result = await cancelOrder(req.body)
-      res.json(result)
+    var result = await cancelOrder(req.body)
+    res.json(result)
   } catch (err) {
-      res.status(500).send({error: serializeError(err).message})
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
 router.post('/createOrder', async function(req, res) {
   try {
-      var result = await createOrder(req.body)
-      res.json(result)
+    var result = await createOrder(req.body)
+    res.json(result)
   } catch (err) {
-      console.log('trade error')
-      var errorS = serializeError(err).message
-      // console.log(errorS)
-      res.status(500).send({error: errorS})
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
 router.get('/trades/:stock/:pair', async function (req, res) {
   try {
-      var stock = req.params.stock
-      var pair = req.params.pair
-      var trades = await getTrades(stock, pair)
-      res.json(trades)
+    var {stock, pair} = req.params
+    var trades = await getTrades(stock, pair)
+    res.json(trades)
   } catch (err) {
-      res.status(500).send({ error: 'function getTrades get ' + stock + ' ' + pair + ' failed!' })
-      console.log('getTrades ERROR', err)
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
 router.get('/stocks', async function (req, res) {
   try {
-      var stocks = await getStocks()
-      res.json(stocks)
+    var stocks = await getStocks()
+    res.json(stocks)
   } catch (err) {
-      res.status(500).send({ error: 'function getStocks failed!' })
-      // console.log('getStocks ERROR', err)
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
 router.get('/pairs/:stock', async function (req, res) {
   try {
-      var stock = req.params.stock
-      var pairs = await getPairs(stock)
-      res.json(pairs)
+    var stock = req.params.stock
+    var pairs = await getPairs(stock)
+    res.json(pairs)
   } catch (err) {
-      res.status(500).send({ error: 'function getPairs get ' + stock + ' failed!' })
-      // console.log('getPairs ERROR', err)
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
 router.get('/orders/:stock/:pair', async function (req, res) {
   try {
-      var stock = req.params.stock
-      var pair = req.params.pair
-      var orders = await getOrderBook(stock, pair)
-      res.json(orders)
+    var {stock, pair} = req.params
+    var orders = await getOrderBook(stock, pair)
+    res.json(orders)
   } catch (err) {
-      res.status(500).send({ error: 'function getOrderBook get ' + stock + ' ' + pair + ' failed!' })
-      // console.log('getOrderBook ERROR', err)
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
 router.get('/ohlcv/:stock/:pair', async function (req, res) {
   try {
-      var stock = req.params.stock
-      var pair = req.params.pair
-      var ohlcv = await getOHLCV(stock, pair)
-      res.json(ohlcv)
+    var {stock, pair} = req.params
+    var ohlcv = await getOHLCV(stock, pair)
+    res.json(ohlcv)
   } catch (err) {
-      res.status(500).send({ error: 'function getOHLCV get ' + stock + ' ' + pair + ' failed!' })
-      // console.log('getOHLCV ERROR', err)
+    res.status(500).send({error: serializeError(err).message})
   }
 })
 
