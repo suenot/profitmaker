@@ -13,7 +13,6 @@ var getMyTrades = require('../core_components/getMyTrades')
 var createOrder = require('../core_components/createOrder')
 var cancelOrder = require('../core_components/cancelOrder')
 var widgets = require('../core_components/widgets')
-const serializeError = require('serialize-error')
 
 var router = express.Router()
 
