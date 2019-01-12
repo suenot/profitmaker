@@ -28,6 +28,7 @@
     "echarts-for-react": "^2.0.15-beta.0",
     "element-react": "^1.4.24",
     "element-theme-default": "^1.4.13",
+    "es6-template-strings": "^2.0.1",
     "eslint": "5.6.0",
     "eslint-config-react-app": "^3.0.5",
     "eslint-loader": "2.1.1",

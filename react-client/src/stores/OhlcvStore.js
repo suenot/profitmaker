@@ -2,6 +2,7 @@ import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import DashboardsStore from './DashboardsStore'
 import SettingsStore from './SettingsStore'
+import template from 'es6-template-strings'
 import _ from 'lodash'
 
 class OhlcvStore {
@@ -13,15 +14,14 @@ class OhlcvStore {
       //   delete this.ohlcv[key]
       // }
       _.forEach(this.counters, (counter, key) => {
-        var [stock, pair, timeframe] = key.split('--')
-        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOhlcv(stock, pair, timeframe)
+        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOhlcv(key)
       })
 
     }
     start()
     setInterval(() => {
       start()
-    }, 3000)
+    }, 5000)
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get stockLowerCase() {return DashboardsStore.stockLowerCase }
@@ -55,10 +55,14 @@ class OhlcvStore {
     return ohlcv
   }
 
-  @action async fetchOhlcv(stock, pair, timeframe) {
-    var stockLowerCase = stock.toLowerCase()
-    var key = `${stock}--${pair}--${timeframe}`
-    axios.get(`${this.serverBackend}/${stockLowerCase}/candles/${pair}/${timeframe}`)
+  @action async fetchOhlcv(key) {
+    var [stock, pair, timeframe, url] = key.split('--')
+    // var stockLowerCase = stock.toLowerCase()
+    // var serverBackend = this.serverBackend
+    // var resultUrl = template(url, { stock, stockLowerCase, pair, timeframe, serverBackend })
+    // '${this.serverBackend}/${stockLowerCase}/candles/${pair}/${timeframe}'
+    // '${serverBackend}/${stockLowerCase}/candles/${pair}/${timeframe}'
+    axios.get(url)
     .then((response) => {
 
       if (this.hashes[key] === JSON.stringify(response.data)) return true
@@ -77,14 +81,21 @@ class OhlcvStore {
 
   counters = {}
 
-  @action count(n, stock, pair, timeframe) {
-    var key = `${stock}--${pair}--${timeframe}`
-    if (this.ohlcv[key] === undefined) this.ohlcv[key] = []
-    if (this.counters[key] === undefined) this.counters[key] = 0
-    this.counters[key] += n
-    if (this.counters[key] === 0) {
-      delete this.counters[key]
-    }
+  @action count(n, stock, pair, timeframe, url) {
+    // TODO: combine in function
+    try {
+      var serverBackend = this.serverBackend
+      var stockLowerCase = stock.toLowerCase()
+      var resultUrl = template(url, { stock, stockLowerCase, pair, timeframe, serverBackend })
+
+      var key = `${stock}--${pair}--${timeframe}--${resultUrl}`
+      if (this.ohlcv[key] === undefined) this.ohlcv[key] = []
+      if (this.counters[key] === undefined) this.counters[key] = 0
+      this.counters[key] += n
+      if (this.counters[key] === 0) {
+        delete this.counters[key]
+      }
+    } catch(err) {}
   }
 }
 

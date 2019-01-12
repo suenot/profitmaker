@@ -15,7 +15,7 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
     var customHeader = widget.customHeader
-    var {stock, pair, timeframe, group} = widget.data
+    var {stock, pair, url, timeframe, group} = widget.data
     return (
       <div className="drawer">
         <div className="drawer-title">
@@ -49,6 +49,16 @@ class Settings extends React.Component {
               label="Pair"
               value={pair}
               onChange={this.setWidgetData.bind(this, 'pair', 'value', 'toUpperCase')}
+              variant="outlined"
+              fullWidth
+              className="mb-16"
+            />
+
+            <TextField
+              id="outlined-name"
+              label="Url"
+              value={url}
+              onChange={this.setWidgetData.bind(this, 'url', 'value', undefined)}
               variant="outlined"
               fullWidth
               className="mb-16"

@@ -1,16 +1,25 @@
 import React from 'react'
 import Chart from './Chart'
 import Preloader from '../Preloader'
-import { observer } from 'mobx-react'
+import { observer, toJS } from 'mobx-react'
 import './theme.sass'
+import template from 'es6-template-strings'
 
 import OhlcvStore from 'stores/OhlcvStore'
 
 @observer
 export default class ChartComponent extends React.Component {
 	render() {
-    var {dashboardId, widgetId, stock, pair, timeframe} = this.props.data
-    var key = `${stock}--${pair}--${timeframe}`
+    var {dashboardId, widgetId, stock, pair, timeframe, url} = this.props.data
+
+		// TODO: combine in func
+		try {
+			var serverBackend = OhlcvStore.serverBackend
+			var stockLowerCase = stock.toLowerCase()
+			var resultUrl = template(url, { stock, stockLowerCase, pair, timeframe, serverBackend })
+	    var key = `${stock}--${pair}--${timeframe}--${resultUrl}`
+		}	catch(err) {}
+
     if (
       OhlcvStore.ohlcvComputed === undefined ||
       JSON.stringify(OhlcvStore.ohlcvComputed) === '{}' ||
@@ -31,20 +40,20 @@ export default class ChartComponent extends React.Component {
   }
 
   componentWillMount() {
-    var {stock, pair, timeframe} = this.props.data
-    OhlcvStore.count(1, stock, pair, timeframe)
+    var {stock, pair, timeframe, url} = this.props.data
+    OhlcvStore.count(1, stock, pair, timeframe, url)
   }
   componentWillUnmount() {
-    var {stock, pair, timeframe} = this.props.data
-    OhlcvStore.count(-1, stock, pair, timeframe)
+    var {stock, pair, timeframe, url} = this.props.data
+    OhlcvStore.count(-1, stock, pair, timeframe, url)
   }
   componentWillUpdate() {
-    var {stock, pair, timeframe} = this.props.data
-    OhlcvStore.count(-1, stock, pair, timeframe)
+    var {stock, pair, timeframe, url} = this.props.data
+    OhlcvStore.count(-1, stock, pair, timeframe, url)
   }
   componentDidUpdate() {
-    var {stock, pair, timeframe} = this.props.data
-    OhlcvStore.count(1, stock, pair, timeframe)
+    var {stock, pair, timeframe, url} = this.props.data
+    OhlcvStore.count(1, stock, pair, timeframe, url)
   }
 
 }
