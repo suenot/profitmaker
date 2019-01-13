@@ -1,7 +1,7 @@
 import React from 'react'
 import Chart from './Chart'
 import Preloader from '../Preloader'
-import { observer, toJS } from 'mobx-react'
+import { observer } from 'mobx-react'
 import './theme.sass'
 import template from 'es6-template-strings'
 
@@ -10,16 +10,8 @@ import OhlcvStore from 'stores/OhlcvStore'
 @observer
 export default class ChartComponent extends React.Component {
 	render() {
-    var {dashboardId, widgetId, stock, pair, timeframe, url} = this.props.data
-
-		// TODO: combine in func
-		try {
-			var serverBackend = OhlcvStore.serverBackend
-			var stockLowerCase = stock.toLowerCase()
-			var resultUrl = template(url, { stock, stockLowerCase, pair, timeframe, serverBackend })
-	    var key = `${stock}--${pair}--${timeframe}--${resultUrl}`
-		}	catch(err) {}
-
+    var {dashboardId, widgetId} = this.props.data
+    var key = this.getKey()
     if (
       OhlcvStore.ohlcvComputed === undefined ||
       JSON.stringify(OhlcvStore.ohlcvComputed) === '{}' ||
@@ -34,26 +26,37 @@ export default class ChartComponent extends React.Component {
       })
 
 			return (
-          <Chart id={`${dashboardId}_${widgetId}_chart`} type="hybrid" data={ordersJSON} _data={this.props.data} />
+        <Chart id={`${dashboardId}_${widgetId}_chart`} type="hybrid" data={ordersJSON} _data={this.props.data} />
 			)
 		}
   }
-
+  getKey() {
+    try {
+      var {stock, pair, timeframe, url} = this.props.data
+      var serverBackend = OhlcvStore.serverBackend
+      var stockLowerCase = stock.toLowerCase()
+      var resultUrl = template(url, { stock, stockLowerCase, pair, timeframe, serverBackend })
+      var key = `${stock}--${pair}--${timeframe}--${resultUrl}`
+      return key
+    }	catch(err) { return undefined }
+  }
   componentWillMount() {
-    var {stock, pair, timeframe, url} = this.props.data
-    OhlcvStore.count(1, stock, pair, timeframe, url)
+    var key = this.getKey()
+    OhlcvStore.count(1, key)
   }
   componentWillUnmount() {
-    var {stock, pair, timeframe, url} = this.props.data
-    OhlcvStore.count(-1, stock, pair, timeframe, url)
+    var key = this.getKey()
+    OhlcvStore.count(-1, key)
   }
   componentWillUpdate() {
-    var {stock, pair, timeframe, url} = this.props.data
-    OhlcvStore.count(-1, stock, pair, timeframe, url)
+    var key = this.getKey()
+    OhlcvStore.count(-1, key)
   }
   componentDidUpdate() {
-    var {stock, pair, timeframe, url} = this.props.data
-    OhlcvStore.count(1, stock, pair, timeframe, url)
+    var key = this.getKey()
+    OhlcvStore.count(1, key)
   }
 
 }
+
+

@@ -31,7 +31,7 @@ class OhlcvStore {
   // hash = ''
   hashes = {}
   @observable ohlcv = {
-    // 'stock--pair--timeframe': []
+    // 'stock--pair--timeframe-url': []
   }
 
   @computed get ohlcvComputed() {
@@ -57,11 +57,6 @@ class OhlcvStore {
 
   @action async fetchOhlcv(key) {
     var [stock, pair, timeframe, url] = key.split('--')
-    // var stockLowerCase = stock.toLowerCase()
-    // var serverBackend = this.serverBackend
-    // var resultUrl = template(url, { stock, stockLowerCase, pair, timeframe, serverBackend })
-    // '${this.serverBackend}/${stockLowerCase}/candles/${pair}/${timeframe}'
-    // '${serverBackend}/${stockLowerCase}/candles/${pair}/${timeframe}'
     axios.get(url)
     .then((response) => {
 
@@ -81,21 +76,13 @@ class OhlcvStore {
 
   counters = {}
 
-  @action count(n, stock, pair, timeframe, url) {
-    // TODO: combine in function
-    try {
-      var serverBackend = this.serverBackend
-      var stockLowerCase = stock.toLowerCase()
-      var resultUrl = template(url, { stock, stockLowerCase, pair, timeframe, serverBackend })
-
-      var key = `${stock}--${pair}--${timeframe}--${resultUrl}`
-      if (this.ohlcv[key] === undefined) this.ohlcv[key] = []
-      if (this.counters[key] === undefined) this.counters[key] = 0
-      this.counters[key] += n
-      if (this.counters[key] === 0) {
-        delete this.counters[key]
-      }
-    } catch(err) {}
+  @action count(n, key) {
+    if (this.ohlcv[key] === undefined) this.ohlcv[key] = []
+    if (this.counters[key] === undefined) this.counters[key] = 0
+    this.counters[key] += n
+    if (this.counters[key] === 0) {
+      delete this.counters[key]
+    }
   }
 }
 
