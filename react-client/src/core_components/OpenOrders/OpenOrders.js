@@ -12,7 +12,7 @@ class OpenOrders extends React.Component {
   render() {
     const {stock, pair} = this.props.data
     var key = `${stock}--${pair}`
-    var data = JSON.parse(JSON.stringify(OpenOrdersStore.openOrders[key]))
+    var data = OpenOrdersStore.openOrders[key]
     var demoMode = false
     if (data === undefined || _.isEmpty(data) || data.length === 0 ) {
       data = Demo
@@ -57,8 +57,8 @@ class OpenOrders extends React.Component {
                   </td>
                   <td>
                     <Button.Group>
-                      <Button type="warning" size="mini" onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], OpenOrdersStore.stock)}>change</Button>
-                      <Button type="danger" size="mini" onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], OpenOrdersStore.stock)}>close</Button>
+                      <Button type="warning" size="mini" onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], item['stock'])}>change</Button>
+                      <Button type="danger" size="mini" onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], item['stock'])}>close</Button>
                     </Button.Group>
                   </td>
                 </tr>
@@ -67,7 +67,7 @@ class OpenOrders extends React.Component {
           }
           </tbody>
         </table>
-        { demoMode && <div class="demo">Demo mode: needed API key</div> }
+        { demoMode && <div className="demo">Demo mode: needed API key</div> }
       </div>
     )
   }

@@ -12,11 +12,12 @@ class MyTrades extends React.Component {
   render() {
     const {stock, pair} = this.props.data
     var key = `${stock}--${pair}`
-    var data = JSON.parse(JSON.stringify(MyTradesStore.myTrades[key]))
+    var data = MyTradesStore.myTrades[key]
     var demoMode = false
     if (data === undefined || _.isEmpty(data) || data.length === 0 ) {
       data = Demo
       demoMode = true
+
     }
     return (
       <div>
@@ -54,7 +55,7 @@ class MyTrades extends React.Component {
           }
           </tbody>
         </table>
-        { demoMode && <div class="demo">Demo mode: needed API key</div> }
+        { demoMode && <div className="demo">Demo mode: needed API key</div> }
       </div>
     )
   }

@@ -96,7 +96,7 @@ class BalancePie extends React.Component {
           className='react_for_echarts'
           theme={'light'}
         />
-        { demoMode && <div class="demo">Demo mode: needed API key</div> }
+        { demoMode && <div className="demo">Demo mode: needed API key</div> }
       </div>
     )
   }
