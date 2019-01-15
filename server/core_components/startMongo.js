@@ -4,7 +4,7 @@ var localMongoUrl = ''
 var {sleep} = require('../../utils')
 
 if (process.env.DOCKER === 'DOCKER') {
-  localMongoUrl = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.dockerHost+':'+mongoConf.port+'/'+mongoConf.db+'?authSource=admin'
+  localMongoUrl = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.dockerHost+':'+'27017'+'/'+mongoConf.db+'?authSource=admin'
   console.log(localMongoUrl)
 } else {
   localMongoUrl = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.host+':'+mongoConf.port+'/'+mongoConf.db+'?authSource=admin'
