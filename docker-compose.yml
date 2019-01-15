@@ -26,7 +26,7 @@ services:
   #   # build: ./vue-client
   #   image: node:8-alpine
   #   ports:
-  #     - 127.0.0.1:8080:8080
+  #     - 127.0.0.1:8051:8080
   #   volumes:
   #     - ./vue-client:/vue-client
   #     # - /vue-client/node_modules
