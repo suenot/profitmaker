@@ -2,8 +2,8 @@ import React from 'react'
 import _ from 'lodash'
 import { observer } from 'mobx-react'
 import moment from 'moment'
-// import Preloader from '../Preloader'
 import Demo from './Demo'
+
 
 import MyTradesStore from 'stores/MyTradesStore'
 
@@ -54,6 +54,7 @@ class MyTrades extends React.Component {
           }
           </tbody>
         </table>
+        { demoMode && <div class="demo">Demo mode: needed API key</div> }
       </div>
     )
   }
