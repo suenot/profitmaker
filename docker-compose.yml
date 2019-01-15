@@ -15,7 +15,7 @@ services:
   kupi-react:
     image: node:8-alpine
     ports:
-      - 127.0.0.1:8050:8050
+      - 127.0.0.1:8041:8041
     volumes:
       - ./react-client:/react-client
       # - /vue-client/node_modules
@@ -26,7 +26,7 @@ services:
   #   # build: ./vue-client
   #   image: node:8-alpine
   #   ports:
-  #     - 127.0.0.1:8051:8080
+  #     - 127.0.0.1:8042:8080
   #   volumes:
   #     - ./vue-client:/vue-client
   #     # - /vue-client/node_modules
@@ -46,7 +46,7 @@ services:
         - kupi-mongo
         - kupi-react
     ports:
-      - 127.0.0.1:8051:8051
+      - 127.0.0.1:8040:8040
     command: yarn docker
     # sh -c 'npm i && node server.js'
 

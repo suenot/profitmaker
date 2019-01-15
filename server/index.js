@@ -91,6 +91,6 @@ const main = async () => {
 main()
 
 var port = process.env.DOCKER === 'DOCKER' ? '0.0.0.0' : '127.0.0.1'
-app.listen(8051, port, () => {
-  console.log('KUPI termintal launched on 8051 port')
+app.listen(8040, port, () => {
+  console.log('KUPI termintal launched on 8040 port')
 })

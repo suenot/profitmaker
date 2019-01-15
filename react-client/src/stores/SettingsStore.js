@@ -2,7 +2,7 @@ import { observable, action, reaction } from 'mobx'
 import { version, AsyncTrunk } from 'mobx-sync'
 import uuidv1 from 'uuid/v1'
 
-@version(1)
+@version(2)
 class SettingsStore {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'settings' })
@@ -43,7 +43,7 @@ class SettingsStore {
   }
   @observable terminalBackend = {
     name: 'Terminal backend',
-    value: 'http://localhost:8051'
+    value: 'http://localhost:8040'
   }
   @observable fetchEnabled = {
     name: 'Fetch',
@@ -109,4 +109,3 @@ const store = window.SettingsStore = new SettingsStore()
 export default store
 
 // export default SettingsStore
-
