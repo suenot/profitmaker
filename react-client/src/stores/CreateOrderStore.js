@@ -37,47 +37,23 @@ class CreateOrderStore {
   @action createOrder(stock, pair, type) {
     var key = `${stock}--${pair}--${type}`
     var createMsg = 'creating ' + type + ' order on ' + stock + ': '+ pair + ' price: '+this.form[key]['price'] + ' amount: ' + this.form[key]['amount']
-    Alert.warning(createMsg, {
-      position: 'bottom-right',
-      effect: 'scale',
-      beep: false,
-      timeout: 'none'
-    })
+    Alert.warning(createMsg)
     axios.post(`${this.terminalBackend}/createOrder`, {
       'stock': stock,
       'pair': pair,
       'type': type,
       'price': this.form[key]['price'],
-      'amount': this.form[key]['amount'],
-      // 'stock': this.stock,
-      // 'pair': this.pair,
-      // 'type': type,
-      // 'price': this.createPrice[type],
-      // 'amount': this.createAmount[type],
+      'amount': this.form[key]['amount']
     })
     .then((response) => {
-      // console.log(response)
-      console.log(response.data)
-
-      Alert.success('orderCreated', {
-        position: 'bottom-right',
-        effect: 'scale',
-        beep: false,
-        timeout: 'none'
-      })
-
+      Alert.success('orderCreated')
     })
     .catch((error) => {
       var errorMessage = 'Server is not available'
       try {
         errorMessage = error.response.data.error
       } catch(err) {}
-      Alert.error(errorMessage, {
-        position: 'bottom-right',
-        effect: 'scale',
-        beep: false,
-        timeout: 'none'
-      })
+      Alert.error(errorMessage)
     })
   }
 

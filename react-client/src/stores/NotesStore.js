@@ -53,12 +53,7 @@ class NotesStore {
       }
       delete this.notes[id]
     } else {
-      Alert.warning('You must have at least one note', {
-        position: 'bottom-right',
-        effect: 'scale',
-        beep: false,
-        timeout: 'none'
-      })
+      Alert.warning('You must have at least one note')
     }
   }
   @action setNote(dashboardId, widgetId, id) {

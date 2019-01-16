@@ -40,6 +40,12 @@
 // alert
 .s-alert-wrapper
   z-index: 3000
+  .s-alert-show,
+  .s-alert-hide,
+  .s-alert-close
+    z-index: 3000
+.s-alert-effect-stackslide
+  z-index: 3000
 //
 
 // theme
@@ -276,8 +282,9 @@ body
 // drawer
 .drawer-dashboard
   background-color: #f4f3f3 !important
-  width: 73px
+  width: 72px
   border-left: 1px solid rgba(0, 0, 0, 0.04) !important
+  z-index: 0 !important
   .divider
     background: rgba(0, 0, 0, 0.04) !important
   .add-widget-btn

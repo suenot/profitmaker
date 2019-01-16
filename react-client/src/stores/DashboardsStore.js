@@ -50,12 +50,7 @@ class DashboardsStore {
       delete this.dashboards[id]
       this.dashboardActiveId = Object.keys(this.dashboards)[0]
     } else {
-      Alert.warning('You must have at least one dashboard', {
-        position: 'bottom-right',
-        effect: 'scale',
-        beep: false,
-        timeout: 'none'
-      })
+      Alert.warning('You must have at least one dashboard')
     }
   }
   @action setDashboardName(name) {

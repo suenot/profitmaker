@@ -49,31 +49,16 @@ class OpenOrdersStore {
 
   @action cancelOrder(id, symbol, _id, stock) {
     var cancelMsg = stock + ': '+ symbol + ' canceling #' + id
-    Alert.warning(cancelMsg, {
-      position: 'bottom-right',
-      effect: 'scale',
-      beep: false,
-      timeout: 'none'
-    })
+    Alert.warning(cancelMsg)
     axios.post(`${this.terminalBackend}/cancelOrder/`, {
       id: id,
       _id: _id,
       symbol: symbol,
       stock: stock
     }).then((response) => {
-      Alert.success('orderCanceled', {
-        position: 'bottom-right',
-        effect: 'scale',
-        beep: false,
-        timeout: 'none'
-      })
+      Alert.success('orderCanceled')
     }).catch((error) => {
-      Alert.error(error.response.data.error, {
-        position: 'bottom-right',
-        effect: 'scale',
-        beep: false,
-        timeout: 'none'
-      })
+      Alert.error(error.response.data.error)
     })
   }
   counters = {}

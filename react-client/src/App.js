@@ -22,13 +22,7 @@ import SettingsIcon from '@material-ui/icons/Settings'
 
 import Alert from 'react-s-alert'
 import 'react-s-alert/dist/s-alert-default.css'
-import 'react-s-alert/dist/s-alert-css-effects/slide.css'
-import 'react-s-alert/dist/s-alert-css-effects/scale.css'
-import 'react-s-alert/dist/s-alert-css-effects/bouncyflip.css'
-import 'react-s-alert/dist/s-alert-css-effects/flip.css'
-import 'react-s-alert/dist/s-alert-css-effects/genie.css'
 import 'react-s-alert/dist/s-alert-css-effects/jelly.css'
-import 'react-s-alert/dist/s-alert-css-effects/stackslide.css'
 
 // import listReactFiles from 'list-react-files'
 
@@ -49,7 +43,7 @@ class App extends React.Component {
         `}</style>
         <CssBaseline />
         <div>
-          <Alert stack={{limit: 5}} />
+          <Alert stack={{limit: 5}} timeout={5000} effect="jelly" position="bottom-right" beep={false} />
           <ReactTooltip place="right" effect="solid" />
           <Drawer
             variant="permanent"
@@ -120,6 +114,7 @@ class App extends React.Component {
               </ListItem>
             </div>
           </Drawer>
+
           <Drawer
             anchor="right"
             variant="persistent"
@@ -143,6 +138,7 @@ class App extends React.Component {
               </ListItemIcon>
             </ListItem>
           </Drawer>
+
           <Drawer
             anchor="right"
             variant="persistent"
