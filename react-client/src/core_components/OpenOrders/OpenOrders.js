@@ -41,7 +41,7 @@ class OpenOrders extends React.Component {
           {
             _.map(data, (item, i) => {
               return (
-                <tr>
+                <tr key={item._id}>
                   <td>{item['data']['id'] || ""}</td>
                   <td>{item['data']['status'] || ""}</td>
                   <td>{item['data']['type'] || ""}</td>
