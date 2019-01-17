@@ -15,7 +15,7 @@ import DrawersStore from 'stores/DrawersStore'
 class Settings extends React.Component {
   render() {
     var {dashboardId, widgetId} = this.props.data
-    var total = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.total
+    var {total, demo} = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
     return (
       <div className="drawer">
         <div className="drawer-title">
@@ -54,8 +54,20 @@ class Settings extends React.Component {
               onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
               variant="outlined"
               fullWidth
-              className={total ? 'hide' : ''}
+              className={'mb-16 ' + total ? 'hide' : ''}
             />
+            <FormGroup>
+              <FormControlLabel
+              control={
+                  <Switch
+                    checked={demo}
+                    onChange={this.setWidgetData.bind(this, 'demo', 'checked', undefined)}
+                    value=""
+                  />
+                }
+                label={demo ? 'Demo on' : 'Demo off' }
+              />
+            </FormGroup>
           </form>
         </div>
         <Divider />
@@ -70,6 +82,7 @@ class Settings extends React.Component {
   setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
     var value = e.target[attr]
+    if (typeof(value) === 'string') value = value.trim()
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value, fn)
   }
   setGroup(dashboardId, widgetId, e) {

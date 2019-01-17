@@ -1,22 +1,34 @@
 import React from 'react'
 import { observer } from 'mobx-react'
-import Preloader from '../Preloader'
 import ReactEcharts from 'echarts-for-react'
+import Preloader from 'core_components/Preloader'
+import WidgetNotification from 'core_components/WidgetNotification'
+import Demo from './Demo'
 
 import BalanceStore from 'stores/BalanceStore'
 
 @observer
 class BalancePie extends React.Component {
   render() {
-    const {type, stock} = this.props.data
+    const {type, stock, demo} = this.props.data
     const key = `${type}--${stock}`
-    if (
-        BalanceStore.balance[key] === undefined
-        || JSON.stringify(BalanceStore.balance[key]) === '{}'
-        || JSON.stringify(BalanceStore.balance[key].data) === '[]'
-      ) {
-      return <Preloader />
+
+    var data = BalanceStore.balance[key]
+
+    if (demo) {
+      data = Demo
+    } else if (data === 'error') {
+      return <div className="preloader-center">
+        <WidgetNotification type="alert" msg="Can't get data"/>
+        <Preloader />
+      </div>
+    } else if (data === undefined || _.isEmpty(data) || data.length === 0 ) {
+      return <div className="preloader-center">
+        <WidgetNotification type="info" msg="No data"/>
+        <Preloader />
+      </div>
     }
+
     var option = {
       tooltip : {
         trigger: 'axis',
@@ -28,7 +40,7 @@ class BalancePie extends React.Component {
         }
       },
       legend: {
-        data: BalanceStore.balance[key].coins
+        data: data.coins
       },
       toolbox: {
         feature: {
@@ -45,7 +57,7 @@ class BalancePie extends React.Component {
         {
           type : 'category',
           boundaryGap : false,
-          data : BalanceStore.balance[key].timestamps
+          data : data.timestamps
         }
       ],
       yAxis : [
@@ -53,7 +65,7 @@ class BalancePie extends React.Component {
           type : 'value'
         }
       ],
-      series : BalanceStore.balance[key].series
+      series : data.series
     }
     return (
       <ReactEcharts

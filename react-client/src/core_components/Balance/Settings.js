@@ -98,6 +98,7 @@ class Settings extends React.Component {
   setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
     var value = e.target[attr]
+    if (typeof(value) === 'string') value = value.trim()
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value, fn)
   }
   setGroup(dashboardId, widgetId, e) {
