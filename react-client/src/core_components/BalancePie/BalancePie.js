@@ -1,8 +1,9 @@
 import React from 'react'
 import { observer } from 'mobx-react'
-import Preloader from '../Preloader'
 import ReactEcharts from 'echarts-for-react'
 import _ from 'lodash'
+import Preloader from 'core_components/Preloader'
+import WidgetNotification from 'core_components/WidgetNotification'
 import Demo from './Demo'
 
 import BalanceStore from 'stores/BalanceStore'
@@ -10,21 +11,24 @@ import BalanceStore from 'stores/BalanceStore'
 @observer
 class BalancePie extends React.Component {
   render() {
-    const {type, stock} = this.props.data
+    const {type, stock, demo} = this.props.data
     const key = `${type}--${stock}`
     var data = BalanceStore.balance[key]
-    var demoMode = false
-    if (data === undefined || _.isEmpty(data) || data.length === 0 ) {
+
+    if (demo) {
       data = Demo
-      demoMode = true
+    } else if (data === 'error') {
+      return <div className="preloader-center">
+        <WidgetNotification type="alert" msg="Can't get data"/>
+        <Preloader />
+      </div>
+    } else if (data === undefined || _.isEmpty(data) || data.length === 0 ) {
+      return <div className="preloader-center">
+        <WidgetNotification type="info" msg="No data"/>
+        <Preloader />
+      </div>
     }
-    // if (
-    //     BalanceStore.balance[key] === undefined
-    //     || JSON.stringify(BalanceStore.balance[key]) === '{}'
-    //     || JSON.stringify(BalanceStore.balance[key].data) === '[]'
-    //   ) {
-    //   return <Preloader />
-    // }
+
     var legendData = []
     var seriesData = []
     var selected = {}
@@ -96,7 +100,7 @@ class BalancePie extends React.Component {
           className='react_for_echarts'
           theme={'light'}
         />
-        { demoMode && <div className="demo">Demo mode: needed API key</div> }
+        { demo && <WidgetNotification type="warning" msg="Demo mode: using test data"/> }
       </div>
     )
   }

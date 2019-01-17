@@ -15,7 +15,7 @@ import DrawersStore from 'stores/DrawersStore'
 class Settings extends React.Component {
   render() {
     var {dashboardId, widgetId} = this.props.data
-    var total = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.total
+    var {total, demo} = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
     return (
       <div className="drawer">
         <div className="drawer-title">
@@ -56,6 +56,19 @@ class Settings extends React.Component {
               fullWidth
               className={total ? 'hide' : ''}
             />
+            <FormGroup>
+              <FormControlLabel
+              className="mb-16"
+              control={
+                  <Switch
+                    checked={demo}
+                    onChange={this.setWidgetData.bind(this, 'demo', 'checked', undefined)}
+                    value=""
+                  />
+                }
+                label={demo ? 'Demo on' : 'Demo off' }
+              />
+            </FormGroup>
           </form>
         </div>
         <Divider />

@@ -22,22 +22,6 @@ class Settings extends React.Component {
           <div className="drawer-title-text">Widget settings</div>
           <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
         </div>
-        {/* <div className="section-body">
-          <form noValidate autoComplete="off">
-            <FormGroup>
-              <FormControlLabel
-              control={
-                  <Switch
-                    checked={total}
-                    onChange={this.setWidgetData.bind(this, 'total', 'checked')}
-                    value=""
-                  />
-                }
-                label={total ? 'All stocks' : 'Current stock' }
-              />
-            </FormGroup>
-          </form>
-        </div> */}
         <Divider />
         <div className="section-body">
           <form noValidate autoComplete="off">
@@ -98,7 +82,6 @@ class Settings extends React.Component {
   }
   setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
-    console.log(e.target)
     var value = e.target[attr]
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value, fn)
   }

@@ -24,7 +24,7 @@ class BalanceStore {
   hashes = {}
 
   @observable precision = 8
-  balance = {}
+  @observable balance = {}
 
   @action available(stock, pair) {
     var key = `now--${stock}`
@@ -49,7 +49,7 @@ class BalanceStore {
       this.balance[key] = response.data
     })
     .catch(error => {
-      this.balance[key] = {}
+      this.balance[key] = 'error'
     })
   }
 

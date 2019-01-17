@@ -496,10 +496,28 @@ body
 .item-icon
   margin-right: 0 !important
 
-.demo
-  background: #f60361
+// preloader
+.preloader-center
+  flex: 1 0 auto
+  display: flex
+  justify-content: center
+  align-items: center
+  height: calc(100% - 18px)
+  flex-direction: column
+
+// notification
+.notification
   position: absolute
   bottom: 0
   width: 100%
   text-align: center
-  color: white
+  &.alert
+    background: #f60361
+    color: white
+  &.warning
+    background: #ff6d00
+    color: white
+  &.info
+    background: #485cbd
+    color: white
+

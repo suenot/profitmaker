@@ -1,12 +1,16 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import TextField from '@material-ui/core/TextField'
+import FormGroup from '@material-ui/core/FormGroup'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import Switch from '@material-ui/core/Switch'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import CloseIcon from '@material-ui/icons/Close'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
+import { type } from 'os';
 
 @observer
 class Settings extends React.Component {
@@ -14,7 +18,7 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
     var customHeader = widget.customHeader
-    var {stock, pair, group} = widget.data
+    var {stock, pair, group, demo} = widget.data
     return (
       <div className="drawer">
         <div className="drawer-title">
@@ -59,6 +63,19 @@ class Settings extends React.Component {
               variant="outlined"
               fullWidth
             />
+            <FormGroup>
+              <FormControlLabel
+              className="mb-16"
+              control={
+                  <Switch
+                    checked={demo}
+                    onChange={this.setWidgetData.bind(this, 'demo', 'checked', undefined)}
+                    value=""
+                  />
+                }
+                label={demo ? 'Demo on' : 'Demo off' }
+              />
+            </FormGroup>
           </form>
         </div>
         <Divider />
@@ -73,7 +90,8 @@ class Settings extends React.Component {
   setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
     var value = e.target[attr]
-    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim(), fn)
+    if (typeof(value) === 'string') value = value.trim()
+    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value, fn)
   }
   setGroup(dashboardId, widgetId, e) {
     var value = e.target.value.trim()

@@ -42,8 +42,9 @@ class OpenOrdersStore {
       this.openOrders[key] = response.data
     })
     .catch((error) => {
-      this.openOrders[key] = []
-      console.log(error)
+      // this.openOrders[key] = []
+      this.openOrders[key] = 'error'
+      // console.log(error)
     })
   }
 

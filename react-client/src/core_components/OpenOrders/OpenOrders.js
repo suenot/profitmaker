@@ -3,6 +3,8 @@ import _ from 'lodash'
 import { observer } from 'mobx-react'
 import { Button } from 'element-react'
 import moment from 'moment'
+import Preloader from 'core_components/Preloader'
+import WidgetNotification from 'core_components/WidgetNotification'
 import Demo from './Demo'
 
 import OpenOrdersStore from 'stores/OpenOrdersStore'
@@ -10,14 +12,24 @@ import OpenOrdersStore from 'stores/OpenOrdersStore'
 @observer
 class OpenOrders extends React.Component {
   render() {
-    const {stock, pair} = this.props.data
+    const {stock, pair, demo} = this.props.data
     var key = `${stock}--${pair}`
     var data = OpenOrdersStore.openOrders[key]
-    var demoMode = false
-    if (data === undefined || _.isEmpty(data) || data.length === 0 ) {
+
+    if (demo) {
       data = Demo
-      demoMode = true
+    } else if (data === 'error') {
+      return <div className="preloader-center">
+        <WidgetNotification type="alert" msg="Can't get data"/>
+        <Preloader />
+      </div>
+    } else if (data === undefined || _.isEmpty(data) || data.length === 0 ) {
+      return <div className="preloader-center">
+        <WidgetNotification type="info" msg="No data"/>
+        <Preloader />
+      </div>
     }
+
     return (
       <div>
         <table className="simpleTable">
@@ -67,7 +79,7 @@ class OpenOrders extends React.Component {
           }
           </tbody>
         </table>
-        { demoMode && <div className="demo">Demo mode: needed API key</div> }
+        { demo && <WidgetNotification type="warning" msg="Demo mode: using test data"/> }
       </div>
     )
   }

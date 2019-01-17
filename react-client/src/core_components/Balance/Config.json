@@ -11,7 +11,7 @@
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Balance/Balance.js",
-    "data": {"stock": "TOTAL", "stockTemp": "BINANCE", "total": true, "type": "now", "group": "", "groupColor": ""},
+    "data": {"demo": false, "stock": "TOTAL", "stockTemp": "BINANCE", "total": true, "type": "now", "group": "", "groupColor": ""},
     "categories": ["Balance"]
   },
   {
@@ -26,7 +26,7 @@
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Balance/Balance.js",
-    "data": {"stock": "BINANCE", "stockTemp": "BINANCE", "total": false, "type": "now", "group": "", "groupColor": ""},
+    "data": {"demo": false, "stock": "BINANCE", "stockTemp": "BINANCE", "total": false, "type": "now", "group": "", "groupColor": ""},
     "categories": ["Balance"]
   }
 ]
