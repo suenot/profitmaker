@@ -68,12 +68,15 @@ class BalancePie extends React.Component {
       series : data.series
     }
     return (
-      <ReactEcharts
-        option={option}
-        style={{width: '100%', height: '100%', position: 'absolute'}}
-        className='react_for_echarts'
-        theme={'light'}
-      />
+      <div>
+        <ReactEcharts
+          option={option}
+          style={{width: '100%', height: '100%', position: 'absolute'}}
+          className='react_for_echarts'
+          theme={'light'}
+        />
+        { demo && <WidgetNotification type="warning" msg="Demo mode: using test data"/> }
+      </div>
     )
   }
   componentDidMount() {
