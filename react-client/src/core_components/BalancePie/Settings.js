@@ -15,13 +15,29 @@ import DrawersStore from 'stores/DrawersStore'
 class Settings extends React.Component {
   render() {
     var {dashboardId, widgetId} = this.props.data
-    var total = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.total
+    var {total, demo} = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
     return (
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Widget settings</div>
           <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
         </div>
+        {/* <div className="section-body">
+          <form noValidate autoComplete="off">
+            <FormGroup>
+              <FormControlLabel
+              control={
+                  <Switch
+                    checked={total}
+                    onChange={this.setWidgetData.bind(this, 'total', 'checked')}
+                    value=""
+                  />
+                }
+                label={total ? 'All stocks' : 'Current stock' }
+              />
+            </FormGroup>
+          </form>
+        </div> */}
         <Divider />
         <div className="section-body">
           <form noValidate autoComplete="off">
@@ -40,7 +56,7 @@ class Settings extends React.Component {
               control={
                   <Switch
                     checked={total}
-                    onChange={this.setWidgetData.bind(this, 'total', 'checked')}
+                    onChange={this.setWidgetData.bind(this, 'total', 'checked', undefined)}
                     value=""
                   />
                 }
@@ -56,6 +72,19 @@ class Settings extends React.Component {
               fullWidth
               className={total ? 'hide' : ''}
             />
+            <FormGroup>
+              <FormControlLabel
+              className="mb-16"
+              control={
+                  <Switch
+                    checked={demo}
+                    onChange={this.setWidgetData.bind(this, 'demo', 'checked', undefined)}
+                    value=""
+                  />
+                }
+                label={demo ? 'Demo on' : 'Demo off' }
+              />
+            </FormGroup>
           </form>
         </div>
         <Divider />
@@ -69,6 +98,7 @@ class Settings extends React.Component {
   }
   setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
+    console.log(e.target)
     var value = e.target[attr]
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value, fn)
   }

@@ -40,7 +40,7 @@ class Settings extends React.Component {
               control={
                   <Switch
                     checked={total}
-                    onChange={this.setWidgetData.bind(this, 'total', 'checked')}
+                    onChange={this.setWidgetData.bind(this, 'total', 'checked', undefined)}
                     value=""
                   />
                 }
