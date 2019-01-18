@@ -9,9 +9,9 @@ import uuidv1 from 'uuid/v1'
 class DashboardsStore {
   @observable dashboards = [
     { id: '1', icon: '/img/widgets/invention.svg', name: 'Intuition', widgets: [
-      {component: "Candles", x: 0, y: 0, w: 3, h: 3, i: "0"},
-      {component: "Candles", x: 7, y: 10, w: 3, h: 3, i: "1"},
-      {component: "Candles", x: 0, y: 10, w: 5, h: 5, i: "2"}
+      {component: "Candles", x: 0, y: 0, w: 6, h: 15, i: "0"},
+      {component: "Handsontable", x: 0, y: 15, w: 6, h: 15, i: "1"},
+      {component: "KupiTable", x: 0, y: 30, w: 6, h: 15, i: "2"},
     ], counter: '2' },
     { id: '2', icon: '/img/widgets/invention.svg', name: 'Refactuiton', widgets: [], counter: '0' },
   ]

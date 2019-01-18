@@ -1,5 +1,6 @@
 <template>
   <div>
+    <!-- <Handsontable /> -->
     <grid-layout v-if="widgets.length !== 0"
       :layout="widgets"
       :col-num="12"
@@ -38,7 +39,6 @@
 
 <script>
 import { GridLayout, GridItem } from 'vue-grid-layout'
-import Chart from '../components/Chart.vue'
 import uuidv1 from 'uuid/v1'
 
 import { observer, toJS } from 'mobx-vue'

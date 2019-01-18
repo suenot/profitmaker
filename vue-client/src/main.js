@@ -6,6 +6,10 @@ import './registry'
 // import Chart from './utils_components/Chart.vue'
 // Vue.component('Chart', Chart)
 
+import "vue-virtual-scroller/dist/vue-virtual-scroller.css"
+import VueVirtualScroller from 'vue-virtual-scroller'
+Vue.use(VueVirtualScroller)
+
 import VueBus from 'vue-bus'
 Vue.use(VueBus)
 
@@ -22,6 +26,8 @@ Vue.use(Vuetify, {
 
 import VCharts from 'v-charts'
 Vue.use(VCharts)
+
+
 
 Vue.config.productionTip = false
 
