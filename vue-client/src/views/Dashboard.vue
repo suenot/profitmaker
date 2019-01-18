@@ -25,7 +25,7 @@
         <div class="widget">
           <div class="widget-header">
             <!-- <div class="title">Title</div> -->
-            <div class="options"><v-icon>more_horiz</v-icon></div>
+            <div class="options" @click="removeWidget(widget.i)"><v-icon>more_horiz</v-icon></div>
           </div>
           <div class="widget-body">
             <component :is="widget.component" :key="widget.i" :height="(widget.h*40-40)+'px'"></component>
@@ -66,8 +66,8 @@ export default observer({
       this.resizedEvent()
     }, 200)
 
-    this.$bus.on('addWidget', () => {
-      this.widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": uuidv1()})
+    this.$bus.on('addWidget', (component) => {
+      this.widgets.push({"component": component, "x":2,"y":0,"w":2,"h":4,"i": uuidv1()})
       this.layoutUpdatedEvent()
     })
   },
@@ -78,12 +78,22 @@ export default observer({
     resizedEvent: () => {
       window.dispatchEvent(new Event('resize'))
     },
-    addWidget: function() {
-      this.counter = (parseInt(this.counter)+1).toString()
-      this.widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": this.counter})
-    },
+    // addWidget: function() {
+    //   // this.counter = (parseInt(this.counter)+1).toString()
+    //   this.widgets.push({"component": "Chart", "x":2,"y":0,"w":2,"h":4,"i": uuidv1()})
+    // },
     layoutUpdatedEvent: function(){
       this.state.updateWidgets(this.widgets, this.$route.params.id)
+    },
+    removeWidget(widgetId) {
+      // var dashboardActiveIndex = _.findIndex(this.dashboards, ['id', dashboardActiveId])
+      // var widgets = this.dashboards[dashboardActiveIndex].widgets
+      // this.dashboards[dashboardActiveIndex].widgets = _.filter(widgets, function(item) {
+      //   return item.i !== widgetId
+      // })
+      this.widgets = _.filter(this.widgets, function(widget) {
+        return widget.i !== widgetId
+      })
     }
   }
 })
