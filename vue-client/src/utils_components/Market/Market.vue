@@ -22,7 +22,17 @@ export default {
           id: '2',
           name: 'KupiTable',
           component: 'KupiTable',
-        }
+        },
+        {
+          id: '3',
+          name: 'Handsontable',
+          component: 'Handsontable',
+        },
+        {
+          id: '4',
+          name: 'GridCanvas',
+          component: 'GridCanvas',
+        },
       ]
     }
   },

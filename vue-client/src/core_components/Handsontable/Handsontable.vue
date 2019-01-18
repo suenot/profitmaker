@@ -6,7 +6,7 @@
   import { HotTable } from '@handsontable/vue'
 
   export default {
-    // props: ['height'],
+    props: ['height'],
     data: function() {
       return {
         settings: {
@@ -52,8 +52,8 @@
           // autoRowSize: {syncLimit: 300},
           stretchH: 'all',
           autoWrapRow: true,
-          width: 806,
-          height: 487,
+          // width: 806,
+          // height: 487,
           maxRows: 22,
           // manualRowMove: true,
           // manualColumnMove: true,
