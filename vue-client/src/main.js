@@ -2,8 +2,9 @@ import Vue from 'vue'
 import App from './App/App.vue'
 import router from './router'
 
-import Chart from './components/Chart.vue'
-Vue.component('Chart', Chart)
+import './registry'
+// import Chart from './utils_components/Chart.vue'
+// Vue.component('Chart', Chart)
 
 import VueBus from 'vue-bus'
 Vue.use(VueBus)
