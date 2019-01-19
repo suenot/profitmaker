@@ -95,6 +95,9 @@ export default observer({
       justify-content: center
       align-items: center
       position: relative
+      &:hover
+        background: rgba(0, 0, 0, 0.08)
+        cursor: pointer
       &.active:after
         display: block
         content: ''
