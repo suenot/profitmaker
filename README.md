@@ -207,7 +207,7 @@ Swagger: [try api online](https://app.swaggerhub.com/apis/soloviofff/kupi.networ
 /createOrder
 ```
 
-## Plan for developemnt
+## Plan for development
 
 ### api
 - websocket
