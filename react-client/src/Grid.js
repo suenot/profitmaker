@@ -26,6 +26,7 @@ class Grid extends React.Component {
   }
 
   render() {
+    var dashboardActiveId = (this.props.data && this.props.data.id) || DashboardsStore.dashboardActiveId
     return (
       <GridLayout
         margin={[-1, -1]}
@@ -44,14 +45,13 @@ class Grid extends React.Component {
         draggableHandle=".draggable-header"
       >
         {
-          JSON.stringify(DashboardsStore.dashboardActiveId) !== 'false' &&
-          _.map(DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].widgets, (widget) => {
+          _.map(DashboardsStore.dashboards[dashboardActiveId].widgets, (widget) => {
             const Component = require("./"+widget.component).default
             var customHeader = false
             if (widget.customHeader !== '') {
               customHeader = widget.customHeader
             }
-            var dashboardId = DashboardsStore.dashboardActiveId
+            var dashboardId = dashboardActiveId
             var widgetId = widget.i
             var stock = widget.data.stock !== undefined ? widget.data.stock : ''
             var pair = widget.data.pair !== undefined ? widget.data.pair : ''
@@ -82,14 +82,14 @@ class Grid extends React.Component {
                         )}>
                         <SettingsIcon style={{ fontSize: 18 }}/>
                       </div>
-                      <div className="pointer widget-icon clear-icon" onClick={this.removeWidget.bind(this, widget.i)}>
+                      <div className="pointer widget-icon clear-icon" onClick={this.removeWidget.bind(this, dashboardId, widgetId)}>
                         <ClearIcon style={{ fontSize: 18 }}/>
                       </div>
                     </div>
                   </div>
                   <div className="widget-body">
                     {
-                      React.createElement(Component, {'data': {...widget.data, dashboardId: DashboardsStore.dashboardActiveId, widgetId: widget.i} })
+                      React.createElement(Component, {'data': {...widget.data, dashboardId: dashboardId, widgetId: widgetId} })
                     }
                   </div>
                 </div>
@@ -135,8 +135,8 @@ class Grid extends React.Component {
     DrawersStore.drawerRightSet(component, width, data, dashboardId, widgetId)
     DrawersStore.drawerRightToggle()
   }
-  removeWidget(id) {
-    DashboardsStore.removeWidget(id)
+  removeWidget(dashboardId, widgetId) {
+    DashboardsStore.removeWidget(dashboardId, widgetId)
   }
   componentDidMount() {
     document.title = DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name

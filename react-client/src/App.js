@@ -33,6 +33,13 @@ import DrawersStore from './stores/DrawersStore'
 @observer
 class App extends React.Component {
   render() {
+    var dashboardsLeft = _.filter(DashboardsStore.dashboards, (dashboard) => {
+      return dashboard.side === 'left'
+    })
+    var dashboardsRight = _.filter(DashboardsStore.dashboards, (dashboard) => {
+      return dashboard.side === 'right'
+    })
+
     const Component = require('./'+DrawersStore.drawerRightComponent+"").default
     return (
       <React.Fragment>
@@ -52,14 +59,14 @@ class App extends React.Component {
               paper: classNames('drawer-left'),
             }}
           >
-            <ListItem button data-tip="New dashboard" onClick={this.addDashboard.bind(this)} className="list-item">
+            <ListItem button data-tip="New dashboard" onClick={this.addDashboard.bind(this, 'left')} className="list-item">
               <ListItemIcon className="item-icon">
                 <AddToQueueIcon />
               </ListItemIcon>
             </ListItem>
             <Divider />
             {
-              _.map(DashboardsStore.dashboards, (dashboard) => {
+              _.map(dashboardsLeft, (dashboard) => {
                 return (
                   <div key={dashboard.id}>
                     <ListItem
@@ -83,7 +90,7 @@ class App extends React.Component {
               <ListItem
                 button
                 data-tip="API keys"
-                onClick={this.drawerRightToggle.bind(this, "core_components/Keys/Keys.js", "320px")}
+                onClick={this.drawerRightToggle.bind(this, "core_components/Keys/Keys.js", "320px", {})}
                 className="list-item"
               >
                 <ListItemIcon aria-label="API keys" className="item-icon">
@@ -94,7 +101,7 @@ class App extends React.Component {
               <ListItem
                 button
                 data-tip="Contact us"
-                onClick={this.drawerRightToggle.bind(this, "core_components/Socials/Socials.js", "320px")}
+                onClick={this.drawerRightToggle.bind(this, "core_components/Socials/Socials.js", "320px", {})}
                 className="list-item"
                 >
                 <ListItemIcon aria-label="Contact us" className="item-icon">
@@ -105,7 +112,7 @@ class App extends React.Component {
               <ListItem
                 button
                 data-tip="Settings"
-                onClick={this.drawerRightToggle.bind(this, "core_components/Settings/GlobalSettings.js", "320px")}
+                onClick={this.drawerRightToggle.bind(this, "core_components/Settings/GlobalSettings.js", "320px", {})}
                 className="list-item"
               >
                 <ListItemIcon aria-label="Settings" className="item-icon">
@@ -124,15 +131,41 @@ class App extends React.Component {
               paper: classNames('drawer-dashboard'),
             }}
           >
+            <ListItem button data-tip="New dashboard" onClick={this.addDashboard.bind(this, 'right')} className="list-item">
+              <ListItemIcon className="item-icon">
+                <AddToQueueIcon />
+              </ListItemIcon>
+            </ListItem>
+            <Divider />
+            {
+              _.map(dashboardsRight, (dashboard) => {
+                return (
+                  <div key={dashboard.id}>
+                    <ListItem
+                      button
+                      data-tip={dashboard.name}
+                      onClick={this.setDashboardDrawer.bind(this, "Grid.js", "320px", {id: dashboard.id})}
+                      className={"list-item " + (dashboard.id === DashboardsStore.drawerDashboardActiveId ? "selected" : "")}
+                    >
+                      {/* onClick={this.setDashboard.bind(this, dashboard.id)} */}
+                      <ListItemIcon className="item-icon">
+                        <img src={dashboard.icon} width="24px" height="24px" alt=""></img>
+                      </ListItemIcon>
+                    </ListItem>
+                    <Divider />
+                  </div>
+                )
+              })
+            }
             <div className="spacer"></div>
             <Divider className="divider"/>
-            <ListItem button data-tip="Add widget" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px")} className="add-widget-btn list-item">
+            <ListItem button data-tip="Add widget" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px", {})} className="add-widget-btn list-item">
               <ListItemIcon className="item-icon">
                 <AddIcon />
               </ListItemIcon>
             </ListItem>
             <Divider className="divider"/>
-            <ListItem button data-tip="Dashboard settings" onClick={this.drawerRightToggle.bind(this, "core_components/Settings/DashboardSettings.js", "320px")} className="list-item">
+            <ListItem button data-tip="Dashboard settings" onClick={this.drawerRightToggle.bind(this, "core_components/Settings/DashboardSettings.js", "320px", {})} className="list-item">
               <ListItemIcon className="item-icon">
                 <SettingsIcon />
               </ListItemIcon>
@@ -143,9 +176,8 @@ class App extends React.Component {
             anchor="right"
             variant="persistent"
             open={DrawersStore.drawerRightOpen}
-            className="drawer-right"
             classes={{
-              paper: classNames('drawer-right'),
+              paper: classNames("drawer-right", "offset"),
             }}
           >
             <div className="drawer-spacer">
@@ -162,25 +194,33 @@ class App extends React.Component {
       </React.Fragment>
     )
   }
-  drawerRightClose() {
-    DrawersStore.drawerRightClose()
+  // drawerRightClose() {
+  //   DrawersStore.drawerRightClose()
+  // }
+  // drawerRightSet(component, width, data) {
+  //   DrawersStore.drawerRightSet(component, width, data, undefined, undefined)
+  //   DrawersStore.drawerRightToOpen()
+  // }
+  setDashboardDrawer(component, width, data, e) {
+    this.drawerRightToggle(component, width, data, e)
+    DashboardsStore.setDrawerDashboard(data.id)
   }
-  drawerRightToggle(component, width, e) {
+  drawerRightToggle(component, width, data, e) {
     e.preventDefault()
-    if (DrawersStore.drawerRightComponent === component) {
+    if ( DrawersStore.drawerRightComponent === component && JSON.stringify(DrawersStore.drawerRightData) === JSON.stringify(data) ) {
       // current component
       DrawersStore.drawerRightToggle()
     } else {
       // new component
       if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
-      DrawersStore.drawerRightSet(component, width)
+      DrawersStore.drawerRightSet(component, width, data)
     }
   }
   setDashboard(id) {
     DashboardsStore.setDashboard(id)
   }
-  addDashboard() {
-    DashboardsStore.addDashboard()
+  addDashboard(side) {
+    DashboardsStore.addDashboard(side)
   }
 }
 
