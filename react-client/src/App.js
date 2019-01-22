@@ -144,7 +144,7 @@ class App extends React.Component {
                     <ListItem
                       button
                       data-tip={dashboard.name}
-                      onClick={this.setDashboardDrawer.bind(this, "Grid.js", "320px", {id: dashboard.id, drawer: true})}
+                      onClick={this.setDashboardDrawer.bind(this, "GridDrawer.js", "320px", {dashboardId: dashboard.id, drawer: true})}
                       className={"list-item " + (dashboard.id === DashboardsStore.drawerDashboardActiveId ? "selected" : "")}
                     >
                       {/* onClick={this.setDashboard.bind(this, dashboard.id)} */}
@@ -203,7 +203,7 @@ class App extends React.Component {
   // }
   setDashboardDrawer(component, width, data, e) {
     this.drawerRightToggle(component, width, data, e)
-    DashboardsStore.setDrawerDashboard(data.id)
+    DashboardsStore.setDrawerDashboard(data.dashboardId)
   }
   drawerRightToggle(component, width, data, e) {
     e.preventDefault()

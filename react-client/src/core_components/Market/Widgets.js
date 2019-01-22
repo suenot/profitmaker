@@ -15,6 +15,7 @@ import DrawersStore from 'stores/DrawersStore'
 @observer
 class Market extends React.Component {
   render() {
+    var dashboardId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
     return (
       <div className="market">
         <div className="widgets simple">
@@ -44,7 +45,7 @@ class Market extends React.Component {
                         </a>
                       </div>
                       <div className="market-actions-action">
-                        <Fab color="secondary" aria-label="Add" onClick={this.addWidget.bind(this, widget)}>
+                        <Fab color="secondary" aria-label="Add" onClick={this.addWidget.bind(this, widget, dashboardId)}>
                           <AddIcon />
                         </Fab>
                       </div>
@@ -64,8 +65,8 @@ class Market extends React.Component {
   componentWillMount() {
     DashboardsStore.fetchWidgets()
   }
-  addWidget(widget) {
-    DashboardsStore.addWidget(widget)
+  addWidget(widget, dashboardId) {
+    DashboardsStore.addWidget(widget, dashboardId)
   }
   drawerRightClose() {
     DrawersStore.drawerRightClose()

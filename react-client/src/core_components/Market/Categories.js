@@ -38,8 +38,9 @@ class Market extends React.Component {
     )
   }
   selectCategory(e) {
+    var dashboardId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
     DashboardsStore.selectCategory(e.target.textContent)
-    DrawersStore.drawerRightSet("core_components/Market/Widgets.js", "320px")
+    DrawersStore.drawerRightSet("core_components/Market/Widgets.js", "320px", {dashboardId: dashboardId})
   }
   componentWillMount() {
     DashboardsStore.fetchWidgets()

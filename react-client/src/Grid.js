@@ -21,84 +21,86 @@ class Grid extends React.Component {
 
   fullscreenTransformOld = ''
 
-  onLayoutChange(layout) {
-    DashboardsStore.setLayout(layout)
+  onLayoutChange(layout, dashboardActiveId) {
+    DashboardsStore.setLayout(layout, dashboardActiveId)
   }
 
   render() {
-    var dashboardActiveId = (this.props.data && this.props.data.id) || DashboardsStore.dashboardActiveId
+    var dashboardActiveId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
     return (
-      <GridLayout
-        margin={[-1, -1]}
-        className="layout"
-        cols={(this.props.data && this.props.data.drawer) || 24}
-        rowHeight={12}
-        layout={DashboardsStore.widgets}
-        onLayoutChange={(layout) => {
-            this.onLayoutChange(layout)
-            setTimeout(function() {
-              window.dispatchEvent(new Event('resize'))
-            }, 200)
+      <div>
+        <GridLayout
+          margin={[-1, -1]}
+          className="layout"
+          cols={24}
+          rowHeight={12}
+          layout={DashboardsStore.widgets}
+          onLayoutChange={(layout) => {
+              this.onLayoutChange(layout, dashboardActiveId)
+              setTimeout(function() {
+                window.dispatchEvent(new Event('resize'))
+              }, 200)
+            }
           }
-        }
-        draggableCancel="input,textarea"
-        draggableHandle=".draggable-header"
-      >
-        {
-          _.map(DashboardsStore.dashboards[dashboardActiveId].widgets, (widget) => {
-            const Component = require("./"+widget.component).default
-            var customHeader = false
-            if (widget.customHeader !== '') {
-              customHeader = widget.customHeader
-            }
-            var dashboardId = dashboardActiveId
-            var widgetId = widget.i
-            var stock = widget.data.stock !== undefined ? widget.data.stock : ''
-            var pair = widget.data.pair !== undefined ? widget.data.pair : ''
-            var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
-            data = {
-              dashboardId: dashboardId,
-              widgetId: widgetId,
-              ...data
-            }
-            var compact = SettingsStore.compactWidgetsHeader ? 'compact' : ''
-            return (
-              <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
-                <div className={`widget widget-${widget.name}`}>
-                  <div className="widget-group-color" style={{background: widget.data.groupColor || 'transparent'}}></div>
-                  <div className={'widget-header draggable-header grabbable ' + compact}>
-                    <span>{ customHeader || widget.header} ({ stock || '' }{ pair ? `:${pair}` : '' })</span>
-                    <div className="widget-icons">
-                      <div className="pointer widget-icon fullscreen-exit-icon hide" onClick={this.fullscreen.bind(this)}>
-                        <FullscreenExitIcon style={{ fontSize: 18 }}/>
-                      </div>
-                      <div className="pointer widget-icon fullscreen-icon" onClick={this.fullscreen.bind(this)}>
-                        <FullscreenIcon style={{ fontSize: 18 }}/>
-                      </div>
-                      <div className="pointer widget-icon settings-icon" onClick={this.drawerRightToggle.bind(
-                          this,
-                          widget.settings,
-                          widget.settingsWidth,
-                          data
-                        )}>
-                        <SettingsIcon style={{ fontSize: 18 }}/>
-                      </div>
-                      <div className="pointer widget-icon clear-icon" onClick={this.removeWidget.bind(this, widget.settings, data)}>
-                        <ClearIcon style={{ fontSize: 18 }}/>
+          draggableCancel="input,textarea"
+          draggableHandle=".draggable-header"
+        >
+          {
+            _.map(DashboardsStore.dashboards[dashboardActiveId].widgets, (widget) => {
+              const Component = require("./"+widget.component).default
+              var customHeader = false
+              if (widget.customHeader !== '') {
+                customHeader = widget.customHeader
+              }
+              var dashboardId = dashboardActiveId
+              var widgetId = widget.i
+              var stock = widget.data.stock !== undefined ? widget.data.stock : ''
+              var pair = widget.data.pair !== undefined ? widget.data.pair : ''
+              var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
+              data = {
+                dashboardId: dashboardId,
+                widgetId: widgetId,
+                ...data
+              }
+              var compact = SettingsStore.compactWidgetsHeader ? 'compact' : ''
+              return (
+                <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
+                  <div className={`widget widget-${widget.name}`}>
+                    <div className="widget-group-color" style={{background: widget.data.groupColor || 'transparent'}}></div>
+                    <div className={'widget-header draggable-header grabbable ' + compact}>
+                      <span>{ customHeader || widget.header} ({ stock || '' }{ pair ? `:${pair}` : '' })</span>
+                      <div className="widget-icons">
+                        <div className="pointer widget-icon fullscreen-exit-icon hide" onClick={this.fullscreen.bind(this)}>
+                          <FullscreenExitIcon style={{ fontSize: 18 }}/>
+                        </div>
+                        <div className="pointer widget-icon fullscreen-icon" onClick={this.fullscreen.bind(this)}>
+                          <FullscreenIcon style={{ fontSize: 18 }}/>
+                        </div>
+                        <div className="pointer widget-icon settings-icon" onClick={this.drawerRightToggle.bind(
+                            this,
+                            widget.settings,
+                            widget.settingsWidth,
+                            data
+                          )}>
+                          <SettingsIcon style={{ fontSize: 18 }}/>
+                        </div>
+                        <div className="pointer widget-icon clear-icon" onClick={this.removeWidget.bind(this, widget.settings, data)}>
+                          <ClearIcon style={{ fontSize: 18 }}/>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="widget-body">
-                    {
-                      React.createElement(Component, {'data': {...widget.data, dashboardId: dashboardId, widgetId: widgetId} })
-                    }
+                    <div className="widget-body">
+                      {
+                        React.createElement(Component, {'data': {...widget.data, dashboardId: dashboardId, widgetId: widgetId} })
+                      }
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })
-        }
-      </GridLayout>
+              )
+            })
+          }
+        </GridLayout>
+      </div>
       // HELPER FOR SCREENSHOTS
       // <div>
       //   {
