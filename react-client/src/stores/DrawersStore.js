@@ -4,7 +4,6 @@ class DrawersStore {
   constructor() {
     document.onkeyup = (e) => {
       if (e.keyCode==27) {
-        // console.log('ESC')
         this.drawerRightClose()
       }
     }
@@ -21,8 +20,8 @@ class DrawersStore {
     this.drawerRightOpen = true
   }
   @action drawerRightClose() {
-    console.log('drawerRightClose')
     this.drawerRightOpen = false
+    this.drawerRightSet('core_components/Empty', '0px')
   }
   @action drawerRightToggle() {
     this.drawerRightOpen = !this.drawerRightOpen

@@ -82,7 +82,7 @@ class Grid extends React.Component {
                         )}>
                         <SettingsIcon style={{ fontSize: 18 }}/>
                       </div>
-                      <div className="pointer widget-icon clear-icon" onClick={this.removeWidget.bind(this, dashboardId, widgetId)}>
+                      <div className="pointer widget-icon clear-icon" onClick={this.removeWidget.bind(this, dashboardId, widgetId, widget.component, data)}>
                         <ClearIcon style={{ fontSize: 18 }}/>
                       </div>
                     </div>
@@ -135,8 +135,8 @@ class Grid extends React.Component {
     DrawersStore.drawerRightSet(component, width, data, dashboardId, widgetId)
     DrawersStore.drawerRightToggle()
   }
-  removeWidget(dashboardId, widgetId) {
-    DashboardsStore.removeWidget(dashboardId, widgetId)
+  removeWidget(dashboardId, widgetId, component, data) {
+    DashboardsStore.removeWidget(dashboardId, widgetId, component, data)
   }
   componentDidMount() {
     document.title = DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name
