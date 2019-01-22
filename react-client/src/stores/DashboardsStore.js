@@ -158,16 +158,16 @@ class DashboardsStore {
     })
   }
 
-  @action removeWidget(dashboardId, widgetId, component, data) {
-    if ( DrawersStore.drawerRightComponent === component && JSON.stringify(DrawersStore.drawerRightData) === JSON.stringify(data) ) {
+  @action removeWidget(settings, data) {
+    if ( DrawersStore.drawerRightComponent === settings && JSON.stringify(DrawersStore.drawerRightData) === JSON.stringify(data) ) {
       DrawersStore.drawerRightClose()
     }
-    this.dashboards[dashboardId].widgets = _.filter(this.dashboards[dashboardId].widgets, function(item) {
-      return item.i !== widgetId
+    this.dashboards[data.dashboardId].widgets = _.filter(this.dashboards[data.dashboardId].widgets, function(item) {
+      return item.i !== data.widgetId
     })
   }
   removeWidgetWithData(key, value) {
-    DrawersStore.drawerRightSet('core_components/Empty', '0px')
+    DrawersStore.drawerRightSet('core_components/Empty', '0px', {}, '', '')
     DrawersStore.drawerRightClose()
     var dashboards = _.cloneDeep(this.dashboards)
     _.forEach(dashboards, (dashboard, i)=>{

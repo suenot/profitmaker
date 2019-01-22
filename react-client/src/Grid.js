@@ -56,6 +56,11 @@ class Grid extends React.Component {
             var stock = widget.data.stock !== undefined ? widget.data.stock : ''
             var pair = widget.data.pair !== undefined ? widget.data.pair : ''
             var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
+            data = {
+              dashboardId: dashboardId,
+              widgetId: widgetId,
+              ...data
+            }
             var compact = SettingsStore.compactWidgetsHeader ? 'compact' : ''
             return (
               <div key={widget.uid} data-grid={{ w: widget.w, h: widget.h, x: widget.x, y: widget.y, minW: widget.minW, minH:  widget.minH }}>
@@ -74,15 +79,11 @@ class Grid extends React.Component {
                           this,
                           widget.settings,
                           widget.settingsWidth,
-                          {
-                            dashboardId: dashboardId,
-                            widgetId: widgetId,
-                            ...data
-                          }
+                          data
                         )}>
                         <SettingsIcon style={{ fontSize: 18 }}/>
                       </div>
-                      <div className="pointer widget-icon clear-icon" onClick={this.removeWidget.bind(this, dashboardId, widgetId, widget.component, data)}>
+                      <div className="pointer widget-icon clear-icon" onClick={this.removeWidget.bind(this, widget.settings, data)}>
                         <ClearIcon style={{ fontSize: 18 }}/>
                       </div>
                     </div>
@@ -135,8 +136,8 @@ class Grid extends React.Component {
     DrawersStore.drawerRightSet(component, width, data, dashboardId, widgetId)
     DrawersStore.drawerRightToggle()
   }
-  removeWidget(dashboardId, widgetId, component, data) {
-    DashboardsStore.removeWidget(dashboardId, widgetId, component, data)
+  removeWidget(settings, data) {
+    DashboardsStore.removeWidget(settings, data)
   }
   componentDidMount() {
     document.title = DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name
