@@ -31,7 +31,7 @@ class Grid extends React.Component {
       <GridLayout
         margin={[-1, -1]}
         className="layout"
-        cols={24}
+        cols={(this.props.data && this.props.data.drawer) || 24}
         rowHeight={12}
         layout={DashboardsStore.widgets}
         onLayoutChange={(layout) => {
