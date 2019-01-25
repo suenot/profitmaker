@@ -30,7 +30,8 @@ class GridDrawer extends React.Component {
         <Divider />
         <Grid data={this.props.data} />
         <Divider />
-        <div className="drawer-footer" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px", {dashboardId: dashboardId})}>
+        <div className="spacer"></div>
+        <div className="drawer-footer pointer" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px", {dashboardId: dashboardId})}>
           Add widget
         </div>
         {/* <Divider /> */}
