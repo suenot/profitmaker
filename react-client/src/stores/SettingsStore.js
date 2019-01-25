@@ -70,39 +70,6 @@ class SettingsStore {
   @action setCompactWidgetsHeader() {
     this.compactWidgetsHeader = !this.compactWidgetsHeader
   }
-
-
-  @observable keys = []
-  @action setKeyData(id, key, value) {
-    var index = _.findIndex(this.keys, ['id', id])
-    this.keys[index][key] = value || ''
-  }
-  @action toggleKeyData(id, key) {
-    var index = _.findIndex(this.keys, ['id', id])
-    this.keys[index][key] = !this.keys[index][key]
-  }
-  // @observable counter = 0
-  @action addKey() {
-    this.keys.push({
-      id: uuidv1(),
-      name: 'Undefined key',
-      stock: 'binance',
-      publicKey: '',
-      privateKey: '',
-      proxy: '',
-      enabled: false
-    })
-    // this.counter += 1
-  }
-  @action removeKey(id) {
-    console.log(JSON.stringify(this.keys))
-    this.keys = _.filter(this.keys, (key)=>{
-      if (key.id !== id) return true
-      return false
-    })
-    console.log(JSON.stringify(this.keys))
-
-  }
 }
 
 const store = window.SettingsStore = new SettingsStore()

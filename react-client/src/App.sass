@@ -280,6 +280,11 @@ body
   //     background: linear-gradient(to right, #ffffff 0%,#ffffff 60%,#7db9e8 60%,#7db9e8 100%)
 
 // drawer
+.drawer
+  display: flex
+  flex-direction: column
+  min-height: 100vh
+
 .drawer-dashboard
   background-color: #f4f3f3 !important
   width: 72px
@@ -314,13 +319,17 @@ body
   background: #efefef
   .drawer-subtitle-text
 .drawer-footer
-  height: 48px
+  min-height: 48px
   padding: 16px
   background: rgba(0, 0, 0, 0.12)
   text-align: center
-  &:hover
+  &.pointer:hover
     background: rgba(0, 0, 0, 0.18)
-    cursor: pointer
+  &.alert
+    background: #f50057
+    color: #fff
+    &.pointer:hover
+      background: #c51162
 .drawer-list
   padding: 0 !important
 .drawer-list-item

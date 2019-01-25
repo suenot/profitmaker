@@ -19,12 +19,12 @@ import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 
-import SettingsStore from 'stores/SettingsStore'
+import KeysStore from 'stores/KeysStore'
 import DrawersStore from 'stores/DrawersStore'
 
 
 @observer
-class Settings extends React.Component {
+class Keys extends React.Component {
   render() {
     return (
       <div className="drawer">
@@ -37,7 +37,7 @@ class Settings extends React.Component {
         </div>
         <Divider />
         {
-          _.map(SettingsStore.keys, (key) => {
+          _.map(KeysStore.keys, (key) => {
             return (
               <ExpansionPanel className="expansion-panel" key={key.id}>
                 <ExpansionPanelSummary expandIcon={<ExpandMoreIcon className="expansion-panel-icon" />} className="expansion-panel-summary">
@@ -111,24 +111,28 @@ class Settings extends React.Component {
             )
           })
         }
+        <div className="spacer"></div>
+        <div className="drawer-footer alert">
+          Keys in browser doesn't work now. They are only for demo. Use keys in your local server.
+        </div>
       </div>
     )
   }
   setKeyData(id, key, e) {
-    SettingsStore.setKeyData(id, key, e.target.value)
+    KeysStore.setKeyData(id, key, e.target.value)
   }
   toggleKeyData(id, key) {
-    SettingsStore.toggleKeyData(id, key)
+    KeysStore.toggleKeyData(id, key)
   }
   addKey() {
-    SettingsStore.addKey()
+    KeysStore.addKey()
   }
   removeKey(id) {
-    SettingsStore.removeKey(id)
+    KeysStore.removeKey(id)
   }
   drawerRightClose() {
     DrawersStore.drawerRightClose()
   }
 }
 
-export default Settings
+export default Keys
