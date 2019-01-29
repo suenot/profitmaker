@@ -29,6 +29,7 @@ class Grid extends React.Component {
     var dashboardActiveId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
     return (
       <div>
+        {/* <h1>{dashboardActiveId}</h1> */}
         <GridLayout
           margin={[-1, -1]}
           className="layout"
@@ -36,10 +37,12 @@ class Grid extends React.Component {
           rowHeight={12}
           layout={DashboardsStore.widgets}
           onLayoutChange={(layout) => {
-              this.onLayoutChange(layout, dashboardActiveId)
-              setTimeout(function() {
-                window.dispatchEvent(new Event('resize'))
-              }, 200)
+              try {
+                this.onLayoutChange(layout, dashboardActiveId)
+                setTimeout(function() {
+                  window.dispatchEvent(new Event('resize'))
+                }, 200)
+              } catch(err) {}
             }
           }
           draggableCancel="input,textarea"

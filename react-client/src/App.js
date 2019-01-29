@@ -10,6 +10,7 @@ import AddToQueueIcon from '@material-ui/icons/AddToQueue'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import AddIcon from '@material-ui/icons/Add'
+import QueueIcon from '@material-ui/icons/Queue'
 import KeyIcon from '@material-ui/icons/VpnKey'
 import Fab from '@material-ui/core/Fab'
 import ReactTooltip from 'react-tooltip'
@@ -85,7 +86,6 @@ class App extends React.Component {
               })
             }
             <div className="spacer"></div>
-            <div>
             <Divider />
               <ListItem
                 button
@@ -112,14 +112,25 @@ class App extends React.Component {
               <ListItem
                 button
                 data-tip="Settings"
-                onClick={this.drawerRightToggle.bind(this, "core_components/Settings/GlobalSettings.js", "320px", {})}
+                onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "320px", {dashboardId: DashboardsStore.dashboardActiveId})}
                 className="list-item"
               >
                 <ListItemIcon aria-label="Settings" className="item-icon">
                   <SettingsIcon />
                 </ListItemIcon>
               </ListItem>
-            </div>
+              <Divider className="divider"/>
+              <ListItem button data-tip="Add widget" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px", {})} className="add-widget-btn list-item">
+                <ListItemIcon className="item-icon">
+                  <QueueIcon />
+                </ListItemIcon>
+              </ListItem>
+              {/* <Divider className="divider"/>
+              <ListItem button data-tip="Dashboard settings" onClick={this.drawerRightToggle.bind(this, "core_components/Settings/DashboardSettings.js", "320px", {})} className="list-item">
+                <ListItemIcon className="item-icon">
+                  <SettingsIcon />
+                </ListItemIcon>
+              </ListItem> */}
           </Drawer>
 
           <Drawer
@@ -158,18 +169,6 @@ class App extends React.Component {
               })
             }
             <div className="spacer"></div>
-            <Divider className="divider"/>
-            <ListItem button data-tip="Add widget" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px", {})} className="add-widget-btn list-item">
-              <ListItemIcon className="item-icon">
-                <AddIcon />
-              </ListItemIcon>
-            </ListItem>
-            <Divider className="divider"/>
-            <ListItem button data-tip="Dashboard settings" onClick={this.drawerRightToggle.bind(this, "core_components/Settings/DashboardSettings.js", "320px", {})} className="list-item">
-              <ListItemIcon className="item-icon">
-                <SettingsIcon />
-              </ListItemIcon>
-            </ListItem>
           </Drawer>
 
           <Drawer
