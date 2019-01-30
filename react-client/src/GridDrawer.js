@@ -4,18 +4,18 @@ import CloseIcon from '@material-ui/icons/Close'
 import Grid from './Grid'
 
 class GridDrawer extends React.Component {
-  drawerRightClose() {
-    DrawersStore.drawerRightClose()
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
-  drawerRightToggle(component, width, data, e) {
+  drawerToggle(drawer, component, width, data, e) {
     e.preventDefault()
-    if ( DrawersStore.drawerRightComponent === component && JSON.stringify(DrawersStore.drawerRightData) === JSON.stringify(data) ) {
+    if ( DrawersStore.drawers[drawer].component === component && JSON.stringify(DrawersStore.drawers[drawer].data) === JSON.stringify(data) ) {
       // current component
-      DrawersStore.drawerRightToggle()
+      DrawersStore.drawerToggle(drawer)
     } else {
       // new component
-      if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
-      DrawersStore.drawerRightSet(component, width, data)
+      if (DrawersStore.drawers[drawer].open === false) DrawersStore.drawerToggle(drawer)
+      DrawersStore.drawerSet(drawer, component, width, data)
     }
   }
   render() {
@@ -25,13 +25,13 @@ class GridDrawer extends React.Component {
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Temporary dashboard</div>
-          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, 'aside-right-first')} className="pointer" />
         </div>
         <Divider />
         <Grid data={this.props.data} />
         <Divider />
         <div className="spacer"></div>
-        <div className="drawer-footer pointer" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px", {dashboardId: dashboardId})}>
+        <div className="drawer-footer pointer" onClick={this.drawerToggle.bind(this, "aside-right-second", "core_components/Market/Categories.js", "320px", {dashboardId: dashboardId})}>
           Add widget
         </div>
         {/* <Divider /> */}

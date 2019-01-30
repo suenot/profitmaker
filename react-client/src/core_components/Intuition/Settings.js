@@ -69,7 +69,7 @@ class Settings extends React.Component {
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim())
   }
   drawerRightClose() {
-    DrawersStore.drawerRightClose()
+    DrawersStore.drawerClose('aside-left-first')
   }
 }
 

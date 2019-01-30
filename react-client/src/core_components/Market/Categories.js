@@ -14,19 +14,22 @@ import DrawersStore from 'stores/DrawersStore'
 @observer
 class Market extends React.Component {
   render() {
+    var TemporaryDashboardId = (this.props.data && this.props.data.dashboardId)
+    var dashboardId = TemporaryDashboardId || DashboardsStore.dashboardActiveId
+    var aside = TemporaryDashboardId ? 'aside-right-second' : 'aside-left-first'
     return (
       <div className="market">
         <div className="categories">
           <div className="drawer-title">
             <div className="drawer-title-text">Widgets categories</div>
-            <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+            <CloseIcon onClick={this.drawerClose.bind(this, aside)} className="pointer" />
           </div>
           <Divider />
           <List component="nav">
             {
               _.map(DashboardsStore.categories, (category) => {
                 return (
-                  <ListItem key={category} button onClick={this.selectCategory.bind(this)}>
+                  <ListItem key={category} button onClick={this.selectCategory.bind(this, dashboardId, aside)}>
                     <ListItemText primary={category} />
                   </ListItem>
                 )
@@ -37,16 +40,15 @@ class Market extends React.Component {
       </div>
     )
   }
-  selectCategory(e) {
-    var dashboardId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
+  selectCategory(dashboardId, aside, e) {
     DashboardsStore.selectCategory(e.target.textContent)
-    DrawersStore.drawerRightSet("core_components/Market/Widgets.js", "320px", {dashboardId: dashboardId})
+    DrawersStore.drawerSet(`${aside}`, "core_components/Market/Widgets.js", "320px", {dashboardId: dashboardId, aside: aside})
   }
   componentWillMount() {
     DashboardsStore.fetchWidgets()
   }
-  drawerRightClose() {
-    DrawersStore.drawerRightClose()
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
 }
 

@@ -51,7 +51,7 @@ class Stocks extends React.Component {
     StocksStore.count(1, this.props.data)
   }
   drawerRightClose() {
-    DrawersStore.drawerRightClose()
+    DrawersStore.drawerClose('aside-left-first')
   }
 }
 

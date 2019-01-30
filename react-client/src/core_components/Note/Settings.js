@@ -82,7 +82,7 @@ class Settings extends React.Component {
     NotesStore.removeNote(id, noteId)
   }
   drawerRightClose() {
-    DrawersStore.drawerRightClose()
+    DrawersStore.drawerClose('aside-left-first')
   }
 }
 

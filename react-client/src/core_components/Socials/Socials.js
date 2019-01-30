@@ -18,7 +18,7 @@ class Settings extends React.Component {
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Contact us</div>
-          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, 'aside-left-first')} className="pointer" />
         </div>
         <List component="nav">
 
@@ -62,8 +62,8 @@ class Settings extends React.Component {
       </div>
     )
   }
-  drawerRightClose() {
-    DrawersStore.drawerRightClose()
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
 }
 

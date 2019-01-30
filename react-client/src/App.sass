@@ -284,25 +284,55 @@ body
   //     background: linear-gradient(to right, #ffffff 0%,#ffffff 60%,#7db9e8 60%,#7db9e8 100%)
 
 // drawer
+.menu-left
+  width: 72px !important
+  z-index: 0 !important
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important
+.menu-right
+  width: 72px !important
+  z-index: 0 !important
+  border-left: 1px solid rgba(0, 0, 0, 0.08) !important
+.aside-left-first
+  width: 320px !important
+  transform: translate(72px, 0px) !important
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important
+.aside-left-second
+  width: 320px !important
+  transform: translate(392px, 0px) !important
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important
+.aside-right-first
+  width: 320px !important
+  transform: translate(-72px, 0px) !important
+  border-left: 1px solid rgba(0, 0, 0, 0.08) !important
+.aside-right-second
+  width: 320px !important
+  transform: translate(-392px, 0px) !important
+  border-left: 1px solid rgba(0, 0, 0, 0.08) !important
+
 .drawer
   display: flex
   flex-direction: column
   min-height: 100vh
+  &.close
+    display: none
+  &.open
+    display: block
 
-.drawer-dashboard
-  background-color: #f4f3f3 !important
-  width: 72px
-  border-left: 1px solid rgba(0, 0, 0, 0.04) !important
-  z-index: 0 !important
-  .divider
-    background: rgba(0, 0, 0, 0.04) !important
-  .add-widget-btn
-    background: #049bfd !important
-    div
-      color: rgba(255,255,255,0.8) !important
 
-.drawer-right.offset
-  transform: translate(-72px, 0px) !important
+// .drawer-dashboard
+//   background-color: #f4f3f3 !important
+//   width: 72px
+//   border-left: 1px solid rgba(0, 0, 0, 0.04) !important
+//   z-index: 0 !important
+.divider
+  background: rgba(0, 0, 0, 0.04) !important
+.add-widget-btn
+  background: #049bfd !important
+  div
+    color: rgba(255,255,255,0.8) !important
+
+// .drawer-right.offset
+//   transform: translate(-72px, 0px) !important
 .drawer-right-toggle
   z-index: 1
 .drawer-title

@@ -26,7 +26,7 @@ class Settings extends React.Component {
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Dashboard settings</div>
-          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, 'aside-left-first')} className="pointer" />
         </div>
         <Divider />
         <div className="section-body">
@@ -53,7 +53,7 @@ class Settings extends React.Component {
                   <InputAdornment variant="filled" position="end">
                     <IconButton
                       aria-label="Icons list"
-                      onClick={this.drawerRightSet.bind(this, "core_components/Settings/IconsList.js", "320px")}
+                      onClick={this.drawerSet.bind(this, "aside-left-first", "core_components/Settings/IconsList.js", "320px")}
                     >
                       <ImageIcon />
                     </IconButton>
@@ -121,8 +121,8 @@ class Settings extends React.Component {
       </div>
     )
   }
-  drawerRightSet(component, width) {
-    DrawersStore.drawerRightSet(component, width)
+  drawerSet(drawer, component, width) {
+    DrawersStore.drawerSet(drawer, component, width)
     // DrawersStore.drawerRightToggle()
   }
   setDashboardName(event) {
@@ -131,8 +131,8 @@ class Settings extends React.Component {
   setDashboardIcon(event) {
     DashboardsStore.setDashboardIcon(event.target.value)
   }
-  drawerRightClose() {
-    DrawersStore.drawerRightClose()
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
   setServerBackend(event) {
     SettingsStore.setServerBackend(event.target.value)

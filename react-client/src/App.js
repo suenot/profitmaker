@@ -41,23 +41,26 @@ class App extends React.Component {
       return dashboard.side === 'right'
     })
 
-    const Component = require('./'+DrawersStore.drawerRightComponent+"").default
+    const AsideLeftFirstComponent = require('./'+DrawersStore.drawers['aside-left-first'].component+"").default
+    const AsideLeftSecondComponent = require('./'+DrawersStore.drawers['aside-left-second'].component+"").default
+    const AsideRightFirstComponent = require('./'+DrawersStore.drawers['aside-right-first'].component+"").default
+    const AsideRightSecondComponent = require('./'+DrawersStore.drawers['aside-right-second'].component+"").default
     return (
       <React.Fragment>
-        <style jsx="true">{`
-          .drawer-right {
+        {/* <style jsx="true">{`
+          .menu-left {
             width: ${DrawersStore.drawerRightWidth}
           }
-        `}</style>
+        `}</style> */}
         <CssBaseline />
         <div>
           <Alert stack={{limit: 5}} timeout={5000} effect="jelly" position="bottom-right" beep={false} />
           <ReactTooltip place="right" effect="solid" />
           <Drawer
             variant="permanent"
-            className="drawer-left"
+            className="menu-left"
             classes={{
-              paper: classNames('drawer-left'),
+              paper: classNames('menu-left'),
             }}
           >
             <ListItem button data-tip="New dashboard" onClick={this.addDashboard.bind(this, 'left')} className="list-item">
@@ -90,7 +93,7 @@ class App extends React.Component {
               <ListItem
                 button
                 data-tip="API keys"
-                onClick={this.drawerRightToggle.bind(this, "core_components/Keys/Keys.js", "320px", {})}
+                onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Keys/Keys.js", "320px", {})}
                 className="list-item"
               >
                 <ListItemIcon aria-label="API keys" className="item-icon">
@@ -101,7 +104,7 @@ class App extends React.Component {
               <ListItem
                 button
                 data-tip="Contact us"
-                onClick={this.drawerRightToggle.bind(this, "core_components/Socials/Socials.js", "320px", {})}
+                onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Socials/Socials.js", "320px", {})}
                 className="list-item"
                 >
                 <ListItemIcon aria-label="Contact us" className="item-icon">
@@ -112,7 +115,7 @@ class App extends React.Component {
               <ListItem
                 button
                 data-tip="Settings"
-                onClick={this.drawerRightToggle.bind(this, "core_components/Settings/Settings.js", "320px", {dashboardId: DashboardsStore.dashboardActiveId})}
+                onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Settings/Settings.js", "320px", {dashboardId: DashboardsStore.dashboardActiveId})}
                 className="list-item"
               >
                 <ListItemIcon aria-label="Settings" className="item-icon">
@@ -120,7 +123,7 @@ class App extends React.Component {
                 </ListItemIcon>
               </ListItem>
               <Divider className="divider"/>
-              <ListItem button data-tip="Add widget" onClick={this.drawerRightToggle.bind(this, "core_components/Market/Categories.js", "320px", {})} className="add-widget-btn list-item">
+              <ListItem button data-tip="Add widget" onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Market/Categories.js", "320px", {})} className="add-widget-btn list-item">
                 <ListItemIcon className="item-icon">
                   <QueueIcon />
                 </ListItemIcon>
@@ -137,9 +140,9 @@ class App extends React.Component {
             anchor="right"
             variant="persistent"
             open={true}
-            className="drawer-dashboard"
+            className="menu-right"
             classes={{
-              paper: classNames('drawer-dashboard'),
+              paper: classNames('menu-right'),
             }}
           >
             <ListItem button data-tip="New dashboard" onClick={this.addDashboard.bind(this, 'right')} className="list-item">
@@ -172,16 +175,61 @@ class App extends React.Component {
           </Drawer>
 
           <Drawer
-            anchor="right"
+            anchor="left"
             variant="persistent"
-            open={DrawersStore.drawerRightOpen}
+            open={DrawersStore.drawers['aside-left-first'].open}
             classes={{
-              paper: classNames("drawer-right", "offset"),
+              paper: classNames("drawer", "aside-left-first", (DrawersStore.drawers['aside-left-first'].open ? 'open' : 'close')),
             }}
           >
             <div className="drawer-spacer">
               {
-                React.createElement(Component, {'data': DrawersStore.drawerRightData})
+                React.createElement(AsideLeftFirstComponent, {'data': DrawersStore.drawers['aside-left-first'].data})
+              }
+            </div>
+          </Drawer>
+
+          <Drawer
+            anchor="left"
+            variant="persistent"
+            open={DrawersStore.drawers['aside-left-second'].open}
+            classes={{
+              paper: classNames("drawer", "aside-left-second", (DrawersStore.drawers['aside-left-second'].open ? 'open' : 'close')),
+            }}
+          >
+            <div className="drawer-spacer">
+              {
+                React.createElement(AsideLeftSecondComponent, {'data': DrawersStore.drawers['aside-left-second'].data})
+              }
+            </div>
+          </Drawer>
+
+          <Drawer
+            anchor="right"
+            variant="persistent"
+            open={DrawersStore.drawers['aside-right-first'].open}
+            classes={{
+              paper: classNames("drawer", "aside-right-first", (DrawersStore.drawers['aside-right-first'].open ? 'open' : 'close')),
+            }}
+          >
+            <div className="drawer-spacer">
+              {
+                React.createElement(AsideRightFirstComponent, {'data': DrawersStore.drawers['aside-right-first'].data})
+              }
+            </div>
+          </Drawer>
+
+          <Drawer
+            anchor="right"
+            variant="persistent"
+            open={DrawersStore.drawers['aside-right-second'].open}
+            classes={{
+              paper: classNames("drawer", "aside-right-second", (DrawersStore.drawers['aside-right-second'].open ? 'open' : 'close')),
+            }}
+          >
+            <div className="drawer-spacer">
+              {
+                React.createElement(AsideRightSecondComponent, {'data': DrawersStore.drawers['aside-right-second'].data})
               }
             </div>
           </Drawer>
@@ -201,18 +249,18 @@ class App extends React.Component {
   //   DrawersStore.drawerRightToOpen()
   // }
   setDashboardDrawer(component, width, data, e) {
-    this.drawerRightToggle(component, width, data, e)
+    this.drawerToggle('aside-right-first', component, width, data, e)
     DashboardsStore.setDrawerDashboard(data.dashboardId)
   }
-  drawerRightToggle(component, width, data, e) {
+  drawerToggle(drawer, component, width, data, e) {
     e.preventDefault()
-    if ( DrawersStore.drawerRightComponent === component && JSON.stringify(DrawersStore.drawerRightData) === JSON.stringify(data) ) {
+    if ( DrawersStore.drawers[drawer].component === component && JSON.stringify(DrawersStore.drawers[drawer].data) === JSON.stringify(data) ) {
       // current component
-      DrawersStore.drawerRightToggle()
+      DrawersStore.drawerToggle(drawer)
     } else {
       // new component
-      if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
-      DrawersStore.drawerRightSet(component, width, data)
+      if (DrawersStore.drawers[drawer].open === false) DrawersStore.drawerToggle(drawer)
+      DrawersStore.drawerSet(drawer, component, width, data)
     }
   }
   setDashboard(id) {

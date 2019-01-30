@@ -45,7 +45,7 @@ class Settings extends React.Component {
     DashboardsStore.setDashboardIcon(`/img/widgets/${icon}`)
   }
   drawerRightClose() {
-    DrawersStore.drawerRightClose()
+    DrawersStore.drawerClose('aside-left-first')
   }
 }
 

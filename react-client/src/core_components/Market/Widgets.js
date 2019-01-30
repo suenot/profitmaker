@@ -16,13 +16,14 @@ import DrawersStore from 'stores/DrawersStore'
 class Market extends React.Component {
   render() {
     var dashboardId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
+    var aside = (this.props.data && this.props.data.aside) || 'aside-left-first'
     return (
       <div className="market">
         <div className="widgets simple">
           <div className="drawer-title">
             <ArrowBackIcon onClick={this.backToCategories.bind(this)} className="pointer" />
             <div className="drawer-title-text">{DashboardsStore.category}</div>
-            <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+            <CloseIcon onClick={this.drawerClose.bind(this, aside)} className="pointer" />
           </div>
           <Divider />
           {
@@ -60,7 +61,7 @@ class Market extends React.Component {
     )
   }
   backToCategories() {
-    DrawersStore.drawerRightSet("core_components/Market/Categories.js", "320px")
+    DrawersStore.drawerSet("aside-left-first", "core_components/Market/Categories.js", "320px")
   }
   componentWillMount() {
     DashboardsStore.fetchWidgets()
@@ -68,8 +69,8 @@ class Market extends React.Component {
   addWidget(widget, dashboardId) {
     DashboardsStore.addWidget(widget, dashboardId)
   }
-  drawerRightClose() {
-    DrawersStore.drawerRightClose()
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
 }
 

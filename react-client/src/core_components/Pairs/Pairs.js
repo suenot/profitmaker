@@ -59,7 +59,7 @@ class Pairs extends React.Component {
     PairsStore.count(1, this.props.data)
   }
   drawerRightClose() {
-    DrawersStore.drawerRightClose()
+    DrawersStore.drawerClose('aside-left-first')
   }
 }
 

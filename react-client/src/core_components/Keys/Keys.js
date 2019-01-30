@@ -131,7 +131,7 @@ class Keys extends React.Component {
     KeysStore.removeKey(id)
   }
   drawerRightClose() {
-    DrawersStore.drawerRightClose()
+    DrawersStore.drawerClose('aside-left-first')
   }
 }
 
