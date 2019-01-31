@@ -14,7 +14,8 @@ import DrawersStore from 'stores/DrawersStore'
 @observer
 class Market extends React.Component {
   render() {
-    var TemporaryDashboardId = (this.props.data && this.props.data.dashboardId)
+    var drawer = this.props.data && (this.props.data.drawer)
+    var TemporaryDashboardId = (this.props.data && (this.props.data.drawer === true) && DashboardsStore.drawerDashboardActiveId)
     var dashboardId = TemporaryDashboardId || DashboardsStore.dashboardActiveId
     var aside = (this.props.data && this.props.data.aside) || (TemporaryDashboardId ? 'aside-right-second' : 'aside-left-first')
     return (
@@ -29,7 +30,7 @@ class Market extends React.Component {
             {
               _.map(DashboardsStore.categories, (category) => {
                 return (
-                  <ListItem key={category} button onClick={this.selectCategory.bind(this, dashboardId, aside)}>
+                  <ListItem key={category} button onClick={this.selectCategory.bind(this, dashboardId, aside, drawer)}>
                     <ListItemText primary={category} />
                   </ListItem>
                 )
@@ -40,9 +41,9 @@ class Market extends React.Component {
       </div>
     )
   }
-  selectCategory(dashboardId, aside, e) {
+  selectCategory(dashboardId, aside, drawer, e) {
     DashboardsStore.selectCategory(e.target.textContent)
-    DrawersStore.drawerSet(`${aside}`, "core_components/Market/Widgets.js", "320px", {dashboardId: dashboardId, aside: aside})
+    DrawersStore.drawerSet(`${aside}`, "core_components/Market/Widgets.js", "320px", {dashboardId: dashboardId, aside: aside, drawer: drawer})
   }
   componentWillMount() {
     DashboardsStore.fetchWidgets()

@@ -15,7 +15,8 @@ import DrawersStore from 'stores/DrawersStore'
 @observer
 class Market extends React.Component {
   render() {
-    var dashboardId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
+    // var dashboardId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
+    var dashboardId = (this.props.data && (this.props.data.drawer === true) && DashboardsStore.drawerDashboardActiveId) || DashboardsStore.dashboardActiveId
     var drawer = (this.props.data && this.props.data.aside) || 'aside-left-first'
     return (
       <div className="market">
