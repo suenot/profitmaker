@@ -63,6 +63,7 @@
     "react-dev-utils": "^6.1.1",
     "react-dom": "^16.6.3",
     "react-grid-layout": "^0.16.6",
+    "react-perfect-scrollbar": "^1.4.4",
     "react-s-alert": "^1.4.1",
     "react-stockcharts": "^0.7.8",
     "react-tooltip": "^3.9.0",

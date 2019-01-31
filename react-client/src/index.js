@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom'
 import App from './App'
 import registerServiceWorker from './registerServiceWorker'
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles'
+import 'react-perfect-scrollbar/dist/css/styles.css'
 
 const theme = createMuiTheme({
   typography: {
