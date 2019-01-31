@@ -61,7 +61,8 @@ class Grid extends React.Component {
               var widgetId = widget.i
               var stock = widget.data.stock !== undefined ? widget.data.stock : ''
               var pair = widget.data.pair !== undefined ? widget.data.pair : ''
-              var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
+              // var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
+              var data = widget.data
               data = {
                 dashboardId: dashboardId,
                 widgetId: widgetId,
@@ -99,7 +100,7 @@ class Grid extends React.Component {
                     <div className="widget-body">
                       <PerfectScrollbar option={{'suppressScrollX': true}} className="widget-body">
                         {
-                          React.createElement(Component, {'data': {...widget.data, dashboardId: dashboardId, widgetId: widgetId} })
+                          React.createElement(Component, {'data': data })
                         }
                       </PerfectScrollbar>
                     </div>
