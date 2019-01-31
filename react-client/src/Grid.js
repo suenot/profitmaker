@@ -9,6 +9,7 @@ import FullscreenIcon from '@material-ui/icons/Fullscreen'
 import FullscreenExitIcon from '@material-ui/icons/FullscreenExit'
 import { observer } from 'mobx-react'
 import RGL, { WidthProvider } from 'react-grid-layout'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 const GridLayout = WidthProvider(RGL)
 
 import SettingsStore from './stores/SettingsStore'
@@ -93,9 +94,11 @@ class Grid extends React.Component {
                       </div>
                     </div>
                     <div className="widget-body">
-                      {
-                        React.createElement(Component, {'data': {...widget.data, dashboardId: dashboardId, widgetId: widgetId} })
-                      }
+                      <PerfectScrollbar option={{'suppressScrollX': true}} className="widget-body">
+                        {
+                          React.createElement(Component, {'data': {...widget.data, dashboardId: dashboardId, widgetId: widgetId} })
+                        }
+                      </PerfectScrollbar>
                     </div>
                   </div>
                 </div>

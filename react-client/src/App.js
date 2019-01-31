@@ -143,7 +143,7 @@ class App extends React.Component {
               paper: classNames('menu-right'),
             }}
           >
-            <ListItem button data-tip="New dashboard" onClick={this.addDashboard.bind(this, 'right')} className="list-item">
+            <ListItem button data-tip="New temporary dashboard" onClick={this.addDashboard.bind(this, 'right')} className="list-item">
               <ListItemIcon className="item-icon">
                 <AddToQueueIcon />
               </ListItemIcon>
