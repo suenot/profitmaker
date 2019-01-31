@@ -90,7 +90,7 @@ class App extends React.Component {
             <ListItem
               button
               data-tip="API keys"
-              onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Keys/Keys.js", "320px", {})}
+              onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Keys/Keys.js", "320px", {drawer: "aside-left-first"})}
               className="list-item"
             >
               <ListItemIcon aria-label="API keys" className="item-icon">
@@ -101,7 +101,7 @@ class App extends React.Component {
             <ListItem
               button
               data-tip="Contact us"
-              onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Socials/Socials.js", "320px", {})}
+              onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Socials/Socials.js", "320px", {drawer: "aside-left-first"})}
               className="list-item"
               >
               <ListItemIcon aria-label="Contact us" className="item-icon">
