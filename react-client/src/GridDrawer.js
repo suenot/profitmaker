@@ -35,11 +35,6 @@ class GridDrawer extends React.Component {
           </div>
           <Divider />
           <Grid data={{...this.props.data, aside: true}} />
-          <Divider />
-          <div className="spacer"></div>
-          <div className="drawer-footer pointer" onClick={this.drawerToggle.bind(this, "aside-right-second", "core_components/Market/Categories.js", "320px", {dashboardId: dashboardId})}>
-            Add widget
-          </div>
         </PerfectScrollbar>
       </div>
     )
