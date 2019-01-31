@@ -10,6 +10,7 @@ import AddToQueueIcon from '@material-ui/icons/AddToQueue'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import QueueIcon from '@material-ui/icons/Queue'
+import SettingsIcon from '@material-ui/icons/Settings'
 import KeyIcon from '@material-ui/icons/VpnKey'
 import ReactTooltip from 'react-tooltip'
 
@@ -17,7 +18,6 @@ import Grid from './Grid'
 import 'element-theme-default'
 import './App.sass'
 import { observer } from 'mobx-react'
-import SettingsIcon from '@material-ui/icons/Settings'
 
 import Alert from 'react-s-alert'
 import 'react-s-alert/dist/s-alert-default.css'
@@ -27,7 +27,6 @@ import 'react-s-alert/dist/s-alert-css-effects/jelly.css'
 
 import DashboardsStore from './stores/DashboardsStore'
 import DrawersStore from './stores/DrawersStore'
-
 
 @observer
 class App extends React.Component {
@@ -88,50 +87,44 @@ class App extends React.Component {
             }
             <div className="spacer"></div>
             <Divider />
-              <ListItem
-                button
-                data-tip="API keys"
-                onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Keys/Keys.js", "320px", {})}
-                className="list-item"
+            <ListItem
+              button
+              data-tip="API keys"
+              onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Keys/Keys.js", "320px", {})}
+              className="list-item"
+            >
+              <ListItemIcon aria-label="API keys" className="item-icon">
+                <KeyIcon />
+              </ListItemIcon>
+            </ListItem>
+            <Divider />
+            <ListItem
+              button
+              data-tip="Contact us"
+              onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Socials/Socials.js", "320px", {})}
+              className="list-item"
               >
-                <ListItemIcon aria-label="API keys" className="item-icon">
-                  <KeyIcon />
-                </ListItemIcon>
-              </ListItem>
-              <Divider />
-              <ListItem
-                button
-                data-tip="Contact us"
-                onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Socials/Socials.js", "320px", {})}
-                className="list-item"
-                >
-                <ListItemIcon aria-label="Contact us" className="item-icon">
-                  <ChatIcon />
-                </ListItemIcon>
-              </ListItem>
-              <Divider />
-              <ListItem
-                button
-                data-tip="Settings"
-                onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Settings/Settings.js", "320px", {dashboardId: DashboardsStore.dashboardActiveId})}
-                className="list-item"
-              >
-                <ListItemIcon aria-label="Settings" className="item-icon">
-                  <SettingsIcon />
-                </ListItemIcon>
-              </ListItem>
-              <Divider className="divider"/>
-              <ListItem button data-tip="Add widget" onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Market/Categories.js", "320px", {})} className="add-widget-btn list-item">
-                <ListItemIcon className="item-icon">
-                  <QueueIcon />
-                </ListItemIcon>
-              </ListItem>
-              {/* <Divider className="divider"/>
-              <ListItem button data-tip="Dashboard settings" onClick={this.drawerRightToggle.bind(this, "core_components/Settings/DashboardSettings.js", "320px", {})} className="list-item">
-                <ListItemIcon className="item-icon">
-                  <SettingsIcon />
-                </ListItemIcon>
-              </ListItem> */}
+              <ListItemIcon aria-label="Contact us" className="item-icon">
+                <ChatIcon />
+              </ListItemIcon>
+            </ListItem>
+            <Divider />
+            <ListItem
+              button
+              data-tip="Settings"
+              onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Settings/Settings.js", "320px", {dashboardId: DashboardsStore.dashboardActiveId})}
+              className="list-item"
+            >
+              <ListItemIcon aria-label="Settings" className="item-icon">
+                <SettingsIcon />
+              </ListItemIcon>
+            </ListItem>
+            <Divider className="divider"/>
+            <ListItem button data-tip="Add widget" onClick={this.drawerToggle.bind(this, "aside-left-first", "core_components/Market/Categories.js", "320px", {dashboardId: DashboardsStore.dashboardActiveId})} className="add-widget-btn list-item">
+              <ListItemIcon className="item-icon">
+                <QueueIcon />
+              </ListItemIcon>
+            </ListItem>
           </Drawer>
 
           <Drawer
@@ -159,7 +152,6 @@ class App extends React.Component {
                       onClick={this.setDashboardDrawer.bind(this, "GridDrawer.js", "320px", {dashboardId: dashboard.id, drawer: true})}
                       className={"list-item " + (dashboard.id === DashboardsStore.drawerDashboardActiveId ? "selected" : "")}
                     >
-                      {/* onClick={this.setDashboard.bind(this, dashboard.id)} */}
                       <ListItemIcon className="item-icon">
                         <img src={dashboard.icon} width="24px" height="24px" alt=""></img>
                       </ListItemIcon>
@@ -170,6 +162,27 @@ class App extends React.Component {
               })
             }
             <div className="spacer"></div>
+            { DashboardsStore.drawerDashboardActiveId !== "" &&
+              <div>
+                <Divider className="divider"/>
+                <ListItem
+                    button
+                    data-tip="Settings"
+                    onClick={this.drawerToggle.bind(this, "aside-right-second", "core_components/Settings/Settings.js", "320px", {drawer: true})}
+                    className="list-item"
+                  >
+                  <ListItemIcon aria-label="Settings" className="item-icon">
+                    <SettingsIcon />
+                  </ListItemIcon>
+                </ListItem>
+                <Divider className="divider"/>
+                <ListItem button data-tip="Add widget" onClick={this.drawerToggle.bind(this, "aside-right-second", "core_components/Market/Categories.js", "320px", {drawer: true})} className="add-widget-btn list-item">
+                  <ListItemIcon className="item-icon">
+                    <QueueIcon />
+                  </ListItemIcon>
+                </ListItem>
+              </div>
+            }
           </Drawer>
 
           <Drawer
@@ -239,13 +252,7 @@ class App extends React.Component {
       </React.Fragment>
     )
   }
-  // drawerRightClose() {
-  //   DrawersStore.drawerRightClose()
-  // }
-  // drawerRightSet(component, width, data) {
-  //   DrawersStore.drawerRightSet(component, width, data, undefined, undefined)
-  //   DrawersStore.drawerRightToOpen()
-  // }
+
   setDashboardDrawer(component, width, data, e) {
     this.drawerToggle('aside-right-first', component, width, data, e)
     DashboardsStore.setDrawerDashboard(data.dashboardId)

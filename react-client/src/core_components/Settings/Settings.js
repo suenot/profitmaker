@@ -20,13 +20,17 @@ import DrawersStore from 'stores/DrawersStore'
 @observer
 class Settings extends React.Component {
   render() {
-    // var {dashboardId} = this.props.data
-    var dashboardId = DashboardsStore.dashboardActiveId
+    console.log(DashboardsStore.drawerDashboardActiveId)
+    console.log(this.props.data)
+    var dashboardId = (this.props.data && (this.props.data.drawer === true) && DashboardsStore.drawerDashboardActiveId) || DashboardsStore.dashboardActiveId
+    var dashboardData = DashboardsStore.dashboards[dashboardId]
+    var {name, icon} = dashboardData
+    var drawer = this.props.data.drawer ? 'aside-right-second' : 'aside-left-first'
     return (
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Dashboard settings</div>
-          <CloseIcon onClick={this.drawerClose.bind(this, 'aside-left-first')} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, drawer)} className="pointer" />
         </div>
         <Divider />
         <div className="section-body">
@@ -34,8 +38,8 @@ class Settings extends React.Component {
             <TextField
               className="mb-16"
               label="Dashboard name"
-              value={DashboardsStore.name}
-              onChange={this.setDashboardName.bind(this)}
+              value={name}
+              onChange={this.setDashboardName.bind(this, dashboardId)}
               variant="outlined"
               fullWidth
               margin="dense"
@@ -43,8 +47,8 @@ class Settings extends React.Component {
             <TextField
               className="mb-16"
               label="Dashboard icon"
-              value={DashboardsStore.icon}
-              onChange={this.setDashboardIcon.bind(this)}
+              value={icon}
+              onChange={this.setDashboardIcon.bind(this, dashboardId)}
               variant="outlined"
               fullWidth
               margin="dense"
@@ -53,7 +57,7 @@ class Settings extends React.Component {
                   <InputAdornment variant="filled" position="end">
                     <IconButton
                       aria-label="Icons list"
-                      onClick={this.drawerSet.bind(this, "aside-left-first", "core_components/Settings/IconsList.js", "320px")}
+                      onClick={this.drawerSet.bind(this, drawer, "core_components/Settings/IconsList.js", "320px")}
                     >
                       <ImageIcon />
                     </IconButton>
@@ -125,11 +129,11 @@ class Settings extends React.Component {
     DrawersStore.drawerSet(drawer, component, width)
     // DrawersStore.drawerRightToggle()
   }
-  setDashboardName(event) {
-    DashboardsStore.setDashboardName(event.target.value)
+  setDashboardName(dashboardId, event) {
+    DashboardsStore.setDashboardName(event.target.value, dashboardId)
   }
-  setDashboardIcon(event) {
-    DashboardsStore.setDashboardIcon(event.target.value)
+  setDashboardIcon(dashboardId, event) {
+    DashboardsStore.setDashboardIcon(event.target.value, dashboardId)
   }
   drawerClose(drawer) {
     DrawersStore.drawerClose(drawer)

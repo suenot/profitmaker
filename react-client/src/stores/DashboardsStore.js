@@ -72,11 +72,11 @@ class DashboardsStore {
       Alert.warning('You must have at least one dashboard')
     }
   }
-  @action setDashboardName(name) {
-    this.dashboards[this.dashboardActiveId].name = name
+  @action setDashboardName(name, dashboardId) {
+    this.dashboards[dashboardId].name = name
   }
-  @action setDashboardIcon(icon) {
-    this.dashboards[this.dashboardActiveId].icon = icon
+  @action setDashboardIcon(icon, dashboardId) {
+    this.dashboards[dashboardId].icon = icon
   }
   @action setCustomHeader(dashboardId, widgetId, value) {
     _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader = value

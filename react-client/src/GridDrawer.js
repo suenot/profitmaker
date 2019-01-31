@@ -4,9 +4,13 @@ import CloseIcon from '@material-ui/icons/Close'
 import Grid from './Grid'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 
+import DashboardsStore from 'stores/DashboardsStore'
+import DrawersStore from 'stores/DrawersStore'
+
 class GridDrawer extends React.Component {
   drawerClose(drawer) {
-    DrawersStore.drawerClose(drawer)
+    DrawersStore.drawersClose()
+    DashboardsStore.setDrawerDashboard('')
   }
   drawerToggle(drawer, component, width, data, e) {
     e.preventDefault()
