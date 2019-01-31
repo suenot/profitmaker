@@ -16,7 +16,7 @@ class Market extends React.Component {
   render() {
     var TemporaryDashboardId = (this.props.data && this.props.data.dashboardId)
     var dashboardId = TemporaryDashboardId || DashboardsStore.dashboardActiveId
-    var aside = TemporaryDashboardId ? 'aside-right-second' : 'aside-left-first'
+    var aside = (this.props.data && this.props.data.aside) || (TemporaryDashboardId ? 'aside-right-second' : 'aside-left-first')
     return (
       <div className="market">
         <div className="categories">
