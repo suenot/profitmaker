@@ -60,7 +60,6 @@ class DashboardsStore {
   }
   @action removeDashboard(id, side) {
     var dashboards = JSON.parse(JSON.stringify(this.dashboards))
-    console.log(id, side)
     _.forEach(dashboards, (item, i) => {
       if (item.side !== side) delete dashboards[i]
     })
