@@ -262,6 +262,11 @@ class App extends React.Component {
     if ( DrawersStore.drawers[drawer].component === component && JSON.stringify(DrawersStore.drawers[drawer].data) === JSON.stringify(data) ) {
       // current component
       DrawersStore.drawerToggle(drawer)
+      if (drawer === 'aside-right-first') {
+        setTimeout(()=>{
+          DashboardsStore.setDrawerDashboard('')
+        }, 200)
+      }
     } else {
       // new component
       if (DrawersStore.drawers[drawer].open === false) DrawersStore.drawerToggle(drawer)
