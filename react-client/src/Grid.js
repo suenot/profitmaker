@@ -27,6 +27,7 @@ class Grid extends React.Component {
   }
 
   render() {
+    var drawer = (this.props.data && this.props.data.aside) ? 'aside-right-second' : 'aside-left-first'
     var dashboardActiveId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
     return (
       <div>
@@ -64,6 +65,7 @@ class Grid extends React.Component {
               data = {
                 dashboardId: dashboardId,
                 widgetId: widgetId,
+                drawer: drawer,
                 ...data
               }
               var compact = SettingsStore.compactWidgetsHeader ? 'compact' : ''
@@ -80,8 +82,9 @@ class Grid extends React.Component {
                         <div className="pointer widget-icon fullscreen-icon" onClick={this.fullscreen.bind(this)}>
                           <FullscreenIcon style={{ fontSize: 18 }}/>
                         </div>
-                        <div className="pointer widget-icon settings-icon" onClick={this.drawerRightToggle.bind(
+                        <div className="pointer widget-icon settings-icon" onClick={this.drawerToggle.bind(
                             this,
+                            drawer,
                             widget.settings,
                             widget.settingsWidth,
                             data
@@ -140,9 +143,9 @@ class Grid extends React.Component {
     item.querySelector('.settings-icon').classList.toggle('hide')
     item.querySelector('.clear-icon').classList.toggle('hide')
   }
-  drawerRightToggle(component, width, data, dashboardId, widgetId) {
-    DrawersStore.drawerRightSet(component, width, data, dashboardId, widgetId)
-    DrawersStore.drawerRightToggle()
+  drawerToggle(drawer, component, width, data, dashboardId, widgetId) {
+    DrawersStore.drawerSet(drawer, component, width, data, dashboardId, widgetId)
+    DrawersStore.drawerToggle(drawer)
   }
   removeWidget(settings, data) {
     DashboardsStore.removeWidget(settings, data)

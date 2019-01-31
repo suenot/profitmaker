@@ -19,7 +19,7 @@ class Settings extends React.Component {
         <div className="drawer-title">
           <ArrowBackIcon onClick={this.backToSettings.bind(this)} className="pointer" />
           <div className="drawer-title-text">Set icon</div>
-          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
         </div>
         <Divider />
         <div className="simpleForm">
@@ -44,8 +44,8 @@ class Settings extends React.Component {
   setDashboardIcon(icon) {
     DashboardsStore.setDashboardIcon(`/img/widgets/${icon}`)
   }
-  drawerRightClose() {
-    DrawersStore.drawerClose('aside-left-first')
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
 }
 

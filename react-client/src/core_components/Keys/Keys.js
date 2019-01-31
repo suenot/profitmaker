@@ -32,7 +32,7 @@ class Keys extends React.Component {
           <div className="drawer-title-text">API keys</div>
           <div>
             <AddIcon onClick={this.addKey.bind(this)} className="pointer" />
-            <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+            <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
           </div>
         </div>
         <Divider />
@@ -130,8 +130,8 @@ class Keys extends React.Component {
   removeKey(id) {
     KeysStore.removeKey(id)
   }
-  drawerRightClose() {
-    DrawersStore.drawerClose('aside-left-first')
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
 }
 

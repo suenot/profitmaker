@@ -21,7 +21,7 @@ class Settings extends React.Component {
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Widget settings</div>
-          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
         </div>
         <Divider />
         <div className="section-body">
@@ -68,8 +68,8 @@ class Settings extends React.Component {
     var value = e.target[attr]
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim())
   }
-  drawerRightClose() {
-    DrawersStore.drawerClose('aside-left-first')
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
 }
 

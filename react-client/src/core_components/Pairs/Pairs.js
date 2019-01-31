@@ -16,7 +16,7 @@ class Pairs extends React.Component {
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Pairs on {stock}</div>
-          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
         </div>
         <Divider />
         <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
@@ -58,8 +58,8 @@ class Pairs extends React.Component {
   componentDidUpdate() {
     PairsStore.count(1, this.props.data)
   }
-  drawerRightClose() {
-    DrawersStore.drawerClose('aside-left-first')
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
 }
 

@@ -30,7 +30,7 @@ class GridDrawer extends React.Component {
             <CloseIcon onClick={this.drawerClose.bind(this, 'aside-right-first')} className="pointer" />
           </div>
           <Divider />
-          <Grid data={this.props.data} />
+          <Grid data={{...this.props.data, aside: true}} />
           <Divider />
           <div className="spacer"></div>
           <div className="drawer-footer pointer" onClick={this.drawerToggle.bind(this, "aside-right-second", "core_components/Market/Categories.js", "320px", {dashboardId: dashboardId})}>
