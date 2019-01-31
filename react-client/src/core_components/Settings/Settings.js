@@ -26,6 +26,7 @@ class Settings extends React.Component {
     var dashboardData = DashboardsStore.dashboards[dashboardId]
     var {name, icon} = dashboardData
     var drawer = this.props.data.drawer ? 'aside-right-second' : 'aside-left-first'
+    var side = this.props.data.drawer ? 'right' : 'left'
     return (
       <div className="drawer">
         <div className="drawer-title">
@@ -65,7 +66,7 @@ class Settings extends React.Component {
                 )
               }}
             />
-            <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.removeDashboard.bind(this, dashboardId)}>
+            <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.removeDashboard.bind(this, dashboardId, side)}>
               <RemoveFromQueueIcon className="mr-8"/> Remove dashboard
             </Button>
           </form>
@@ -153,8 +154,8 @@ class Settings extends React.Component {
   setCompactWidgetsHeader() {
     SettingsStore.setCompactWidgetsHeader()
   }
-  removeDashboard(dashboardId) {
-    DashboardsStore.removeDashboard(dashboardId)
+  removeDashboard(dashboardId, side) {
+    DashboardsStore.removeDashboard(dashboardId, side)
   }
 }
 

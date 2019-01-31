@@ -58,16 +58,21 @@ class DashboardsStore {
     this.addWidget({"name":"selector","component":"core_components/Selector/Selector.js","settings":"core_components/Selector/Settings.js","settingsWidth":"300px","img":"core_components/Selector/Selector.png","header":"Selector","customHeader":"","description":"","author":"#core","authorLink":"https://github.com/kupi-network/kupi-terminal","source":"https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Selector/Selector.js","data":{"stock": "BINANCE", "pair": "ETH_BTC", "group":"", "groupColor": "" },"categories":["utils"],"w":7,"h":5}, id)
 
   }
-  @action removeDashboard(id) {
-    var side = 'left'
+  @action removeDashboard(id, side) {
     var dashboards = JSON.parse(JSON.stringify(this.dashboards))
+    console.log(id, side)
     _.forEach(dashboards, (item, i) => {
       if (item.side !== side) delete dashboards[i]
     })
     if (Object.keys(dashboards).length > 1) {
+      if (side === 'right') {
+        DrawersStore.drawerClose('aside-right-first')
+        DrawersStore.drawerClose('aside-right-second')
+      }
       delete this.dashboards[id]
       var anotherKey = Object.keys(dashboards).filter((item) => { return item !== id})[0]
-      this.dashboardActiveId = anotherKey
+      if (side === 'left') this.dashboardActiveId = anotherKey
+      // if (side === 'right') this.drawerDashboardActiveId = anotherKey
     } else {
       Alert.warning('You must have at least one dashboard')
     }
