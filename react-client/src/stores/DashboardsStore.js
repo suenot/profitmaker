@@ -164,9 +164,11 @@ class DashboardsStore {
   @action addWidget(widget, _dashboardId) {
     var id = uuidv1()
     var dashboardId = _dashboardId || this.dashboardActiveId
+    var widgetData = JSON.parse(JSON.stringify(widget.data))
     this.dashboards[dashboardId].widgets.push({
-      i: id, uid: id, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widget.data, x: 0, y: 0, w: widget.w || 7, h: widget.h || 15, minW: 2, minH: 3
+      i: id, uid: id, name: widget.name, component: widget.component, settings: widget.settings, settingsWidth: widget.settingsWidth, header: widget.header, customHeader: widget.customHeader, data: widgetData, x: 0, y: 0, w: widget.w || 7, h: widget.h || 15, minW: 2, minH: 3
     })
+
   }
 
   @action removeWidget(settings, data) {

@@ -27,7 +27,8 @@ class Grid extends React.Component {
   }
 
   render() {
-    var drawer = (this.props.data && this.props.data.aside) ? 'aside-right-second' : 'aside-left-first'
+    var drawer = (this.props.data && this.props.data.aside)
+    var drawerName = drawer ? 'aside-right-second' : 'aside-left-first'
     var dashboardActiveId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
     return (
       <div>
@@ -35,7 +36,7 @@ class Grid extends React.Component {
         <GridLayout
           margin={[-1, -1]}
           className="layout"
-          cols={24}
+          cols={drawer ? 12 : 24}
           rowHeight={12}
           layout={DashboardsStore.widgets}
           onLayoutChange={(layout) => {
@@ -61,12 +62,12 @@ class Grid extends React.Component {
               var widgetId = widget.i
               var stock = widget.data.stock !== undefined ? widget.data.stock : ''
               var pair = widget.data.pair !== undefined ? widget.data.pair : ''
-              // var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
-              var data = widget.data
+              var data = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data
+              // var data = widget.data
               data = {
                 dashboardId: dashboardId,
                 widgetId: widgetId,
-                drawer: drawer,
+                drawer: drawerName,
                 ...data
               }
               var compact = SettingsStore.compactWidgetsHeader ? 'compact' : ''
@@ -85,7 +86,7 @@ class Grid extends React.Component {
                         </div>
                         <div className="pointer widget-icon settings-icon" onClick={this.drawerToggle.bind(
                             this,
-                            drawer,
+                            drawerName,
                             widget.settings,
                             widget.settingsWidth,
                             data

@@ -11,15 +11,19 @@ import OhlcvStore from 'stores/OhlcvStore'
 export default class ChartComponent extends React.Component {
 	render() {
     var {dashboardId, widgetId} = this.props.data
+
     var key = this.getKey()
+
     if (
       OhlcvStore.ohlcvComputed === undefined ||
       JSON.stringify(OhlcvStore.ohlcvComputed) === '{}' ||
       OhlcvStore.ohlcvComputed[key] === undefined ||
+      JSON.stringify(OhlcvStore.ohlcvComputed[key]) === '[]' ||
       JSON.parse( JSON.stringify(OhlcvStore.ohlcvComputed[key]) ).length < 3 ) {
 			return <Preloader />
 		} else {
       var ordersJSON = JSON.parse( JSON.stringify(OhlcvStore.ohlcvComputed[key]) )
+
 			ordersJSON = ordersJSON.map(function(order){
 				order.date = new Date(order.date)
 				return order
