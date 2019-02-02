@@ -9,7 +9,6 @@ import DrawersStore from 'stores/DrawersStore'
 class Selector extends React.Component {
   render() {
     var {dashboardId, widgetId, stock, pair, group, drawer} = this.props.data
-    console.log(drawer)
     return (
       <div className="selector">
         <Button size="medium" onClick={this.drawerToggle.bind(this, drawer, "core_components/Stocks/Stocks.js", "300px", {"group": group, "drawer": drawer})}>
