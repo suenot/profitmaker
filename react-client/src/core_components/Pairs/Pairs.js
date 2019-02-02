@@ -11,12 +11,12 @@ import DrawersStore from 'stores/DrawersStore'
 @observer
 class Pairs extends React.Component {
   render() {
-    var stock = this.props.data.stock
+    var {stock, drawer} = this.props.data
     return (
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Pairs on {stock}</div>
-          <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, drawer)} className="pointer" />
         </div>
         <Divider />
         <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>

@@ -10,11 +10,12 @@ import DrawersStore from 'stores/DrawersStore'
 @observer
 class Stocks extends React.Component {
   render() {
+    var {drawer} = this.props.data
     return (
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Stocks</div>
-          <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, drawer)} className="pointer" />
         </div>
         <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
         <table className="simpleTable">
