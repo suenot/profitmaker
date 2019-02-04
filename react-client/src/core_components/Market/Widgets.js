@@ -8,6 +8,7 @@ import ghLogo from'./github-logo.svg'
 import ArrowBackIcon from '@material-ui/icons/ArrowBackIos'
 import CloseIcon from '@material-ui/icons/Close'
 import Divider from '@material-ui/core/Divider'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -27,36 +28,38 @@ class Market extends React.Component {
             <CloseIcon onClick={this.drawerClose.bind(this, drawer)} className="pointer" />
           </div>
           <Divider />
-          {
-            _.map(DashboardsStore.widgetsMarketFitered, (widget) => {
-              var style = {
-                backgroundImage: `url(${ require( "../../"+widget.img ) })`
-              }
-              return (
-                <div className="market-widget" key={widget.id} style={style}>
-                  <div className="market-wrapper">
-                    <div className="market-main">
-                      <h3 className="market-header">{widget.header}</h3>
-                      <p className="market-description">{widget.description}</p>
-                    </div>
-                    <div className="market-actions">
-                      <div className="market-actions-autor">
-                        <a href={widget.authorLink} target="_blank">{widget.author}</a>
-                        <a className="market-actions-git" href={widget.source} target="_blank">
-                          <img src={ghLogo} alt="github"/>
-                        </a>
+          <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
+            {
+              _.map(DashboardsStore.widgetsMarketFitered, (widget) => {
+                var style = {
+                  backgroundImage: `url(${ require( "../../"+widget.img ) })`
+                }
+                return (
+                  <div className="market-widget" key={widget.id} style={style}>
+                    <div className="market-wrapper">
+                      <div className="market-main">
+                        <h3 className="market-header">{widget.header}</h3>
+                        <p className="market-description">{widget.description}</p>
                       </div>
-                      <div className="market-actions-action">
-                        <Fab color="secondary" aria-label="Add" onClick={this.addWidget.bind(this, widget, dashboardId)}>
-                          <AddIcon />
-                        </Fab>
+                      <div className="market-actions">
+                        <div className="market-actions-autor">
+                          <a href={widget.authorLink} target="_blank">{widget.author}</a>
+                          <a className="market-actions-git" href={widget.source} target="_blank">
+                            <img src={ghLogo} alt="github"/>
+                          </a>
+                        </div>
+                        <div className="market-actions-action">
+                          <Fab color="secondary" aria-label="Add" onClick={this.addWidget.bind(this, widget, dashboardId)}>
+                            <AddIcon />
+                          </Fab>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )
-            })
-          }
+                )
+              })
+            }
+          </PerfectScrollbar>
         </div>
       </div>
     )

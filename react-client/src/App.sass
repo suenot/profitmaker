@@ -15,6 +15,9 @@
   margin-right: 8px !important
 .mr-16
   margin-right: 16px !important
+.flex-column
+  display: flex
+  flex-direction: column
 
 .grabbable
   cursor: move
@@ -325,8 +328,8 @@ body
   &.open
     display: block
   .scrollbar-container
-    height: 100vh
-    max-height: 100vh
+    height: 100%
+    max-height: 100%
 
 // .drawer-dashboard
 //   background-color: #f4f3f3 !important
@@ -377,6 +380,7 @@ body
   padding: 0 !important
 .drawer-list-item
   padding: 11px 16px !important
+  flex: 0 0 auto
 // .drawer-list-item-text
 // .drawer-list-item-icon
 
@@ -548,6 +552,7 @@ body
 .list-item
   display: flex !important
   justify-content: center !important
+  flex: 0 0 auto
 .item-icon
   margin-right: 0 !important
 

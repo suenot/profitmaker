@@ -6,6 +6,7 @@ import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import CloseIcon from '@material-ui/icons/Close'
 import IconButton from '@material-ui/core/IconButton'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -24,38 +25,40 @@ class Settings extends React.Component {
           <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
         </div>
         <Divider />
-        <div className="section-body">
-          <form noValidate autoComplete="off">
-            <Typography variant="h6" gutterBottom>Widget settings</Typography>
-            <TextField
-              id="outlined-name"
-              label="Name"
-              value={customHeader}
-              onChange={this.changeCustomHeader.bind(this)}
-              variant="outlined"
-              fullWidth
-              className="mb-16"
-            />
-            <TextField
-              id="outlined-name"
-              label="Url"
-              value={url}
-              onChange={this.setWidgetData.bind(this, 'url', 'value')}
-              variant="outlined"
-              fullWidth
-              className="mb-16"
-            />
-            <TextField
-              id="outlined-name"
-              label="Key"
-              value={key}
-              onChange={this.setWidgetData.bind(this, 'key', 'value')}
-              variant="outlined"
-              fullWidth
-            />
-          </form>
-        </div>
-        <Divider />
+        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
+          <div className="section-body">
+            <form noValidate autoComplete="off">
+              <Typography variant="h6" gutterBottom>Widget settings</Typography>
+              <TextField
+                id="outlined-name"
+                label="Name"
+                value={customHeader}
+                onChange={this.changeCustomHeader.bind(this)}
+                variant="outlined"
+                fullWidth
+                className="mb-16"
+              />
+              <TextField
+                id="outlined-name"
+                label="Url"
+                value={url}
+                onChange={this.setWidgetData.bind(this, 'url', 'value')}
+                variant="outlined"
+                fullWidth
+                className="mb-16"
+              />
+              <TextField
+                id="outlined-name"
+                label="Key"
+                value={key}
+                onChange={this.setWidgetData.bind(this, 'key', 'value')}
+                variant="outlined"
+                fullWidth
+              />
+            </form>
+          </div>
+          <Divider />
+        </PerfectScrollbar>
       </div>
     )
   }

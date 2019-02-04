@@ -11,6 +11,7 @@ import InputAdornment from '@material-ui/core/InputAdornment'
 import ImageIcon from '@material-ui/icons/Image'
 import CloseIcon from '@material-ui/icons/Close'
 import RemoveFromQueueIcon from '@material-ui/icons/RemoveFromQueue'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
 import SettingsStore from 'stores/SettingsStore'
 import DashboardsStore from 'stores/DashboardsStore'
@@ -38,95 +39,97 @@ class Settings extends React.Component {
           <CloseIcon onClick={this.drawerClose.bind(this, drawerName)} className="pointer" />
         </div>
         <Divider />
-        <div className="section-body">
-          <form noValidate autoComplete="off">
-            <TextField
-              className="mb-16"
-              label="Dashboard name"
-              value={name}
-              onChange={this.setDashboardName.bind(this, dashboardId)}
-              variant="outlined"
-              fullWidth
-              margin="dense"
-            />
-            <TextField
-              className="mb-16"
-              label="Dashboard icon"
-              value={icon}
-              onChange={this.setDashboardIcon.bind(this, dashboardId)}
-              variant="outlined"
-              fullWidth
-              margin="dense"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment variant="filled" position="end">
-                    <IconButton
-                      aria-label="Icons list"
-                      onClick={this.drawerSet.bind(this, drawerName, "core_components/Settings/IconsList.js", "320px", {dashboardId: dashboardId, drawerName: drawerName, drawer: drawer})}
-                    >
-                      <ImageIcon />
-                    </IconButton>
-                  </InputAdornment>
-                )
-              }}
-            />
-            <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.removeDashboard.bind(this, dashboardId, side)}>
-              <RemoveFromQueueIcon className="mr-8"/> Remove dashboard
-            </Button>
-          </form>
-        </div>
-        <Divider />
-        <div className="drawer-title">
-          <div className="drawer-title-text">Global settings</div>
-        </div>
-        <Divider />
-        <div className="section-body">
+        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
+          <div className="section-body">
             <form noValidate autoComplete="off">
               <TextField
                 className="mb-16"
-                label={SettingsStore.serverBackend.name}
-                value={SettingsStore.serverBackend.value}
-                onChange={this.setServerBackend.bind(this)}
+                label="Dashboard name"
+                value={name}
+                onChange={this.setDashboardName.bind(this, dashboardId)}
                 variant="outlined"
                 fullWidth
                 margin="dense"
               />
               <TextField
                 className="mb-16"
-                label={SettingsStore.terminalBackend.name}
-                value={SettingsStore.terminalBackend.value}
-                onChange={this.setTerminalBackend.bind(this)}
+                label="Dashboard icon"
+                value={icon}
+                onChange={this.setDashboardIcon.bind(this, dashboardId)}
                 variant="outlined"
                 fullWidth
                 margin="dense"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment variant="filled" position="end">
+                      <IconButton
+                        aria-label="Icons list"
+                        onClick={this.drawerSet.bind(this, drawerName, "core_components/Settings/IconsList.js", "320px", {dashboardId: dashboardId, drawerName: drawerName, drawer: drawer})}
+                      >
+                        <ImageIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
               />
-              <FormGroup>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={SettingsStore.fetchEnabled.value}
-                      onChange={this.setFetchEnabled.bind(this)}
-                      value=""
-                    />
-                  }
-                  label={SettingsStore.fetchEnabled.value ? SettingsStore.fetchEnabled.name + ' enabled' : SettingsStore.fetchEnabled.name + ' disabled' }
-                />
-              </FormGroup>
-              <FormGroup>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={SettingsStore.compactWidgetsHeader}
-                      onChange={this.setCompactWidgetsHeader.bind(this)}
-                      value=""
-                    />
-                  }
-                  label={SettingsStore.compactWidgetsHeader ? 'Headers on hover' : 'Static headers' }
-                />
-              </FormGroup>
+              <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.removeDashboard.bind(this, dashboardId, side)}>
+                <RemoveFromQueueIcon className="mr-8"/> Remove dashboard
+              </Button>
             </form>
           </div>
-        <Divider />
+          <Divider />
+          <div className="drawer-title">
+            <div className="drawer-title-text">Global settings</div>
+          </div>
+          <Divider />
+          <div className="section-body">
+              <form noValidate autoComplete="off">
+                <TextField
+                  className="mb-16"
+                  label={SettingsStore.serverBackend.name}
+                  value={SettingsStore.serverBackend.value}
+                  onChange={this.setServerBackend.bind(this)}
+                  variant="outlined"
+                  fullWidth
+                  margin="dense"
+                />
+                <TextField
+                  className="mb-16"
+                  label={SettingsStore.terminalBackend.name}
+                  value={SettingsStore.terminalBackend.value}
+                  onChange={this.setTerminalBackend.bind(this)}
+                  variant="outlined"
+                  fullWidth
+                  margin="dense"
+                />
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={SettingsStore.fetchEnabled.value}
+                        onChange={this.setFetchEnabled.bind(this)}
+                        value=""
+                      />
+                    }
+                    label={SettingsStore.fetchEnabled.value ? SettingsStore.fetchEnabled.name + ' enabled' : SettingsStore.fetchEnabled.name + ' disabled' }
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={SettingsStore.compactWidgetsHeader}
+                        onChange={this.setCompactWidgetsHeader.bind(this)}
+                        value=""
+                      />
+                    }
+                    label={SettingsStore.compactWidgetsHeader ? 'Headers on hover' : 'Static headers' }
+                  />
+                </FormGroup>
+              </form>
+            </div>
+          <Divider />
+        </PerfectScrollbar>
       </div>
     )
   }

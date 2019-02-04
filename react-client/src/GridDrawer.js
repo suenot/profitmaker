@@ -28,12 +28,12 @@ class GridDrawer extends React.Component {
     var dashboardId = this.props.data && this.props.data.dashboardId
     return (
       <div className="drawer">
-        <PerfectScrollbar option={{'suppressScrollX': true}}>
-          <div className="drawer-title">
-            <div className="drawer-title-text">Temporary dashboard</div>
-            <CloseIcon onClick={this.drawerClose.bind(this, 'aside-right-first')} className="pointer" />
-          </div>
-          <Divider />
+        <div className="drawer-title">
+          <div className="drawer-title-text">Temporary dashboard</div>
+          <CloseIcon onClick={this.drawerClose.bind(this, 'aside-right-first')} className="pointer" />
+        </div>
+        <Divider />
+        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
           <Grid data={{...this.props.data, aside: true}} />
         </PerfectScrollbar>
       </div>

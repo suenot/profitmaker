@@ -7,6 +7,7 @@ import InputAdornment from '@material-ui/core/InputAdornment'
 import 'rc-color-picker/assets/index.css'
 import ColorPicker from 'rc-color-picker'
 import CloseIcon from '@material-ui/icons/Close'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -25,37 +26,39 @@ class Settings extends React.Component {
           <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
         </div>
         <Divider />
-        <div className="section-body">
-          <form noValidate autoComplete="off">
-            <TextField
-              id="outlined-name"
-              label="Name"
-              value={customHeader}
-              onChange={this.changeCustomHeader.bind(this)}
-              variant="outlined"
-              fullWidth
-              className="mb-16"
-            />
-            {/* // onChange={this.setWidgetData.bind(this, 'group', 'value')} */}
-            <TextField
-              id="outlined-name"
-              label="Group"
-              value={group}
-              onChange={this.setGroup.bind(this, dashboardId, widgetId)}
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment variant="filled" position="end">
-                    <ColorPicker color={groupColor} mode="RGB" onChange={this.setGroupColor.bind(this, dashboardId, group)} placement="bottomRight" />
-                  </InputAdornment>
-                )
-              }}
-            />
-          </form>
-        </div>
-        <Divider />
+        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
+          <div className="section-body">
+            <form noValidate autoComplete="off">
+              <TextField
+                id="outlined-name"
+                label="Name"
+                value={customHeader}
+                onChange={this.changeCustomHeader.bind(this)}
+                variant="outlined"
+                fullWidth
+                className="mb-16"
+              />
+              {/* // onChange={this.setWidgetData.bind(this, 'group', 'value')} */}
+              <TextField
+                id="outlined-name"
+                label="Group"
+                value={group}
+                onChange={this.setGroup.bind(this, dashboardId, widgetId)}
+                variant="outlined"
+                fullWidth
+                margin="normal"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment variant="filled" position="end">
+                      <ColorPicker color={groupColor} mode="RGB" onChange={this.setGroupColor.bind(this, dashboardId, group)} placement="bottomRight" />
+                    </InputAdornment>
+                  )
+                }}
+              />
+            </form>
+          </div>
+          <Divider />
+        </PerfectScrollbar>
       </div>
     )
   }

@@ -7,6 +7,7 @@ import ListItem from '@material-ui/core/ListItem'
 import ListItemText from '@material-ui/core/ListItemText'
 import CloseIcon from '@material-ui/icons/Close'
 import Divider from '@material-ui/core/Divider'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -26,17 +27,19 @@ class Market extends React.Component {
             <CloseIcon onClick={this.drawerClose.bind(this, aside)} className="pointer" />
           </div>
           <Divider />
-          <List component="nav">
-            {
-              _.map(DashboardsStore.categories, (category) => {
-                return (
-                  <ListItem key={category} button onClick={this.selectCategory.bind(this, dashboardId, aside, drawer)}>
-                    <ListItemText primary={category} />
-                  </ListItem>
-                )
-              })
-            }
-          </List>
+          <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
+            <List component="nav">
+              {
+                _.map(DashboardsStore.categories, (category) => {
+                  return (
+                    <ListItem key={category} button onClick={this.selectCategory.bind(this, dashboardId, aside, drawer)}>
+                      <ListItemText primary={category} />
+                    </ListItem>
+                  )
+                })
+              }
+            </List>
+          </PerfectScrollbar>
         </div>
       </div>
     )

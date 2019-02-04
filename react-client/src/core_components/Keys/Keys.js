@@ -13,11 +13,12 @@ import ImageIcon from '@material-ui/icons/Image'
 import CloseIcon from '@material-ui/icons/Close'
 import AddIcon from '@material-ui/icons/Add'
 import RemoveIcon from '@material-ui/icons/Remove'
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
-import Typography from '@material-ui/core/Typography';
+import ExpansionPanel from '@material-ui/core/ExpansionPanel'
+import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary'
+import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails'
+import Typography from '@material-ui/core/Typography'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
 import KeysStore from 'stores/KeysStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -36,81 +37,83 @@ class Keys extends React.Component {
           </div>
         </div>
         <Divider />
-        {
-          _.map(KeysStore.keys, (key) => {
-            return (
-              <ExpansionPanel className="expansion-panel" key={key.id}>
-                <ExpansionPanelSummary expandIcon={<ExpandMoreIcon className="expansion-panel-icon" />} className="expansion-panel-summary">
-                  <Typography>{key.name}</Typography>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails className="expansion-panel-details">
-                  <form noValidate autoComplete="off">
-                    <TextField
-                      className="mb-16"
-                      label="Unique name"
-                      value={key.name}
-                      onChange={this.setKeyData.bind(this, key.id, 'name')}
-                      variant="outlined"
-                      fullWidth
-                      margin="dense"
-                    />
-                    <TextField
-                      className="mb-16"
-                      label="Stock"
-                      value={key.stock}
-                      onChange={this.setKeyData.bind(this, key.id, 'stock')}
-                      variant="outlined"
-                      fullWidth
-                      margin="dense"
-                    />
-                    <TextField
-                      className="mb-16"
-                      label="Public key"
-                      value={key.publicKey}
-                      onChange={this.setKeyData.bind(this, key.id, 'publicKey')}
-                      variant="outlined"
-                      fullWidth
-                      margin="dense"
-                    />
-                    <TextField
-                      className="mb-16"
-                      label="Private key"
-                      value={key.privateKey}
-                      onChange={this.setKeyData.bind(this, key.id, 'privateKey')}
-                      variant="outlined"
-                      fullWidth
-                      margin="dense"
-                    />
-                    <TextField
-                      className="mb-16"
-                      label="Proxy"
-                      value={key.proxy}
-                      onChange={this.setKeyData.bind(this, key.id, 'proxy')}
-                      variant="outlined"
-                      fullWidth
-                      margin="dense"
-                    />
-                    <FormGroup>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={JSON.parse(key.enabled)}
-                            onChange={this.toggleKeyData.bind(this, key.id, 'enabled')}
-                            value={JSON.parse(key.enabled)}
-                          />
-                        }
-                        label={JSON.parse(key.enabled) ? 'Enabled' : 'Disabled'}
+        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 135px)'}}>
+          {
+            _.map(KeysStore.keys, (key) => {
+              return (
+                <ExpansionPanel className="expansion-panel" key={key.id}>
+                  <ExpansionPanelSummary expandIcon={<ExpandMoreIcon className="expansion-panel-icon" />} className="expansion-panel-summary">
+                    <Typography>{key.name}</Typography>
+                  </ExpansionPanelSummary>
+                  <ExpansionPanelDetails className="expansion-panel-details">
+                    <form noValidate autoComplete="off">
+                      <TextField
+                        className="mb-16"
+                        label="Unique name"
+                        value={key.name}
+                        onChange={this.setKeyData.bind(this, key.id, 'name')}
+                        variant="outlined"
+                        fullWidth
+                        margin="dense"
                       />
-                    </FormGroup>
-                    <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.removeKey.bind(this, key.id)}>
-                      Remove key
-                    </Button>
-                  </form>
-                </ExpansionPanelDetails>
-              </ExpansionPanel>
-            )
-          })
-        }
+                      <TextField
+                        className="mb-16"
+                        label="Stock"
+                        value={key.stock}
+                        onChange={this.setKeyData.bind(this, key.id, 'stock')}
+                        variant="outlined"
+                        fullWidth
+                        margin="dense"
+                      />
+                      <TextField
+                        className="mb-16"
+                        label="Public key"
+                        value={key.publicKey}
+                        onChange={this.setKeyData.bind(this, key.id, 'publicKey')}
+                        variant="outlined"
+                        fullWidth
+                        margin="dense"
+                      />
+                      <TextField
+                        className="mb-16"
+                        label="Private key"
+                        value={key.privateKey}
+                        onChange={this.setKeyData.bind(this, key.id, 'privateKey')}
+                        variant="outlined"
+                        fullWidth
+                        margin="dense"
+                      />
+                      <TextField
+                        className="mb-16"
+                        label="Proxy"
+                        value={key.proxy}
+                        onChange={this.setKeyData.bind(this, key.id, 'proxy')}
+                        variant="outlined"
+                        fullWidth
+                        margin="dense"
+                      />
+                      <FormGroup>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={JSON.parse(key.enabled)}
+                              onChange={this.toggleKeyData.bind(this, key.id, 'enabled')}
+                              value={JSON.parse(key.enabled)}
+                            />
+                          }
+                          label={JSON.parse(key.enabled) ? 'Enabled' : 'Disabled'}
+                        />
+                      </FormGroup>
+                      <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.removeKey.bind(this, key.id)}>
+                        Remove key
+                      </Button>
+                    </form>
+                  </ExpansionPanelDetails>
+                </ExpansionPanel>
+              )
+            })
+          }
+        </PerfectScrollbar>
         <div className="spacer"></div>
         <div className="drawer-footer alert">
           Keys in browser doesn't work now. They are only for demo. Use keys in your local server.

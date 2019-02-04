@@ -64,7 +64,6 @@ export default class ChartComponent extends React.Component {
   }
   componentWillUnmount() {
     var key = this.getKey()
-    OhlcvStore.count(-1, key)
   }
   componentWillUpdate() {
     var key = this.getKey()

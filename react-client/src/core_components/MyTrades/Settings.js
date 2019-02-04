@@ -7,6 +7,7 @@ import Switch from '@material-ui/core/Switch'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import CloseIcon from '@material-ui/icons/Close'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -25,59 +26,61 @@ class Settings extends React.Component {
           <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
         </div>
         <Divider />
-        <div className="section-body">
-          <form noValidate autoComplete="off">
-            <TextField
-              id="outlined-name"
-              label="Name"
-              value={customHeader}
-              onChange={this.changeCustomHeader.bind(this)}
-              variant="outlined"
-              fullWidth
-              className="mb-16"
-            />
-            <TextField
-              id="outlined-name"
-              label="Stock"
-              value={stock}
-              onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
-              variant="outlined"
-              fullWidth
-              className="mb-16"
-            />
-            <TextField
-              id="outlined-name"
-              label="Pair"
-              value={pair}
-              onChange={this.setWidgetData.bind(this, 'pair', 'value', 'toUpperCase')}
-              variant="outlined"
-              fullWidth
-              className="mb-16"
-            />
-            <TextField
-              id="outlined-name"
-              label="Group"
-              value={group}
-              onChange={this.setGroup.bind(this, dashboardId, widgetId)}
-              variant="outlined"
-              fullWidth
-            />
-            <FormGroup>
-              <FormControlLabel
-              className="mb-16"
-              control={
-                  <Switch
-                    checked={demo}
-                    onChange={this.setWidgetData.bind(this, 'demo', 'checked', undefined)}
-                    value=""
-                  />
-                }
-                label={demo ? 'Demo on' : 'Demo off' }
+        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
+          <div className="section-body">
+            <form noValidate autoComplete="off">
+              <TextField
+                id="outlined-name"
+                label="Name"
+                value={customHeader}
+                onChange={this.changeCustomHeader.bind(this)}
+                variant="outlined"
+                fullWidth
+                className="mb-16"
               />
-            </FormGroup>
-          </form>
-        </div>
-        <Divider />
+              <TextField
+                id="outlined-name"
+                label="Stock"
+                value={stock}
+                onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
+                variant="outlined"
+                fullWidth
+                className="mb-16"
+              />
+              <TextField
+                id="outlined-name"
+                label="Pair"
+                value={pair}
+                onChange={this.setWidgetData.bind(this, 'pair', 'value', 'toUpperCase')}
+                variant="outlined"
+                fullWidth
+                className="mb-16"
+              />
+              <TextField
+                id="outlined-name"
+                label="Group"
+                value={group}
+                onChange={this.setGroup.bind(this, dashboardId, widgetId)}
+                variant="outlined"
+                fullWidth
+              />
+              <FormGroup>
+                <FormControlLabel
+                className="mb-16"
+                control={
+                    <Switch
+                      checked={demo}
+                      onChange={this.setWidgetData.bind(this, 'demo', 'checked', undefined)}
+                      value=""
+                    />
+                  }
+                  label={demo ? 'Demo on' : 'Demo off' }
+                />
+              </FormGroup>
+            </form>
+          </div>
+          <Divider />
+        </PerfectScrollbar>
       </div>
 
     )

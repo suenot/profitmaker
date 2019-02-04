@@ -7,6 +7,7 @@ import Switch from '@material-ui/core/Switch'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import CloseIcon from '@material-ui/icons/Close'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -23,55 +24,57 @@ class Settings extends React.Component {
           <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
         </div>
         <Divider />
-        <div className="section-body">
-          <form noValidate autoComplete="off">
-            <TextField
-              id="outlined-name"
-              label="Name"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader}
-              onChange={this.changeCustomHeader.bind(this)}
-              variant="outlined"
-              fullWidth
-              className="mb-16"
-            />
-            <FormGroup>
-              <FormControlLabel
-              className="mb-16"
-              control={
-                  <Switch
-                    checked={total}
-                    onChange={this.setTotal.bind(this)}
-                    value=""
-                  />
-                }
-                label={total ? 'All stocks' : 'Current stock' }
+        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
+          <div className="section-body">
+            <form noValidate autoComplete="off">
+              <TextField
+                id="outlined-name"
+                label="Name"
+                value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).customHeader}
+                onChange={this.changeCustomHeader.bind(this)}
+                variant="outlined"
+                fullWidth
+                className="mb-16"
               />
-            </FormGroup>
-            <TextField
-              id="outlined-name"
-              label="Stock"
-              value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stock}
-              onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
-              variant="outlined"
-              fullWidth
-              className={total ? 'hide' : ''}
-            />
-            <FormGroup>
-              <FormControlLabel
-              className="mb-16"
-              control={
-                  <Switch
-                    checked={demo}
-                    onChange={this.setWidgetData.bind(this, 'demo', 'checked', undefined)}
-                    value=""
-                  />
-                }
-                label={demo ? 'Demo on' : 'Demo off' }
+              <FormGroup>
+                <FormControlLabel
+                className="mb-16"
+                control={
+                    <Switch
+                      checked={total}
+                      onChange={this.setTotal.bind(this)}
+                      value=""
+                    />
+                  }
+                  label={total ? 'All stocks' : 'Current stock' }
+                />
+              </FormGroup>
+              <TextField
+                id="outlined-name"
+                label="Stock"
+                value={_.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stock}
+                onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
+                variant="outlined"
+                fullWidth
+                className={total ? 'hide' : ''}
               />
-            </FormGroup>
-          </form>
-        </div>
-        <Divider />
+              <FormGroup>
+                <FormControlLabel
+                className="mb-16"
+                control={
+                    <Switch
+                      checked={demo}
+                      onChange={this.setWidgetData.bind(this, 'demo', 'checked', undefined)}
+                      value=""
+                    />
+                  }
+                  label={demo ? 'Demo on' : 'Demo off' }
+                />
+              </FormGroup>
+            </form>
+          </div>
+          <Divider />
+        </PerfectScrollbar>
       </div>
     )
   }
