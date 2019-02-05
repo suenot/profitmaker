@@ -9,7 +9,7 @@ var {getPairs} = require('../core_components/getPairs')
 var {getOrderBook} = require('../core_components/getOrderBook')
 var {getOHLCV} = require('../core_components/getOHLCV')
 var {getTrades} = require('../core_components/updateTradesRaw')
-var getMyTrades = require('../core_components/getMyTrades')
+var {getMyTradesFromVariable} = require('../core_components/getMyTrades')
 var createOrder = require('../core_components/createOrder')
 var cancelOrder = require('../core_components/cancelOrder')
 var widgets = require('../core_components/widgets')
@@ -81,7 +81,7 @@ router.get('/myTrade/:stock/:pair', async function (req, res) {
   try {
     var stock = req.params.stock.toLowerCase()
     var pair = req.params.pair.split('_').join('/')
-    var result = await getMyTrades(stock, pair)
+    var result = await getMyTradesFromVariable(stock, pair)
     res.json(result)
   } catch (err) {
     res.status(500).send({error: serializeError(err).message})

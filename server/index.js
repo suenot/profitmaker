@@ -39,6 +39,7 @@ global.PAIRS
 global.ORDERBOOK
 global.OHLCV
 global.TRADESRAW
+global.MYTRADES = {}
 
 ///////////////
 //globals end
