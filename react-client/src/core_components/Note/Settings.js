@@ -9,6 +9,7 @@ import _ from 'lodash'
 import CloseIcon from '@material-ui/icons/Close'
 import AddIcon from '@material-ui/icons/Add'
 import './Note.sass'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import NotesStore from 'stores/NotesStore'
@@ -25,37 +26,39 @@ class Settings extends React.Component {
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Widget settings</div>
-          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
         </div>
         <Divider />
-        <form className="section-body" noValidate autoComplete="off">
-          <TextField
-            id="outlined-name"
-            label="Name"
-            value={customHeader}
-            onChange={this.changeCustomHeader.bind(this)}
-            variant="outlined"
-            fullWidth
-          />
-        </form>
-        <Divider />
-        <div className="drawer-subtitle">
-          <div className="drawer-subtitle-text">Notes</div>
-          <AddIcon onClick={this.addNote.bind(this)} className="pointer" />
-        </div>
-        <List component="nav" className="drawer-list">
-          {
-            _.map(NotesStore.notes, (note) => {
-              return (
-                <ListItem button onClick={this.setNote.bind(this, note.id)} key={note.id} className={"drawer-list-item list-item " + (note.id === noteId ? "selected" : "")}>
-                  <ListItemText primary={note.name} className="drawer-list-item-text" />
-                  <CloseIcon onClick={this.removeNote.bind(this, note.id, noteId)} className="drawer-list-item-icon" />
-                </ListItem>
-              )
-            })
-          }
-        </List>
-        <Divider />
+        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
+          <form className="section-body" noValidate autoComplete="off">
+            <TextField
+              id="outlined-name"
+              label="Name"
+              value={customHeader}
+              onChange={this.changeCustomHeader.bind(this)}
+              variant="outlined"
+              fullWidth
+            />
+          </form>
+          <Divider />
+          <div className="drawer-subtitle">
+            <div className="drawer-subtitle-text">Notes</div>
+            <AddIcon onClick={this.addNote.bind(this)} className="pointer" />
+          </div>
+          <List component="nav" className="drawer-list">
+            {
+              _.map(NotesStore.notes, (note) => {
+                return (
+                  <ListItem button onClick={this.setNote.bind(this, note.id)} key={note.id} className={"drawer-list-item list-item " + (note.id === noteId ? "selected" : "")}>
+                    <ListItemText primary={note.name} className="drawer-list-item-text" />
+                    <CloseIcon onClick={this.removeNote.bind(this, note.id, noteId)} className="drawer-list-item-icon" />
+                  </ListItem>
+                )
+              })
+            }
+          </List>
+          <Divider />
+        </PerfectScrollbar>
       </div>
     )
   }
@@ -81,8 +84,8 @@ class Settings extends React.Component {
     e.stopPropagation()
     NotesStore.removeNote(id, noteId)
   }
-  drawerRightClose() {
-    DrawersStore.drawerRightClose()
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
 }
 

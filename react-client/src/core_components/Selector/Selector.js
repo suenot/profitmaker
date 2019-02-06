@@ -3,21 +3,20 @@ import { observer } from 'mobx-react'
 import Typography from '@material-ui/core/Typography'
 import Button from '@material-ui/core/Button'
 
-import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
 
 @observer
 class Selector extends React.Component {
   render() {
-    var {dashboardId, widgetId, stock, pair, group} = this.props.data
+    var {dashboardId, widgetId, stock, pair, group, drawer} = this.props.data
     return (
       <div className="selector">
-        <Button size="medium" onClick={this.drawerRightToggle.bind(this, "core_components/Stocks/Stocks.js", "300px", {"group": group})}>
+        <Button size="medium" onClick={this.drawerToggle.bind(this, drawer, "core_components/Stocks/Stocks.js", "300px", {"group": group, "drawer": drawer})}>
           <Typography variant="h6" color="inherit" noWrap>
             {stock}
           </Typography>
         </Button>
-        <Button size="medium" onClick={this.drawerRightToggle.bind(this, "core_components/Pairs/Pairs.js", "300px", {"group": group, "stock": stock})}>
+        <Button size="medium" onClick={this.drawerToggle.bind(this, drawer, "core_components/Pairs/Pairs.js", "300px", {"group": group, "stock": stock, "drawer": drawer})}>
           <Typography variant="h6" color="inherit" noWrap>
             {pair}
           </Typography>
@@ -25,14 +24,14 @@ class Selector extends React.Component {
       </div>
     )
   }
-  drawerRightToggle(component, width, data) {
-    if (DrawersStore.drawerRightComponent === component) {
+  drawerToggle(drawer, component, width, data) {
+    if ( DrawersStore.drawers[drawer].component === component && JSON.stringify(DrawersStore.drawers[drawer].data) === JSON.stringify(data) ) {
       // current component
-      DrawersStore.drawerRightToggle()
+      DrawersStore.drawerToggle(drawer)
     } else {
       // new component
-      if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
-      DrawersStore.drawerRightSet(component, width, data)
+      if (DrawersStore.drawers[drawer].open === false) DrawersStore.drawerToggle(drawer)
+      DrawersStore.drawerSet(drawer, component, width, data)
     }
     // DrawersStore.drawerRightSet(component, width)
     // DrawersStore.drawerRightToggle()

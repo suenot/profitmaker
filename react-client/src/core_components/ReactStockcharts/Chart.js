@@ -36,7 +36,7 @@ import _ from 'lodash'
 import DrawersStore from 'stores/DrawersStore'
 
 class HeikinAshi extends React.Component {
-  drawerRightToggle(component, width, data, dashboardId, widgetId) {
+  drawerToggle(drawer, component, width, data, dashboardId, widgetId) {
     // if (DrawersStore.drawerRightComponent === component) {
     //   // current component
     //   DrawersStore.drawerRightToggle()
@@ -45,8 +45,8 @@ class HeikinAshi extends React.Component {
     //   if (DrawersStore.drawerRightOpen === false) DrawersStore.drawerRightToggle()
     //   DrawersStore.drawerRightSet(component, width)
     // }
-    DrawersStore.drawerRightSet(component, width, data, dashboardId, widgetId)
-    DrawersStore.drawerRightToggle()
+    DrawersStore.drawerSet(drawer, component, width, data, dashboardId, widgetId)
+    DrawersStore.drawerToggle(drawer)
   }
 	render() {
 		const ha = heikinAshi()
@@ -83,18 +83,16 @@ class HeikinAshi extends React.Component {
 		const start = xAccessor(last(data))
     const end = xAccessor(data[Math.max(0, data.length - 150)])
 		const xExtents = [start, end]
-    const {dashboardId, widgetId, timeframe} = this.props._data
+    const {dashboardId, widgetId, timeframe, drawer} = this.props._data
 		return (
       <div>
         <Button variant="outlined" size="small" color="primary" className="react-stockcharts-timeframe"
-          onClick={this.drawerRightToggle.bind(
+          onClick={this.drawerToggle.bind(
             this,
+            drawer,
             "core_components/ReactStockcharts/Settings.js",
             "300px",
-            {
-              dashboardId: dashboardId,
-              widgetId: widgetId,
-            },
+            this.props._data,
             dashboardId,
             widgetId
           )}>

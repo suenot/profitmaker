@@ -4,6 +4,7 @@ import _ from 'lodash'
 import { observer } from 'mobx-react'
 import CloseIcon from '@material-ui/icons/Close'
 import Divider from '@material-ui/core/Divider'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
 import PairsStore from 'stores/PairsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -11,30 +12,32 @@ import DrawersStore from 'stores/DrawersStore'
 @observer
 class Pairs extends React.Component {
   render() {
-    var stock = this.props.data.stock
+    var {stock, drawer} = this.props.data
     return (
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Pairs on {stock}</div>
-          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, drawer)} className="pointer" />
         </div>
         <Divider />
-        <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
-        <table className="simpleTable">
-          <tbody>
-            {
-              _.map(PairsStore.pairsComputed[stock], (pair) => {
-                return <tr key={pair}>
-                  <td>
-                    <div className="cell" onClick={this.setPair.bind(this, pair)}>
-                      {pair}
-                    </div>
-                  </td>
-                </tr>
-              })
-            }
-          </tbody>
-        </table>
+        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
+          <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
+          <table className="simpleTable">
+            <tbody>
+              {
+                _.map(PairsStore.pairsComputed[stock], (pair) => {
+                  return <tr key={pair}>
+                    <td>
+                      <div className="cell" onClick={this.setPair.bind(this, pair)}>
+                        {pair}
+                      </div>
+                    </td>
+                  </tr>
+                })
+              }
+            </tbody>
+          </table>
+        </PerfectScrollbar>
       </div>
     )
   }
@@ -58,8 +61,8 @@ class Pairs extends React.Component {
   componentDidUpdate() {
     PairsStore.count(1, this.props.data)
   }
-  drawerRightClose() {
-    DrawersStore.drawerRightClose()
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
 }
 

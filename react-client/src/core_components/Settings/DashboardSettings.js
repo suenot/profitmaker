@@ -10,6 +10,7 @@ import IconButton from '@material-ui/core/IconButton'
 import InputAdornment from '@material-ui/core/InputAdornment'
 import ImageIcon from '@material-ui/icons/Image'
 import CloseIcon from '@material-ui/icons/Close'
+import RemoveFromQueueIcon from '@material-ui/icons/RemoveFromQueue'
 
 import SettingsStore from 'stores/SettingsStore'
 import DashboardsStore from 'stores/DashboardsStore'
@@ -23,7 +24,7 @@ class Settings extends React.Component {
       <div className="drawer">
         <div className="drawer-title">
           <div className="drawer-title-text">Dashboard settings</div>
-          <CloseIcon onClick={this.drawerRightClose.bind(this)} className="pointer" />
+          <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
         </div>
         <Divider />
         <div className="section-body">
@@ -59,7 +60,7 @@ class Settings extends React.Component {
               }}
             />
             <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.removeDashboard.bind(this, DashboardsStore.dashboardActiveId)}>
-              Remove dashboard
+              <RemoveFromQueueIcon className="mr-8"/> Remove dashboard
             </Button>
           </form>
         </div>
@@ -92,8 +93,8 @@ class Settings extends React.Component {
   setDashboardIcon(event) {
     DashboardsStore.setDashboardIcon(event.target.value)
   }
-  drawerRightClose() {
-    DrawersStore.drawerRightClose()
+  drawerClose(drawer) {
+    DrawersStore.drawerClose(drawer)
   }
 }
 

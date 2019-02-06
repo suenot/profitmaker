@@ -11,6 +11,13 @@
   margin-bottom: 8px !important
 .mb-16
   margin-bottom: 16px !important
+.mr-8
+  margin-right: 8px !important
+.mr-16
+  margin-right: 16px !important
+.flex-column
+  display: flex
+  flex-direction: column
 
 .grabbable
   cursor: move
@@ -280,18 +287,64 @@ body
   //     background: linear-gradient(to right, #ffffff 0%,#ffffff 60%,#7db9e8 60%,#7db9e8 100%)
 
 // drawer
-.drawer-dashboard
-  background-color: #f4f3f3 !important
-  width: 72px
-  border-left: 1px solid rgba(0, 0, 0, 0.04) !important
-  z-index: 0 !important
-  .divider
-    background: rgba(0, 0, 0, 0.04) !important
-  .add-widget-btn
-    background: #049bfd !important
-    div
-      color: rgba(255,255,255,0.8) !important
+.menu-left
+  width: 72px !important
+  z-index: 1000 !important
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important
+  .list-item.selected
+    box-shadow: -1px 0px 0px 0px #049bfd inset
+.menu-right
+  width: 72px !important
+  z-index: 1000 !important
+  border-left: 1px solid rgba(0, 0, 0, 0.08) !important
+  .list-item.selected
+    box-shadow: 1px 0px 0px 0px #049bfd inset
+.aside-left-first
+  width: 320px !important
+  transform: translate(72px, 0px) !important
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important
+.aside-left-second
+  width: 320px !important
+  transform: translate(392px, 0px) !important
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important
+.aside-right-first
+  width: 320px !important
+  transform: translate(-72px, 0px) !important
+  border-left: 1px solid rgba(0, 0, 0, 0.08) !important
+.aside-right-second
+  width: 320px !important
+  transform: translate(-392px, 0px) !important
+  border-left: 1px solid rgba(0, 0, 0, 0.08) !important
 
+
+
+
+.drawer
+  display: flex
+  flex-direction: column
+  min-height: 100vh
+  &.close
+    display: none
+  &.open
+    display: block
+  .scrollbar-container
+    height: 100%
+    max-height: 100%
+
+// .drawer-dashboard
+//   background-color: #f4f3f3 !important
+//   width: 72px
+//   border-left: 1px solid rgba(0, 0, 0, 0.04) !important
+//   z-index: 0 !important
+.divider
+  background: rgba(0, 0, 0, 0.04) !important
+.add-widget-btn
+  background: #049bfd !important
+  div
+    color: rgba(255,255,255,0.8) !important
+
+// .drawer-right.offset
+//   transform: translate(-72px, 0px) !important
 .drawer-right-toggle
   z-index: 1
 .drawer-title
@@ -300,7 +353,7 @@ body
   align-items: center
   height: 48px
   padding: 16px
-  background: #efefef
+  background: rgba(0, 0, 0, 0.12)
   .drawer-title-text
     font-size: 16px
 .drawer-subtitle
@@ -311,19 +364,25 @@ body
   height: 48px
   background: #efefef
   .drawer-subtitle-text
+.drawer-footer
+  min-height: 48px
+  padding: 16px
+  background: rgba(0, 0, 0, 0.12)
+  text-align: center
+  &.pointer:hover
+    background: rgba(0, 0, 0, 0.18)
+  &.alert
+    background: #f50057
+    color: #fff
+    &.pointer:hover
+      background: #c51162
 .drawer-list
   padding: 0 !important
 .drawer-list-item
   padding: 11px 16px !important
-.drawer-list-item-text
-.drawer-list-item-icon
-
-
-.list-item.selected
-  box-shadow: -1px 0px 0px 0px #049bfd inset
-  background: none
-.drawer-list-item.selected
-  box-shadow: 1px 0px 0px 0px #049bfd inset
+  flex: 0 0 auto
+// .drawer-list-item-text
+// .drawer-list-item-icon
 
 
 .market
@@ -493,6 +552,7 @@ body
 .list-item
   display: flex !important
   justify-content: center !important
+  flex: 0 0 auto
 .item-icon
   margin-right: 0 !important
 
