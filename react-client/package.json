@@ -80,7 +80,8 @@
   },
   "devDependencies": {},
   "scripts": {
-    "start": "PORT=8041 node scripts/start.js",
+    "start": "HOST=127.0.0.1 PORT=8041 node scripts/start.js",
+    "docker": "HOST=0.0.0.0 PORT=8041 node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js"
   },

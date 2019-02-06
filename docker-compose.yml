@@ -7,10 +7,8 @@ services:
      - ./private/mongo.env
     volumes:
       - ./private/mongo/db:/data/db
-      # - kupi-terminal-mongo-volume:/data/db
     ports:
       - 127.0.0.1:27018:27017
-    # command: mongod --smallfiles --logpath=/dev/null # --quiet
 
   kupi-react:
     image: node:8-alpine
@@ -18,9 +16,9 @@ services:
       - 127.0.0.1:8041:8041
     volumes:
       - ./react-client:/react-client
-      # - /vue-client/node_modules
+      # - /react-client/node_modules
     working_dir: /react-client
-    command: sh -c 'yarn && yarn start' # yarn start
+    command: sh -c 'yarn && yarn docker' # yarn start
 
   # vue:
   #   # build: ./vue-client
