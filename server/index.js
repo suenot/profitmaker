@@ -61,6 +61,9 @@ var {getMyTrades} = require('./core_components/getMyTrades')
 var {createOrder} = require('./core_components/createOrder')
 var {cancelOrder} = require('./core_components/cancelOrder')
 
+
+
+
 const main = async () => {
   try { global.MONGO = await startMongo() } catch(err) { console.log(err) }
   try {
@@ -75,6 +78,7 @@ const main = async () => {
     // try { updateTradesHistory(localMongo, privateKeys, 60000) } catch(err) { console.log(err) }
     try { openOrders() } catch(err) { console.log(err) }
     // // try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
+    // try { await fetchDeposit('binance', 'ETH') } catch(err) { console.log(err) }
     app.use('/', api)
     try {
       const userApi = require('./user_components/api')

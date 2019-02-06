@@ -9,7 +9,7 @@ const updateCoinmarketcap = async function(t) {
 }
 const updateCoinmarketcapFromBD = async function() {
     try {
-      var response = await axios.get(`http://144.76.109.194:8051/coinmarketcap/`)
+      var response = await axios.get(`http://api.kupi.network/coinmarketcap/`)
       global.COINMARKETCAP = response.data
     } catch (err) { console.log(err) }
 }
