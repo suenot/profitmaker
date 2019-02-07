@@ -7,8 +7,7 @@ const api = require('./api')
 
 var bodyParser = require('body-parser')
 const serializeError = require('serialize-error')
-const privateKeys = require('../private/keys.json').keys
-const ethPockets = require('../private/keys.json').ethPockets
+const privateKeys = require('../private/keys.json')
 
 const ccxt = require ('ccxt')
 app.use(bodyParser.json())
@@ -29,7 +28,9 @@ let db
 global.MONGO
 global.COINMARKETCAP = {}
 global.BALANCE = {}
-global.STOCKS
+// global.STOCKS = {}
+global.CCXT = {}
+global.ETHPLORER = {}
 global.MARKETS
 global.sleepUntil = {}
 global.sleepUntilPriority = {}
@@ -45,10 +46,11 @@ global.MYTRADES = {}
 //globals end
 ///////////////
 var startMongo = require('./core_components/startMongo')
-var updateBalance = require('./core_components/updateBalance')
-var initStocks = require('./core_components/initStocks')
+var {updateBalance} = require('./core_components/updateBalance')
+var {initCCXT} = require('./core_components/initCCXT')
+var {initEthplorer} = require('./core_components/initEthplorer')
 var initBalance = require('./core_components/initBalance')
-var updateCoinmarketcap = require('./core_components/updateCoinmarketcap')
+var {updateCoinmarketcapCycle, updateCoinmarketcap} = require('./core_components/updateCoinmarketcap')
 var updateTradesHistory = require('./core_components/updateTradesHistory')
 var balanceHistory = require('./core_components/balanceHistory')
 // var updateOpenOrders = require('./core_components/updateOpenOrders')
@@ -69,26 +71,33 @@ const main = async () => {
   try { global.MONGO = await startMongo() } catch(err) { console.log(err) }
   try {
 
-    await initStocks(privateKeys)
-    await initBalance()
+    await initCCXT(privateKeys)
+    await initEthplorer(privateKeys)
+
+
+
+    // await initBalance()
     // получение публичных данных с сервера
-    try { updateCoinmarketcap(60000) } catch(err) { console.log(err) }
+    // try { await updateCoinmarketcap() } catch(err) { console.log(err) }
+    // try { updateCoinmarketcapCycle(60000) } catch(err) { console.log(err) }
 
     // // получение приватных данных с бирж
-    try { updateBalance(privateKeys, ethPockets, 20*60*1000) } catch(err) { console.log(err) }
-    // try { updateTradesHistory(localMongo, privateKeys, 60000) } catch(err) { console.log(err) }
-    try { openOrders() } catch(err) { console.log(err) }
-    // // try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
-    // try { await fetchDeposit('binance', 'ETH') } catch(err) { console.log(err) }
-    app.use('/', api)
-    try {
-      const userApi = require('./user_components/api')
-      app.use('/user_components', userApi)
-    } catch(err) { console.log(err) }
-    try {
-      var userComponents = require('./user_components')
-      userComponents()
-    } catch(err) { console.log(err) }
+    try { updateBalance(20*60*1000) } catch(err) { console.log(err) }
+    // // try { updateTradesHistory(localMongo, privateKeys, 60000) } catch(err) { console.log(err) }
+    // try { openOrders() } catch(err) { console.log(err) }
+    // // // try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
+    // // try { await fetchDeposit('binance', 'ETH') } catch(err) { console.log(err) }
+
+
+    // app.use('/', api)
+    // try {
+    //   const userApi = require('./user_components/api')
+    //   app.use('/user_components', userApi)
+    // } catch(err) { console.log(err) }
+    // try {
+    //   var userComponents = require('./user_components')
+    //   userComponents()
+    // } catch(err) { console.log(err) }
 
 
   } catch (err) { }

@@ -4,33 +4,54 @@ var sleep = require('../../utils').sleep
 var catchHead = require('../../utils').catchHead
 var calculateCoin = require('../../utils').calculateCoin
 
-const updateBalance = async function(privateKeys, ethPockets, timeout) {
+const updateBalance = async function(timeout) {
+    // console.log('updateBalance')
+    // console.log(global.CCXT)
     while (true) {
       try {
-        for (let [stockName, stock] of Object.entries(privateKeys)) {
-          await updateStocksBalance(stockName)
+        for (let [ccxtKey, ccxtObject] of Object.entries(global.CCXT)) {
+          // console.log('******')
+          let [keyID, keyType] = ccxtKey.split('--')
+          // global.CCXT[`${key.id}--${keyType}`]
+          if ( keyType === "safe") {
+
+            // console.log('*****', ccxtObject.kupi_keyName)
+            // console.log(keyID)
+            // console.log(keyType)
+            var kupi_keyName = ccxtObject.kupi_keyName
+            await updateStocksBalance(ccxtKey, kupi_keyName)
+
+            // await getBalance(ccxtKey, kupi_keyName)
+          }
         }
       } catch(err) { console.log(err) }
       try {
-        for (let [stockName, stock] of Object.entries(ethPockets)) {
-          await updateETHBalance(stockName, stock)
+        for (let [pocketName, pocket] of Object.entries(global.ETHPLORER)) {
+          // console.log(pocketName)
+          // console.log(pocket)
+          await updateETHBalance(pocket)
         }
-      } catch(err) {}
+      } catch(err) { console.log(err) }
       await updateTotal()
       await writeTotal()
       await sleep(timeout)
     }
 }
 
-const updateStocksBalance = async function(stockName) {
+// const getBalance = async function(ccxtKey, kupi_keyName) {
+//   console.log(kupi_keyName)
+//   var data = await global.CCXT[ccxtKey].fetch_balance()
+//   console.log(data)
+// }
+const updateStocksBalance = async function(ccxtKey, kupi_keyName) {
   if (!global.COINMARKETCAP) { return false }
   try {
-    var rateLimit = global.STOCKS[stockName]['rateLimit'] + 700
-    var stockNameUpper = stockName.toUpperCase()
-    await catchHead(rateLimit, stockName)
-    var data = await global.STOCKS[stockName].fetch_balance()
+    var rateLimit = global.CCXT[ccxtKey]['rateLimit'] + 700
+    // var stockNameUpper = stockName.toUpperCase()
+    await catchHead(rateLimit, kupi_keyName)
+    var data = await global.CCXT[ccxtKey].fetch_balance()
     var res = {
-        "stock": stockNameUpper,
+        "stock": kupi_keyName,
         "timestamp": Date.now(),
         "datetime": new Date(Date.now()),
         "freeBTC": 0,
@@ -41,46 +62,48 @@ const updateStocksBalance = async function(stockName) {
         "totalUSD": 0,
         "data": {}
     }
-    for (let [coin, value] of Object.entries(data.total)) {
-      if ( coin[0] != '$' ) {
-        if (value != 0) {
-          var calcTotal = await calculateCoin(value, coin)
-          var calcFree = await calculateCoin(data['free'][coin], coin)
-          var calcUsed = await calculateCoin(data['used'][coin], coin)
-          res['data'][coin] = {
-            'shortName': coin,
-            'total': value,
-            'totalUSD': calcTotal.usd,
-            'totalBTC': calcTotal.btc,
-            'used': data['used'][coin],
-            'usedUSD': calcUsed.usd,
-            'usedBTC': calcUsed.btc,
-            'free': data['free'][coin],
-            'freeUSD': calcFree.usd,
-            'freeBTC': calcFree.btc
+    if (data.total) {
+      for (let [coin, value] of Object.entries(data.total)) {
+        if ( coin[0] != '$' ) {
+          if (value != 0) {
+            var calcTotal = await calculateCoin(value, coin)
+            var calcFree = await calculateCoin(data['free'][coin], coin)
+            var calcUsed = await calculateCoin(data['used'][coin], coin)
+            res['data'][coin] = {
+              'shortName': coin,
+              'total': value,
+              'totalUSD': calcTotal.usd,
+              'totalBTC': calcTotal.btc,
+              'used': data['used'][coin],
+              'usedUSD': calcUsed.usd,
+              'usedBTC': calcUsed.btc,
+              'free': data['free'][coin],
+              'freeUSD': calcFree.usd,
+              'freeBTC': calcFree.btc
+            }
+            res.freeBTC += calcFree.btc
+            res.freeUSD += calcFree.usd
+            res.usedBTC += calcUsed.btc
+            res.usedUSD += calcUsed.usd
+            res.totalBTC += calcTotal.btc
+            res.totalUSD += calcTotal.usd
           }
-          res.freeBTC += calcFree.btc
-          res.freeUSD += calcFree.usd
-          res.usedBTC += calcUsed.btc
-          res.usedUSD += calcUsed.usd
-          res.totalBTC += calcTotal.btc
-          res.totalUSD += calcTotal.usd
         }
       }
     }
-    if ( global.BALANCE === undefined ) global.BALANCE = {}
-    if ( global.BALANCE[stockNameUpper] === undefined ) global.BALANCE[stockNameUpper] = {}
-    global.BALANCE[stockNameUpper] = res
+
+    if ( global.BALANCE[kupi_keyName] === undefined ) global.BALANCE[kupi_keyName] = {}
+    global.BALANCE[kupi_keyName] = res
     // console.log(stockNameUpper, global.BALANCE[stockNameUpper]['totalUSD'])
   } catch (err) { console.log(err) }
 }
 
-const updateETHBalance = async function(stockName, stock) {
+const updateETHBalance = async function(pocket) {
   if (!global.COINMARKETCAP) { return false }
   try {
-    var stockNameUpper = stockName.toUpperCase()
+    // var stockNameUpper = stockName.toUpperCase()
     var res = {
-        "stock": stockNameUpper,
+        "stock": pocket.name,
         "timestamp": Date.now(),
         "datetime": new Date(Date.now()),
         "freeBTC": 0,
@@ -92,8 +115,8 @@ const updateETHBalance = async function(stockName, stock) {
         "data": {}
     }
 
-    await catchHead(500, stockName)
-    var response = await axios.get('http://api.ethplorer.io/getAddressInfo/' + stock.address + '?apiKey=freekey')
+    await catchHead(500, pocket.name)
+    var response = await axios.get('http://api.ethplorer.io/getAddressInfo/' + pocket.address + '?apiKey=freekey')
     var ethCalc = await calculateCoin(response.data['ETH']['balance'], 'ETH')
     res['data']['ETH'] = {
       'shortName': 'ETH',
@@ -153,9 +176,8 @@ const updateETHBalance = async function(stockName, stock) {
         res.totalUSD += calc.usd
       }
     }
-    if ( global.BALANCE === undefined ) global.BALANCE = {}
-    if ( global.BALANCE[stockNameUpper] === undefined ) global.BALANCE[stockNameUpper] = {}
-    global.BALANCE[stockNameUpper] = res
+    if ( global.BALANCE[pocket.name] === undefined ) global.BALANCE[pocket.name] = {}
+    global.BALANCE[pocket.name] = res
   } catch (err) { console.log(err) }
 }
 
@@ -221,11 +243,11 @@ const writeTotal = async function () {
   if (!global.COINMARKETCAP) { return false }
   try {
     for (let [stockName, stock] of Object.entries(global.BALANCE)) {
-        var stockNameUpper = stockName.toUpperCase()
-        await global.MONGO.collection('balance').replaceOne({'stock': stockNameUpper}, stock, {upsert: true})
-        await global.MONGO.collection('balanceTimeseries').replaceOne({'stock': stockNameUpper, "timestamp": stock.timestamp }, stock, {upsert: true}) // TODO заменить на insert
+        // var stockNameUpper = stockName.toUpperCase()
+        await global.MONGO.collection('balance').replaceOne({'stock': stockName}, stock, {upsert: true})
+        await global.MONGO.collection('balanceTimeseries').replaceOne({'stock': stockName, "timestamp": stock.timestamp }, stock, {upsert: true}) // TODO заменить на insert
     }
     console.log('balance saved')
   } catch (err) { console.log(err) }
 }
-module.exports = updateBalance
+exports.updateBalance = updateBalance

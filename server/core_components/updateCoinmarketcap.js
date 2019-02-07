@@ -1,17 +1,18 @@
 var sleep = require('../../utils').sleep
 const axios = require('axios')
 
-const updateCoinmarketcap = async function(t) {
+const updateCoinmarketcapCycle = async function(timeout) {
     while (true) {
-        await updateCoinmarketcapFromBD()
-        await sleep(t)
+        await updateCoinmarketcap()
+        await sleep(timeout)
     }
 }
-const updateCoinmarketcapFromBD = async function() {
+const updateCoinmarketcap = async function() {
     try {
-      var response = await axios.get(`http://api.kupi.network/coinmarketcap/`)
-      global.COINMARKETCAP = response.data
+        var response = await axios.get(`http://api.kupi.network/coinmarketcap/`)
+        global.COINMARKETCAP = response.data
     } catch (err) { console.log(err) }
 }
 
-module.exports = updateCoinmarketcap
+exports.updateCoinmarketcapCycle = updateCoinmarketcapCycle
+exports.updateCoinmarketcap = updateCoinmarketcap

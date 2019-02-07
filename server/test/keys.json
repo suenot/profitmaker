@@ -1,0 +1,28 @@
+[
+  {
+      "id": "1",
+      "name": "Binance cryptoman@gmail.com",
+      "parser": "ccxt",
+      "stock": "binance",
+      "safe_apiKey": "apiKey",
+      "safe_secret": "secret",
+      "notSafe_apiKey": "apiKey",
+      "notSafe_secret": "secret",
+      "danger_apiKey": "apiKey",
+      "danger_secret": "secret",
+      "2fa_hash": "bbbbb",
+      "2fa_secret": "nnnnn",
+      "2fa_type": "totp",
+      "proxy": ["http://localhost:1001"],
+      "withdrawLimit": "1",
+      "withdrawLimitIn": "BTC",
+      "note": "Verification level 2"
+  },
+  {
+      "id": "3",
+      "parser": "ethplorer",
+      "name": "My eth wallet",
+      "address": "",
+      "note": ""
+  }
+]
