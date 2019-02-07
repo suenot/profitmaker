@@ -13,6 +13,7 @@ var {getMyTradesFromVariable} = require('../core_components/getMyTrades')
 var createOrder = require('../core_components/createOrder')
 var cancelOrder = require('../core_components/cancelOrder')
 var widgets = require('../core_components/widgets')
+var {fetchDeposit} = require('../core_components/fetchDeposit')
 
 var router = express.Router()
 
@@ -155,4 +156,13 @@ router.get('/ohlcv/:stock/:pair', async function (req, res) {
   }
 })
 
+router.get('/fetchDeposit', async function (req, res) {
+  try {
+    var {stock, symbol} = req.params
+    var depositInfo = await fetchDeposit(stock, symbol)
+    res.json(depositInfo)
+  } catch (err) {
+    res.status(500).send({error: serializeError(err).message})
+  }
+})
 module.exports = router
