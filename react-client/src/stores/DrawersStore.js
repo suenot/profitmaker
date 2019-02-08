@@ -67,9 +67,13 @@ class DrawersStore {
     this.drawers[drawer].component = 'core_components/Empty'
   }
   @action drawersClose() {
-    _.forEach(this.drawers, (drawer) => {
+    var drawers = this.drawers
+    _.forEach(drawers, (drawer) => {
       drawer.open = false
+      drawer.component = 'core_components/Empty'
     })
+    this.drawers = drawers
+    DashboardsStore.setDrawerDashboard('')
   }
   @action drawerToggle(drawer) {
     this.drawers[drawer].open = !this.drawers[drawer].open
