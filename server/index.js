@@ -30,6 +30,7 @@ global.COINMARKETCAP = {}
 global.BALANCE = {}
 // global.STOCKS = {}
 global.CCXT = {}
+global.ACOUNTS = {}
 global.ETHPLORER = {}
 global.MARKETS
 global.sleepUntil = {}
@@ -78,7 +79,7 @@ const main = async () => {
 
     // await initBalance()
     // получение публичных данных с сервера
-    // try { await updateCoinmarketcap() } catch(err) { console.log(err) }
+    try { await updateCoinmarketcap() } catch(err) { console.log(err) }
     // try { updateCoinmarketcapCycle(60000) } catch(err) { console.log(err) }
 
     // // получение приватных данных с бирж

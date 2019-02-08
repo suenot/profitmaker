@@ -1,24 +1,27 @@
 var {sleep, catchHead} = require('../../utils')
 const ccxt = require ('ccxt')
 const {ObjectId} = require('mongodb')
+const _ = require ('lodash')
 
-
+//1
 const openOrders = async function() {
   try {
     while (true) {
       var dataToParse = await getOpenOrdersFromDB()
       // console.log(dataToParse)
-      if (dataToParse != []) {
+      if (!_.isEmpty(dataToParse)) {
         await createParseLists(dataToParse)
       }
       await sleep(90000)
     }
   } catch (err) { console.log(err)}
 }
+
 const getOpenOrdersFromDB = async function() {
   try {
     var data = global.MONGO.collection('openOrders').find({}).toArray()
-    if (data.data === []) {
+
+    if (_.isEmpty(data.data)) {
       return {}
     } else { return data }
   } catch (err) { console.log(err)}
@@ -62,12 +65,14 @@ const fetchOpenOrder = async function(stock, symbol, id, _id='') {
   } catch (err) { console.log(err)}
 }
 
+
+// API step 2. Forse fetch this stock/market for active orders
 const marketOpenOrders = async function(stock, symbol) {
   try {
     var stockName = stock.toLowerCase()
     var rateLimit = global.STOCKS[stockName]['rateLimit']
     await catchHead(rateLimit, stockName)
-    var stockActiveTrades = await global.STOCKS[stockName].fetchOpenOrders(symbol = symbol, since = undefined, limit = undefined, params = {})
+    var stockActiveTrades = await global.STOCKS[stockName].fetchOpenOrders(symbol = symbol, since = undefined, limit = undefined)
 
     if (stockActiveTrades.length > 0) {
       for (var data of stockActiveTrades) {
@@ -86,6 +91,8 @@ const marketOpenOrders = async function(stock, symbol) {
   } catch (err) { console.log(err) }
 }
 
+
+// for API
 const getOpenOrders = async function(stock, symbol) {
   try {
     var data = await global.MONGO.collection('openOrders').find({'stock': stock, 'symbol': symbol}).toArray()

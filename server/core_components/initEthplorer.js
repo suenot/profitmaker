@@ -4,7 +4,7 @@ const initEthplorer = async function(privateKeys) {
     for (let key of privateKeys) {
       if (key.parser === 'ethplorer') {
         // console.log(key)
-        global.ETHPLORER[key.id] = key
+        global.ETHPLORER[key.name] = key
       }
     }
   } catch (err) {
