@@ -5,7 +5,7 @@
 2. Install mongo
 ```
 docker volume create kupi-terminal-mongo-volume
-docker run --name kupi-terminal-mongo -p 28319:27017 -v kupi-terminal-mongo-volume:/data/db -d mongo
+docker run --name kupi-terminal-mongo -p 27018:27017 -v kupi-terminal-mongo-volume:/data/db -d mongo
 ```
 
 3. Copy ignored by default files

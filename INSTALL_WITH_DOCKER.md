@@ -9,15 +9,10 @@ cp -R ./defaults/. ./
 
 3. Set mongo password in ```./private/mongo.json``` and ```./private/mongo.env```
 
-4. Set global variables (optionally)
-```
-export DOCKER_CLIENT_TIMEOUT=120
-export COMPOSE_HTTP_TIMEOUT=120
-```
-5. Install node modules
+4. Install node modules
 ```cd react-client && npm i``` # for react verison
-```cd vue-client && npm i``` # for vue verison
+```cd vue-client && npm i``` # for vue verison (in development, not ready)
 
-6. Build and run containers
+5. Build and run containers
 ```docker-compose up``` # for react version
-```docker-compose -f docker-compose-vue.yml up``` # for vue version
+```docker-compose -f docker-compose-vue.yml up``` # for vue version (in development, not ready)
