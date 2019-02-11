@@ -13,7 +13,7 @@ const catchHead = async function(rateLimit, stock) {
         }
     }
 }
-const calculateCoin = function (amount, coin) {
+const calculateCoin = async function (amount, coin) {
   return { 'btc': parseFloat(global.COINMARKETCAP[coin]['price_btc']) * parseFloat(amount), 'usd': parseFloat(global.COINMARKETCAP[coin]['price_usd']) * parseFloat(amount) }
 }
 ////////////////////

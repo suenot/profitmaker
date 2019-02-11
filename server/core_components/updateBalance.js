@@ -7,7 +7,7 @@ const updateBalance = async function(timeout) {
     while (true) {
       try {
         for (let [ccxtKey, ccxtObject] of Object.entries(global.CCXT)) {
-          let [keyID, keyType] = ccxtKey.split('--')
+          let [keyId, keyType] = ccxtKey.split('--')
           if ( keyType === "safe") {
             var kupi_keyName = ccxtObject.kupi_keyName
             await updateStocksBalance(ccxtKey, kupi_keyName)
@@ -49,13 +49,23 @@ const calculateStockBalance = async function(data, kupi_keyName) {
     "totalUSD": 0,
     "data": {}
   }
-  if (data.total) {
+  if (!_.isEmpty(data.total)) {
     for (let [coin, value] of Object.entries(data.total)) {
       if ( coin[0] != '$' ) {
         if (value != 0) {
-          var calcTotal = await calculateCoin(value, coin)
-          var calcFree = await calculateCoin(data['free'][coin], coin)
-          var calcUsed = await calculateCoin(data['used'][coin], coin)
+          try {
+            var calcTotal = await calculateCoin(value, coin)
+            var calcFree = await calculateCoin(data['free'][coin], coin)
+            var calcUsed = await calculateCoin(data['used'][coin], coin)
+          } catch (err) {
+            // console.log('calculateStockBalance - COINMARKETCAP error ', coin)
+            // console.log(err)
+            var calcTotal = {'btc': 0, 'usd': 0}
+            var calcFree = {'btc': 0, 'usd': 0}
+            var calcUsed = {'btc': 0, 'usd': 0}
+          }
+          // TODO Cannot read property 'price_btc' of undefined
+
           res['data'][coin] = {
             'shortName': coin,
             'total': value,
@@ -124,10 +134,19 @@ const calculateETHBalance = async function(data, name) {
   res.totalBTC += ethCalc.btc
   res.totalUSD += ethCalc.usd
   for (let [i, token] of Object.entries(data.data.tokens)) {
+     // TODO Cannot read property 'price_btc' of undefined
     var decimals = token['tokenInfo']['decimals']
     var symbol = token['tokenInfo']['symbol']
     var balance = token['balance'] / 10**decimals
-    var calc = calculateCoin(balance, symbol)
+    try {
+      var calc = await calculateCoin(balance, symbol)
+    } catch (err) {
+      // console.log(err)
+
+      // console.log('calculateETHBalance - COINMARKETCAP error ', symbol)
+      var calc = {'btc': 0, 'usd': 0}
+    }
+
     // console.log(token['tokenInfo'])
     if (token['tokenInfo']['price'] == false) {
       res['data'][symbol] = {

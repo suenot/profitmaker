@@ -1,24 +1,30 @@
 var catchHead = require('../../utils').catchHead
 
-const getMyTrades = async function(stockName, symbol) {
+const getMyTrades = async function(account, symbol) {
   try {
-    var rateLimit = global.STOCKS[stockName]['rateLimit']
-    if (global.STOCKS[stockName].has['fetchMyTrades']) {
-      await catchHead(rateLimit, stockName)
-      var trades = await global.STOCKS[stockName].fetchMyTrades(symbol)
-      var id = `${stockName}--${symbol}`
-      global.MYTRADES[id] = trades
-      return trades
+    console.log(global.ACCOUNTS[account])
+    if (global.ACCOUNTS[account].parser === 'ccxt' && global.ACCOUNTS[account].notSafe !== '') {
+      if (global.CCXT[global.ACCOUNTS[account].notSafe].has['fetchMyTrades']) {
+        var rateLimit = global.CCXT[global.ACCOUNTS[account].notSafe]['rateLimit']
+        console.log(rateLimit)
+        await catchHead(rateLimit, global.ACCOUNTS[account].notSafe)
+        var trades = await global.CCXT[global.ACCOUNTS[account].notSafe].fetchMyTrades(symbol)
+        var id = `${account}--${symbol}`
+        global.MYTRADES[id] = trades
+        return trades
+      } else {
+        return {'Error': account + ' havent fetchMyTrades'}
+      }
     } else {
-      return {'Error': stockName + ' havent fetchMyTrades'}
+      return {'Error': account + ' havent key for this operation'}
     }
   } catch (err) { console.log(err) }
 }
 
-const getMyTradesFromVariable = async function(stockName, symbol) {
+const getMyTradesFromVariable = async function(account, symbol) {
   try {
-    getMyTrades(stockName, symbol)
-    var id = `${stockName}--${symbol}`
+    getMyTrades(account, symbol)
+    var id = `${account}--${symbol}`
     var trades = global.MYTRADES[id]
     return trades
   } catch (err) { console.log(err) }

@@ -30,12 +30,11 @@ global.COINMARKETCAP = {}
 global.BALANCE = {}
 // global.STOCKS = {}
 global.CCXT = {}
-global.ACOUNTS = {}
+global.ACCOUNTS = {}
 global.ETHPLORER = {}
 global.MARKETS
 global.sleepUntil = {}
 global.sleepUntilPriority = {}
-global.TRADESHISTORY
 global.OPENORDERS
 global.PAIRS
 global.ORDERBOOK
@@ -43,24 +42,23 @@ global.OHLCV
 global.TRADESRAW
 global.MYTRADES = {}
 
-///////////////
-//globals end
-///////////////
+//////////////
+// globals end
+//////////////
 var startMongo = require('./core_components/startMongo')
 var {updateBalance} = require('./core_components/updateBalance')
 var {initCCXT} = require('./core_components/initCCXT')
 var {initEthplorer} = require('./core_components/initEthplorer')
 var initBalance = require('./core_components/initBalance')
-var {updateCoinmarketcapCycle, updateCoinmarketcap} = require('./core_components/updateCoinmarketcap')
-var updateTradesHistory = require('./core_components/updateTradesHistory')
+var {updateCoinmarketcapCycle, updateCoinmarketcap} = require('./core_components/kupi_api/updateCoinmarketcap')
 var balanceHistory = require('./core_components/balanceHistory')
 // var updateOpenOrders = require('./core_components/updateOpenOrders')
 var {openOrders, fetchOpenOrder, getOpenOrders} = require('./core_components/openOrders')
-var {getStocksCycle, getStocks} = require('./core_components/getStocks')
-var {getPairs} = require('./core_components/getPairs')
-var {getOrderBook} = require('./core_components/getOrderBook')
-var {getOHLCV} = require('./core_components/getOHLCV')
-var {updateTradesRaw, getTrades} = require('./core_components/updateTradesRaw')
+var {getStocksCycle, getStocks} = require('./core_components/kupi_api/getStocks')
+var {getPairs} = require('./core_components/kupi_api/getPairs')
+var {getOrderBook} = require('./core_components/kupi_api/getOrderBook')
+var {getOHLCV} = require('./core_components/kupi_api/getOHLCV')
+var {getTrades} = require('./core_components/kupi_api/getTrades')
 var {getMyTrades} = require('./core_components/getMyTrades')
 var {createOrder} = require('./core_components/createOrder')
 var {cancelOrder} = require('./core_components/cancelOrder')
@@ -74,7 +72,8 @@ const main = async () => {
 
     await initCCXT(privateKeys)
     await initEthplorer(privateKeys)
-
+    // console.log(global.ACCOUNTS)
+    // console.log(global.CCXT)
 
 
     // await initBalance()
@@ -83,8 +82,11 @@ const main = async () => {
     // try { updateCoinmarketcapCycle(60000) } catch(err) { console.log(err) }
 
     // // получение приватных данных с бирж
+    // balance
     try { updateBalance(20*60*1000) } catch(err) { console.log(err) }
-    // // try { updateTradesHistory(localMongo, privateKeys, 60000) } catch(err) { console.log(err) }
+
+    // console.log(await getMyTrades('ID_Binance_2', 'ETH/BTC') )
+
     // try { openOrders() } catch(err) { console.log(err) }
     // // // try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
     // // try { await fetchDeposit('binance', 'ETH') } catch(err) { console.log(err) }

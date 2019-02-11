@@ -1,5 +1,3 @@
-var {calculateCoin} = require('../../utils')
-
 var {calculateStockBalance, calculateETHBalance} = require('../core_components/updateBalance')
 
 global.COINMARKETCAP = {

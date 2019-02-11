@@ -1,14 +1,18 @@
 const _ = require('lodash')
 const express = require('express')
 const serializeError = require('serialize-error')
+
+var {getPairs} = require('../core_components/kupi_api/getPairs')
+var {getOrderBook} = require('../core_components/kupi_api/getOrderBook')
+var {getOHLCV} = require('../core_components/kupi_api/getOHLCV')
+var {getTrades} = require('../core_components/kupi_api/getTrades')
+
+
 var balanceHistory = require('../core_components/balanceHistory')
 // var updateOpenOrders = require('./core_components/updateOpenOrders')
 var {getOpenOrders} = require('../core_components/openOrders')
-var {getStocks} = require('../core_components/getStocks')
-var {getPairs} = require('../core_components/getPairs')
-var {getOrderBook} = require('../core_components/getOrderBook')
-var {getOHLCV} = require('../core_components/getOHLCV')
-var {getTrades} = require('../core_components/updateTradesRaw')
+var {getStocks} = require('../core_components/kupi_api/getStocks')
+
 var {getMyTradesFromVariable} = require('../core_components/getMyTrades')
 var createOrder = require('../core_components/createOrder')
 var cancelOrder = require('../core_components/cancelOrder')
