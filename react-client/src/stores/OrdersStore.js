@@ -61,6 +61,13 @@ class OrdersStore {
           sum: sumAsks
         }
       }
+      _orders.asks = _.forEach(_orders.asks, (order)=>{
+        order.totalPercent = order.total / sumAsks * 100
+        order.sumPercent = order.sum / sumAsks * 100
+        order.totalPercentInverse = 100 - order.totalPercent
+        order.sumPercentInverse = 100 - order.sumPercent
+      })
+
       var sumBids = 0
       for( let [key, order] of Object.entries(_orders.bids) ) {
         var _price = order[0]
@@ -75,6 +82,13 @@ class OrdersStore {
           sum: sumBids
         }
       }
+      _orders.bids = _.forEach(_orders.bids, (order)=>{
+        order.totalPercent = order.total / sumBids * 100
+        order.sumPercent = order.sum / sumBids * 100
+        order.totalPercentInverse = 100 - order.totalPercent
+        order.sumPercentInverse = 100 - order.sumPercent
+      })
+
       this.orders[key] = _orders
     })
     .catch((error) => {

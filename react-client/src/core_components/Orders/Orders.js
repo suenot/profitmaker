@@ -11,6 +11,7 @@ class Orders extends React.Component {
   render() {
     const {type, stock, pair} = this.props.data
     var key = `${stock}--${pair}`
+    var color = type === 'asks' ? 'rgba(255, 138, 138, 0.42)' : 'rgba(78, 136, 71, 0.42)'
     if (OrdersStore.orders[key] === undefined || OrdersStore.orders[key][type] === undefined) {
 			return <Preloader />
 		}
@@ -22,15 +23,24 @@ class Orders extends React.Component {
               <th className="simpleTable-header">price</th>
               <th className="simpleTable-header">amount</th>
               <th className="simpleTable-header">total</th>
+              {/* <th className="simpleTable-header">totalPercent</th> */}
+              {/* <th className="simpleTable-header">sumPercent</th> */}
             </tr>
           </thead>
           <tbody>
             {
-              _.map(OrdersStore.orders[key][type].slice(0, 15), (order) => {
-                return <tr key={order.id} onClick={this.setAll.bind(this, order.price, order.amount, order.total)}>
+              // .slice(0, 15)
+              _.map(OrdersStore.orders[key][type].slice(0, 30), (order) => {
+                return <tr
+                  key={order.id}
+                  onClick={this.setAll.bind(this, order.price, order.amount, order.total)}
+                  style={{background: `linear-gradient(to right, #ffffff 0%, #ffffff ${order.sumPercentInverse.toFixed(2)}%, ${color} ${order.sumPercentInverse.toFixed(2)}%, ${color} 100%)`}}
+                >
                   <td>{order.price.toFixed(8)}</td>
                   <td>{order.amount.toFixed(8)}</td>
                   <td>{order.total.toFixed(8)}</td>
+                  {/* <td>{order.totalPercent.toFixed(2)}</td> */}
+                  {/* <td>{order.sumPercent.toFixed(2)}</td> */}
                 </tr>
               })
             }
