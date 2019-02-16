@@ -219,7 +219,6 @@ Swagger: [try api online](https://app.swaggerhub.com/apis/soloviofff/kupi.networ
 
 ### terminal
 - websocket
-- dashboards with color_groups of widgets (2+ stocks on one page)
 - free arbitrage signals (one signal in one hands)
 - free strategies that really works
 - free bots
@@ -229,7 +228,6 @@ Swagger: [try api online](https://app.swaggerhub.com/apis/soloviofff/kupi.networ
 - i18n language support
 - analytics widgets
 - more stocks
-- docker version
 - app version based on electron
 - online version
 - improve security
