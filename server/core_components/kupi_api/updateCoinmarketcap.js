@@ -11,6 +11,7 @@ const updateCoinmarketcap = async function() {
     try {
         var response = await axios.get(`http://api.kupi.network/coinmarketcap/`)
         global.COINMARKETCAP = response.data
+        return response.data
     } catch (err) { console.log(err) }
 }
 

@@ -53,18 +53,10 @@ const calculateStockBalance = async function(data, kupi_keyName) {
     for (let [coin, value] of Object.entries(data.total)) {
       if ( coin[0] != '$' ) {
         if (value != 0) {
-          try {
-            var calcTotal = await calculateCoin(value, coin)
-            var calcFree = await calculateCoin(data['free'][coin], coin)
-            var calcUsed = await calculateCoin(data['used'][coin], coin)
-          } catch (err) {
-            // console.log('calculateStockBalance - COINMARKETCAP error ', coin)
-            // console.log(err)
-            var calcTotal = {'btc': 0, 'usd': 0}
-            var calcFree = {'btc': 0, 'usd': 0}
-            var calcUsed = {'btc': 0, 'usd': 0}
-          }
-          // TODO Cannot read property 'price_btc' of undefined
+
+          var calcTotal = await calculateCoin(value, coin)
+          var calcFree = await calculateCoin(data['free'][coin], coin)
+          var calcUsed = await calculateCoin(data['used'][coin], coin)
 
           res['data'][coin] = {
             'shortName': coin,
@@ -114,7 +106,8 @@ const calculateETHBalance = async function(data, name) {
     "totalUSD": 0,
     "data": {}
   }
-  var ethCalc = calculateCoin(data.data['ETH']['balance'], 'ETH')
+
+  var ethCalc = await calculateCoin(data.data['ETH']['balance'], 'ETH')
   res['data']['ETH'] = {
     'shortName': 'ETH',
     'total': data.data['ETH']['balance'],
@@ -133,21 +126,16 @@ const calculateETHBalance = async function(data, name) {
   res.usedUSD += 0
   res.totalBTC += ethCalc.btc
   res.totalUSD += ethCalc.usd
+
+  // console.log(data.data.tokens)
   for (let [i, token] of Object.entries(data.data.tokens)) {
-     // TODO Cannot read property 'price_btc' of undefined
     var decimals = token['tokenInfo']['decimals']
     var symbol = token['tokenInfo']['symbol']
     var balance = token['balance'] / 10**decimals
-    try {
-      var calc = await calculateCoin(balance, symbol)
-    } catch (err) {
-      // console.log(err)
-
-      // console.log('calculateETHBalance - COINMARKETCAP error ', symbol)
-      var calc = {'btc': 0, 'usd': 0}
-    }
-
+    var calc = await calculateCoin(balance, symbol)
+    // console.log(calc)
     // console.log(token['tokenInfo'])
+
     if (token['tokenInfo']['price'] == false) {
       res['data'][symbol] = {
         'shortName': symbol,

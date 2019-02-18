@@ -18,7 +18,7 @@ app.use(cors())
 
 const signale = require('signale')
 
-
+// deprecated ?
 let db
 
 
@@ -36,7 +36,7 @@ global.MARKETS
 global.sleepUntil = {}
 global.sleepUntilPriority = {}
 global.OPENORDERS
-global.PAIRS
+global.PAIRS = {}
 global.ORDERBOOK
 global.OHLCV
 global.TRADESRAW
@@ -52,7 +52,6 @@ var {initEthplorer} = require('./core_components/initEthplorer')
 var initBalance = require('./core_components/initBalance')
 var {updateCoinmarketcapCycle, updateCoinmarketcap} = require('./core_components/kupi_api/updateCoinmarketcap')
 var balanceHistory = require('./core_components/balanceHistory')
-// var updateOpenOrders = require('./core_components/updateOpenOrders')
 var {openOrders, fetchOpenOrder, getOpenOrders} = require('./core_components/openOrders')
 var {getStocksCycle, getStocks} = require('./core_components/kupi_api/getStocks')
 var {getPairs} = require('./core_components/kupi_api/getPairs')
@@ -76,23 +75,35 @@ const main = async () => {
     // console.log(global.CCXT)
 
 
-    // await initBalance()
+    await initBalance()
     // получение публичных данных с сервера
     try { await updateCoinmarketcap() } catch(err) { console.log(err) }
     // try { updateCoinmarketcapCycle(60000) } catch(err) { console.log(err) }
 
     // // получение приватных данных с бирж
+
+    // SAFE
     // balance
     try { updateBalance(20*60*1000) } catch(err) { console.log(err) }
+    // console.log(await getMyTrades('ID_Binance_2', 'ETH/BTC') )  // тестовое получение трэйдов
 
-    // console.log(await getMyTrades('ID_Binance_2', 'ETH/BTC') )
+    // KUPI_API | SAFE & PUBLIC
+    // console.log(await getPairs('binance'))
+    // console.log(await getTrades('binance', 'ETH_BTC'))
+    // console.log(await getStocks())
+    // console.log(await updateCoinmarketcap())
+    // console.log(await getOrderBook('binance', 'ETH_BTC'))
+    // console.log(await getOHLCV('binance', 'ETH_BTC', '3m'))
 
-    // try { openOrders() } catch(err) { console.log(err) }
-    // // // try { updateOpenOrders(localMongo, privateKeys, 20000) } catch(err) { console.log(err) }
+
+    // NOT-SAFE
+    try { openOrders(90000) } catch(err) { console.log(err) }
+
+
     // // try { await fetchDeposit('binance', 'ETH') } catch(err) { console.log(err) }
 
 
-    // app.use('/', api)
+    app.use('/', api)
     // try {
     //   const userApi = require('./user_components/api')
     //   app.use('/user_components', userApi)

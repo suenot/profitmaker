@@ -61,27 +61,28 @@ router.get('/balance/history/:stock/', async function (req, res) {
   }
 })
 
-router.get('/openOrders/:stock/:pair', async function (req, res) {
+router.get('/openOrders/:account/:pair', async function (req, res) {
   try {
-    var stock = req.params.stock
+    var account = req.params.account
     var symbol = req.params.pair.split('_').join('/')
-    var data = await getOpenOrders(stock, symbol)
+    var data = await getOpenOrders(account, symbol)
     res.json(data)
   } catch (err) {
     res.status(500).send({error: serializeError(err).message})
   }
 })
+// deprecated
+// router.get('/myTrades/:stock/:pair', function (req, res) {
+//   try {
+//     var stock = req.params.stock
+//     var pair = req.params.pair.split('_').join('/')
+//     res.json(global.TRADESHISTORY[stock][pair])
+//   } catch (err) {
+//     res.status(500).send({error: serializeError(err).message})
+//   }
+// })
 
-router.get('/myTrades/:stock/:pair', function (req, res) {
-  try {
-    var stock = req.params.stock
-    var pair = req.params.pair.split('_').join('/')
-    res.json(global.TRADESHISTORY[stock][pair])
-  } catch (err) {
-    res.status(500).send({error: serializeError(err).message})
-  }
-})
-
+// TODO (account, pair)
 router.get('/myTrade/:stock/:pair', async function (req, res) {
   try {
     var stock = req.params.stock.toLowerCase()
@@ -111,15 +112,16 @@ router.post('/createOrder', async function(req, res) {
   }
 })
 
-router.get('/trades/:stock/:pair', async function (req, res) {
-  try {
-    var {stock, pair} = req.params
-    var trades = await getTrades(stock, pair)
-    res.json(trades)
-  } catch (err) {
-    res.status(500).send({error: serializeError(err).message})
-  }
-})
+// deprecated
+// router.get('/trades/:stock/:pair', async function (req, res) {
+//   try {
+//     var {stock, pair} = req.params
+//     var trades = await getTrades(stock, pair)
+//     res.json(trades)
+//   } catch (err) {
+//     res.status(500).send({error: serializeError(err).message})
+//   }
+// })
 
 router.get('/stocks', async function (req, res) {
   try {
@@ -160,6 +162,7 @@ router.get('/ohlcv/:stock/:pair', async function (req, res) {
   }
 })
 
+// TODO danger key only
 router.get('/fetchDeposit', async function (req, res) {
   try {
     var {stock, symbol} = req.params
@@ -169,4 +172,13 @@ router.get('/fetchDeposit', async function (req, res) {
     res.status(500).send({error: serializeError(err).message})
   }
 })
+//
+router.get('/accounts', async function (req, res) {
+  try {
+    res.json(global.ACCOUNTS)
+  } catch (err) {
+    res.status(500).send({error: serializeError(err).message})
+  }
+})
+
 module.exports = router
