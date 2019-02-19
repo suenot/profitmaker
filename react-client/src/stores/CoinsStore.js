@@ -1,13 +1,17 @@
-import { observable, action } from 'mobx'
-import uuidv1 from 'uuid/v1'
+import { observable, action, computed } from 'mobx'
+import axios from 'axios'
+
+import SettingsStore from './SettingsStore'
 
 class CoinsStore {
   constructor() {
-    fetchCoins()
+    this.fetchCoins()
     setInterval(() => {
-      fetchCoins()
+      this.fetchCoins()
     }, 60000)
   }
+
+  @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
   @observable coins = {}
   @observable hash = ''
@@ -19,7 +23,7 @@ class CoinsStore {
       this.hash = JSON.stringify(response.data)
       this.coins = response.data
     })
-    .catch(() => {
+    .catch((err) => {
       this.coins = {}
     })
   }

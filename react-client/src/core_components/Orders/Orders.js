@@ -49,11 +49,11 @@ class Orders extends React.Component {
                     percent = visualMode === 'crocodile' ? order.sumPercent : order.totalPercent
                   } else { // fixed
                     if (visualMode === 'crocodile') {
-                      var visualModeCrocodileMaxInQuote = CoinsStore.coins[coinTo].price_usd ? visualModeCrocodileMax / CoinsStore.coins[coinTo].price_usd : 30
+                      var visualModeCrocodileMaxInQuote = (CoinsStore.coins[coinTo] && CoinsStore.coins[coinTo].price_usd) ? (visualModeCrocodileMax / CoinsStore.coins[coinTo].price_usd) : 30
                       if (visualModeCrocodileMaxInQuote >= order.total) percent = 100
                       percent = order.sum / visualModeCrocodileMaxInQuote * 100
                     } else { // wall
-                      var visualModeWallsMaxInQuote = CoinsStore.coins[coinTo].price_usd ? visualModeWallsMax / CoinsStore.coins[coinTo].price_usd : 1
+                      var visualModeWallsMaxInQuote = (CoinsStore.coins[coinTo] && CoinsStore.coins[coinTo].price_usd) ? (visualModeWallsMax / CoinsStore.coins[coinTo].price_usd) : 1
                       if (visualModeWallsMaxInQuote >= order.total) percent = 100
                       percent = order.total / visualModeWallsMaxInQuote * 100
                     }
@@ -100,11 +100,13 @@ class Orders extends React.Component {
                     percent = visualMode === 'crocodile' ? order.sumPercent : order.totalPercent
                   } else { // fixed
                     if (visualMode === 'crocodile') {
-                      if (visualModeCrocodileMax >= order.total) percent = 100
-                      percent = order.sum / visualModeCrocodileMax * 100
+                      var visualModeCrocodileMaxInQuote = (CoinsStore.coins[coinTo] && CoinsStore.coins[coinTo].price_usd) ? (visualModeCrocodileMax / CoinsStore.coins[coinTo].price_usd) : 30
+                      if (visualModeCrocodileMaxInQuote >= order.total) percent = 100
+                      percent = order.sum / visualModeCrocodileMaxInQuote * 100
                     } else { // wall
-                      if (visualModeWallsMax >= order.total) percent = 100
-                      percent = order.total / visualModeWallsMax * 100
+                      var visualModeWallsMaxInQuote = (CoinsStore.coins[coinTo] && CoinsStore.coins[coinTo].price_usd) ? (visualModeWallsMax / CoinsStore.coins[coinTo].price_usd) : 1
+                      if (visualModeWallsMaxInQuote >= order.total) percent = 100
+                      percent = order.total / visualModeWallsMaxInQuote * 100
                     }
                   }
                 }
