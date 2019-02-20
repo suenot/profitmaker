@@ -11,7 +11,7 @@ import SettingsStore from './SettingsStore'
 import DrawersStore from './DrawersStore'
 
 
-@version(11)
+@version(12)
 class DashboardsStore {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'dashboards' })
