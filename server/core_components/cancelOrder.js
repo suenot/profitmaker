@@ -1,20 +1,22 @@
 const ccxt = require ('ccxt')
-var {sleep, catchHead} = require('../../utils')
+var {catchHead} = require('../../utils')
 var {fetchOpenOrder} = require('./openOrders')
 
 const cancelOrder = async function(data) {
-  console.log('cancelOrder +++++++')
-  console.log(data)
-  var stockUpper = data.stock
-  var stockName = stockUpper.toLowerCase()
+  var accountId = data.accountId
+  try {
+    var ccxtId = global.ACCOUNTS[accountId].notSafe
+  } catch (err) {
+    return 'need notSafe key for cancelOrder'
+  }
   var symbol = data.symbol
   var id = data.id
   var _id = data._id
-  var rateLimit = global.STOCKS[stockName]['rateLimit']
-  await catchHead(rateLimit, stockName)
-  var result = await global.STOCKS[stockName].cancelOrder(id, symbol)
-  // var result = await cancel (stockName, id, symbol)
-  await fetchOpenOrder(stockUpper, symbol, id, _id)
+  var rateLimit = global.CCXT[ccxtId]['rateLimit']
+  await catchHead(rateLimit, ccxtId)
+  console.log(ccxtId, id, symbol)
+  var result = await global.CCXT[ccxtId].cancelOrder(id, symbol)
+  fetchOpenOrder(accountId, symbol, id, _id)
   return result
 }
 

@@ -39,14 +39,14 @@ const createParseLists = async function(data) {
 const fetchOpenOrder = async function(account, symbol, id, _id='') {
   try {
     try {
-      var ccxtID = global.ACCOUNTS[account].notSafe
+      var ccxtId = global.ACCOUNTS[account].safe
     } catch (err) {
-      return 'need notSafe key for openOrders'
+      return 'need safe key for openOrders'
     }
-    var rateLimit = global.CCXT[ccxtID]['rateLimit']
-    await catchHead(rateLimit, ccxtID)
+    var rateLimit = global.CCXT[ccxtId]['rateLimit']
+    await catchHead(rateLimit, ccxtId)
     try {
-      var data = await global.CCXT[ccxtID].fetchOrder(id, symbol)
+      var data = await global.CCXT[ccxtId].fetchOrder(id, symbol)
       if (data.status === 'canceled' || data.status === 'closed') {
         // console.log('не найдено ордеров, удаляем коллекцию ' + stockName + ':'+ symbol + ':'+_id)
         await global.MONGO.collection('openOrders').deleteOne({'account': account, 'symbol': symbol, 'id': id})
@@ -74,14 +74,14 @@ const fetchOpenOrder = async function(account, symbol, id, _id='') {
 const marketOpenOrders = async function(account, symbol) {
   try {
     try {
-      var ccxtID = global.ACCOUNTS[account].notSafe
+      var ccxtId = global.ACCOUNTS[account].safe
     } catch (err) {
-      return 'need notSafe key for openOrders'
+      return 'need safe key for openOrders'
     }
 
-    var rateLimit = global.CCXT[ccxtID]['rateLimit']
-    await catchHead(rateLimit, ccxtID)
-    var stockActiveTrades = await global.CCXT[ccxtID].fetchOpenOrders(symbol = symbol, since = undefined, limit = undefined)
+    var rateLimit = global.CCXT[ccxtId]['rateLimit']
+    await catchHead(rateLimit, ccxtId)
+    var stockActiveTrades = await global.CCXT[ccxtId].fetchOpenOrders(symbol = symbol, since = undefined, limit = undefined)
 
     if (stockActiveTrades.length > 0) {
       for (var data of stockActiveTrades) {
