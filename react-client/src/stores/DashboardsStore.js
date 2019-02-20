@@ -221,6 +221,20 @@ class DashboardsStore {
     this.dashboards[dashboardId].widgets = widgets
   }
 
+  @action openTemporaryDashboard(dashboardId) {
+    // take stock and pair for temporary dashboard from widgets in active dashboard
+    var widgets = _.cloneDeep(this.dashboards[dashboardId].widgets)
+    for (let widget of widgets) {
+      for (let _widget of this.dashboards[this.dashboardActiveId].widgets) {
+        if (widget.data.group === _widget.data.group) {
+          widget.data.stock = _widget.data.stock
+          widget.data.pair = _widget.data.pair
+          break
+        }
+      }
+    }
+    this.dashboards[dashboardId].widgets = widgets
+  }
 }
 
 const store = window.DashboardsStore = new DashboardsStore()

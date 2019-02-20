@@ -1,5 +1,7 @@
 import { observable, action } from 'mobx'
 
+import DashboardsStore from './DashboardsStore'
+
 class DrawersStore {
   constructor() {
     document.onkeyup = (e) => {
@@ -59,6 +61,7 @@ class DrawersStore {
       data: {}
     },
   }
+
   @action drawerOpen(drawer) {
     this.drawers[drawer].open = true
   }
@@ -88,6 +91,7 @@ class DrawersStore {
       width: width || '320px',
       data: data || {}
     }
+    if (drawer === 'aside-right-first') DashboardsStore.openTemporaryDashboard(data.dashboardId)
   }
 }
 
