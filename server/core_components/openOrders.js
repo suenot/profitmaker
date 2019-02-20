@@ -1,5 +1,5 @@
 var {sleep, catchHead} = require('../../utils')
-const ccxt = require ('ccxt')
+var {getCCXTId} = require('./getCCXTId')
 const {ObjectId} = require('mongodb')
 const _ = require ('lodash')
 
@@ -36,22 +36,16 @@ const createParseLists = async function(data) {
 }
 
 // 1.4
-const fetchOpenOrder = async function(account, symbol, id, _id='') {
+const fetchOpenOrder = async function(accountId, symbol, id, _id='') {
   try {
-    try {
-      var ccxtId = global.ACCOUNTS[account].safe
-    } catch (err) {
-      return 'need safe key for openOrders'
-    }
+    var ccxtId = getCCXTId(accountId, 'safe')
     var rateLimit = global.CCXT[ccxtId]['rateLimit']
     await catchHead(rateLimit, ccxtId)
     try {
       var data = await global.CCXT[ccxtId].fetchOrder(id, symbol)
       if (data.status === 'canceled' || data.status === 'closed') {
-        // console.log('не найдено ордеров, удаляем коллекцию ' + stockName + ':'+ symbol + ':'+_id)
-        await global.MONGO.collection('openOrders').deleteOne({'account': account, 'symbol': symbol, 'id': id})
+        await global.MONGO.collection('openOrders').deleteOne({'account': accountId, 'symbol': symbol, 'id': id})
       } else {
-        // console.log('найдены ордера, проверяем коллекцию ' + stockName + ':'+ symbol + ':'+id)
         var res = {
           'account': account,
           'symbol': symbol,
@@ -71,14 +65,9 @@ const fetchOpenOrder = async function(account, symbol, id, _id='') {
 
 
 // API 2.1 Forse fetch this stock/market for active orders
-const marketOpenOrders = async function(account, symbol) {
+const marketOpenOrders = async function(accountId, symbol) {
   try {
-    try {
-      var ccxtId = global.ACCOUNTS[account].safe
-    } catch (err) {
-      return 'need safe key for openOrders'
-    }
-
+    var ccxtId = getCCXTId(accountId, 'safe')
     var rateLimit = global.CCXT[ccxtId]['rateLimit']
     await catchHead(rateLimit, ccxtId)
     var stockActiveTrades = await global.CCXT[ccxtId].fetchOpenOrders(symbol = symbol, since = undefined, limit = undefined)
@@ -87,14 +76,14 @@ const marketOpenOrders = async function(account, symbol) {
       for (var data of stockActiveTrades) {
         // console.log('stockActiveTrade', data)
         var res = {
-          'account': account,
+          'account': accountId,
           'symbol': symbol,
           'id': data.id,
           'timestamp': Date.now(),
           'datetime': new Date(Date.now()),
           'data': data
         }
-        await global.MONGO.collection('openOrders').replaceOne({'account': account, 'symbol': symbol, 'id': data.id}, res, {upsert: true})
+        await global.MONGO.collection('openOrders').replaceOne({'account': accountId, 'symbol': symbol, 'id': data.id}, res, {upsert: true})
       }
     }
   } catch (err) { console.log(err) }
@@ -102,11 +91,11 @@ const marketOpenOrders = async function(account, symbol) {
 
 
 // 2 for API
-const getOpenOrders = async function(account, symbol) {
+const getOpenOrders = async function(accountId, symbol) {
   // отдаем фронту что есть в базе, и форсим проверку на бирже. при следующем запросе с фронта будут обновленные данные
   try {
-    var data = await global.MONGO.collection('openOrders').find({'account': account, 'symbol': symbol}).toArray()
-    marketOpenOrders(account, symbol)
+    var data = await global.MONGO.collection('openOrders').find({'account': accountId, 'symbol': symbol}).toArray()
+    marketOpenOrders(accountId, symbol)
     return data
   } catch (err) {}
 }
