@@ -92,13 +92,17 @@ class DashboardsStore {
     _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data[key] = value
   }
   @action setWidgetsData(key, value, group) {
-    var dashboard = this.dashboards[this.dashboardActiveId]
-    for (let i = 0; i<dashboard.widgets.length; i++) {
-      // TODO: ALL groups
-      var widget = dashboard.widgets[i]
-      if (widget.data[key] !== undefined && ((widget.data.group === group) || (group === ""))) {
-        this.dashboards[this.dashboardActiveId].widgets[i].data[key] = value
-      }
+    var dashboards = [this.dashboards[this.dashboardActiveId], this.dashboards[this.drawerDashboardActiveId]]
+    for (let dashboard of dashboards) {
+      try {
+        for (let i = 0; i<dashboard.widgets.length; i++) {
+          // TODO: ALL groups
+          var widget = dashboard.widgets[i]
+          if (widget.data[key] !== undefined && ((widget.data.group === group) || (group === ""))) {
+            this.dashboards[dashboard.id].widgets[i].data[key] = value
+          }
+        }
+      } catch(err) {}
     }
   }
 
