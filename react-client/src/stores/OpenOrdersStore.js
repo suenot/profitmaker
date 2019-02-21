@@ -59,7 +59,12 @@ class OpenOrdersStore {
     }).then((response) => {
       Alert.success('orderCanceled')
     }).catch((error) => {
-      Alert.error(error.response.data.error)
+      try {
+        Alert.error(error.response.data.error)
+      } catch(err) {
+        Alert.error(JSON.stringify(error))
+      }
+
     })
   }
   counters = {}

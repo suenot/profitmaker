@@ -41,7 +41,7 @@ class TradesStore {
     .then((response) => {
       if (this.hashes[key] === JSON.stringify(response.data)) return true
       this.hashes[key] = JSON.stringify(response.data)
-      var trades = _.orderBy(response.data.slice(0, 20), ['timestamp'], ['desc'])
+      var trades = _.orderBy(response.data, ['timestamp'], ['desc'])
       this.trades[key] = trades
     })
     .catch(() => {

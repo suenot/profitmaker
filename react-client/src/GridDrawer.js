@@ -10,7 +10,7 @@ import DrawersStore from 'stores/DrawersStore'
 class GridDrawer extends React.Component {
   drawerClose(drawer) {
     DrawersStore.drawersClose()
-    DashboardsStore.setDrawerDashboard('')
+    // DashboardsStore.setDrawerDashboard('')
   }
   drawerToggle(drawer, component, width, data, e) {
     e.preventDefault()

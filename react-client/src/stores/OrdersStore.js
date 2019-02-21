@@ -18,24 +18,12 @@ class OrdersStore {
     setInterval(() => {
       start()
     }, 1000)
-    // const start = () => {
-    //   this.fetchOrders()
-    // }
-    // start()
-    // setInterval(() => {
-    //   if ( this.counter > 0 && (SettingsStore.fetchEnabled.value) ) start()
-    // }, 1000)
   }
   @computed get stock() {return DashboardsStore.stock }
   @computed get stockLowerCase() {return DashboardsStore.stockLowerCase }
   @computed get pair() {return DashboardsStore.pair }
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
-  // hash = ''
-  // @observable orders = {
-  //   'asks': [],
-  //   'bids': []
-  // }
   hashes = {}
   @observable orders = {}
 
@@ -47,33 +35,28 @@ class OrdersStore {
       if (this.hashes[key] === JSON.stringify(response.data)) return true
       this.hashes[key] = JSON.stringify(response.data)
       var _orders = response.data
-      var sumAsks = 0
-      for( let [key, order] of Object.entries(_orders.asks) ) {
-        var price = order[0]
-        var amount = order[1]
-        var total = price * amount
-        sumAsks = total + sumAsks
-        _orders.asks[key] = {
-          id: uuidv1(),
-          price: price,
-          amount: amount,
-          total: total,
-          sum: sumAsks
+      var sum = {asks: 0, bids: 0}
+
+      for( let type of Object.keys(sum) ) {
+        for( let [key, order] of Object.entries(_orders[type]) ) {
+          var price = order[0]
+          var amount = order[1]
+          var total = price * amount
+          sum[type] = total + sum[type]
+          _orders[type][key] = {
+            id: uuidv1(),
+            price: price,
+            amount: amount,
+            total: total,
+            sum: sum[type]
+          }
         }
-      }
-      var sumBids = 0
-      for( let [key, order] of Object.entries(_orders.bids) ) {
-        var _price = order[0]
-        var _amount = order[1]
-        var _total = _price * _amount
-        sumBids = total + sumBids
-        _orders.bids[key] = {
-          id: uuidv1(),
-          price: _price,
-          amount: _amount,
-          total: _total,
-          sum: sumBids
-        }
+        _orders[type] = _.forEach(_orders[type], (order)=>{
+          order.totalPercent = order.total / sum[type] * 100
+          order.sumPercent = order.sum / sum[type] * 100
+          order.totalPercentInverse = 100 - order.totalPercent
+          order.sumPercentInverse = 100 - order.sumPercent
+        })
       }
       this.orders[key] = _orders
     })
@@ -85,10 +68,6 @@ class OrdersStore {
     })
   }
 
-  // counter = 0
-  // @action count(n) {
-  //   this.counter += n
-  // }
   counters = {}
   @action count(n, data) {
     var key = `${data.stock}--${data.pair}`

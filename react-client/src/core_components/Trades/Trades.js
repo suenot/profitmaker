@@ -26,7 +26,7 @@ class Trades extends React.Component {
             </thead>
             <tbody>
             {
-              _.map(TradesStore.trades[key], (item) => {
+              _.map(TradesStore.trades[key].slice(0, 40), (item) => {
                 return (
                   <tr key={item.id}>
                     <td style={item.side === 'buy'?{color: '#ea0371'}:{color: '#83b327'}}>

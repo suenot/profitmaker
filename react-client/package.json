@@ -61,7 +61,7 @@
     "react": "^16.6.3",
     "react-app-polyfill": "^0.1.3",
     "react-dev-utils": "^6.1.1",
-    "react-dom": "^16.6.3",
+    "react-dom": "^16.8.2",
     "react-grid-layout": "^0.16.6",
     "react-perfect-scrollbar": "^1.4.4",
     "react-s-alert": "^1.4.1",

@@ -19,7 +19,6 @@ import DrawersStore from './stores/DrawersStore'
 
 @observer
 class Grid extends React.Component {
-
   fullscreenTransformOld = ''
 
   onLayoutChange(layout, dashboardActiveId) {
@@ -101,7 +100,7 @@ class Grid extends React.Component {
                     <div className="widget-body">
                       <PerfectScrollbar option={{'suppressScrollX': true}} className="widget-body">
                         {
-                          React.createElement(Component, {'data': data })
+                          React.createElement(Component, {'data': data})
                         }
                       </PerfectScrollbar>
                     </div>

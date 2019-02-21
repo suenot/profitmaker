@@ -5,6 +5,11 @@ import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import CloseIcon from '@material-ui/icons/Close'
 import PerfectScrollbar from 'react-perfect-scrollbar'
+import OutlinedInput from '@material-ui/core/OutlinedInput'
+import InputLabel from '@material-ui/core/InputLabel'
+import MenuItem from '@material-ui/core/MenuItem'
+import FormControl from '@material-ui/core/FormControl'
+import Select from '@material-ui/core/Select'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -15,7 +20,7 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
     var customHeader = widget.customHeader
-    var {stock, pair, group} = widget.data
+    var {stock, pair, type, visualMode, visualModeMax, visualModeCrocodileMax, visualModeWallsMax, group} = widget.data
     return (
       <div className="drawer">
         <div className="drawer-title">
@@ -53,6 +58,115 @@ class Settings extends React.Component {
                 fullWidth
                 className="mb-16"
               />
+              <FormControl variant="outlined" fullWidth>
+                <InputLabel
+                  ref={ref => {
+                    this.InputLabelRef = ref;
+                  }}
+                  htmlFor="outlined-type-simple"
+                >
+                  Type
+                </InputLabel>
+                <Select
+                  value={type}
+                  onChange={this.setWidgetData.bind(this, 'type', 'value', undefined)}
+                  fullWidth
+                  className="mb-16"
+                  input={
+                    <OutlinedInput
+                      labelWidth={35}
+                      name="Type"
+                      id="outlined-type-simple"
+                    />
+                  }
+                >
+                  <MenuItem value="asks">asks</MenuItem>
+                  <MenuItem value="bids">bids</MenuItem>
+                  <MenuItem value="both">both</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl variant="outlined" fullWidth>
+                <InputLabel
+                  ref={ref => {
+                    this.InputLabelRef = ref;
+                  }}
+                  htmlFor="outlined-visualMode-simple"
+                >
+                  Visual mode
+                </InputLabel>
+                <Select
+                  value={visualMode}
+                  onChange={this.setWidgetData.bind(this, 'visualMode', 'value', undefined)}
+                  fullWidth
+                  className="mb-16"
+                  input={
+                    <OutlinedInput
+                      labelWidth={90}
+                      name="Visual mode"
+                      id="outlined-visualMode-simple"
+                    />
+                  }
+                >
+                  <MenuItem value="none">none</MenuItem>
+                  <MenuItem value="crocodile">crocodile</MenuItem>
+                  <MenuItem value="walls">walls</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl variant="outlined" fullWidth>
+                <InputLabel
+                  ref={ref => {
+                    this.InputLabelRef = ref;
+                  }}
+                  htmlFor="outlined-visualModeMax-simple"
+                >
+                  Visual mode max
+                </InputLabel>
+                <Select
+                  value={visualModeMax}
+                  onChange={this.setWidgetData.bind(this, 'visualModeMax', 'value', undefined)}
+                  fullWidth
+                  className="mb-16"
+                  input={
+                    <OutlinedInput
+                      labelWidth={125}
+                      name="Visual mode max"
+                      id="outlined-visualModeMax-simple"
+                    />
+                  }
+                >
+                  <MenuItem value="total sum">total sum</MenuItem>
+                  <MenuItem value="fixed">fixed</MenuItem>
+                </Select>
+              </FormControl>
+
+              {
+                visualMode == 'crocodile' && visualModeMax == 'fixed' &&
+                <TextField
+                  id="outlined-name"
+                  label="Max crocodile in usd"
+                  value={visualModeCrocodileMax}
+                  onChange={this.setWidgetData.bind(this, 'visualModeCrocodileMax', 'value', undefined)}
+                  variant="outlined"
+                  fullWidth
+                  className="mb-16"
+                />
+              }
+
+              {
+                visualMode == 'walls' && visualModeMax == 'fixed' &&
+                <TextField
+                  id="outlined-name"
+                  label="Max walls in usd"
+                  value={visualModeWallsMax}
+                  onChange={this.setWidgetData.bind(this, 'visualModeWallsMax', 'value', undefined)}
+                  variant="outlined"
+                  fullWidth
+                  className="mb-16"
+                />
+              }
+
               <TextField
                 id="outlined-name"
                 label="Group"
