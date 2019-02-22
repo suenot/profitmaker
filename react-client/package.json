@@ -40,6 +40,7 @@
     "fork-ts-checker-webpack-plugin-alt": "0.4.14",
     "fs-extra": "7.0.0",
     "html-webpack-plugin": "4.0.0-alpha.2",
+    "http-proxy-middleware": "^0.19.1",
     "identity-obj-proxy": "3.0.0",
     "jest": "23.6.0",
     "jest-pnp-resolver": "1.0.1",
@@ -153,8 +154,5 @@
     "presets": [
       "react-app"
     ]
-  },
-  "proxy": [
-    { "match": ["user-api/**/*"], "target": "http://localhost:8040" }
-  ]
+  }
 }
