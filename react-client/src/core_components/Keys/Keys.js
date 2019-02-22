@@ -19,6 +19,8 @@ import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails'
 import Typography from '@material-ui/core/Typography'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import PerfectScrollbar from 'react-perfect-scrollbar'
+import ReactDOM from 'react-dom'
+import axios from "axios"
 
 import KeysStore from 'stores/KeysStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -30,7 +32,7 @@ class Keys extends React.Component {
     return (
       <div className="drawer">
         <div className="drawer-title">
-          <div className="drawer-title-text">API keys</div>
+          <div className="drawer-title-text">Store keys in browser</div>
           <div>
             <AddIcon onClick={this.addKey.bind(this)} className="pointer" />
             <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
@@ -113,7 +115,40 @@ class Keys extends React.Component {
               )
             })
           }
+
+          <div className="drawer-title">
+            <div className="drawer-title-text">Store accounts on local server</div>
+            <div>
+            </div>
+          </div>
+          <Divider />
+          <div className="section-body">
+            <form onSubmit={this.toLogin.bind(this)}>
+              <TextField
+                id="email"
+                className="mb-16"
+                label="Email"
+                defaultValue=""
+                variant="outlined"
+                fullWidth
+                margin="dense"
+              />
+              <TextField
+                id="password"
+                className="mb-16"
+                label="Password"
+                defaultValue=""
+                variant="outlined"
+                fullWidth
+                margin="dense"
+                type="password"
+              />
+              <Button type="submit" className="mb-16" fullWidth variant="contained" color="primary" onClick={this.toLogin.bind(this)}>Login</Button>
+            </form>
+            <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.toLogout.bind(this)}>Logout</Button>
+          </div>
         </PerfectScrollbar>
+
         <div className="spacer"></div>
         <div className="drawer-footer alert">
           Keys in browser doesn't work now. They are only for demo. Use keys in your local server.
@@ -121,6 +156,43 @@ class Keys extends React.Component {
       </div>
     )
   }
+  toLogin(event) {
+    event.preventDefault()
+    // console.log('login')
+    // email: 'user@email.com',
+    // password: 'password',
+    var email = ReactDOM.findDOMNode(this).querySelector('#email').value
+    var password = ReactDOM.findDOMNode(this).querySelector('#password').value
+    // console.log(email, password)
+    axios.post("/user-api/login", {
+      email,
+      password
+    })
+    .then((response) => {
+      console.log(response.data)
+      console.log("Logged in")
+      this.getUserData()
+    })
+    .catch((errors) => {
+      console.log("Cannot log in")
+    })
+  }
+  toLogout() {
+    console.log('logout')
+    axios.get("/user-api/logout")
+    .then(() => {
+      this.getUserData()
+    })
+  }
+  getUserData() {
+    axios.get("/user-api/user")
+    .then((response) => {
+      console.log(response)
+    })
+    .catch((errors) => {
+      console.log(errors)
+    }
+  )}
   setKeyData(id, key, e) {
     KeysStore.setKeyData(id, key, e.target.value)
   }
