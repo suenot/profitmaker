@@ -153,5 +153,8 @@
     "presets": [
       "react-app"
     ]
-  }
+  },
+  "proxy": [
+    { "match": ["user-api/**/*"], "target": "http://localhost:8040" }
+  ]
 }
