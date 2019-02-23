@@ -1,0 +1,11 @@
+version: '3.1'
+
+services:
+  kupi-mongo:
+    image: mongo:3
+    env_file:
+     - ./private/mongo.env
+    volumes:
+      - ./private/mongo/db:/data/db
+    ports:
+      - 127.0.0.1:27018:27017
