@@ -13,3 +13,4 @@ cp -R ./defaults/. ./
 ```docker-compose up``` # for server+mongo version (react or vue need run separately)
 ```docker-compose -f docker-compose-react.yml up``` # for express+mongo+react version (in development, not ready)
 ```docker-compose -f docker-compose-vue.yml up``` # for express+mongo+vue version (vue frontend not ready)
+```docker-compose -f docker-compose-mongo.yml up``` # for mongo
