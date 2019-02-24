@@ -27,17 +27,26 @@ class BalanceStore {
   @observable balance = {}
 
   @action available(stock, pair) {
-    var key = `now--${stock}`
-    var current = pair.split('_')
-    var availableBuy
-    var availableSell
-    if (this.balance[key] !== undefined && this.balance[key].data !== undefined) {
-      availableBuy = _.find(this.balance[key].data, {'shortName': current[1]})
-      availableSell = _.find(this.balance[key].data, {'shortName': current[0]})
+    try {
+      var key = `now--${stock}`
+      var current = pair.split('_')
+      var availableBuy
+      var availableSell
+      if (this.balance[key] !== undefined && this.balance[key].data !== undefined) {
+        availableBuy = _.find(this.balance[key].data, {'shortName': current[1]})
+        availableSell = _.find(this.balance[key].data, {'shortName': current[0]})
+      }
+      return {
+        buy: availableBuy ? availableBuy.free : 0,
+        sell: availableSell ? availableSell.free : 0
+      }
     }
-    return {
-      buy: availableBuy ? availableBuy.free : 0,
-      sell: availableSell ? availableSell.free : 0
+    catch(err) {
+      console.log(err)
+      return {
+        buy: availableBuy ? availableBuy.free : 0,
+        sell: availableSell ? availableSell.free : 0
+      }
     }
   }
 

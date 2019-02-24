@@ -230,7 +230,7 @@ class DashboardsStore {
     var widgets = _.cloneDeep(this.dashboards[dashboardId].widgets)
     for (let widget of widgets) {
       for (let _widget of this.dashboards[this.dashboardActiveId].widgets) {
-        if (widget.data.group === _widget.data.group) {
+        if ((widget.data.group === _widget.data.group) && (_widget.data.stock !== undefined) && (_widget.data.pair !== undefined)) {
           widget.data.stock = _widget.data.stock
           widget.data.pair = _widget.data.pair
           break
