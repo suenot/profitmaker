@@ -116,8 +116,8 @@ class HeikinAshi extends React.Component {
             yExtents={[d => [d.high, d.low], ema20.accessor(), ema50.accessor()]}
             padding={{ top: 10, bottom: 10 }}
           >
-            <XAxis axisAt="bottom" orient="bottom"/>
-            <YAxis axisAt="right" orient="right" ticks={5} />
+            {/* <XAxis axisAt="bottom" orient="bottom"/> */}
+            {/* <YAxis axisAt="right" orient="right" ticks={5} /> */}
             <MouseCoordinateY
               at="right"
               orient="right"

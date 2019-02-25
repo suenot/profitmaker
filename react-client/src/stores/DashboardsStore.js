@@ -176,9 +176,12 @@ class DashboardsStore {
   }
 
   @action removeWidget(settings, data) {
-    if ( DrawersStore.drawerRightComponent === settings && JSON.stringify(DrawersStore.drawerRightData) === JSON.stringify(data) ) {
-      DrawersStore.drawerRightClose()
-    }
+    // Remove asides
+    if ( DrawersStore.drawers['aside-left-first'].component === settings && JSON.stringify(DrawersStore.drawers['aside-left-first'].data) === JSON.stringify(data) ) DrawersStore.drawerClose('aside-left-first')
+    if ( DrawersStore.drawers['aside-right-second'].component === settings && JSON.stringify(DrawersStore.drawers['aside-right-second'].data) === JSON.stringify(data) ) DrawersStore.drawerClose('aside-right-second')
+
+    // Remove widget
+    if ( DrawersStore.drawerRightComponent === settings && JSON.stringify(DrawersStore.drawerRightData) === JSON.stringify(data) ) DrawersStore.drawersClose()
     this.dashboards[data.dashboardId].widgets = _.filter(this.dashboards[data.dashboardId].widgets, function(item) {
       return item.i !== data.widgetId
     })
