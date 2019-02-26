@@ -7,12 +7,9 @@ import Button from '@material-ui/core/Button'
 import FormGroup from '@material-ui/core/FormGroup'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Switch from '@material-ui/core/Switch'
-import IconButton from '@material-ui/core/IconButton'
 import InputAdornment from '@material-ui/core/InputAdornment'
-import ImageIcon from '@material-ui/icons/Image'
 import CloseIcon from '@material-ui/icons/Close'
 import AddIcon from '@material-ui/icons/Add'
-import RemoveIcon from '@material-ui/icons/Remove'
 import ExpansionPanel from '@material-ui/core/ExpansionPanel'
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary'
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails'
@@ -21,6 +18,11 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import ReactDOM from 'react-dom'
 import axios from "axios"
+import List from '@material-ui/core/List'
+import ListItem from '@material-ui/core/ListItem'
+import ListItemIcon from '@material-ui/core/ListItemIcon'
+import ListItemText from '@material-ui/core/ListItemText'
+import KeyIcon from '@material-ui/icons/VpnKey'
 
 import KeysStore from 'stores/KeysStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -123,32 +125,36 @@ class Keys extends React.Component {
           </div>
           <Divider />
           <div className="section-body">
-            <form onSubmit={this.toLogin.bind(this)}>
-              <TextField
-                id="email"
-                className="mb-16"
-                label="Email"
-                defaultValue=""
-                variant="outlined"
-                fullWidth
-                margin="dense"
-              />
-              <TextField
-                id="password"
-                className="mb-16"
-                label="Password"
-                defaultValue=""
-                variant="outlined"
-                fullWidth
-                margin="dense"
-                type="password"
-              />
-              <Button type="submit" className="mb-16" fullWidth variant="contained" color="primary" onClick={this.toLogin.bind(this)}>Login</Button>
-            </form>
-            <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.toLogout.bind(this)}>Logout</Button>
+            { _.isEmpty(KeysStore.user) &&
+              <form onSubmit={this.toLogin.bind(this)}>
+                <TextField
+                  id="email"
+                  className="mb-16"
+                  label="Email"
+                  defaultValue=""
+                  variant="outlined"
+                  fullWidth
+                  margin="dense"
+                />
+                <TextField
+                  id="password"
+                  className="mb-16"
+                  label="Password"
+                  defaultValue=""
+                  variant="outlined"
+                  fullWidth
+                  margin="dense"
+                  type="password"
+                />
+                <Button type="submit" className="mb-16" fullWidth variant="contained" color="primary" onClick={this.toLogin.bind(this)}>Login</Button>
+              </form>
+            }
+            { !_.isEmpty(KeysStore.user) &&
+              <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.toLogout.bind(this)}>Logout</Button>
+            }
           </div>
 
-          {
+          { !_.isEmpty(KeysStore.user) &&
             _.map(KeysStore.accounts, (account) => {
               return (
                 <ExpansionPanel className="expansion-panel" key={account.id}>
@@ -167,6 +173,32 @@ class Keys extends React.Component {
                         }}
                       />
                       <TextField className="mb-16" label="Note" value={account.note} variant="outlined" fullWidth margin="dense" disabled={true} multiline />
+                      <List dense={true}>
+                        { account.safe &&
+                          <ListItem>
+                            <ListItemIcon>
+                              <KeyIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Safe key" />
+                          </ListItem>
+                        }
+                        { account.notSafe &&
+                          <ListItem>
+                            <ListItemIcon>
+                              <KeyIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Not safe key" />
+                          </ListItem>
+                        }
+                        { account.danger &&
+                          <ListItem>
+                            <ListItemIcon>
+                              <KeyIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Danger key" />
+                          </ListItem>
+                        }
+                      </List>
                     </form>
                   </ExpansionPanelDetails>
                 </ExpansionPanel>
@@ -186,41 +218,13 @@ class Keys extends React.Component {
   }
   toLogin(event) {
     event.preventDefault()
-    // console.log('login')
-    // email: 'user@email.com',
-    // password: 'password',
     var email = ReactDOM.findDOMNode(this).querySelector('#email').value
     var password = ReactDOM.findDOMNode(this).querySelector('#password').value
-    // console.log(email, password)
-    axios.post("/user-api/login", {
-      email,
-      password
-    })
-    .then((response) => {
-      console.log(response.data)
-      console.log("Logged in")
-      this.getUserData()
-    })
-    .catch((errors) => {
-      console.log("Cannot log in")
-    })
+    KeysStore.toLogin(email, password)
   }
   toLogout() {
-    console.log('logout')
-    axios.get("/user-api/logout")
-    .then(() => {
-      this.getUserData()
-    })
+    KeysStore.toLogout()
   }
-  getUserData() {
-    axios.get("/user-api/user")
-    .then((response) => {
-      console.log(response)
-    })
-    .catch((errors) => {
-      console.log(errors)
-    }
-  )}
   setKeyData(id, key, e) {
     KeysStore.setKeyData(id, key, e.target.value)
   }

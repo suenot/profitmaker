@@ -2,18 +2,20 @@ import { observable, action, computed } from 'mobx'
 // import { version, AsyncTrunk } from 'mobx-sync'
 import uuidv1 from 'uuid/v1'
 import axios from 'axios'
+import Alert from 'react-s-alert'
 
 
 // @version(2)
 class KeysStore {
-  // constructor() {
-  //   const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'keys' })
-  //   trunk.init()
-  //   reaction(
-  //     () => this.keys,
-  //     () => trunk.updateStore(this)
-  //   )
-  // }
+  constructor() {
+    this.fetchUserData()
+    // const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'keys' })
+    // trunk.init()
+    // reaction(
+    //   () => this.keys,
+    //   () => trunk.updateStore(this)
+    // )
+  }
 
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
@@ -49,18 +51,55 @@ class KeysStore {
   }
 
 
-
+  @observable user = {}
   @observable accounts = []
   @observable accountsHash = ''
   @action fetchAccounts() {
-    axios.get(`${this.terminalBackend}/accounts`)
+    axios.get(`/user-api/accounts`)
     .then((response) => {
       if (this.accountsHash === JSON.stringify(response.data)) return true
       this.accountsHash = JSON.stringify(response.data)
       this.accounts = response.data
     })
-    .catch((err) => {
+    .catch(() => {
       this.accounts = {}
+    })
+  }
+
+  @action toLogout() {
+    axios.get("/user-api/logout")
+    .then(() => {
+      this.user = {}
+      Alert.success('Logged out')
+
+    })
+    .catch(() => {
+      Alert.error('Cannot logout')
+    })
+  }
+
+  @action fetchUserData() {
+    axios.get("/user-api/user")
+    .then((response) => {
+      this.user = response.data.user
+    })
+    .catch(() => {
+      this.user = {}
+    })
+    this.fetchAccounts()
+  }
+
+  @action toLogin(email, password) {
+    axios.post("/user-api/login", {
+      email,
+      password
+    })
+    .then(() => {
+      this.fetchUserData()
+      Alert.success('Logged in')
+    })
+    .catch(() => {
+      Alert.error('Cannot login')
     })
   }
 

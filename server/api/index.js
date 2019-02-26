@@ -186,7 +186,7 @@ router.get('/fetchDeposit', async function (req, res) {
   }
 })
 //
-router.get('/accounts', async function (req, res) {
+router.get('/user-api/accounts', authMiddleware, function (req, res) {
   try {
     res.json(global.ACCOUNTS)
   } catch (err) {
