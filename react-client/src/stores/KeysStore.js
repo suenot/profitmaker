@@ -1,6 +1,8 @@
-import { observable, action } from 'mobx'
+import { observable, action, computed } from 'mobx'
 // import { version, AsyncTrunk } from 'mobx-sync'
 import uuidv1 from 'uuid/v1'
+import axios from 'axios'
+
 
 // @version(2)
 class KeysStore {
@@ -12,6 +14,9 @@ class KeysStore {
   //     () => trunk.updateStore(this)
   //   )
   // }
+
+  @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
+
   @observable keys = [{"id":"0c53fac0-207a-11e9-89e8-e5dd80d4c0b9","name":"Binance demo key","stock":"binance","publicKey":"aaa-aaa","privateKey":"bbb-bbb","proxy":"","enabled":true},{"id":"8d934a50-207a-11e9-89e8-e5dd80d4c0b9","name":"Liqui demo key","stock":"liqui","publicKey":"aaa-aaa","privateKey":"bbb-bbb","proxy":"http://localhost:1000","enabled":false},{"id":"90945550-207a-11e9-89e8-e5dd80d4c0b9","name":"Bittrex demo key","stock":"bittrex","publicKey":"aaa-aaa","privateKey":"bbb-bbb","proxy":"","enabled":false},{"id":"90e49830-207a-11e9-89e8-e5dd80d4c0b9","name":"Tidex demo key","stock":"tidex","publicKey":"aaa-aaa","privateKey":"bbb-bbb","proxy":"","enabled":false}]
   @action setKeyData(id, key, value) {
     var index = _.findIndex(this.keys, ['id', id])
@@ -42,6 +47,23 @@ class KeysStore {
     })
     // console.log(JSON.stringify(this.keys))
   }
+
+
+
+  @observable accounts = []
+  @observable accountsHash = ''
+  @action fetchAccounts() {
+    axios.get(`${this.terminalBackend}/accounts`)
+    .then((response) => {
+      if (this.accountsHash === JSON.stringify(response.data)) return true
+      this.accountsHash = JSON.stringify(response.data)
+      this.accounts = response.data
+    })
+    .catch((err) => {
+      this.accounts = {}
+    })
+  }
+
 }
 
 const store = window.KeysStore = new KeysStore()

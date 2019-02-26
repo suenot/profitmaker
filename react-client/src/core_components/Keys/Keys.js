@@ -147,6 +147,34 @@ class Keys extends React.Component {
             </form>
             <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.toLogout.bind(this)}>Logout</Button>
           </div>
+
+          {
+            _.map(KeysStore.accounts, (account) => {
+              return (
+                <ExpansionPanel className="expansion-panel" key={account.id}>
+                  <ExpansionPanelSummary expandIcon={<ExpandMoreIcon className="expansion-panel-icon" />} className="expansion-panel-summary">
+                    <Typography>{account.name}</Typography>
+                  </ExpansionPanelSummary>
+                  <ExpansionPanelDetails className="expansion-panel-details">
+                    <form noValidate autoComplete="off">
+                      <TextField className="mb-16" label="Id" value={account.id} variant="outlined" fullWidth margin="dense" disabled={true} />
+                      <TextField className="mb-16" label="Name" value={account.name} variant="outlined" fullWidth margin="dense" disabled={true} />
+                      <TextField className="mb-16" label="Parser" value={account.parser} variant="outlined" fullWidth margin="dense" disabled={true} />
+                      <TextField className="mb-16" label="Stock" value={account.stock} variant="outlined" fullWidth margin="dense" disabled={true} />
+                      <TextField className="mb-16" label="Withdraw limit" value={account.withdrawLimit} variant="outlined" fullWidth margin="dense" disabled={true}
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">{account.withdrawLimitIn}</InputAdornment>,
+                        }}
+                      />
+                      <TextField className="mb-16" label="Note" value={account.note} variant="outlined" fullWidth margin="dense" disabled={true} multiline />
+                    </form>
+                  </ExpansionPanelDetails>
+                </ExpansionPanel>
+              )
+            })
+          }
+
+
         </PerfectScrollbar>
 
         <div className="spacer"></div>

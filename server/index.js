@@ -51,20 +51,17 @@ app.use(cookieSession({
 }))
 app.use(passport.initialize())
 app.use(passport.session())
-global.USERS = [
-  {
-    id: 1,
-    name: "Jude",
-    email: "user@email.com",
-    password: "password"
-  }
-]
+try {
+  global.USERS = require('../private/auth.json')
+} catch(err) {
+  global.USERS = []
+}
+console.log(global.USERS)
+
 
 // const localMongoUrl = "mongodb://192.168.99.100:27017/client"
 const cors = require('cors')
 app.use(cors())
-
-const signale = require('signale')
 
 // deprecated ?
 let db
