@@ -61,9 +61,10 @@ var {getTrades} = require('./core_components/kupi_api/getTrades')
 var {getMyTrades} = require('./core_components/getMyTrades')
 var {createOrder} = require('./core_components/createOrder')
 var {cancelOrder} = require('./core_components/cancelOrder')
+var {checkCcxt} = require('./core_components/checkCcxt')
 
 
-
+var names = ['binance', 'tidex']
 
 const main = async () => {
   try { global.MONGO = await startMongo() } catch(err) { console.log(err) }
@@ -74,6 +75,7 @@ const main = async () => {
     // console.log(global.ACCOUNTS)
     // console.log(global.CCXT)
 
+    checkCcxt(names)
 
     await initBalance()
     // получение публичных данных с сервера
