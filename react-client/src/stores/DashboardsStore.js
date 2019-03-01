@@ -181,14 +181,12 @@ class DashboardsStore {
     if ( DrawersStore.drawers['aside-right-second'].component === settings && JSON.stringify(DrawersStore.drawers['aside-right-second'].data) === JSON.stringify(data) ) DrawersStore.drawerClose('aside-right-second')
 
     // Remove widget
-    if ( DrawersStore.drawerRightComponent === settings && JSON.stringify(DrawersStore.drawerRightData) === JSON.stringify(data) ) DrawersStore.drawersClose()
     this.dashboards[data.dashboardId].widgets = _.filter(this.dashboards[data.dashboardId].widgets, function(item) {
       return item.i !== data.widgetId
     })
   }
   removeWidgetWithData(key, value) {
-    DrawersStore.drawerRightSet('core_components/Empty', '0px', {}, '', '')
-    DrawersStore.drawerRightClose()
+    DrawersStore.drawersClose()
     var dashboards = _.cloneDeep(this.dashboards)
     _.forEach(dashboards, (dashboard, i)=>{
       var _dashboard = _.cloneDeep(dashboard)
