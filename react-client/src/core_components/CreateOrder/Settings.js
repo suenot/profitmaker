@@ -1,13 +1,11 @@
 import React from 'react'
 import { observer } from 'mobx-react'
-import TextField from '@material-ui/core/TextField'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import CloseIcon from '@material-ui/icons/Close'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import CommonSettings from 'core_components/Settings/Common.js'
 
-import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
 
 @observer
@@ -27,21 +25,6 @@ class Settings extends React.Component {
       </div>
 
     )
-  }
-  changeCustomHeader(e) {
-    var {dashboardId, widgetId} = this.props.data
-    var value = e.target.value.trim()
-    DashboardsStore.setCustomHeader(dashboardId, widgetId, value)
-  }
-  setWidgetData(key, attr, fn, e) {
-    var {dashboardId, widgetId} = this.props.data
-    var value = e.target[attr]
-    DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim(), fn)
-  }
-  setGroup(dashboardId, widgetId, e) {
-    var value = e.target.value.trim()
-    DashboardsStore.setWidgetData(dashboardId, widgetId, 'group', value)
-    DashboardsStore.setGroup(dashboardId, widgetId, value)
   }
   drawerClose(drawer) {
     DrawersStore.drawerClose(drawer)
