@@ -5,6 +5,7 @@ import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import CloseIcon from '@material-ui/icons/Close'
 import PerfectScrollbar from 'react-perfect-scrollbar'
+import CommonSettings from 'core_components/Settings/Common.js'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -12,10 +13,6 @@ import DrawersStore from 'stores/DrawersStore'
 @observer
 class Settings extends React.Component {
   render() {
-    var {dashboardId, widgetId} = this.props.data
-    var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
-    var customHeader = widget.customHeader
-    var {stock, pair, type, group} = widget.data
     return (
       <div className="drawer">
         <div className="drawer-title">
@@ -24,54 +21,7 @@ class Settings extends React.Component {
         </div>
         <Divider />
         <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
-          <div className="section-body">
-            <form noValidate autoComplete="off">
-              <TextField
-                id="outlined-name"
-                label="Name"
-                value={customHeader}
-                onChange={this.changeCustomHeader.bind(this)}
-                variant="outlined"
-                fullWidth
-                className="mb-16"
-              />
-              <TextField
-                id="outlined-name"
-                label="Stock"
-                value={stock}
-                onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
-                variant="outlined"
-                fullWidth
-                className="mb-16"
-              />
-              <TextField
-                id="outlined-name"
-                label="Pair"
-                value={pair}
-                onChange={this.setWidgetData.bind(this, 'pair', 'value', 'toUpperCase')}
-                variant="outlined"
-                fullWidth
-                className="mb-16"
-              />
-              <TextField
-                id="outlined-name"
-                label="Type"
-                value={type}
-                onChange={this.setWidgetData.bind(this, 'type', 'value')}
-                variant="outlined"
-                fullWidth
-                className="mb-16"
-              />
-              <TextField
-                id="outlined-name"
-                label="Group"
-                value={group}
-                onChange={this.setGroup.bind(this, dashboardId, widgetId)}
-                variant="outlined"
-                fullWidth
-              />
-            </form>
-          </div>
+          <CommonSettings data={this.props.data}/>
           <Divider />
         </PerfectScrollbar>
       </div>
