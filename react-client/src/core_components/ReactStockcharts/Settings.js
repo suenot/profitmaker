@@ -1,6 +1,5 @@
 import React from 'react'
 import { observer } from 'mobx-react'
-import TextField from '@material-ui/core/TextField'
 import Divider from '@material-ui/core/Divider'
 import _ from 'lodash'
 import Button from '@material-ui/core/Button'
@@ -16,8 +15,7 @@ class Settings extends React.Component {
   render() {
     var {dashboardId, widgetId} = this.props.data
     var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
-    var customHeader = widget.customHeader
-    var {stock, pair, url, timeframe, group} = widget.data
+    var {timeframe} = widget.data
     return (
       <div className="drawer">
         <div className="drawer-title">
@@ -52,20 +50,10 @@ class Settings extends React.Component {
       </div>
     )
   }
-  changeCustomHeader(e) {
-    var {dashboardId, widgetId} = this.props.data
-    var value = e.target.value.trim()
-    DashboardsStore.setCustomHeader(dashboardId, widgetId, value)
-  }
   setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
     var value = e.target[attr].trim()
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value, fn)
-  }
-  setGroup(dashboardId, widgetId, e) {
-    var value = e.target.value.trim()
-    DashboardsStore.setWidgetData(dashboardId, widgetId, 'group', value)
-    DashboardsStore.setGroup(dashboardId, widgetId, value)
   }
   drawerClose(drawer) {
     DrawersStore.drawerClose(drawer)
