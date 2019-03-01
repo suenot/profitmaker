@@ -4,7 +4,8 @@ import TextField from '@material-ui/core/TextField'
 import FormGroup from '@material-ui/core/FormGroup'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Switch from '@material-ui/core/Switch'
-
+import InputAdornment from '@material-ui/core/InputAdornment'
+import ColorPicker from 'rc-color-picker'
 import OutlinedInput from '@material-ui/core/OutlinedInput'
 import InputLabel from '@material-ui/core/InputLabel'
 import MenuItem from '@material-ui/core/MenuItem'
@@ -22,7 +23,7 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
     var customHeader = widget.customHeader
-    var {stock, pair, type, url, group, total, demo} = widget.data
+    var {stock, pair, type, url, group, groupColor, total, demo} = widget.data
     return (
       <div className="section-body">
         <form noValidate autoComplete="off">
@@ -133,14 +134,21 @@ class Settings extends React.Component {
             />
           }
 
-          { group !== undefined &&
-            <TextField
+          { group !== undefined && groupColor !== undefined &&
+              <TextField
               id="outlined-name"
               label="Group"
               value={group}
               onChange={this.setGroup.bind(this, dashboardId, widgetId)}
               variant="outlined"
               fullWidth
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment variant="filled" position="end">
+                    <ColorPicker color={groupColor} mode="RGB" onChange={this.setGroupColor.bind(this, dashboardId, group)} placement="bottomRight" />
+                  </InputAdornment>
+                )
+              }}
             />
           }
 
@@ -179,6 +187,10 @@ class Settings extends React.Component {
     var value = e.target.value.trim()
     DashboardsStore.setWidgetData(dashboardId, widgetId, 'group', value)
     DashboardsStore.setGroup(dashboardId, widgetId, value)
+  }
+  setGroupColor(dashboardId, group, e) {
+    var color = e.color
+    DashboardsStore.setGroupColor(dashboardId, group, color)
   }
   drawerClose(drawer) {
     DrawersStore.drawerClose(drawer)

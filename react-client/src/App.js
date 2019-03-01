@@ -24,6 +24,9 @@ import Alert from 'react-s-alert'
 import 'react-s-alert/dist/s-alert-default.css'
 import 'react-s-alert/dist/s-alert-css-effects/jelly.css'
 
+import 'rc-color-picker/assets/index.css'
+
+
 // import listReactFiles from 'list-react-files'
 
 import DashboardsStore from './stores/DashboardsStore'
