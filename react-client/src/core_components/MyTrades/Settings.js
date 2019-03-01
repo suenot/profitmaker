@@ -6,16 +6,11 @@ import CloseIcon from '@material-ui/icons/Close'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import CommonSettings from 'core_components/Settings/Common.js'
 
-import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
 
 @observer
 class Settings extends React.Component {
   render() {
-    var {dashboardId, widgetId} = this.props.data
-    var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
-    var customHeader = widget.customHeader
-    var {stock, pair, group, demo} = widget.data
     return (
       <div className="drawer">
         <div className="drawer-title">
