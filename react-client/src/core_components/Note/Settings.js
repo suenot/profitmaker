@@ -10,6 +10,7 @@ import CloseIcon from '@material-ui/icons/Close'
 import AddIcon from '@material-ui/icons/Add'
 import './Note.sass'
 import PerfectScrollbar from 'react-perfect-scrollbar'
+import CommonSettings from 'core_components/Settings/Common.js'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import NotesStore from 'stores/NotesStore'
@@ -30,16 +31,7 @@ class Settings extends React.Component {
         </div>
         <Divider />
         <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
-          <form className="section-body" noValidate autoComplete="off">
-            <TextField
-              id="outlined-name"
-              label="Name"
-              value={customHeader}
-              onChange={this.changeCustomHeader.bind(this)}
-              variant="outlined"
-              fullWidth
-            />
-          </form>
+          <CommonSettings data={this.props.data}/>
           <Divider />
           <div className="drawer-subtitle">
             <div className="drawer-subtitle-text">Notes</div>
