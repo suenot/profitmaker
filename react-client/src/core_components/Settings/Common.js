@@ -1,6 +1,9 @@
 import React from 'react'
 import { observer } from 'mobx-react'
 import TextField from '@material-ui/core/TextField'
+import FormGroup from '@material-ui/core/FormGroup'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import Switch from '@material-ui/core/Switch'
 import _ from 'lodash'
 
 import DashboardsStore from 'stores/DashboardsStore'
@@ -12,7 +15,7 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
     var customHeader = widget.customHeader
-    var {stock, pair, url, group} = widget.data
+    var {stock, pair, url, group, total, demo} = widget.data
     return (
       <div className="section-body">
         <form noValidate autoComplete="off">
@@ -28,7 +31,23 @@ class Settings extends React.Component {
             />
           }
 
-          { stock !== undefined &&
+          { total !== undefined &&
+            <FormGroup>
+              <FormControlLabel
+              className="mb-16"
+              control={
+                  <Switch
+                    checked={total}
+                    onChange={this.setTotal.bind(this)}
+                    value=""
+                  />
+                }
+                label={total ? 'All stocks' : 'Current stock' }
+              />
+            </FormGroup>
+          }
+
+          { stock !== undefined && stock != 'TOTAL' &&
             <TextField
               id="outlined-name"
               label="Stock"
@@ -74,6 +93,23 @@ class Settings extends React.Component {
               fullWidth
             />
           }
+
+          { demo !== undefined &&
+            <FormGroup>
+              <FormControlLabel
+              className="mb-16"
+              control={
+                  <Switch
+                    checked={demo}
+                    onChange={this.setWidgetData.bind(this, 'demo', 'checked', undefined)}
+                    value=""
+                  />
+                }
+                label={demo ? 'Demo on' : 'Demo off' }
+              />
+            </FormGroup>
+          }
+
           </form>
       </div>
     )
@@ -85,7 +121,8 @@ class Settings extends React.Component {
   }
   setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
-    var value = e.target[attr].trim()
+    var value = e.target[attr]
+    if (typeof(value) === 'string') value = value.trim()
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value, fn)
   }
   setGroup(dashboardId, widgetId, e) {
@@ -95,6 +132,16 @@ class Settings extends React.Component {
   }
   drawerClose(drawer) {
     DrawersStore.drawerClose(drawer)
+  }
+  setTotal(e) {
+    var {dashboardId, widgetId} = this.props.data
+    DashboardsStore.setWidgetData(dashboardId, widgetId, 'total', e.target.checked)
+    if (e.target.checked) {
+      DashboardsStore.setWidgetData(dashboardId, widgetId, 'stock', 'TOTAL')
+    } else {
+      var stockTemp = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stockTemp
+      DashboardsStore.setWidgetData(dashboardId, widgetId, 'stock', stockTemp)
+    }
   }
 }
 
