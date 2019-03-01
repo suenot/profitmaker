@@ -23,7 +23,7 @@ class Settings extends React.Component {
     var {dashboardId, widgetId} = this.props.data
     var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
     var customHeader = widget.customHeader
-    var {stock, pair, type, url, group, groupColor, total, demo} = widget.data
+    var {stock, accountId, pair, type, url, group, groupColor, total, demo} = widget.data
     return (
       <div className="section-body">
         <form noValidate autoComplete="off">
@@ -61,6 +61,18 @@ class Settings extends React.Component {
               label="Stock"
               value={stock}
               onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
+              variant="outlined"
+              fullWidth
+              className="mb-16"
+            />
+          }
+
+          { accountId !== undefined &&
+            <TextField
+              id="outlined-name"
+              label="Account"
+              value={accountId}
+              onChange={this.setWidgetData.bind(this, 'accountId', 'value', 'toUpperCase')}
               variant="outlined"
               fullWidth
               className="mb-16"
