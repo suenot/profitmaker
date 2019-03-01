@@ -4,6 +4,13 @@ import TextField from '@material-ui/core/TextField'
 import FormGroup from '@material-ui/core/FormGroup'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Switch from '@material-ui/core/Switch'
+
+import OutlinedInput from '@material-ui/core/OutlinedInput'
+import InputLabel from '@material-ui/core/InputLabel'
+import MenuItem from '@material-ui/core/MenuItem'
+import FormControl from '@material-ui/core/FormControl'
+import Select from '@material-ui/core/Select'
+
 import _ from 'lodash'
 
 import DashboardsStore from 'stores/DashboardsStore'
@@ -71,7 +78,7 @@ class Settings extends React.Component {
             />
           }
 
-          { type !== undefined &&
+          { type !== undefined && widget.name === 'create-order' &&
             <TextField
               id="outlined-name"
               label="Type"
@@ -82,6 +89,37 @@ class Settings extends React.Component {
               className="mb-16"
             />
           }
+
+          { type !== undefined && widget.name === 'orders' &&
+            <FormControl variant="outlined" fullWidth>
+              <InputLabel
+                ref={ref => {
+                  this.InputLabelRef = ref;
+                }}
+                htmlFor="outlined-type-simple"
+              >
+                Type
+              </InputLabel>
+              <Select
+                value={type}
+                onChange={this.setWidgetData.bind(this, 'type', 'value', undefined)}
+                fullWidth
+                className="mb-16"
+                input={
+                  <OutlinedInput
+                    labelWidth={35}
+                    name="Type"
+                    id="outlined-type-simple"
+                  />
+                }
+              >
+                <MenuItem value="asks">asks</MenuItem>
+                <MenuItem value="bids">bids</MenuItem>
+                <MenuItem value="both">both</MenuItem>
+              </Select>
+            </FormControl>
+          }
+
 
           { url !== undefined &&
             <TextField
