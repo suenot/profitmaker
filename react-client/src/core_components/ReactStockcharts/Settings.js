@@ -6,6 +6,7 @@ import _ from 'lodash'
 import Button from '@material-ui/core/Button'
 import CloseIcon from '@material-ui/icons/Close'
 import PerfectScrollbar from 'react-perfect-scrollbar'
+import CommonSettings from 'core_components/Settings/Common.js'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -24,58 +25,7 @@ class Settings extends React.Component {
           <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
         </div>
         <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
-          <div className="section-body">
-            <form noValidate autoComplete="off">
-              <TextField
-                id="outlined-name"
-                label="Name"
-                value={customHeader}
-                onChange={this.changeCustomHeader.bind(this)}
-                variant="outlined"
-                fullWidth
-                className="mb-16"
-              />
-
-              <TextField
-                id="outlined-name"
-                label="Stock"
-                value={stock}
-                onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
-                variant="outlined"
-                fullWidth
-                className="mb-16"
-              />
-
-              <TextField
-                id="outlined-name"
-                label="Pair"
-                value={pair}
-                onChange={this.setWidgetData.bind(this, 'pair', 'value', 'toUpperCase')}
-                variant="outlined"
-                fullWidth
-                className="mb-16"
-              />
-
-              <TextField
-                id="outlined-name"
-                label="Url"
-                value={url}
-                onChange={this.setWidgetData.bind(this, 'url', 'value', undefined)}
-                variant="outlined"
-                fullWidth
-                className="mb-16"
-              />
-
-              <TextField
-                id="outlined-name"
-                label="Group"
-                value={group}
-                onChange={this.setGroup.bind(this, dashboardId, widgetId)}
-                variant="outlined"
-                fullWidth
-              />
-            </form>
-          </div>
+          <CommonSettings data={this.props.data}/>
           <Divider />
           <div className="drawer-title">
             <div className="drawer-title-text">Timeframes</div>
