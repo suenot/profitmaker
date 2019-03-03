@@ -1,17 +1,21 @@
-{
-  "keys": {
-      "binance": {
-          "apiKey": "apiKey",
-          "secret": "secret"
-      },
-      "liqui": {
-          "apiKey": "apiKey",
-          "secret": "secret"
-      }
-  },
-  "ethPockets": {
-    "eth_pocket_name_free": {
-      "address": "eth_address"
-    }
+[
+  {
+    "id": "binance user@gmail.com",
+    "name": "user@gmail.com",
+    "parser": "ccxt",
+    "stock": "binance",
+    "safe_apiKey": "",
+    "safe_secret": "",
+    "notSafe_apiKey": "",
+    "notSafe_secret": "",
+    "danger_apiKey": "",
+    "danger_secret": "",
+    "2fa_hash": "",
+    "2fa_secret": "",
+    "2fa_type": "",
+    "proxy": [],
+    "withdrawLimit": "2",
+    "withdrawLimitIn": "BTC",
+    "note": ""
   }
-}
+]

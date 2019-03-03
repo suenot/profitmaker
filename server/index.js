@@ -5,18 +5,63 @@ const api = require('./api')
 
 
 
-var bodyParser = require('body-parser')
 const serializeError = require('serialize-error')
 const privateKeys = require('../private/keys.json')
 
 const ccxt = require ('ccxt')
+
+const bodyParser = require('body-parser')
 app.use(bodyParser.json())
+
+const cookieSession = require('cookie-session')
+
+// PASSPORT
+const passport = require('passport')
+const LocalStrategy = require('passport-local').Strategy
+// const publicRoot = '../react-client/public/'
+// app.use(express.static(publicRoot))
+passport.use(new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password'
+  },
+  (username, password, done) => {
+    let user = global.USERS.find((user) => {
+      return user.email === username && user.password === password
+    })
+    if (user) {
+      done(null, user)
+    } else {
+      done(null, false, {message: 'Incorrect username or password'})
+    }
+  }
+))
+passport.serializeUser((user, done) => {
+  done(null, user.id)
+})
+passport.deserializeUser((id, done) => {
+  let user = global.USERS.find((user) => {
+    return user.id === id
+  })
+  done(null, user)
+})
+app.use(cookieSession({
+  name: 'mysession',
+  keys: ['authrandomkey'],
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
+app.use(passport.initialize())
+app.use(passport.session())
+try {
+  global.USERS = require('../private/auth.json')
+} catch(err) {
+  global.USERS = []
+}
+console.log(global.USERS)
+
 
 // const localMongoUrl = "mongodb://192.168.99.100:27017/client"
 const cors = require('cors')
 app.use(cors())
-
-const signale = require('signale')
 
 // deprecated ?
 let db
@@ -70,14 +115,17 @@ const main = async () => {
   try { global.MONGO = await startMongo() } catch(err) { console.log(err) }
   try {
     checkCcxt()
-    await initCCXT(privateKeys)
-    await initEthplorer(privateKeys)
+    try {
+      await initCCXT(privateKeys)
+      await initEthplorer(privateKeys)
+    } catch(err) {
+      console.log('No keys, no problems')
+    }
     // console.log(global.ACCOUNTS)
     // console.log(global.CCXT)
 
 
-
-    await initBalance()
+    try { await initBalance() } catch(err) { console.log(err) }
     // получение публичных данных с сервера
     try { await updateCoinmarketcap() } catch(err) { console.log(err) }
     // try { updateCoinmarketcapCycle(60000) } catch(err) { console.log(err) }
@@ -86,7 +134,11 @@ const main = async () => {
 
     // SAFE
     // balance
+
+
     try { updateBalance(20*60*1000) } catch(err) { console.log(err) }
+
+
     // console.log(await getMyTrades('ID_Binance_2', 'ETH/BTC') )  // тестовое получение трэйдов
 
     // KUPI_API | SAFE & PUBLIC

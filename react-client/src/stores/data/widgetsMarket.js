@@ -298,7 +298,7 @@ export default [
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Orders/Orders.js",
-    "data": {"demo": false, "stock": "BINANCE", "pair": "ETH_BTC", "type": "asks", "visualMode": "crocodile", "visualModeMax": "total sum", "visualModeCrocodileMax": 10000, "visualModeWallsMax": 1000, "group": "", "groupColor": ""},
+    "data": {"stock": "BINANCE", "pair": "ETH_BTC", "type": "asks", "visualMode": "crocodile", "visualModeMax": "total sum", "visualModeCrocodileMax": 10000, "visualModeWallsMax": 1000, "group": "", "groupColor": ""},
     "categories": ["Orders"]
   },
   {
@@ -314,7 +314,7 @@ export default [
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Orders/Orders.js",
-    "data": {"demo": false, "stock": "BINANCE", "pair": "ETH_BTC", "type": "bids", "visualMode": "crocodile", "visualModeMax": "total sum", "visualModeCrocodileMax": 10000, "visualModeWallsMax": 1000, "group": "", "groupColor": ""},
+    "data": {"stock": "BINANCE", "pair": "ETH_BTC", "type": "bids", "visualMode": "crocodile", "visualModeMax": "total sum", "visualModeCrocodileMax": 10000, "visualModeWallsMax": 1000, "group": "", "groupColor": ""},
     "categories": ["Orders"]
   },
   {

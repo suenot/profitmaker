@@ -10,6 +10,7 @@ import InputLabel from '@material-ui/core/InputLabel'
 import MenuItem from '@material-ui/core/MenuItem'
 import FormControl from '@material-ui/core/FormControl'
 import Select from '@material-ui/core/Select'
+import CommonSettings from 'core_components/Settings/Common.js'
 
 import DashboardsStore from 'stores/DashboardsStore'
 import DrawersStore from 'stores/DrawersStore'
@@ -19,8 +20,7 @@ class Settings extends React.Component {
   render() {
     var {dashboardId, widgetId} = this.props.data
     var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
-    var customHeader = widget.customHeader
-    var {stock, pair, type, visualMode, visualModeMax, visualModeCrocodileMax, visualModeWallsMax, group} = widget.data
+    var {visualMode, visualModeMax, visualModeCrocodileMax, visualModeWallsMax} = widget.data
     return (
       <div className="drawer">
         <div className="drawer-title">
@@ -29,63 +29,13 @@ class Settings extends React.Component {
         </div>
         <Divider />
         <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
+          <CommonSettings data={this.props.data}/>
+          <Divider />
+          <div className="drawer-title">
+            <div className="drawer-title-text">Visual settings</div>
+          </div>
           <div className="section-body">
             <form noValidate autoComplete="off">
-              <TextField
-                id="outlined-name"
-                label="Name"
-                value={customHeader}
-                onChange={this.changeCustomHeader.bind(this)}
-                variant="outlined"
-                fullWidth
-                className="mb-16"
-              />
-              <TextField
-                id="outlined-name"
-                label="Stock"
-                value={stock}
-                onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
-                variant="outlined"
-                fullWidth
-                className="mb-16"
-              />
-              <TextField
-                id="outlined-name"
-                label="Pair"
-                value={pair}
-                onChange={this.setWidgetData.bind(this, 'pair', 'value', 'toUpperCase')}
-                variant="outlined"
-                fullWidth
-                className="mb-16"
-              />
-              <FormControl variant="outlined" fullWidth>
-                <InputLabel
-                  ref={ref => {
-                    this.InputLabelRef = ref;
-                  }}
-                  htmlFor="outlined-type-simple"
-                >
-                  Type
-                </InputLabel>
-                <Select
-                  value={type}
-                  onChange={this.setWidgetData.bind(this, 'type', 'value', undefined)}
-                  fullWidth
-                  className="mb-16"
-                  input={
-                    <OutlinedInput
-                      labelWidth={35}
-                      name="Type"
-                      id="outlined-type-simple"
-                    />
-                  }
-                >
-                  <MenuItem value="asks">asks</MenuItem>
-                  <MenuItem value="bids">bids</MenuItem>
-                  <MenuItem value="both">both</MenuItem>
-                </Select>
-              </FormControl>
-
               <FormControl variant="outlined" fullWidth>
                 <InputLabel
                   ref={ref => {
@@ -113,7 +63,6 @@ class Settings extends React.Component {
                   <MenuItem value="walls">walls</MenuItem>
                 </Select>
               </FormControl>
-
               <FormControl variant="outlined" fullWidth>
                 <InputLabel
                   ref={ref => {
@@ -140,7 +89,6 @@ class Settings extends React.Component {
                   <MenuItem value="fixed">fixed</MenuItem>
                 </Select>
               </FormControl>
-
               {
                 visualMode == 'crocodile' && visualModeMax == 'fixed' &&
                 <TextField
@@ -153,7 +101,6 @@ class Settings extends React.Component {
                   className="mb-16"
                 />
               }
-
               {
                 visualMode == 'walls' && visualModeMax == 'fixed' &&
                 <TextField
@@ -166,15 +113,6 @@ class Settings extends React.Component {
                   className="mb-16"
                 />
               }
-
-              <TextField
-                id="outlined-name"
-                label="Group"
-                value={group}
-                onChange={this.setGroup.bind(this, dashboardId, widgetId)}
-                variant="outlined"
-                fullWidth
-              />
             </form>
           </div>
           <Divider />
@@ -183,20 +121,10 @@ class Settings extends React.Component {
 
     )
   }
-  changeCustomHeader(e) {
-    var {dashboardId, widgetId} = this.props.data
-    var value = e.target.value.trim()
-    DashboardsStore.setCustomHeader(dashboardId, widgetId, value)
-  }
   setWidgetData(key, attr, fn, e) {
     var {dashboardId, widgetId} = this.props.data
     var value = e.target[attr]
     DashboardsStore.setWidgetData(dashboardId, widgetId, key, value.trim(), fn)
-  }
-  setGroup(dashboardId, widgetId, e) {
-    var value = e.target.value.trim()
-    DashboardsStore.setWidgetData(dashboardId, widgetId, 'group', value)
-    DashboardsStore.setGroup(dashboardId, widgetId, value)
   }
   drawerClose(drawer) {
     DrawersStore.drawerClose(drawer)

@@ -145,17 +145,17 @@ class Orders extends React.Component {
   }
 
   toCenter() {
-    const {stock, pair} = this.props.data
-    var key = `${stock}--${pair}`
-    if (!(OrdersStore.orders[key] === undefined || OrdersStore.orders[key]['asks'] === undefined || OrdersStore.orders[key]['bids'] === undefined)) {
-      if (this.props.data.type === 'both') {
-        setTimeout(()=> {
+    try {
+      const {stock, pair} = this.props.data
+      var key = `${stock}--${pair}`
+      if (!(OrdersStore.orders[key] === undefined || OrdersStore.orders[key]['asks'] === undefined || OrdersStore.orders[key]['bids'] === undefined)) {
+        if (this.props.data.type === 'both') {
           var widgetHeight = ReactDOM.findDOMNode(this).parentNode.parentNode.parentNode.offsetHeight
           var top = ReactDOM.findDOMNode(this).querySelector('.orders-center').offsetTop
           ReactDOM.findDOMNode(this).parentNode.scrollTop = top - widgetHeight / 2 + 24
-        }, 200)
+        }
       }
-    }
+    } catch(err) {}
   }
   componentDidMount() {
     this.toCenter()
@@ -169,10 +169,10 @@ class Orders extends React.Component {
   }
   componentWillUpdate() {
     OrdersStore.count(-1, this.props.data)
+    this.toCenter()
   }
   componentDidUpdate() {
     OrdersStore.count(1, this.props.data)
-    this.toCenter()
   }
 }
 

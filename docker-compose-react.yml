@@ -10,6 +10,15 @@ services:
     ports:
       - 127.0.0.1:27018:27017
 
+  kupi-react:
+    image: node:8-alpine
+    ports:
+      - 127.0.0.1:8041:8041
+    volumes:
+      - ./react-client:/react-client
+    working_dir: /react-client
+    command: sh -c 'yarn && yarn docker'
+
   kupi-server:
     image: node:8-alpine
     volumes:

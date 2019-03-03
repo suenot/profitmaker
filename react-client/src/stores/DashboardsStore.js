@@ -176,16 +176,17 @@ class DashboardsStore {
   }
 
   @action removeWidget(settings, data) {
-    if ( DrawersStore.drawerRightComponent === settings && JSON.stringify(DrawersStore.drawerRightData) === JSON.stringify(data) ) {
-      DrawersStore.drawerRightClose()
-    }
+    // Remove asides
+    if ( DrawersStore.drawers['aside-left-first'].component === settings && JSON.stringify(DrawersStore.drawers['aside-left-first'].data) === JSON.stringify(data) ) DrawersStore.drawerClose('aside-left-first')
+    if ( DrawersStore.drawers['aside-right-second'].component === settings && JSON.stringify(DrawersStore.drawers['aside-right-second'].data) === JSON.stringify(data) ) DrawersStore.drawerClose('aside-right-second')
+
+    // Remove widget
     this.dashboards[data.dashboardId].widgets = _.filter(this.dashboards[data.dashboardId].widgets, function(item) {
       return item.i !== data.widgetId
     })
   }
   removeWidgetWithData(key, value) {
-    DrawersStore.drawerRightSet('core_components/Empty', '0px', {}, '', '')
-    DrawersStore.drawerRightClose()
+    DrawersStore.drawersClose()
     var dashboards = _.cloneDeep(this.dashboards)
     _.forEach(dashboards, (dashboard, i)=>{
       var _dashboard = _.cloneDeep(dashboard)
@@ -230,7 +231,7 @@ class DashboardsStore {
     var widgets = _.cloneDeep(this.dashboards[dashboardId].widgets)
     for (let widget of widgets) {
       for (let _widget of this.dashboards[this.dashboardActiveId].widgets) {
-        if (widget.data.group === _widget.data.group) {
+        if ((widget.data.group === _widget.data.group) && (_widget.data.stock !== undefined) && (_widget.data.pair !== undefined)) {
           widget.data.stock = _widget.data.stock
           widget.data.pair = _widget.data.pair
           break

@@ -19,9 +19,22 @@ var cancelOrder = require('../core_components/cancelOrder')
 var widgets = require('../core_components/widgets')
 var {fetchDeposit} = require('../core_components/fetchDeposit')
 
+const passport = require('passport')
 var router = express.Router()
 
+const authMiddleware = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    res.status(401).send('You are not authenticated')
+  } else {
+    return next()
+  }
+}
+
 router.get('/', (req, res) => {
+  res.json('https://github.com/kupi-network/kupi-terminal')
+})
+
+router.get('/test', (req, res) => {
   res.json('https://github.com/kupi-network/kupi-terminal')
 })
 
@@ -173,12 +186,40 @@ router.get('/fetchDeposit', async function (req, res) {
   }
 })
 //
-router.get('/accounts', async function (req, res) {
+router.get('/user-api/accounts', authMiddleware, function (req, res) {
   try {
     res.json(global.ACCOUNTS)
   } catch (err) {
     res.status(500).send({error: serializeError(err).message})
   }
+})
+
+router.post("/user-api/login", (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      return next(err)
+    }
+    if (!user) {
+      return res.status(400).send([user, "Cannot log in", info])
+    }
+    req.login(user, (err) => {
+      res.send("Logged in")
+    })
+  })(req, res, next)
+})
+
+router.get('/user-api/logout', function(req, res){
+  req.logout()
+  console.log("logged out")
+  return res.send()
+})
+
+router.get("/user-api/user", authMiddleware, (req, res) => {
+  let user = global.USERS.find((user) => {
+    return user.id === req.session.passport.user
+  })
+  console.log([user, req.session])
+  res.send({user: user})
 })
 
 module.exports = router
