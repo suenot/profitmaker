@@ -53,7 +53,7 @@ class SettingsStore {
     name: 'Fetch interval',
     value: '2000'
   }
-  @observable compactWidgetsHeader = true
+  @observable compactWidgetsHeader = false
 
   @action setServerBackend(value) {
     this.serverBackend.value = value
