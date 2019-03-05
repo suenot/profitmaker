@@ -31,6 +31,8 @@ import 'rc-color-picker/assets/index.css'
 
 import DashboardsStore from './stores/DashboardsStore'
 import DrawersStore from './stores/DrawersStore'
+import KeysStore from './stores/KeysStore'
+
 
 @observer
 class App extends React.Component {
@@ -289,6 +291,9 @@ class App extends React.Component {
   }
   addDashboard(side) {
     DashboardsStore.addDashboard(side)
+  }
+  componentWillMount() {
+    KeysStore.fetchUserData()
   }
 }
 

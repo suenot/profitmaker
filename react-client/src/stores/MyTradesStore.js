@@ -3,15 +3,15 @@ import axios from 'axios'
 import uuidv1 from 'uuid/v1'
 import _ from 'lodash'
 
-import DashboardsStore from './DashboardsStore'
+// import DashboardsStore from './DashboardsStore'
 import SettingsStore from './SettingsStore'
 
 class MyTradesStore {
   constructor() {
     const start = () => {
       _.forEach(this.counters, (counter, key) => {
-        var [stock, pair] = key.split('--')
-        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchMyTrades(stock, pair)
+        var [stock, pair, accountId] = key.split('--')
+        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchMyTrades(stock, pair, accountId)
       })
     }
     start()
@@ -26,16 +26,16 @@ class MyTradesStore {
     //   if ( this.counter > 0 && (SettingsStore.fetchEnabled.value) ) start()
     // }, 5000)
   }
-  @computed get stock() {return DashboardsStore.stock }
-  @computed get pair() {return DashboardsStore.pair }
+  // @computed get stock() {return DashboardsStore.stock }
+  // @computed get pair() {return DashboardsStore.pair }
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
   hashes = {}
   @observable myTrades = {}
 
-  @action fetchMyTrades(stock, pair){
-    var key = `${stock}--${pair}`
-    axios.get(`${this.terminalBackend}/myTrade/${stock}/${pair}`)
+  @action fetchMyTrades(stock, pair, accountId){
+    var key = `${stock}--${pair}--${accountId}`
+    axios.get(`/user-api/myTrades/${accountId}/${pair}`)
     .then((response) => {
       if (this.hashes[key] === JSON.stringify(response.data)) return true
       this.hashes[key] = JSON.stringify(response.data)
@@ -45,6 +45,7 @@ class MyTradesStore {
         return trade.uuid = uuidv1()
       })
       this.myTrades[key] = myTrades
+      console.log(this.myTrades[key])
     })
     .catch((error) => {
       // this.myTrades[key] = {}
@@ -54,7 +55,7 @@ class MyTradesStore {
 
   counters = {}
   @action count(n, data) {
-    var key = `${data.stock}--${data.pair}`
+    var key = `${data.stock}--${data.pair}--${data.accountId}`
     if (this.myTrades[key] === undefined) this.myTrades[key] = []
     if (this.counters[key] === undefined) this.counters[key] = 0
     this.counters[key] += n

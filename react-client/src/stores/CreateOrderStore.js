@@ -38,8 +38,9 @@ class CreateOrderStore {
     var key = `${stock}--${pair}--${type}`
     var createMsg = 'creating ' + type + ' order on ' + stock + ': '+ pair + ' price: '+this.form[key]['price'] + ' amount: ' + this.form[key]['amount']
     Alert.warning(createMsg)
-    axios.post(`${this.terminalBackend}/createOrder`, {
+    axios.post(`${this.terminalBackend}/user-api/createOrder`, {
       'stock': stock,
+      'accountId': '',
       'pair': pair,
       'type': type,
       'price': this.form[key]['price'],

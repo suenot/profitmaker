@@ -12,9 +12,9 @@ import MyTradesStore from 'stores/MyTradesStore'
 @observer
 class MyTrades extends React.Component {
   render() {
-    const {stock, pair, demo} = this.props.data
-    var key = `${stock}--${pair}`
-    var data = MyTradesStore.myTrades[key]
+    const {stock, pair, demo, accountId} = this.props.data
+    var key = `${stock}--${pair}--${accountId}`
+    var data = MyTradesStore.myTrades[key].slice(0, 100)
 
     if (demo) {
       data = Demo
