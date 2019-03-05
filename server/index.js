@@ -106,6 +106,7 @@ var {getTrades} = require('./core_components/kupi_api/getTrades')
 var {getMyTrades} = require('./core_components/getMyTrades')
 var {createOrder} = require('./core_components/createOrder')
 var {cancelOrder} = require('./core_components/cancelOrder')
+var {checkCcxt} = require('./core_components/checkCcxt')
 
 
 
@@ -113,7 +114,7 @@ var {cancelOrder} = require('./core_components/cancelOrder')
 const main = async () => {
   try { global.MONGO = await startMongo() } catch(err) { console.log(err) }
   try {
-
+    checkCcxt()
     try {
       await initCCXT(privateKeys)
       await initEthplorer(privateKeys)
