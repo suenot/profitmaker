@@ -48,7 +48,7 @@ class MyTradesStore {
       console.log(this.myTrades[key])
     })
     .catch((error) => {
-      // this.myTrades[key] = {}
+      this.myTrades[key] = []
       this.myTrades[key] = 'error'
     })
   }

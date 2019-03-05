@@ -14,7 +14,8 @@ class MyTrades extends React.Component {
   render() {
     const {stock, pair, demo, accountId} = this.props.data
     var key = `${stock}--${pair}--${accountId}`
-    var data = MyTradesStore.myTrades[key].slice(0, 100)
+    var data = MyTradesStore.myTrades[key]
+    data = data && data.slice(0, 100)
 
     if (demo) {
       data = Demo
