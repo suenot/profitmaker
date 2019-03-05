@@ -114,7 +114,7 @@ var {checkCcxt} = require('./core_components/checkCcxt')
 const main = async () => {
   try { global.MONGO = await startMongo() } catch(err) { console.log(err) }
   try {
-    checkCcxt()
+    // checkCcxt()
     try {
       await initCCXT(privateKeys)
       await initEthplorer(privateKeys)

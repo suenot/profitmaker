@@ -74,7 +74,7 @@ const checkOrderbooks = async function(name) {
   try {
     if (global.CHECKSTOCK[name].has.fetchOrderBooks) {
       var data = await global.CHECKSTOCK[name].fetchOrderBooks([global.CHECKSYMBOLS[name].symbols[0], global.CHECKSYMBOLS[name].symbols[1]])
-      console.log(data)
+      // console.log(data)
       var checkCase = data[global.CHECKSYMBOLS[name].symbols[0]]
       var isObject = _.isPlainObject(checkCase)
       var isArray = _.isArray(checkCase.bids)
