@@ -14,6 +14,7 @@ class Selector extends React.Component {
         <Button size="medium" onClick={this.drawerToggle.bind(this, drawer, "core_components/Stocks/Stocks.js", "300px", {"group": group, "drawer": drawer})}>
           <Typography variant="h6" color="inherit" noWrap>
             {stock}
+            <span className="selector-account">user@gmail.com</span>
           </Typography>
         </Button>
         <Button size="medium" onClick={this.drawerToggle.bind(this, drawer, "core_components/Pairs/Pairs.js", "300px", {"group": group, "stock": stock, "drawer": drawer})}>
