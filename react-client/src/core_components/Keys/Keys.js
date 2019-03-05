@@ -34,15 +34,14 @@ class Keys extends React.Component {
     return (
       <div className="drawer">
         <div className="drawer-title">
-          <div className="drawer-title-text">Store keys in browser</div>
+          <div className="drawer-title-text">Accounts on local server</div>
           <div>
-            <AddIcon onClick={this.addKey.bind(this)} className="pointer" />
             <CloseIcon onClick={this.drawerClose.bind(this, this.props.data.drawer)} className="pointer" />
           </div>
         </div>
         <Divider />
         <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 135px)'}}>
-          {
+          {/* {
             _.map(KeysStore.keys, (key) => {
               return (
                 <ExpansionPanel className="expansion-panel" key={key.id}>
@@ -116,14 +115,8 @@ class Keys extends React.Component {
                 </ExpansionPanel>
               )
             })
-          }
+          } */}
 
-          <div className="drawer-title">
-            <div className="drawer-title-text">Store accounts on local server</div>
-            <div>
-            </div>
-          </div>
-          <Divider />
           <div className="section-body">
             { _.isEmpty(KeysStore.user) &&
               <form onSubmit={this.toLogin.bind(this)}>
@@ -148,9 +141,6 @@ class Keys extends React.Component {
                 />
                 <Button type="submit" className="mb-16" fullWidth variant="contained" color="primary" onClick={this.toLogin.bind(this)}>Login</Button>
               </form>
-            }
-            { !_.isEmpty(KeysStore.user) &&
-              <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.toLogout.bind(this)}>Logout</Button>
             }
           </div>
 
@@ -210,9 +200,14 @@ class Keys extends React.Component {
         </PerfectScrollbar>
 
         <div className="spacer"></div>
-        <div className="drawer-footer alert">
+        { !_.isEmpty(KeysStore.user) &&
+          <div className="section-body">
+            <Button className="mb-16" fullWidth variant="contained" color="secondary" onClick={this.toLogout.bind(this)}>Logout</Button>
+          </div>
+        }
+        {/* <div className="drawer-footer alert">
           Keys in browser doesn't work now. They are only for demo. Use keys in your local server.
-        </div>
+        </div> */}
       </div>
     )
   }
