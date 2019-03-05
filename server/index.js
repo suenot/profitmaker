@@ -56,7 +56,6 @@ try {
 } catch(err) {
   global.USERS = []
 }
-console.log(global.USERS)
 
 
 // const localMongoUrl = "mongodb://192.168.99.100:27017/client"
