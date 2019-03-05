@@ -8,7 +8,7 @@ global.CHECKCCXT = {} // object for result
 global.CHECKSTOCK = {} // object for init stocks
 global.CHECKSYMBOLS = {} // symbols for test
 const checkCcxt = async function() {
-  console.log('checkSTART')
+  // console.log('checkSTART')
   // console.log(ccxt.exchanges)
   // var names = ['binance']
   var names = ccxt.exchanges
@@ -25,14 +25,14 @@ const checkCcxt = async function() {
   } catch (err) { console.log(err) }
 
   await Promise.all(names.map(checkStock))
-  console.log(global.CHECKCCXT)
-  console.log('checkEND')
+  // console.log(global.CHECKCCXT)
+  // console.log('checkEND')
 }
 
 const checkStock = async function(name) {
   try {
     await checkPairs(name)
-    console.log(global.CHECKSTOCK[name].rateLimit)
+    // console.log(global.CHECKSTOCK[name].rateLimit)
     await catchHead(global.CHECKSTOCK[name].rateLimit, name)
     await checkOrderbook(name)
     await catchHead(global.CHECKSTOCK[name].rateLimit, name)
@@ -69,7 +69,7 @@ const checkPairs = async function(name) {
 }
 
 const checkOrderbooks = async function(name) {
-  console.log('++++')
+  // console.log('++++')
   // console.log(global.CHECKSTOCK[name].has.fetchOrderBooks)
   try {
     if (global.CHECKSTOCK[name].has.fetchOrderBooks) {
@@ -94,7 +94,7 @@ const checkOrderbooks = async function(name) {
 }
 
 const checkOrderbook = async function(name) {
-  console.log('+-+-+-+')
+  // console.log('+-+-+-+')
   try {
     var data = await global.CHECKSTOCK[name].fetchOrderBook(global.CHECKSYMBOLS[name].symbols[0])
     // console.log(data)
@@ -112,7 +112,7 @@ const checkOrderbook = async function(name) {
 }
 
 const checkOHLCV = async function(name){
-  console.log('*-*-*-*')
+  // console.log('*-*-*-*')
   try {
     if (global.CHECKSTOCK[name].has.fetchOHLCV) {
 
@@ -134,7 +134,7 @@ const checkOHLCV = async function(name){
 }
 
 const checkTrades = async function(name) {
-  console.log('/-/-/-/')
+  // console.log('/-/-/-/')
   try {
     if (global.CHECKSTOCK[name].has['fetchTrades']) {
       var data = await global.CHECKSTOCK[name].fetchTrades (global.CHECKSYMBOLS[name].symbols[0])
