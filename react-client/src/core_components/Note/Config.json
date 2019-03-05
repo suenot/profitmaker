@@ -11,7 +11,9 @@
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Note/Note.js",
-    "data": {"noteId": "1"},
+    "data": {
+      "noteId": "1"
+    },
     "categories": ["Utils"]
   }
 ]
