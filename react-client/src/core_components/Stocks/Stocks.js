@@ -24,8 +24,8 @@ class Stocks extends React.Component {
             <tbody>
               {
                 _.map(StocksStore.stocksComputed, (stock) => {
-                  return <tr key={stock.name} className="el-table__row">
-                    <td><div className="cell" onClick={this.setStock.bind(this, stock.name)}>{stock.name}</div></td>
+                  return <tr key={stock.id} className="el-table__row">
+                    <td><div className="cell stocks-cell" onClick={this.setStock.bind(this, stock.name, stock.accountName, stock.accountId)}><span>{stock.name}</span> <span className="muted">{stock.accountName}</span></div></td>
                   </tr>
                 })
               }
@@ -38,9 +38,13 @@ class Stocks extends React.Component {
   toggleFilter(e) {
     StocksStore.setStocksFilter(e.target.value)
   }
-  setStock(stock) {
+  setStock(stock, accountName, accountId) {
     var group = this.props.data.group
     DashboardsStore.setWidgetsData('stock', stock, group)
+    if (accountName === undefined) accountName = ''
+    DashboardsStore.setWidgetsData('accountName', accountName, group)
+    if (accountId === undefined) accountId = ''
+    DashboardsStore.setWidgetsData('accountId', accountId, group)
   }
   componentWillMount() {
     StocksStore.count(1, this.props.data)

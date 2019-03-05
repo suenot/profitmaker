@@ -92,6 +92,7 @@ class DashboardsStore {
     _.find(this.dashboards[dashboardId].widgets, ['i', widgetId]).data[key] = value
   }
   @action setWidgetsData(key, value, group) {
+
     var dashboards = [this.dashboards[this.dashboardActiveId], this.dashboards[this.drawerDashboardActiveId]]
     for (let dashboard of dashboards) {
       try {

@@ -1,9 +1,11 @@
 import { observable, action, computed } from 'mobx'
 import axios from 'axios'
 import _ from 'lodash'
+import uuidv1 from 'uuid/v1'
 
 // import DashboardsStore from './DashboardsStore'
 import SettingsStore from './SettingsStore'
+import KeysStore from './KeysStore'
 
 class StocksStore {
   constructor(){
@@ -14,6 +16,7 @@ class StocksStore {
   }
 
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
+  @computed get accounts() {return KeysStore.accounts }
 
   hash = ''
   @observable stocks = []
@@ -24,11 +27,28 @@ class StocksStore {
   }
 
   @computed get stocksComputed() {
-    // console.log(this.stocks)
-    return this.stocks.filter((stock) => {
-      // console.log(stock)
+    var _stocks = []
+    var stocks = _.clone(this.stocks)
+    stocks.filter((stock) => {
       return stock.name.toLowerCase().indexOf( this.stocksFilter.toLowerCase() ) !== -1
     })
+    stocks.map((stock)=>{
+      _stocks.push({
+        id: `${stock.name}`,
+        name: stock.name,
+      })
+      for (let account of Object.values(this.accounts)) {
+        if (account.stock.toUpperCase() === stock.name) {
+          _stocks.push({
+            id: `${stock.name}--${account.id}`,
+            name: stock.name,
+            accountId: account.id,
+            accountName: account.name
+          })
+        }
+      }
+    })
+    return _stocks
   }
 
   // @action setStock(stock) {

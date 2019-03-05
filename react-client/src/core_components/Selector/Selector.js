@@ -8,16 +8,18 @@ import DrawersStore from 'stores/DrawersStore'
 @observer
 class Selector extends React.Component {
   render() {
-    var {dashboardId, widgetId, stock, pair, group, drawer} = this.props.data
+    var {dashboardId, widgetId, stock, accountName, pair, group, drawer} = this.props.data
     return (
       <div className="selector">
-        <Button size="medium" onClick={this.drawerToggle.bind(this, drawer, "core_components/Stocks/Stocks.js", "300px", {"group": group, "drawer": drawer})}>
+        <Button size="medium"
+          onClick={this.drawerToggle.bind(this, drawer, "core_components/Stocks/Stocks.js", "300px", {"group": group, "drawer": drawer})}>
           <Typography variant="h6" color="inherit" noWrap>
             {stock}
-            <span className="selector-account">user@gmail.com</span>
+            <span className="selector-account">{accountName}</span>
           </Typography>
         </Button>
-        <Button size="medium" onClick={this.drawerToggle.bind(this, drawer, "core_components/Pairs/Pairs.js", "300px", {"group": group, "stock": stock, "drawer": drawer})}>
+        <Button size="medium"
+          onClick={this.drawerToggle.bind(this, drawer, "core_components/Pairs/Pairs.js", "300px", {"group": group, "stock": stock, "drawer": drawer})}>
           <Typography variant="h6" color="inherit" noWrap>
             {pair}
           </Typography>

@@ -11,7 +11,14 @@
     "author": "#core",
     "authorLink": "https://github.com/kupi-network/kupi-terminal",
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Selector/Selector.js",
-    "data": {"stock": "BINANCE", "pair": "ETH_BTC", "group": "", "groupColor": ""},
+    "data": {
+      "stock": "BINANCE",
+      "accountName": "",
+      "accountId": "",
+      "pair": "ETH_BTC",
+      "group": "",
+      "groupColor": ""
+    },
     "categories": ["Utils"],
     "w": 7,
     "h": 4

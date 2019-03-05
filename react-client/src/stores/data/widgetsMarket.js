@@ -362,6 +362,8 @@ export default [
     "source": "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Selector/Selector.js",
     "data": {
       "stock": "BINANCE",
+      "accountName": "",
+      "accountId": "",
       "pair": "ETH_BTC",
       "group": "",
       "groupColor": ""

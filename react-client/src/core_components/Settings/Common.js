@@ -20,10 +20,10 @@ import DrawersStore from 'stores/DrawersStore'
 @observer
 class Settings extends React.Component {
   render() {
-    var {dashboardId, widgetId} = this.props.data
+    var {dashboardId, widgetId, drawer} = this.props.data
     var widget = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId])
     var customHeader = widget.customHeader
-    var {stock, accountId, pair, type, url, group, groupColor, total, demo} = widget.data
+    var {stock, accountName, pair, type, url, group, groupColor, total, demo} = widget.data
     return (
       <div className="section-body">
         <form noValidate autoComplete="off">
@@ -60,22 +60,24 @@ class Settings extends React.Component {
               id="outlined-name"
               label="Stock"
               value={stock}
-              onChange={this.setWidgetData.bind(this, 'stock', 'value', 'toUpperCase')}
+              onClick={this.drawerToggle.bind(this, drawer, "core_components/Stocks/Stocks.js", "300px", {"group": group, "drawer": drawer})}
               variant="outlined"
               fullWidth
               className="mb-16"
+              disabled
             />
           }
 
-          { accountId !== undefined &&
+          { accountName !== undefined &&
             <TextField
               id="outlined-name"
               label="Account"
-              value={accountId}
-              onChange={this.setWidgetData.bind(this, 'accountId', 'value', 'toUpperCase')}
+              value={accountName}
+              onClick={this.drawerToggle.bind(this, drawer, "core_components/Stocks/Stocks.js", "300px", {"group": group, "drawer": drawer})}
               variant="outlined"
               fullWidth
               className="mb-16"
+              disabled
             />
           }
 
@@ -84,10 +86,11 @@ class Settings extends React.Component {
               id="outlined-name"
               label="Pair"
               value={pair}
-              onChange={this.setWidgetData.bind(this, 'pair', 'value', 'toUpperCase')}
+              onClick={this.drawerToggle.bind(this, drawer, "core_components/Pairs/Pairs.js", "300px", {"group": group, "stock": stock, "drawer": drawer})}
               variant="outlined"
               fullWidth
               className="mb-16"
+              disabled
             />
           }
 
@@ -216,6 +219,18 @@ class Settings extends React.Component {
       var stockTemp = _.find(DashboardsStore.dashboards[dashboardId].widgets, ['i', widgetId]).data.stockTemp
       DashboardsStore.setWidgetData(dashboardId, widgetId, 'stock', stockTemp)
     }
+  }
+  drawerToggle(drawer, component, width, data) {
+    if ( DrawersStore.drawers[drawer].component === component && JSON.stringify(DrawersStore.drawers[drawer].data) === JSON.stringify(data) ) {
+      // current component
+      DrawersStore.drawerToggle(drawer)
+    } else {
+      // new component
+      if (DrawersStore.drawers[drawer].open === false) DrawersStore.drawerToggle(drawer)
+      DrawersStore.drawerSet(drawer, component, width, data)
+    }
+    // DrawersStore.drawerRightSet(component, width)
+    // DrawersStore.drawerRightToggle()
   }
 }
 
