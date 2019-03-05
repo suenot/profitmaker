@@ -38,7 +38,7 @@ router.get('/test', (req, res) => {
   res.json('https://github.com/kupi-network/kupi-terminal')
 })
 
-router.get('/widgets/:framework', function (req, res) {
+router.get('/user-api/widgets/:framework', function (req, res) {
   try {
     if (req.params.framework === 'react') {
       res.json(widgets('react-client'))
@@ -52,7 +52,7 @@ router.get('/widgets/:framework', function (req, res) {
   }
 })
 
-router.get('/balance/now/:stock', function (req, res) {
+router.get('/user-api/balance/now/:stock', authMiddleware, function (req, res) {
   try {
     var stock = req.params.stock
     var balance = global.BALANCE[stock]
@@ -64,7 +64,7 @@ router.get('/balance/now/:stock', function (req, res) {
   }
 })
 
-router.get('/balance/history/:stock/', async function (req, res) {
+router.get('/user-api/balance/history/:stock/', authMiddleware, async function (req, res) {
   try {
     var stock = req.params.stock
     var result = await balanceHistory(stock)
@@ -74,7 +74,7 @@ router.get('/balance/history/:stock/', async function (req, res) {
   }
 })
 
-router.get('/openOrders/:account/:pair', async function (req, res) {
+router.get('/user-api/openOrders/:account/:pair', authMiddleware, async function (req, res) {
   try {
     var account = req.params.account
     var symbol = req.params.pair.split('_').join('/')
@@ -84,30 +84,19 @@ router.get('/openOrders/:account/:pair', async function (req, res) {
     res.status(500).send({error: serializeError(err).message})
   }
 })
-// deprecated
-// router.get('/myTrades/:stock/:pair', function (req, res) {
-//   try {
-//     var stock = req.params.stock
-//     var pair = req.params.pair.split('_').join('/')
-//     res.json(global.TRADESHISTORY[stock][pair])
-//   } catch (err) {
-//     res.status(500).send({error: serializeError(err).message})
-//   }
-// })
 
-// TODO (account, pair)
-router.get('/myTrade/:stock/:pair', async function (req, res) {
+router.get('/user-api/myTrades/:accountId/:pair', authMiddleware, async function (req, res) {
   try {
-    var stock = req.params.stock.toLowerCase()
+    var accountId = req.params.accountId
     var pair = req.params.pair.split('_').join('/')
-    var result = await getMyTradesFromVariable(stock, pair)
+    var result = await getMyTradesFromVariable(accountId, pair)
     res.json(result)
   } catch (err) {
     res.status(500).send({error: serializeError(err).message})
   }
 })
 
-router.post('/cancelOrder', async function(req, res) {
+router.post('/user-api/cancelOrder', authMiddleware, async function(req, res) {
   try {
     var result = await cancelOrder(req.body)
     res.json(result)
@@ -116,7 +105,7 @@ router.post('/cancelOrder', async function(req, res) {
   }
 })
 
-router.post('/createOrder', async function(req, res) {
+router.post('/user-api/createOrder', authMiddleware, async function(req, res) {
   try {
     var result = await createOrder(req.body)
     res.json(result)
@@ -136,7 +125,7 @@ router.post('/createOrder', async function(req, res) {
 //   }
 // })
 
-router.get('/stocks', async function (req, res) {
+router.get('/user-api/stocks', async function (req, res) {
   try {
     var stocks = await getStocks()
     res.json(stocks)
@@ -145,7 +134,7 @@ router.get('/stocks', async function (req, res) {
   }
 })
 
-router.get('/pairs/:stock', async function (req, res) {
+router.get('/user-api/pairs/:stock', async function (req, res) {
   try {
     var stock = req.params.stock
     var pairs = await getPairs(stock)
@@ -155,7 +144,7 @@ router.get('/pairs/:stock', async function (req, res) {
   }
 })
 
-router.get('/orders/:stock/:pair', async function (req, res) {
+router.get('/user-api/orders/:stock/:pair', async function (req, res) {
   try {
     var {stock, pair} = req.params
     var orders = await getOrderBook(stock, pair)
@@ -165,7 +154,7 @@ router.get('/orders/:stock/:pair', async function (req, res) {
   }
 })
 
-router.get('/ohlcv/:stock/:pair', async function (req, res) {
+router.get('/user-api/ohlcv/:stock/:pair', async function (req, res) {
   try {
     var {stock, pair} = req.params
     var ohlcv = await getOHLCV(stock, pair)
@@ -176,7 +165,7 @@ router.get('/ohlcv/:stock/:pair', async function (req, res) {
 })
 
 // TODO danger key only
-router.get('/fetchDeposit', async function (req, res) {
+router.get('/user-api/fetchDeposit', authMiddleware, async function (req, res) {
   try {
     var {stock, symbol} = req.params
     var depositInfo = await fetchDeposit(stock, symbol)
@@ -208,7 +197,7 @@ router.post("/user-api/login", (req, res, next) => {
   })(req, res, next)
 })
 
-router.get('/user-api/logout', function(req, res){
+router.get('/user-api/logout', authMiddleware, function(req, res){
   req.logout()
   console.log("logged out")
   return res.send()
