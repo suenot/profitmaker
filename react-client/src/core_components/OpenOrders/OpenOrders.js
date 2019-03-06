@@ -12,8 +12,8 @@ import OpenOrdersStore from 'stores/OpenOrdersStore'
 @observer
 class OpenOrders extends React.Component {
   render() {
-    const {stock, pair, demo} = this.props.data
-    var key = `${stock}--${pair}`
+    const {stock, accountId, pair, demo} = this.props.data
+    var key = `${stock}--${pair}--${accountId}`
     var data = OpenOrdersStore.openOrders[key]
 
     if (demo) {
@@ -69,8 +69,8 @@ class OpenOrders extends React.Component {
                   </td>
                   <td>
                     <Button.Group>
-                      <Button type="warning" size="mini" onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], item['stock'])}>change</Button>
-                      <Button type="danger" size="mini" onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], item['stock'])}>close</Button>
+                      {/* <Button type="warning" size="mini" onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], item['stock'], accountId)}>change</Button> */}
+                      <Button type="danger" size="mini" onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], item['stock'], accountId)}>close</Button>
                     </Button.Group>
                   </td>
                 </tr>
@@ -83,8 +83,8 @@ class OpenOrders extends React.Component {
       </div>
     )
   }
-  cancelOrder(id, symbol, _id, stock, e) {
-    OpenOrdersStore.cancelOrder(id, symbol, _id, stock)
+  cancelOrder(id, symbol, _id, stock, accountId, e) {
+    OpenOrdersStore.cancelOrder(id, symbol, _id, stock, accountId)
   }
   componentWillMount() {
     OpenOrdersStore.count(1, this.props.data)

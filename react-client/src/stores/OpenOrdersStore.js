@@ -17,8 +17,8 @@ class OpenOrdersStore {
     // }, 5000)
     const start = () => {
       _.forEach(this.counters, (counter, key) => {
-        var [stock, pair] = key.split('--')
-        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOpenOrders(stock, pair)
+        var [stock, pair, accountId] = key.split('--')
+        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOpenOrders(stock, pair, accountId)
       })
     }
     start()
@@ -33,9 +33,9 @@ class OpenOrdersStore {
   hashes = {}
   @observable openOrders = {}
 
-  @action fetchOpenOrders(stock, pair){
-    var key = `${stock}--${pair}`
-    axios.get(`${this.terminalBackend}/openOrders/${stock}/${pair}`)
+  @action fetchOpenOrders(stock, pair, accountId){
+    var key = `${stock}--${pair}--${accountId}`
+    axios.get(`/user-api/openOrders/${accountId}/${pair}`)
     .then((response) => {
       if (this.hashes[key] === JSON.stringify(response.data)) return true
       this.hashes[key] = JSON.stringify(response.data)
@@ -48,14 +48,15 @@ class OpenOrdersStore {
     })
   }
 
-  @action cancelOrder(id, symbol, _id, stock) {
+  @action cancelOrder(id, symbol, _id, stock, accountId) {
     var cancelMsg = stock + ': '+ symbol + ' canceling #' + id
     Alert.warning(cancelMsg)
-    axios.post(`${this.terminalBackend}/cancelOrder/`, {
+    axios.post(`/user-api/cancelOrder/`, {
       id: id,
       _id: _id,
       symbol: symbol,
-      stock: stock
+      stock: stock,
+      accountId: accountId
     }).then((response) => {
       Alert.success('orderCanceled')
     }).catch((error) => {
@@ -69,7 +70,7 @@ class OpenOrdersStore {
   }
   counters = {}
   @action count(n, data) {
-    var key = `${data.stock}--${data.pair}`
+    var key = `${data.stock}--${data.pair}--${data.accountId}`
     if (this.openOrders[key] === undefined) this.openOrders[key] = []
     if (this.counters[key] === undefined) this.counters[key] = 0
     this.counters[key] += n
