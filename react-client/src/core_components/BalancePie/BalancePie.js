@@ -11,8 +11,8 @@ import BalanceStore from 'stores/BalanceStore'
 @observer
 class BalancePie extends React.Component {
   render() {
-    const {type, stock, demo} = this.props.data
-    const key = `${type}--${stock}`
+    const {type, stock, demo, accountId} = this.props.data
+    const key = `${type}--${stock}--${accountId}`
     var data = BalanceStore.balance[key]
 
     if (demo) {

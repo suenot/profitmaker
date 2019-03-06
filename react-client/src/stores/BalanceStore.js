@@ -9,8 +9,10 @@ class BalanceStore {
     const start = () => {
       _.forEach(this.counters, (counter, key) => {
         if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) {
-          var [type, stock] = key.split('--')
-          this.fetchBalance(stock, key, type)
+          var [type, stock, accountId] = key.split('--')
+          console.log(type, stock, accountId)
+
+          this.fetchBalance(stock, key, type, accountId)
         }
       })
     }
@@ -26,9 +28,9 @@ class BalanceStore {
   @observable precision = 8
   @observable balance = {}
 
-  @action available(stock, pair) {
+  @action available(stock, pair, accountId) {
     try {
-      var key = `now--${stock}`
+      var key = `now--${stock}--${accountId}`
       var current = pair.split('_')
       var availableBuy
       var availableSell
@@ -50,8 +52,11 @@ class BalanceStore {
     }
   }
 
-  @action fetchBalance(stock, key, type){
-    axios.get(`${this.terminalBackend}/balance/${type}/${stock}`)
+  @action fetchBalance(stock, key, type, accountId){
+    // axios.post(`/user-api/balance/${type}/${stock}`)
+    axios.post(`/user-api/balance/`, {
+     type, key, stock, accountId
+    })
     .then(response => {
       if (this.hashes[key] === JSON.stringify(response.data)) return true
       this.hashes[key] = JSON.stringify(response.data)
@@ -64,8 +69,8 @@ class BalanceStore {
 
   counters = {}
   @action count(n, data) {
-    const {type, stock} = data
-    var key = `${type}--${stock}`
+    const {type, stock, accountId} = data
+    var key = `${type}--${stock}--${accountId}`
     if (this.balance[key] === undefined) this.balance[key] = {}
     if (this.counters[key] === undefined) this.counters[key] = 0
     this.counters[key] += n

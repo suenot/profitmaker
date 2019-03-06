@@ -52,27 +52,46 @@ router.get('/user-api/widgets/:framework', function (req, res) {
   }
 })
 
-router.get('/user-api/balance/now/:stock', authMiddleware, function (req, res) {
+router.post('/user-api/balance', authMiddleware, async function (req, res) {
   try {
-    var stock = req.params.stock
-    var balance = global.BALANCE[stock]
-    balance.data = _.toArray(balance.data)
-    balance.data = _.orderBy(balance.data, ['totalUSD'], ['desc'])
-    res.json(balance)
+    var {stock, type, accountId} = req.body
+    console.log(stock, type, accountId)
+
+    if (type === 'now') {
+      var balance = global.BALANCE[stock]
+      balance.data = _.toArray(balance.data)
+      balance.data = _.orderBy(balance.data, ['totalUSD'], ['desc'])
+      res.json(balance)
+    } else if (type === 'history') {
+      var result = await balanceHistory(stock)
+      res.json(result)
+    }
   } catch (err) {
     res.status(500).send({error: serializeError(err).message})
   }
 })
 
-router.get('/user-api/balance/history/:stock/', authMiddleware, async function (req, res) {
-  try {
-    var stock = req.params.stock
-    var result = await balanceHistory(stock)
-    res.json(result)
-  } catch (err) {
-    res.status(500).send({error: serializeError(err).message})
-  }
-})
+// router.get('/user-api/balance/now/:stock', authMiddleware, function (req, res) {
+//   try {
+//     var stock = req.params.stock
+//     var balance = global.BALANCE[stock]
+//     balance.data = _.toArray(balance.data)
+//     balance.data = _.orderBy(balance.data, ['totalUSD'], ['desc'])
+//     res.json(balance)
+//   } catch (err) {
+//     res.status(500).send({error: serializeError(err).message})
+//   }
+// })
+
+// router.get('/user-api/balance/history/:stock/', authMiddleware, async function (req, res) {
+//   try {
+//     var stock = req.params.stock
+//     var result = await balanceHistory(stock)
+//     res.json(result)
+//   } catch (err) {
+//     res.status(500).send({error: serializeError(err).message})
+//   }
+// })
 
 router.get('/user-api/openOrders/:account/:pair', authMiddleware, async function (req, res) {
   try {
