@@ -6,11 +6,9 @@ var {calculateCoin, catchHead, sleep} = require('../../utils')
 const updateBalance = async function(timeout) {
     while (true) {
       try {
-        for (let [ccxtKey, ccxtObject] of Object.entries(global.CCXT)) {
-          let [keyId, keyType] = ccxtKey.split('--')
-          if ( keyType === "safe") {
-            var kupi_keyName = ccxtObject.kupi_keyName
-            await updateStocksBalance(ccxtKey, kupi_keyName)
+        for ( let [account, accountIn] of Object.entries(global.ACCOUNTS) ) {
+          if (accountIn.safe) {
+            await updateStocksBalance(accountIn.safe, account)
           }
         }
       } catch(err) { console.log(err) }
@@ -25,20 +23,20 @@ const updateBalance = async function(timeout) {
     }
 }
 
-const updateStocksBalance = async function(ccxtKey, kupi_keyName) {
+const updateStocksBalance = async function(ccxtKey, account) {
   if ( _.isEmpty(global.COINMARKETCAP) ) { return false }
   try {
     var rateLimit = global.CCXT[ccxtKey]['rateLimit'] + 700
-    await catchHead(rateLimit, kupi_keyName)
+    await catchHead(rateLimit, account)
     var data = await global.CCXT[ccxtKey].fetch_balance()
-    if ( global.BALANCE[kupi_keyName] === undefined ) global.BALANCE[kupi_keyName] = {}
-    global.BALANCE[kupi_keyName] = await calculateStockBalance(data, kupi_keyName)
+    if ( global.BALANCE[account] === undefined ) global.BALANCE[account] = {}
+    global.BALANCE[account] = await calculateStockBalance(data, account)
   } catch (err) { console.log(err) }
 }
 
-const calculateStockBalance = async function(data, kupi_keyName) {
+const calculateStockBalance = async function(data, account) {
   var res = {
-    "stock": kupi_keyName,
+    "stock": account,
     "timestamp": Date.now(),
     "datetime": new Date(Date.now()),
     "freeBTC": 0,
