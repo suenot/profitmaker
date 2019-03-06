@@ -10,8 +10,8 @@ import BalanceStore from 'stores/BalanceStore'
 @observer
 class CreateOrder extends React.Component {
   render() {
-    const {stock, pair, type} = this.props.data
-    const key = `${stock}--${pair}--${type}`
+    const {stock, pair, type, accountId} = this.props.data
+    const key = `${stock}--${pair}--${type}--${accountId}`
     if (CreateOrderStore.form[key] === undefined) this.initForm(key)
     return (
       <div className="simpleForm">
@@ -64,13 +64,13 @@ class CreateOrder extends React.Component {
     )
   }
   changeValue(field, value) {
-    const {stock, pair, type} = this.props.data
+    const {stock, pair, type, accountId} = this.props.data
     // console.log(value)
-    CreateOrderStore.createChange(stock, pair, type, field, value.target.value)
+    CreateOrderStore.createChange(stock, pair, type, accountId, field, value.target.value)
   }
   createOrder() {
-    const {stock, pair, type} = this.props.data
-    CreateOrderStore.createOrder(stock, pair, type)
+    const {stock, pair, type, accountId} = this.props.data
+    CreateOrderStore.createOrder(stock, pair, type, accountId)
   }
   componentDidMount() {
     // BalanceStore.count(1, this.props.data)

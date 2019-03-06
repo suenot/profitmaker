@@ -16,8 +16,8 @@ class CreateOrderStore {
 
   @observable form = {}
 
-  @action createChange(stock, pair, type, field, value) {
-    var key = `${stock}--${pair}--${type}`
+  @action createChange(stock, pair, type, accountId, field, value) {
+    var key = `${stock}--${pair}--${type}--${accountId}`
     var total
     if (field === 'price') {
       this.form[key]['price'] = value
@@ -34,13 +34,13 @@ class CreateOrderStore {
     }
   }
 
-  @action createOrder(stock, pair, type) {
-    var key = `${stock}--${pair}--${type}`
+  @action createOrder(stock, pair, type, accountId) {
+    var key = `${stock}--${pair}--${type}--${accountId}`
     var createMsg = 'creating ' + type + ' order on ' + stock + ': '+ pair + ' price: '+this.form[key]['price'] + ' amount: ' + this.form[key]['amount']
     Alert.warning(createMsg)
-    axios.post(`${this.terminalBackend}/user-api/createOrder`, {
+    axios.post(`/user-api/createOrder`, {
       'stock': stock,
-      'accountId': '',
+      'accountId': accountId,
       'pair': pair,
       'type': type,
       'price': this.form[key]['price'],
