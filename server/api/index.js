@@ -56,9 +56,11 @@ router.post('/user-api/balance', authMiddleware, async function (req, res) {
   try {
     var {stock, type, accountId} = req.body
     console.log(stock, type, accountId)
+    var key = accountId
+    if (stock === 'TOTAL') key = 'TOTAL'
 
     if (type === 'now') {
-      var balance = global.BALANCE[stock]
+      var balance = global.BALANCE[key]
       balance.data = _.toArray(balance.data)
       balance.data = _.orderBy(balance.data, ['totalUSD'], ['desc'])
       res.json(balance)

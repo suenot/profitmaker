@@ -22,7 +22,7 @@ const initCCXT = async function(privateKeys) {
               'enableRateLimit': true,
               'apiKey': apiKey,
               'secret': secret,
-              'kupi_keyName': key.name
+              // 'kupi_keyName': key.name
             })
             global.ACCOUNTS[key.id][`${keyType}`] = `${key.id}--${keyType}`
 
