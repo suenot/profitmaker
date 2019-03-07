@@ -31,7 +31,6 @@ class Grid extends React.Component {
     var dashboardActiveId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
     return (
       <div>
-        {/* <h1>{dashboardActiveId}</h1> */}
         <GridLayout
           margin={[-1, -1]}
           className="layout"
@@ -152,10 +151,14 @@ class Grid extends React.Component {
     DashboardsStore.removeWidget(settings, data)
   }
   componentDidMount() {
-    document.title = DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name
-  }
+    try {
+      document.title = DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name
+    } catch(err) { }
+}
   componentDidUpdate() {
-    document.title = DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name
+    try {
+      document.title = DashboardsStore.dashboards[DashboardsStore.dashboardActiveId].name
+    } catch(err) { }
   }
 
 }
