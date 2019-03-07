@@ -55,7 +55,8 @@ class DashboardsStore {
     var icon = '/img/widgets/' + _.sample(widgetsIcons)
     var id = uuidv1()
     this.dashboards[id] = { id: id, side: side, name: 'Untitled', bg: '#ccc', icon: icon, type: 'terminal', stock: 'BINANCE', pair: 'ETH_BTC', widgets: []}
-    this.addWidget({"name":"selector","component":"core_components/Selector/Selector.js","settings":"core_components/Selector/Settings.js","settingsWidth":"300px","img":"core_components/Selector/Selector.png","header":"Selector","customHeader":"","description":"","author":"#core","authorLink":"https://github.com/kupi-network/kupi-terminal","source":"https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Selector/Selector.js","data":{"stock": "BINANCE", "pair": "ETH_BTC", "group":"", "groupColor": "" },"categories":["utils"],"w":7,"h":5}, id)
+    var selector = _.find(widgetsMarket, ['name', 'selector'])
+    this.addWidget(selector, id)
 
   }
   @action removeDashboard(id, side) {
