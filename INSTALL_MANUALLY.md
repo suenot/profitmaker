@@ -17,14 +17,16 @@ cp -R ./defaults/. ./
 
 5. Set mongo password in ```./private/mongo.json``` and ```./private/mongo.env```
 
-6. Run terminal-server
+6. Set auth password in ```./private/auth.json```
+
+7. Run terminal-server
 ```
 cd server
 npm install
 npm run start
 ```
 
-7. Run terminal-frontend
+8. Run terminal-frontend
 ```
 cd react-client
 npm install
