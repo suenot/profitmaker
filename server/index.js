@@ -1,61 +1,20 @@
-
 const express = require('express')
 const app = express()
-const api = require('./api')
+const api = require('./api/api')
 
 
 
-const serializeError = require('serialize-error')
+// const serializeError = require('serialize-error')
 const privateKeys = require('../private/keys.json')
 
-const ccxt = require ('ccxt')
 
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 
-const cookieSession = require('cookie-session')
 
 // PASSPORT
-const passport = require('passport')
-const LocalStrategy = require('passport-local').Strategy
-// const publicRoot = '../react-client/public/'
-// app.use(express.static(publicRoot))
-passport.use(new LocalStrategy({
-    usernameField: 'email',
-    passwordField: 'password'
-  },
-  (username, password, done) => {
-    let user = global.USERS.find((user) => {
-      return user.email === username && user.password === password
-    })
-    if (user) {
-      done(null, user)
-    } else {
-      done(null, false, {message: 'Incorrect username or password'})
-    }
-  }
-))
-passport.serializeUser((user, done) => {
-  done(null, user.id)
-})
-passport.deserializeUser((id, done) => {
-  let user = global.USERS.find((user) => {
-    return user.id === id
-  })
-  done(null, user)
-})
-app.use(cookieSession({
-  name: 'mysession',
-  keys: ['authrandomkey'],
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
-app.use(passport.initialize())
-app.use(passport.session())
-try {
-  global.USERS = require('../private/auth.json')
-} catch(err) {
-  global.USERS = []
-}
+var {auth} = require('./core_components/auth/auth')
+auth(app)
 
 
 // const localMongoUrl = "mongodb://192.168.99.100:27017/client"
@@ -63,7 +22,7 @@ const cors = require('cors')
 app.use(cors())
 
 // deprecated ?
-let db
+// let db
 
 
 ///////////////
@@ -105,7 +64,7 @@ var {getTrades} = require('./core_components/kupi_api/getTrades')
 var {getMyTrades} = require('./core_components/getMyTrades')
 var {createOrder} = require('./core_components/createOrder')
 var {cancelOrder} = require('./core_components/cancelOrder')
-var {checkCcxt} = require('./core_components/checkCcxt')
+
 
 
 
@@ -113,7 +72,7 @@ var {checkCcxt} = require('./core_components/checkCcxt')
 const main = async () => {
   try { global.MONGO = await startMongo() } catch(err) { console.log(err) }
   try {
-    // checkCcxt()
+
     try {
       await initCCXT(privateKeys)
       await initEthplorer(privateKeys)
@@ -157,14 +116,14 @@ const main = async () => {
 
 
     app.use('/', api)
-    // try {
-    //   const userApi = require('./user_components/api')
-    //   app.use('/user_components', userApi)
-    // } catch(err) { console.log(err) }
-    // try {
-    //   var userComponents = require('./user_components')
-    //   userComponents()
-    // } catch(err) { console.log(err) }
+    try {
+      const userApi = require('./user_components/api')
+      app.use('/user_components', userApi)
+    } catch(err) { console.log(err) }
+    try {
+      var userComponents = require('./user_components')
+      userComponents()
+    } catch(err) { console.log(err) }
 
 
   } catch (err) { }

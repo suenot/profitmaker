@@ -232,4 +232,6 @@ router.get("/user-api/user", authMiddleware, (req, res) => {
   res.send({user: user})
 })
 
+
 module.exports = router
+// exports.api = router
