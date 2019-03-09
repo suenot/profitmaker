@@ -105,7 +105,7 @@ var {getTrades} = require('./core_components/kupi_api/getTrades')
 var {getMyTrades} = require('./core_components/getMyTrades')
 var {createOrder} = require('./core_components/createOrder')
 var {cancelOrder} = require('./core_components/cancelOrder')
-var {checkCcxt} = require('./core_components/checkCcxt')
+
 
 
 
@@ -113,7 +113,7 @@ var {checkCcxt} = require('./core_components/checkCcxt')
 const main = async () => {
   try { global.MONGO = await startMongo() } catch(err) { console.log(err) }
   try {
-    // checkCcxt()
+
     try {
       await initCCXT(privateKeys)
       await initEthplorer(privateKeys)
@@ -157,14 +157,14 @@ const main = async () => {
 
 
     app.use('/', api)
-    // try {
-    //   const userApi = require('./user_components/api')
-    //   app.use('/user_components', userApi)
-    // } catch(err) { console.log(err) }
-    // try {
-    //   var userComponents = require('./user_components')
-    //   userComponents()
-    // } catch(err) { console.log(err) }
+    try {
+      const userApi = require('./user_components/api')
+      app.use('/user_components', userApi)
+    } catch(err) { console.log(err) }
+    try {
+      var userComponents = require('./user_components')
+      userComponents()
+    } catch(err) { console.log(err) }
 
 
   } catch (err) { }
