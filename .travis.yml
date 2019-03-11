@@ -5,6 +5,7 @@ node_js:
 install:
   - npm install -g codecov
   - npm install -g jest
+  - cd server && npm install && cd ..
 script:
   - jest
   - codecov
