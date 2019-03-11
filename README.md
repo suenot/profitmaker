@@ -1,6 +1,6 @@
 # Kupi-terminal – crypto currency trading terminal
 
-[![Discord](https://img.shields.io/badge/chat-on%20discord-blue.svg)](https://discord.gg/2PtuMAg) ![Version](https://img.shields.io/badge/express-0.4.0-blue.svg) ![Version](https://img.shields.io/badge/react-0.4.0-blue.svg) ![Version](https://img.shields.io/badge/vue-0.0.1-orange.svg) 
+[![Discord](https://img.shields.io/badge/chat-on%20discord-blue.svg)](https://discord.gg/2PtuMAg) ![Version](https://img.shields.io/badge/express_server-0.4.0-blue.svg) ![Version](https://img.shields.io/badge/react_client-0.4.0-blue.svg) ![Version](https://img.shields.io/badge/vue_client-0.0.1-orange.svg) 
 
 Open source, customized, extendable trading terminal that supports multiple crypto stocks. 
 
