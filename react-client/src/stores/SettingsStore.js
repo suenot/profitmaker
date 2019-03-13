@@ -1,8 +1,8 @@
 import { observable, action, reaction } from 'mobx'
 import { version, AsyncTrunk } from 'mobx-sync'
-import uuidv1 from 'uuid/v1'
+// import uuidv1 from 'uuid/v1'
 
-@version(2)
+@version(3)
 class SettingsStore {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'settings' })
@@ -39,7 +39,7 @@ class SettingsStore {
   }
   @observable serverBackend = {
     name: 'Server backend',
-    value: 'http://api.kupi.network'
+    value: 'https://kupi.network/api'
   }
   @observable terminalBackend = {
     name: 'Terminal backend',
