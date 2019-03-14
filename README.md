@@ -9,7 +9,7 @@ Open source, customized, extendable trading terminal that supports multiple cryp
 ### [Demo](#demo) ·[How it works](#how-it-works) · [Features](#features) · [Technologies](#technologies) · [Warning](#warning) · [Quick start](#quick-start) · [Exchange markets](#supported-cryptocurrency-exchange-markets) · [API](#api) · [Plan for development](#plan-for-development) · [Crypto](#crypto) · [Team](#team) · [Contact us](#contact-us)
 
 ## Demo
-[http://demo.kupi.network/](http://demo.kupi.network/)
+[https://kupi.network/](https://kupi.network/)
 
 ## How it works
 ![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/structure.png?raw=true)
@@ -185,7 +185,7 @@ The list above is updated frequently, new crypto markets, altcoin exchanges, bug
 
 ## API:
 #### Server api:
-Server: [http://api.kupi.network/](http://api.kupi.network/)
+Server: [https://kupi.network/api](https://kupi.network/api)
 
 Swagger: [try api online](https://app.swaggerhub.com/apis/soloviofff/kupi.network/1.0.0#/)
 ```
