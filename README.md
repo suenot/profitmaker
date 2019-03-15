@@ -1,6 +1,6 @@
 # Kupi-terminal – crypto currency trading terminal
 
-[![License](https://img.shields.io/badge/licence-GPL--2.0-blue.svg)](https://raw.githubusercontent.com/kupi-network/kupi-terminal/master/LICENSE) [![Discord](https://img.shields.io/badge/chat-on_discord-blue.svg)](https://discord.gg/2PtuMAg) ![Version](https://img.shields.io/badge/express_server-0.4.0-blue.svg) ![Version](https://img.shields.io/badge/react_client-0.4.0-blue.svg) ![Version](https://img.shields.io/badge/vue_client-0.0.1-orange.svg) [![codecov](https://codecov.io/gh/kupi-network/kupi-terminal/branch/master/graph/badge.svg)](https://codecov.io/gh/kupi-network/kupi-terminal)
+[![License](https://img.shields.io/badge/licence-GPL--2.0-blue.svg)](https://raw.githubusercontent.com/kupi-network/kupi-terminal/master/LICENSE) [![Discord](https://img.shields.io/discord/430374279343898624.svg?color=4D64BA&label=chat%20on%20discord)](https://discord.gg/2PtuMAg) ![Version](https://img.shields.io/badge/express_server-0.4.0-blue.svg) ![Version](https://img.shields.io/badge/react_client-0.4.0-blue.svg) ![Version](https://img.shields.io/badge/vue_client-0.0.1-orange.svg) [![codecov](https://codecov.io/gh/kupi-network/kupi-terminal/branch/master/graph/badge.svg)](https://codecov.io/gh/kupi-network/kupi-terminal)
 
 Open source, customized, extendable trading terminal that supports multiple crypto stocks. 
 
