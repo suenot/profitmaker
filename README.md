@@ -185,7 +185,7 @@ The list above is updated frequently, new crypto markets, altcoin exchanges, bug
 
 ## API:
 #### Server api:
-Server: [https://kupi.network/api](https://kupi.network/api)
+Server: [https://kupi.network/api](https://kupi.network/api) (secure) or [http://kupi.network/api](http://kupi.network/api) (faster)
 
 Swagger: [try api online](https://app.swaggerhub.com/apis/soloviofff/kupi.network/1.0.0#/)
 ```
