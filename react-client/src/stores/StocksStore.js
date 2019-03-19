@@ -29,7 +29,7 @@ class StocksStore {
   @computed get stocksComputed() {
     var _stocks = []
     var stocks = _.clone(this.stocks)
-    stocks.filter((stock) => {
+    stocks = stocks.filter((stock) => {
       return stock.name.toLowerCase().indexOf( this.stocksFilter.toLowerCase() ) !== -1
     })
     stocks.map((stock)=>{
@@ -48,6 +48,7 @@ class StocksStore {
         }
       }
     })
+    console.log(_stocks)
     return _stocks
   }
 
@@ -64,18 +65,30 @@ class StocksStore {
   // }
 
   @action async fetchStocks() {
-    axios.get(`${this.serverBackend}/stocks`)
-    .then((response) => {
-      if (this.hash === JSON.stringify(response.data)) {
-        return true
-      }
-      this.hash = JSON.stringify(response.data)
-      this.stocks = _.toArray(response.data)
-    })
-    .catch((error) => {
-      this.stocks = []
-      console.log(error)
-    })
+    // create empty vars
+    var ccxtStocks = []
+    var kupiStocks = []
+    // fetch ccxt stocks from terminal server
+    try {
+      var ccxtResponse = await axios.get(`/user-api/ccxt/stocks`)
+      ccxtStocks = _.toArray(ccxtResponse.data)
+    } catch(err) { console.log(err) }
+    // fetch ccxt stocks from kupi server
+    try {
+      var kupiResponse = await axios.get(`${this.serverBackend}/stocks`)
+      kupiStocks = _.toArray(kupiResponse.data)
+      kupiStocks = kupiStocks.map((stock)=>{
+        stock.kupi = true
+        return stock
+      })
+    } catch(err) { console.log(err) }
+    // compare hash
+    if (this.hash === JSON.stringify(ccxtStocks) + JSON.stringify(kupiStocks)) {
+      return true
+    }
+    this.hash = JSON.stringify(ccxtStocks) + JSON.stringify(kupiStocks)
+    // combine lists
+    this.stocks = _.uniqBy([...kupiStocks, ...ccxtStocks], 'name')
   }
 
   counter = 0
