@@ -48,7 +48,6 @@ class StocksStore {
         }
       }
     })
-    console.log(_stocks)
     return _stocks
   }
 
