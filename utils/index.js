@@ -1,20 +1,24 @@
 let sleep = (ms) => new Promise (resolve => setTimeout (resolve, ms))
 
 const catchHead = async function(rateLimit, stock) {
+  // console.log('CH Start')
+  // console.log(rateLimit, stock)
+  if (rateLimit === undefined) rateLimit = 3000
   while (true) {
     if ( global.sleepUntil[stock] == undefined ) {
 
-      global.sleepUntil[stock] = new Date(Date.now() + rateLimit + 500)
+      global.sleepUntil[stock] = Date.now() + rateLimit + 500
       // console.log(global.sleepUntil[stock])
       break
     } else if ( global.sleepUntil[stock] < new Date() ) {
-      global.sleepUntil[stock] = new Date(Date.now() + rateLimit + 500)
+      global.sleepUntil[stock] = Date.now() + rateLimit + 500
       // console.log(global.sleepUntil[stock])
       break
     } else {
-      await sleep(100)
+      await sleep(200)
     }
   }
+  // console.log('CH End')
 }
 const calculateCoin = async function (amount, coin) {
   try {
@@ -25,6 +29,7 @@ const calculateCoin = async function (amount, coin) {
   }
 
 }
+
 ////////////////////
 // TRADE UTILS START
 ////////////////////

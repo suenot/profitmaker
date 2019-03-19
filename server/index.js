@@ -50,7 +50,7 @@ var {updateCoinmarketcap} = require('./core_components/kupi_api/updateCoinmarket
 var {openOrders} = require('./core_components/openOrders')
 
 
-
+const ccxt = require ('ccxt')
 
 
 const main = async () => {
@@ -65,6 +65,8 @@ const main = async () => {
     }
     // console.log(global.ACCOUNTS)
     // console.log(global.CCXT)
+
+
 
     try { await initBalance() } catch(err) { console.log(err) }
     // получение публичных данных с сервера

@@ -10,11 +10,11 @@ const getExchangeOrderBook = function(exchange, symbol) {
 }
 
 const getOrderBook = async function(exchange, symbol) {
-  var id = await initExchange(exchange)
+  var {ccxtId} = await initExchange(exchange)
   var STOCK_NAME_UPPER = exchange.toUpperCase()
-  if (global.CCXT[id].has['fetchOrderBook']) {
-    await catchHead(global.CCXT[id].ratelimit, id)
-    var data = await global.CCXT[id].fetchOrderBook(symbol)
+  if (global.CCXT[ccxtId].has['fetchOrderBook']) {
+    await catchHead(global.CCXT[ccxtId].rateLimit, ccxtId)
+    var data = await global.CCXT[ccxtId].fetchOrderBook(symbol)
     try {
       var bestpriceBid = data['bids'][0][0] || 9999999999999999999
       var bestpriceAsk = data['asks'][0][0] || 0

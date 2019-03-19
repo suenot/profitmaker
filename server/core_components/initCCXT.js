@@ -1,6 +1,17 @@
 const ccxt = require ('ccxt')
+const _ = require ('lodash')
+
 
 const initCCXT = async function(privateKeys) {
+  var stocks = _.clone(ccxt.exchanges)
+  for (let stock of stocks) {
+    if (global.CCXT[`${stock}--public`] === undefined) {
+      global.CCXT[`${stock}--public`] = new ccxt[stock] ({
+        'enableRateLimit': true
+      })
+    }
+  }
+
   for (let key of privateKeys) {
     global.ACCOUNTS[key.id] = {
       id: key.id,

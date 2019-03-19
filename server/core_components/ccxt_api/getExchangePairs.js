@@ -10,9 +10,10 @@ const getExchangePairs = function(exchange) {
 }
 
 const getPairs = async function(exchange) {
-  var id = await initExchange(exchange)
-  await catchHead(global.CCXT[id].ratelimit, id)
-  var data = await global.CCXT[id].loadMarkets()
+  var {ccxtId} = await initExchange(exchange)
+  await catchHead(global.CCXT[ccxtId].rateLimit, ccxtId)
+
+  var data = await global.CCXT[ccxtId].loadMarkets()
   var symbols = []
   for (var key in data) {
     var symbol = data[key]['symbol']

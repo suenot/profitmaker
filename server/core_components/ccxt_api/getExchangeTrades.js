@@ -12,11 +12,10 @@ const getExchangeTrades = function(exchange, symbol) {
 }
 
 const getTrades = async function(exchange, symbol) {
-  var id = await initExchange(exchange)
-
-  if (global.CCXT[id].has['fetchTrades']) {
-    await catchHead(global.CCXT[id].ratelimit, id)
-    var result = await global.CCXT[id].fetchTrades(symbol)
+  var {ccxtId} = await initExchange(exchange)
+  if (global.CCXT[ccxtId].has['fetchTrades']) {
+    await catchHead(global.CCXT[ccxtId].rateLimit, ccxtId)
+    var result = await global.CCXT[ccxtId].fetchTrades(symbol)
     result = _.sortBy(result, [function(o) { return parseInt(o.timestamp) }])
     global.TRADES[`${exchange}--${symbol}`] = result
   }
