@@ -2,7 +2,7 @@ const express = require('express')
 const _ = require('lodash')
 const serializeError = require('serialize-error')
 var {getPairs} = require('./getPairs')
-var {getOrderBook} = require('./getOrderBook')
+var {getExchangeOrderBook} = require('./getExchangeOrderBook')
 var {getOHLCV} = require('./getOHLCV')
 var {getExchangeTrades} = require('./getExchangeTrades')
 var {getStocks} = require('./getStocks')
@@ -30,7 +30,9 @@ module.exports = () => {
   app.get(`/:stock/orders/:pair`, async function (req, res) {
     try {
       var {stock, pair} = req.params
-      res.json(await getOrderBook(stock, pair))
+      stock = stock.toLowerCase()
+      symbol = pair.split('_').join('/')
+      res.json(await getExchangeOrderBook(stock, pair))
     } catch(err) {
       res.status(500).send({error: serializeError(err).message})
     }
