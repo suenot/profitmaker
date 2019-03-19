@@ -89,36 +89,36 @@ const main = async () => {
     // console.log(global.CCXT)
     getExchangeTrades('binance', 'ETH/BTC')
 
-    // try { await initBalance() } catch(err) { console.log(err) }
-    // // получение публичных данных с сервера
-    // try { await updateCoinmarketcap() } catch(err) { console.log(err) }
-    // // try { updateCoinmarketcapCycle(60000) } catch(err) { console.log(err) }
+    try { await initBalance() } catch(err) { console.log(err) }
+    // получение публичных данных с сервера
+    try { await updateCoinmarketcap() } catch(err) { console.log(err) }
+    // try { updateCoinmarketcapCycle(60000) } catch(err) { console.log(err) }
 
-    // // // получение приватных данных с бирж
+    // // получение приватных данных с бирж
 
-    // // SAFE
-    // // balance
-
-
-    // try { updateBalance(20*60*1000) } catch(err) { console.log(err) }
+    // SAFE
+    // balance
 
 
-    // // console.log(await getMyTrades('ID_Binance_2', 'ETH/BTC') )  // тестовое получение трэйдов
-
-    // // KUPI_API | SAFE & PUBLIC
-    // // console.log(await getPairs('binance'))
-    // // console.log(await getTrades('binance', 'ETH_BTC'))
-    // // console.log(await getStocks())
-    // // console.log(await updateCoinmarketcap())
-    // // console.log(await getOrderBook('binance', 'ETH_BTC'))
-    // // console.log(await getOHLCV('binance', 'ETH_BTC', '3m'))
+    try { updateBalance(20*60*1000) } catch(err) { console.log(err) }
 
 
-    // // NOT-SAFE
-    // try { openOrders(90000) } catch(err) { console.log(err) }
+    // console.log(await getMyTrades('ID_Binance_2', 'ETH/BTC') )  // тестовое получение трэйдов
+
+    // KUPI_API | SAFE & PUBLIC
+    // console.log(await getPairs('binance'))
+    // console.log(await getTrades('binance', 'ETH_BTC'))
+    // console.log(await getStocks())
+    // console.log(await updateCoinmarketcap())
+    // console.log(await getOrderBook('binance', 'ETH_BTC'))
+    // console.log(await getOHLCV('binance', 'ETH_BTC', '3m'))
 
 
-    // // try { await fetchDeposit('binance', 'ETH') } catch(err) { console.log(err) }
+    // NOT-SAFE
+    try { openOrders(90000) } catch(err) { console.log(err) }
+
+
+    // try { await fetchDeposit('binance', 'ETH') } catch(err) { console.log(err) }
 
 
     app.use('/user-api/', api)
