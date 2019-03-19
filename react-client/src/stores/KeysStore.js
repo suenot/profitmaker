@@ -55,7 +55,7 @@ class KeysStore {
   @observable accounts = []
   @observable accountsHash = ''
   @action fetchAccounts() {
-    axios.get(`/user-api/accounts`)
+    axios.get(`/user-api/auth/accounts`)
     .then((response) => {
       if (this.accountsHash === JSON.stringify(response.data)) return true
       this.accountsHash = JSON.stringify(response.data)
@@ -67,7 +67,7 @@ class KeysStore {
   }
 
   @action toLogout() {
-    axios.get("/user-api/logout")
+    axios.get("/user-api/auth/logout")
     .then(() => {
       this.user = {}
       Alert.success('Logged out')
@@ -79,7 +79,7 @@ class KeysStore {
   }
 
   @action fetchUserData() {
-    axios.get("/user-api/user")
+    axios.get("/user-api/auth/user")
     .then((response) => {
       this.user = response.data.user
     })
@@ -90,7 +90,7 @@ class KeysStore {
   }
 
   @action toLogin(email, password) {
-    axios.post("/user-api/login", {
+    axios.post("/user-api/auth/login", {
       email,
       password
     })
