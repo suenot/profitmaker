@@ -116,6 +116,14 @@ const main = async () => {
 }
 main()
 
+if (process.env.QUEUE_LOG === 'TRUE') {
+  setInterval(()=>{
+    console.log('queue:')
+    console.log(global.sleepUntil)
+  }, 1000)
+}
+
+
 var port = process.env.DOCKER === 'DOCKER' ? '0.0.0.0' : '127.0.0.1'
 app.listen(8040, port, () => {
   console.log('KUPI termintal launched on 8040 port')
