@@ -1,13 +1,6 @@
 const express = require('express')
 const app = express()
 const api = require('./api/api')
-// const authApi = require('./core_components/auth/api')
-// const ccxtApi = require('./core_components/ccxt_api/api')
-// const kupiApi = require('./core_components/kupi_api/api')
-
-
-
-// const serializeError = require('serialize-error')
 const privateKeys = require('../private/keys.json')
 
 
@@ -20,12 +13,8 @@ var {auth} = require('./core_components/auth/auth')
 auth(app)
 
 
-// const localMongoUrl = "mongodb://192.168.99.100:27017/client"
 const cors = require('cors')
 app.use(cors())
-
-// deprecated ?
-// let db
 
 
 ///////////////
@@ -43,9 +32,10 @@ global.sleepUntil = {}
 global.sleepUntilPriority = {}
 global.OPENORDERS
 global.PAIRS = {}
-global.ORDERBOOK
-global.OHLCV
+global.ORDERBOOK = {}
+global.OHLCV = {}
 global.TRADESRAW
+global.TRADES = {}
 global.MYTRADES = {}
 
 //////////////
@@ -56,22 +46,8 @@ var {updateBalance} = require('./core_components/updateBalance')
 var {initCCXT} = require('./core_components/initCCXT')
 var {initEthplorer} = require('./core_components/initEthplorer')
 var initBalance = require('./core_components/initBalance')
-var {updateCoinmarketcapCycle, updateCoinmarketcap} = require('./core_components/kupi_api/updateCoinmarketcap')
-var balanceHistory = require('./core_components/balanceHistory')
-var {openOrders, fetchOpenOrder, getOpenOrders} = require('./core_components/openOrders')
-var {getStocksCycle, getStocks} = require('./core_components/kupi_api/getStocks')
-var {getPairs} = require('./core_components/kupi_api/getPairs')
-var {getOrderBook} = require('./core_components/kupi_api/getOrderBook')
-var {getOHLCV} = require('./core_components/kupi_api/getOHLCV')
-var {getTrades} = require('./core_components/kupi_api/getTrades')
-var {getMyTrades} = require('./core_components/getMyTrades')
-var {createOrder} = require('./core_components/createOrder')
-var {cancelOrder} = require('./core_components/cancelOrder')
-
-
-var {getExchangeTrades} = require('./core_components/ccxt_api/getExchangeTrades')
-var {getExchangeOrderBook} = require('./core_components/ccxt_api/getExchangeOrderBook')
-var {getExchangeOHLCV} = require('./core_components/ccxt_api/getExchangeOHLCV')
+var {updateCoinmarketcap} = require('./core_components/kupi_api/updateCoinmarketcap')
+var {openOrders} = require('./core_components/openOrders')
 
 
 
@@ -89,9 +65,6 @@ const main = async () => {
     }
     // console.log(global.ACCOUNTS)
     // console.log(global.CCXT)
-    // getExchangeTrades('binance', 'ETH/BTC')
-    // getExchangeOrderBook('binance', 'ETH/BTC')
-    getExchangeOHLCV('binance', 'ETH/BTC', '1m')
 
     try { await initBalance() } catch(err) { console.log(err) }
     // получение публичных данных с сервера

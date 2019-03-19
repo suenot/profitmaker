@@ -1,17 +1,20 @@
 var {catchHead} = require('../../../utils')
 var {initExchange} = require('./initExchange')
 
-const getExchangeOrderBook = async function(exchange, symbol) {
-  console.log('++++++', exchange, symbol)
+const getExchangeOrderBook = function(exchange, symbol) {
+  if (global.ORDERBOOK[`${exchange}--${symbol}`] === undefined) {
+    global.ORDERBOOK[`${exchange}--${symbol}`] = {}
+  }
+  getOrderBook(exchange, symbol)
+  return global.ORDERBOOK[`${exchange}--${symbol}`]
+}
+
+const getOrderBook = async function(exchange, symbol) {
   var id = await initExchange(exchange)
-
   var STOCK_NAME_UPPER = exchange.toUpperCase()
-
   if (global.CCXT[id].has['fetchOrderBook']) {
     await catchHead(global.CCXT[id].ratelimit, id)
-
     var data = await global.CCXT[id].fetchOrderBook(symbol)
-
     try {
       var bestpriceBid = data['bids'][0][0] || 9999999999999999999
       var bestpriceAsk = data['asks'][0][0] || 0
@@ -22,8 +25,7 @@ const getExchangeOrderBook = async function(exchange, symbol) {
     var [coinFrom, coinTo] = symbol.split('/')
     var bids = data['bids']
     var asks = data['asks']
-
-    var orderBook = {
+    global.ORDERBOOK[`${exchange}--${symbol}`] = {
       'id': `${STOCK_NAME_UPPER}--${coinFrom}--${coinTo}`,
       'stock': STOCK_NAME_UPPER,
       'symbol': symbol,
@@ -39,14 +41,7 @@ const getExchangeOrderBook = async function(exchange, symbol) {
       'bestpriceBid': bestpriceBid,
       'bestpriceAsk': bestpriceAsk
     }
-    console.log(orderBook)
-    return orderBook
-
-
-  } else {
-    return `${exchange} dont have fetchOrderBook method`
   }
-
 }
 
 exports.getExchangeOrderBook = getExchangeOrderBook
