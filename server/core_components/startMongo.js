@@ -5,20 +5,19 @@ var {sleep} = require('../../utils')
 
 if (process.env.DOCKER === 'DOCKER') {
   localMongoUrl = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.dockerHost+':'+'27017'+'/'+mongoConf.db+'?authSource=admin'
-  console.log(localMongoUrl)
+  // console.log(localMongoUrl)
 } else {
   localMongoUrl = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.host+':'+mongoConf.port+'/'+mongoConf.db+'?authSource=admin'
-  console.log(localMongoUrl)
+  // console.log(localMongoUrl)
 }
 const startMongo = async function() {
   while(true) {
     try {
       var db = await MongoClient.connect(localMongoUrl)
-      console.log('Получилось подключиться к монге')
+      console.log('Connected to mongo')
       return db
     } catch (err) {
-      console.log('Не получилось подключиться к монге')
-      // console.log(err)
+      console.log("Can't connect to mongo")
     }
     await sleep(1000)
   }
