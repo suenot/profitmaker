@@ -12,7 +12,6 @@ const getExchangeTrades = function(exchange, symbol) {
 }
 
 const getTrades = async function(exchange, symbol) {
-  console.log('++++++', exchange, symbol)
   var id = await initExchange(exchange)
 
   if (global.CCXT[id].has['fetchTrades']) {

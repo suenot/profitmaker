@@ -1,7 +1,7 @@
 const express = require('express')
 const _ = require('lodash')
 const serializeError = require('serialize-error')
-var {getPairs} = require('./getPairs')
+var {getExchangePairs} = require('./getExchangePairs')
 var {getExchangeOrderBook} = require('./getExchangeOrderBook')
 var {getExchangeOHLCV} = require('./getExchangeOHLCV')
 var {getExchangeTrades} = require('./getExchangeTrades')
@@ -24,7 +24,8 @@ router.get(`/:stocks/`, function (req, res) {
 router.get(`/:stock/pairs/`, function (req, res) {
   try {
     var {stock} = req.params
-    res.json(getPairs(stock))
+    stock = stock.toLowerCase()
+    res.json(getExchangePairs(stock))
   } catch(err) {
     res.status(500).send({error: serializeError(err).message})
   }

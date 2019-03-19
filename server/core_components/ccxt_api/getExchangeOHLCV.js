@@ -10,7 +10,6 @@ const getExchangeOHLCV = function(exchange, symbol, timeframe) {
 }
 
 const getOHLCV = async function(exchange, symbol, timeframe) {
-  console.log('++++++ OHLCV', exchange, symbol)
   var id = await initExchange(exchange)
   if (global.CCXT[id].has['fetchOHLCV']) {
     await catchHead(global.CCXT[id].ratelimit, id)
