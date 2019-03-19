@@ -1,5 +1,5 @@
-import ccxt from 'ccxt'
-import _ from 'lodash'
+const ccxt = require ('ccxt')
+const _ = require ('lodash')
 
 const getStocks = function() {
   var stocks = _.clone(ccxt.exchanges)

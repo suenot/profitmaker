@@ -4,7 +4,7 @@ const serializeError = require('serialize-error')
 var {getPairs} = require('./getPairs')
 var {getOrderBook} = require('./getOrderBook')
 var {getOHLCV} = require('./getOHLCV')
-var {getTrades} = require('./getTrades')
+var {getExchangeTrades} = require('./getExchangeTrades')
 var {getStocks} = require('./getStocks')
 
 module.exports = () => {
@@ -48,7 +48,9 @@ module.exports = () => {
   app.get(`/:stock/trades/:pair`, async function (req, res) {
     try {
       var {stock, pair} = req.params
-      res.json(await getTrades(stock, pair))
+      stock = stock.toLowerCase()
+      symbol = pair.split('_').join('/')
+      res.json(await getExchangeTrades(stock, symbol))
     } catch(err) {
       res.status(500).send({error: serializeError(err).message})
     }

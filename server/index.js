@@ -87,7 +87,7 @@ const main = async () => {
     }
     // console.log(global.ACCOUNTS)
     // console.log(global.CCXT)
-    getExchangeTrades('binance', 'ETH/BTC')
+    // getExchangeTrades('binance', 'ETH/BTC')
 
     try { await initBalance() } catch(err) { console.log(err) }
     // получение публичных данных с сервера
