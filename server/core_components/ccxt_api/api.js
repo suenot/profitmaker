@@ -2,8 +2,8 @@ const express = require('express')
 const _ = require('lodash')
 const serializeError = require('serialize-error')
 var {getPairs} = require('./getPairs')
-var {getOrderBook} = require('./getOrderBook')
-var {getOHLCV} = require('./getOHLCV')
+var {getExchangeOrderBook} = require('./getExchangeOrderBook')
+var {getExchangeOHLCV} = require('./getOHLCV')
 var {getExchangeTrades} = require('./getExchangeTrades')
 var {getStocks} = require('./getStocks')
 
@@ -33,16 +33,20 @@ router.get(`/:stock/pairs/`, function (req, res) {
 router.get(`/:stock/orders/:pair`, function (req, res) {
   try {
     var {stock, pair} = req.params
-    res.json(getOrderBook(stock, pair))
+    stock = stock.toLowerCase()
+    var symbol = pair.split('_').join('/')
+    res.json(await getExchangeOrderBook(stock, symbol))
   } catch(err) {
     res.status(500).send({error: serializeError(err).message})
   }
 })
 
-router.get(`/:stock/candles/:pair/:timeframe`, function (req, res) {
+app.get(`/:stock/candles/:pair/:timeframe`, function (req, res) {
   try {
     var {stock, pair, timeframe} = req.params
-    res.json(getOHLCV(stock, pair, timeframe))
+    stock = stock.toLowerCase()
+    symbol = pair.split('_').join('/')
+    res.json(getExchangeOHLCV(stock, symbol, timeframe))
   } catch(err) {
     res.status(500).send({error: serializeError(err).message})
   }
@@ -52,7 +56,7 @@ router.get(`/:stock/trades/:pair`, function (req, res) {
   try {
     var {stock, pair} = req.params
     stock = stock.toLowerCase()
-    symbol = pair.split('_').join('/')
+    var symbol = pair.split('_').join('/')
     res.json(getExchangeTrades(stock, symbol))
   } catch(err) {
     res.status(500).send({error: serializeError(err).message})
