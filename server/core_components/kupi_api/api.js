@@ -6,54 +6,57 @@ var {getOrderBook} = require('./getOrderBook')
 var {getOHLCV} = require('./getOHLCV')
 var {getTrades} = require('./getTrades')
 
-module.exports = () => {
-  let app = express()
-  app.get('/stocks', async function (req, res) {
-    try {
-      res.json(await getStocks())
-    } catch (err) {
-      res.status(500).send({error: serializeError(err).message})
-    }
-  })
+var router = express.Router({mergeParams: true})
 
-  app.get('/:stock/pairs/', async function (req, res) {
-    try {
-      var {stock} = req.params
-      res.json(await getPairs(stock))
-    } catch (err) {
-      res.status(500).send({error: serializeError(err).message})
-    }
-  })
+router.get('/', (req, res) => {
+  res.json('kupi api')
+})
 
-  app.get('/:stock/orders/:pair', async function (req, res) {
-    try {
-      var {stock, pair} = req.params
-      var orders = await getOrderBook(stock, pair)
-      res.json(orders)
-    } catch (err) {
-      res.status(500).send({error: serializeError(err).message})
-    }
-  })
+router.get('/stocks', function (req, res) {
+  try {
+    res.json(getStocks())
+  } catch (err) {
+    res.status(500).send({error: serializeError(err).message})
+  }
+})
 
-  app.get('/:stock/candles/:pair/:timeframe', async function (req, res) {
-    try {
-      var {stock, pair} = req.params
-      var ohlcv = await getOHLCV(stock, pair)
-      res.json(ohlcv)
-    } catch (err) {
-      res.status(500).send({error: serializeError(err).message})
-    }
-  })
+router.get('/:stock/pairs/', function (req, res) {
+  try {
+    var {stock} = req.params
+    res.json(getPairs(stock))
+  } catch (err) {
+    res.status(500).send({error: serializeError(err).message})
+  }
+})
 
-  app.get('/:stock/trades/:pair', async function (req, res) {
-    try {
-      var {stock, pair} = req.params
-      var ohlcv = await getTrades(stock, pair)
-      res.json(ohlcv)
-    } catch (err) {
-      res.status(500).send({error: serializeError(err).message})
-    }
-  })
+router.get('/:stock/orders/:pair', function (req, res) {
+  try {
+    var {stock, pair} = req.params
+    var orders = getOrderBook(stock, pair)
+    res.json(orders)
+  } catch (err) {
+    res.status(500).send({error: serializeError(err).message})
+  }
+})
 
-  return app
-}
+router.get('/:stock/candles/:pair/:timeframe', function (req, res) {
+  try {
+    var {stock, pair} = req.params
+    var ohlcv = getOHLCV(stock, pair)
+    res.json(ohlcv)
+  } catch (err) {
+    res.status(500).send({error: serializeError(err).message})
+  }
+})
+
+router.get('/:stock/trades/:pair', function (req, res) {
+  try {
+    var {stock, pair} = req.params
+    var ohlcv = getTrades(stock, pair)
+    res.json(ohlcv)
+  } catch (err) {
+    res.status(500).send({error: serializeError(err).message})
+  }
+})
+
+module.exports = router

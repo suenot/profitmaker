@@ -1,9 +1,9 @@
 const express = require('express')
 const app = express()
 const api = require('./api/api')
-const authApi = require('./core_components/auth/api')
-const ccxtApi = require('./core_components/ccxt_api/api')
-const kupiApi = require('./core_components/kupi_api/api')
+// const authApi = require('./core_components/auth/api')
+// const ccxtApi = require('./core_components/ccxt_api/api')
+// const kupiApi = require('./core_components/kupi_api/api')
 
 
 
@@ -122,9 +122,9 @@ const main = async () => {
 
 
     app.use('/user-api/', api)
-    app.use('/user-api/auth/', authApi)
-    app.use('/user-api/ccxt/', ccxtApi)
-    app.use('/user-api/kupi/', kupiApi)
+    // app.use('/user-api/auth/', authApi)
+    // app.use('/user-api/ccxt/', ccxtApi)
+    // app.use('/user-api/kupi/', kupiApi)
     try {
       const userApi = require('./user_components/api')
       app.use('/user_components', userApi)
