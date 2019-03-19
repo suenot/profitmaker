@@ -14,6 +14,12 @@ Open source, customized, extendable trading terminal that supports multiple cryp
 ## How it works
 ![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/structure.png?raw=true)
 
+## Sponsored Promotion
+
+Want this place? Contact us: https://www.facebook.com/dexenot
+
+![Placehodler](https://user-images.githubusercontent.com/1707/48204972-43569e00-e37c-11e8-9cf3-b86e3dc19ee9.png)
+
 ## Features:
 - Open source
 - Your api keys stay on your machine, no need to send its anywhere
