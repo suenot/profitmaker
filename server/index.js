@@ -71,6 +71,7 @@ var {cancelOrder} = require('./core_components/cancelOrder')
 
 var {getExchangeTrades} = require('./core_components/ccxt_api/getExchangeTrades')
 var {getExchangeOrderBook} = require('./core_components/ccxt_api/getExchangeOrderBook')
+var {getExchangeOHLCV} = require('./core_components/ccxt_api/getExchangeOHLCV')
 
 
 
@@ -90,6 +91,7 @@ const main = async () => {
     // console.log(global.CCXT)
     // getExchangeTrades('binance', 'ETH/BTC')
     // getExchangeOrderBook('binance', 'ETH/BTC')
+    getExchangeOHLCV('binance', 'ETH/BTC', '1m')
 
     try { await initBalance() } catch(err) { console.log(err) }
     // получение публичных данных с сервера
