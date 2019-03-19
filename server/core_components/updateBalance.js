@@ -234,7 +234,7 @@ const writeTotal = async function () {
         await global.MONGO.collection('balance').replaceOne({'stock': stockName}, stock, {upsert: true})
         await global.MONGO.collection('balanceTimeseries').replaceOne({'stock': stockName, "timestamp": stock.timestamp }, stock, {upsert: true}) // TODO заменить на insert
     }
-    console.log('balance saved')
+    console.log('Balance saved')
   } catch (err) { console.log(err) }
 }
 exports.updateBalance = updateBalance
