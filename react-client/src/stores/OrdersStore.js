@@ -24,20 +24,56 @@ class OrdersStore {
   @computed get pair() {return DashboardsStore.pair }
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
+  tubes = {}
   hashes = {}
   @observable orders = {}
+
+  @action async fetchOrders_kupi(stockLowerCase, pair, key) {
+    return axios.get(`${this.serverBackend}/${stockLowerCase}/orders/${pair}`)
+    .then((response) => {
+      return response.data
+    })
+    .catch(() => {
+      this.tubes[key] = 'ccxt'
+      return {
+        'asks': [],
+        'bids': []
+      }
+    })
+  }
+
+  @action async fetchOrders_ccxt(stockLowerCase, pair) {
+    return axios.get(`/user-api/ccxt/${stockLowerCase}/orders/${pair}`)
+    .then((response) => {
+      return response.data
+    })
+    .catch(() => {
+      return {
+        'asks': [],
+        'bids': []
+      }
+    })
+  }
+
 
   @action async fetchOrders(stock, pair) {
     var stockLowerCase = stock.toLowerCase()
     var key = `${stock}--${pair}`
-    axios.get(`${this.serverBackend}/${stockLowerCase}/orders/${pair}`)
-    .then((response) => {
-      if (this.hashes[key] === JSON.stringify(response.data)) return true
-      this.hashes[key] = JSON.stringify(response.data)
-      var _orders = response.data
-      var sum = {asks: 0, bids: 0}
+    var data
+    if (this.tubes[key] === 'ccxt') {
+      data = await this.fetchOrders_ccxt(stockLowerCase, pair)
+    } else {
+      data = await this.fetchOrders_kupi(stockLowerCase, pair, key)
+    }
 
-      for( let type of Object.keys(sum) ) {
+    if (this.hashes[key] === JSON.stringify(data)) return true
+    this.hashes[key] = JSON.stringify(data)
+
+    var _orders = data
+    var sum = {asks: 0, bids: 0}
+
+    for( let type of Object.keys(sum) ) {
+      if ( !_.isEmpty(_orders[type]) ) {
         for( let [key, order] of Object.entries(_orders[type]) ) {
           var price = order[0]
           var amount = order[1]
@@ -58,14 +94,9 @@ class OrdersStore {
           order.sumPercentInverse = 100 - order.sumPercent
         })
       }
-      this.orders[key] = _orders
-    })
-    .catch((error) => {
-      this.orders[key] = {
-        'asks': [],
-        'bids': []
-      }
-    })
+    }
+    this.orders[key] = _orders
+
   }
 
   counters = {}
