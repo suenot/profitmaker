@@ -28,7 +28,7 @@ class OhlcvStore {
   @computed get pair() {return DashboardsStore.pair }
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
-  // hash = ''
+  tubes = {}
   hashes = {}
   @observable ohlcv = {
     // 'stock--pair--timeframe-url': []
@@ -55,23 +55,46 @@ class OhlcvStore {
     return ohlcv
   }
 
+  @action async fetchOhlcv_kupi(stockLowerCase, pair, timeframe, key) {
+    return axios.get(`${this.serverBackend}/${stockLowerCase}/candles/${pair}/${timeframe}`)
+    .then((response) => {
+      return response.data
+    })
+    .catch(() => {
+      this.tubes[key] = 'ccxt'
+      return []
+    })
+  }
+
+  @action async fetchOhlcv_ccxt(stockLowerCase, pair, timeframe) {
+    return axios.get(`/user-api/ccxt/${stockLowerCase}/candles/${pair}/${timeframe}`)
+    .then((response) => {
+      return response.data
+    })
+    .catch(() => {
+      return []
+    })
+  }
+
   @action async fetchOhlcv(key) {
     var [stock, pair, timeframe, url] = key.split('--')
-    axios.get(url)
-    .then((response) => {
+    var stockLowerCase = stock.toLowerCase()
 
-      if (this.hashes[key] === JSON.stringify(response.data)) return true
-      this.hashes[key] = JSON.stringify(response.data)
+    var data
+    if (this.tubes[key] === 'ccxt') {
+      data = await this.fetchOhlcv_ccxt(stockLowerCase, pair, timeframe)
+    } else {
+      data = await this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe, key)
+    }
 
-      if (!response.data) {
-        this.ohlcv[key] = []
-      } else {
-        this.ohlcv[key] = response.data
-      }
-    })
-    .catch((error) => {
+    if (this.hashes[key] === JSON.stringify(data)) return true
+    this.hashes[key] = JSON.stringify(data)
+
+    if (!data) {
       this.ohlcv[key] = []
-    })
+    } else {
+      this.ohlcv[key] = data
+    }
   }
 
   counters = {}
