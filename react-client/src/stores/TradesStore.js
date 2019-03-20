@@ -31,22 +31,46 @@ class TradesStore {
   @computed get pair() {return DashboardsStore.pair }
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
+  tubes = {}
   hashes = {}
   @observable trades = {} // []
 
-  @action fetchTrades(stock, pair){
-    var stockLowerCase = stock.toLowerCase()
-    var key = `${stock}--${pair}`
-    axios.get(`${this.serverBackend}/${stockLowerCase}/trades/${pair}`)
+  @action async fetchTrades_kupi(stockLowerCase, pair, key) {
+    return axios.get(`${this.serverBackend}/${stockLowerCase}/trades/${pair}`)
     .then((response) => {
-      if (this.hashes[key] === JSON.stringify(response.data)) return true
-      this.hashes[key] = JSON.stringify(response.data)
-      var trades = _.orderBy(response.data, ['timestamp'], ['desc'])
-      this.trades[key] = trades
+      return response.data
     })
     .catch(() => {
-      this.trades[key] = []
+      this.tubes[key] = 'ccxt'
+      return []
     })
+  }
+
+  @action async fetchTrades_ccxt(stockLowerCase, pair) {
+    return axios.get(`/user-api/ccxt/${stockLowerCase}/trades/${pair}`)
+    .then((response) => {
+      return response.data
+    })
+    .catch(() => {
+      return []
+    })
+  }
+
+  @action async fetchTrades(stock, pair){
+    var stockLowerCase = stock.toLowerCase()
+    var key = `${stock}--${pair}`
+
+    var data
+    if (this.tubes[key] === 'ccxt') {
+      data = await this.fetchTrades_ccxt(stockLowerCase, pair)
+    } else {
+      data = await this.fetchTrades_kupi(stockLowerCase, pair, key)
+    }
+
+    if (this.hashes[key] === JSON.stringify(data)) return true
+    this.hashes[key] = JSON.stringify(data)
+
+    this.trades[key] = _.orderBy(data, ['timestamp'], ['desc'])
   }
 
   counters = {}
