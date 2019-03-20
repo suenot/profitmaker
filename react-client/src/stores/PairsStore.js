@@ -5,22 +5,23 @@ import SettingsStore from './SettingsStore'
 
 class PairsStore {
   constructor() {
-    const start = () => {
-      _.forEach(this.counters, (counter, stock) => {
-        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchPairs(stock)
-      })
-    }
-    start()
-    setInterval(() => {
-      start()
+    this.start()
+    this.interval = setInterval(() => {
+      this.start()
     }, 1000)
   }
-  // @computed get stock() {return DashboardsStore.stock }
-  // @computed get stockLowerCase() {return DashboardsStore.stockLowerCase }
+
+  @action start() {
+    _.forEach(this.counters, (counter, stock) => {
+      if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchPairs(stock)
+    })
+  }
+
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
   @observable pairsFilter = ''
 
+  interval = ''
   hashes = {}
   tubes = {}
   @observable pairs = {}

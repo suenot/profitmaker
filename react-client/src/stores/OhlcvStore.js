@@ -7,27 +7,29 @@ import _ from 'lodash'
 
 class OhlcvStore {
   constructor() {
-    const start = () => {
-      // TODO
-      // if (this.counters[key] === 0) {
-      //   delete this.counters[key]
-      //   delete this.ohlcv[key]
-      // }
-      _.forEach(this.counters, (counter, key) => {
-        if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOhlcv(key)
-      })
-
-    }
-    start()
-    setInterval(() => {
-      start()
+    this.start()
+    this.interval = setInterval(() => {
+      this.start()
     }, 5000)
   }
+
+  @action start() {
+    // TODO
+    // if (this.counters[key] === 0) {
+    //   delete this.counters[key]
+    //   delete this.ohlcv[key]
+    // }
+    _.forEach(this.counters, (counter, key) => {
+      if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOhlcv(key)
+    })
+  }
+
   @computed get stock() {return DashboardsStore.stock }
   @computed get stockLowerCase() {return DashboardsStore.stockLowerCase }
   @computed get pair() {return DashboardsStore.pair }
   @computed get serverBackend() {return SettingsStore.serverBackend.value }
 
+  interval = ''
   tubes = {}
   hashes = {}
   @observable ohlcv = {
