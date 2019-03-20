@@ -6,7 +6,7 @@
     "bignumber.js": "^8.1.1",
     "body-parser": "^1.18.2",
     "bson": "^1.0.4",
-    "ccxt": "1.18.288",
+    "ccxt": "1.18.385",
     "cookie-session": "^2.0.0-beta.3",
     "cors": "^2.8.4",
     "ethereumjs-abi": "^0.6.6",
