@@ -8,13 +8,6 @@ import SettingsStore from './SettingsStore'
 
 class OpenOrdersStore {
   constructor() {
-    // const start = () => {
-    //   this.fetchOpenOrders()
-    // }
-    // start()
-    // setInterval(() => {
-    //   if ( this.counter > 0 && (SettingsStore.fetchEnabled.value) ) start()
-    // }, 5000)
     const start = () => {
       _.forEach(this.counters, (counter, key) => {
         var [stock, pair, accountId] = key.split('--')
@@ -42,9 +35,7 @@ class OpenOrdersStore {
       this.openOrders[key] = response.data
     })
     .catch((error) => {
-      // this.openOrders[key] = []
       this.openOrders[key] = 'error'
-      // console.log(error)
     })
   }
 
