@@ -34,8 +34,11 @@ class StocksStore {
     })
     stocks.map((stock)=>{
       _stocks.push({
-        id: `${stock.name}`,
+        id: stock.name,
         name: stock.name,
+        kupi: stock.kupi || false,
+        ccxt: stock.ccxt || false,
+        rateLimit: stock.rateLimit
       })
       for (let account of Object.values(this.accounts)) {
         if (account.stock.toUpperCase() === stock.name) {
@@ -43,7 +46,10 @@ class StocksStore {
             id: `${stock.name}--${account.id}`,
             name: stock.name,
             accountId: account.id,
-            accountName: account.name
+            accountName: account.name,
+            kupi: stock.kupi || false,
+            ccxt: stock.ccxt || false,
+            rateLimit: stock.rateLimit
           })
         }
       }
@@ -67,17 +73,22 @@ class StocksStore {
     // create empty vars
     var ccxtStocks = []
     var kupiStocks = []
-    // fetch ccxt stocks from terminal server
+    // fetch ccxt stocks
     try {
       var ccxtResponse = await axios.get(`/user-api/ccxt/stocks`)
       ccxtStocks = _.toArray(ccxtResponse.data)
+      ccxtStocks = ccxtStocks.map((stock)=>{
+        stock.ccxt = true
+        return stock
+      })
     } catch(err) { console.log(err) }
-    // fetch ccxt stocks from kupi server
+    // fetch kupi stocks
     try {
       var kupiResponse = await axios.get(`${this.serverBackend}/stocks`)
       kupiStocks = _.toArray(kupiResponse.data)
       kupiStocks = kupiStocks.map((stock)=>{
         stock.kupi = true
+        stock.ccxt = true
         return stock
       })
     } catch(err) { console.log(err) }
@@ -86,8 +97,21 @@ class StocksStore {
       return true
     }
     this.hash = JSON.stringify(ccxtStocks) + JSON.stringify(kupiStocks)
+    // add rateLimit to kupiStocks
+    for (let kupiStock of kupiStocks) {
+      if (kupiStock.rateLimit === undefined) {
+        var _stock = _.find(ccxtStocks, function(ccxtStock) {
+          return ccxtStock.name == kupiStock.name
+        })
+        if (_stock !== undefined) {
+          kupiStock.rateLimit = _stock.rateLimit
+        }
+      }
+    }
     // combine lists
-    this.stocks = _.uniqBy([...kupiStocks, ...ccxtStocks], 'name')
+    var stocks = _.uniqBy([...kupiStocks, ...ccxtStocks], 'name')
+    // write to mobx
+    this.stocks = stocks
   }
 
   counter = 0
