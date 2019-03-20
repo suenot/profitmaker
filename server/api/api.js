@@ -35,7 +35,6 @@ router.get('/widgets/:framework', function (req, res) {
 router.post('/balance', authMiddleware, async function (req, res) {
   try {
     var {stock, type, accountId} = req.body
-    console.log(stock, type, accountId)
     var key = accountId
     if (stock === 'TOTAL') key = 'TOTAL'
 

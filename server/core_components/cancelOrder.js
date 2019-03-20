@@ -12,7 +12,6 @@ const cancelOrder = async function(data) {
     var _id = data._id
     var rateLimit = global.CCXT[ccxtId]['rateLimit']
     await catchHead(rateLimit, ccxtId)
-    // console.log(ccxtId, id, symbol)
     var result = await global.CCXT[ccxtId].cancelOrder(id, symbol)
     fetchOpenOrder(accountId, symbol, id, _id)
     return result

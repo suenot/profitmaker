@@ -2,11 +2,9 @@ var catchHead = require('../../utils').catchHead
 
 const getMyTrades = async function(account, symbol) {
   try {
-    console.log(global.ACCOUNTS[account])
     if (global.ACCOUNTS[account].parser === 'ccxt' && global.ACCOUNTS[account].notSafe !== '') {
       if (global.CCXT[global.ACCOUNTS[account].notSafe].has['fetchMyTrades']) {
         var rateLimit = global.CCXT[global.ACCOUNTS[account].notSafe]['rateLimit']
-        console.log(rateLimit)
         await catchHead(rateLimit, global.ACCOUNTS[account].notSafe)
         var trades = await global.CCXT[global.ACCOUNTS[account].notSafe].fetchMyTrades(symbol)
         var id = `${account}--${symbol}`

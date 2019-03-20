@@ -46,10 +46,7 @@ const balanceHistory = async function(stock) {
 
           if ( (item.data[coin].totalUSD/item.totalUSD*100) > 10) {
             // если % > 5
-            // console.log('*****************')
             BALANCE_HISTORY_COINS_RESULT.add(coin)
-            // console.log(balance.totalUSD)
-            // console.log(item.totalUSD)
             BALANCE_HISTORY_USD[coin].push(item.data[coin].totalUSD)
             BALANCE_HISTORY_BTC[coin].push(item.data[coin].totalBTC)
           } else {

@@ -7,7 +7,6 @@ const fetchDeposit = async function(stockName, symbol) {
     try {
       await catchHead(global.STOCKS[stockName]['rateLimit'], stockName)
       let depositInfo = await global.STOCKS[stockName].fetchDepositAddress(symbol)
-      // console.log(depositInfo)
       return depositInfo
     } catch (err) {
       return 'fetchDeposit in progress. Croitor we belive in you'

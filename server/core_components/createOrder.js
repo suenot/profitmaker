@@ -14,7 +14,6 @@ const createOrder = async function(data) {
     var rateLimit = global.CCXT[ccxtId]['rateLimit']
     await catchHead(rateLimit, ccxtId)
     var result = await global.CCXT[ccxtId].createOrder(ccxtSymbol, 'limit', side, amount, price) /// ('BTC/USD', 'limit', 'buy', 1, 2500.00)
-    // console.log(result)
     fetchOpenOrder(accountId, symbol, result.id)
     return result
   } catch (err) {

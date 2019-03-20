@@ -22,7 +22,6 @@ router.post("/login", (req, res, next) => {
       console.log("Cannot log in")
       return res.status(400).send([user, "Cannot log in", info])
     }
-    console.log("before Logged in")
     req.login(user, (err) => {
       console.log("Logged in")
       res.send("Logged in")
@@ -40,7 +39,6 @@ router.get("/user", authMiddleware, (req, res) => {
   let user = global.USERS.find((user) => {
     return user.id === req.session.passport.user
   })
-  console.log([user, req.session])
   res.send({user: user})
 })
 
