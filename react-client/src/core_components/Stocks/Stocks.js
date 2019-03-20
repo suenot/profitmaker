@@ -18,8 +18,8 @@ class Stocks extends React.Component {
           <div className="drawer-title-text">Stocks</div>
           <CloseIcon onClick={this.drawerClose.bind(this, drawer)} className="pointer" />
         </div>
-        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
-          <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
+        <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
+        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px - 22px)'}}>
           <table className="simpleTable">
             <tbody>
               {

@@ -19,9 +19,8 @@ class Pairs extends React.Component {
           <div className="drawer-title-text">Pairs on {stock}</div>
           <CloseIcon onClick={this.drawerClose.bind(this, drawer)} className="pointer" />
         </div>
-        <Divider />
-        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px)'}}>
-          <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
+        <input className="simpleSearch" onChange={this.toggleFilter.bind(this)}/>
+        <PerfectScrollbar option={{'suppressScrollX': true}} style={{height: 'calc(100vh - 49px - 22px)'}}>
           <table className="simpleTable">
             <tbody>
               {
