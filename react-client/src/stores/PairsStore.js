@@ -22,6 +22,7 @@ class PairsStore {
   @observable pairsFilter = ''
 
   hashes = {}
+  tubes = {}
   @observable pairs = {}
 
   @computed get pairsComputed() {
@@ -46,20 +47,41 @@ class PairsStore {
   //   DashboardsStore.setWidgetsData('pair', pair)
   // }
 
+  @action async fetchPairs_kupi(stockLowerCase, key) {
+    return axios.get(`${this.serverBackend}/${stockLowerCase}/pairs/`)
+    .then((response) => {
+      return response.data
+    })
+    .catch(() => {
+      this.tubes[key] = 'ccxt'
+      return []
+    })
+  }
+
+  @action async fetchPairs_ccxt(stockLowerCase) {
+    return axios.get(`/user-api/ccxt/${stockLowerCase}/pairs/`)
+    .then((response) => {
+      return response.data
+    })
+    .catch(() => {
+      return []
+    })
+  }
+
   @action async fetchPairs(key) {
     var stockLowerCase = key.toLowerCase()
-    axios.get(`${this.serverBackend}/${stockLowerCase}/pairs/`)
-    .then((response) => {
-      if (this.hashes[key] === JSON.stringify(response.data)) return true
-      this.hashes[key] = JSON.stringify(response.data)
-      var pairs = response.data.map((pair) => {
-        return pair.split('/').join('_')
-      })
-      this.pairs[key] = pairs
+    var data
+    if (this.tubes[key] === 'ccxt') {
+      data = await this.fetchPairs_ccxt(stockLowerCase)
+    } else {
+      data = await this.fetchPairs_kupi(stockLowerCase, key)
+    }
+    if (this.hashes[key] === JSON.stringify(data)) return true
+    this.hashes[key] = JSON.stringify(data)
+    var pairs = data.map((pair) => {
+      return pair.split('/').join('_')
     })
-    .catch((err) => {
-      this.pairs[key] = []
-    })
+    this.pairs[key] = pairs
   }
 
   counters = {}
