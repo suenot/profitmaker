@@ -1,5 +1,7 @@
 import React from 'react'
 import _ from 'lodash'
+import axios from 'axios'
+import uuidv1 from 'uuid/v1'
 import { observer } from 'mobx-react'
 import moment from 'moment'
 import Preloader from 'core_components/Preloader'
@@ -7,14 +9,18 @@ import WidgetNotification from 'core_components/WidgetNotification'
 import Demo from './Demo'
 
 
-import MyTradesStore from 'stores/MyTradesStore'
-
 @observer
 class MyTrades extends React.Component {
+  state = {
+    interval: '',
+    hash: '',
+    data: [],
+    timer: 1000,
+  }
+
   render() {
-    const {stock, pair, demo, accountId} = this.props.data
-    var key = `${stock}--${pair}--${accountId}`
-    var data = MyTradesStore.myTrades[key]
+    const {demo} = this.props.data
+    var data = this.state.data
     data = data && data.slice(0, 100)
 
     if (demo) {
@@ -27,7 +33,6 @@ class MyTrades extends React.Component {
     } else if (data === undefined || _.isEmpty(data) || data.length === 0 ) {
       return <div className="preloader-center">
         <WidgetNotification type="info" msg="No data"/>
-        <Preloader />
       </div>
     }
 
@@ -71,18 +76,55 @@ class MyTrades extends React.Component {
       </div>
     )
   }
-  componentWillMount() {
-    MyTradesStore.count(1, this.props.data)
+
+  fetchMyTrades() {
+    const {pair, accountId} = this.props.data
+    axios.get(`/user-api/myTrades/${accountId}/${pair}`)
+    .then((response) => {
+      if (this.state.hash === JSON.stringify(response.data)) return true
+      this.state.hash = JSON.stringify(response.data)
+
+      var myTrades = response.data
+      myTrades = myTrades.map((trade)=>{
+        trade.uuid = uuidv1()
+        return trade
+      })
+      this.setState({
+        data: myTrades
+      })
+    })
+    .catch((error) => {
+      this.setState({
+        data: 'error'
+      })
+    })
+  }
+
+  start() {
+    this.setState({
+      interval: setInterval(()=>{
+        this.fetchMyTrades()
+      }, this.state.timer)
+    })
+  }
+  finish() {
+    if (this.state.interval) {
+      clearInterval(this.state.interval)
+      this.setState({ interval: null })
+    }
+  }
+  componentDidMount() {
+    this.start()
   }
   componentWillUnmount() {
-    MyTradesStore.count(-1, this.props.data)
+    this.finish()
   }
-  componentWillUpdate() {
-    MyTradesStore.count(-1, this.props.data)
-  }
-  componentDidUpdate() {
-    MyTradesStore.count(1, this.props.data)
-  }
+  // componentWillUpdate() {
+  //   this.finish()
+  // }
+  // componentDidUpdate() {
+  //   this.start()
+  // }
 }
 
 export default MyTrades
