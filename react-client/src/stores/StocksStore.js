@@ -84,7 +84,7 @@ class StocksStore {
     } catch(err) { console.log(err) }
     // fetch kupi stocks
     try {
-      var kupiResponse = await axios.get(`${this.serverBackend}/stocks`)
+      var kupiResponse = await axios.get(`${this.serverBackend}/api/stocks`)
       kupiStocks = _.toArray(kupiResponse.data)
       kupiStocks = kupiStocks.map((stock)=>{
         stock.kupi = true

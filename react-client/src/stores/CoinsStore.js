@@ -17,7 +17,7 @@ class CoinsStore {
   @observable hash = ''
 
   @action fetchCoins(){
-    axios.get(`${this.serverBackend}/coinmarketcap`)
+    axios.get(`${this.serverBackend}/api/coinmarketcap`)
     .then((response) => {
       if (this.hash === JSON.stringify(response.data)) return true
       this.hash = JSON.stringify(response.data)
