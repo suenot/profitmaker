@@ -3,19 +3,22 @@ import Chart from './Chart'
 import Preloader from '../Preloader'
 import { observer } from 'mobx-react'
 import './theme.sass'
-import template from 'es6-template-strings'
-
-import OhlcvStore from 'stores/OhlcvStore'
+// import template from 'es6-template-strings' // TODO: remove from packages
+import axios from 'axios'
 
 @observer
 export default class ChartComponent extends React.Component {
-  constructor () {
-    super()
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null
-    }
+  state = {
+    hasError: false,
+    error: null,
+    errorInfo: null,
+
+    interval: null,
+    tube: '',
+    hash: '',
+    data: [],
+    timer: 1000,
+    serverBackend: 'https://kupi.network'
   }
 
   componentDidCatch (error, info) {
@@ -23,20 +26,20 @@ export default class ChartComponent extends React.Component {
   }
 
 	render() {
+    var data = this.state.data
     if (this.state.hasError) {
       return <div></div>
     } else {
       var {dashboardId, widgetId} = this.props.data
-      var key = this.getKey()
       if (
-        OhlcvStore.ohlcvComputed === undefined ||
-        JSON.stringify(OhlcvStore.ohlcvComputed) === '{}' ||
-        OhlcvStore.ohlcvComputed[key] === undefined ||
-        JSON.stringify(OhlcvStore.ohlcvComputed[key]) === '[]' ||
-        JSON.parse( JSON.stringify(OhlcvStore.ohlcvComputed[key]) ).length < 3 ) {
+        // OhlcvStore.ohlcvComputed === undefined ||
+        // JSON.stringify(OhlcvStore.ohlcvComputed) === '{}' ||
+        data === undefined ||
+        JSON.stringify(data) === '[]' ||
+        JSON.parse( JSON.stringify(data) ).length < 3 ) {
         return <Preloader />
       } else {
-        var ordersJSON = JSON.parse( JSON.stringify(OhlcvStore.ohlcvComputed[key]) )
+        var ordersJSON = JSON.parse( JSON.stringify(data) )
         ordersJSON = ordersJSON.map(function(order){
           order.date = new Date(order.date)
           return order
@@ -48,33 +51,94 @@ export default class ChartComponent extends React.Component {
     }
   }
 
-  getKey() {
-    try {
-      var {stock, pair, timeframe, url} = this.props.data
-      var serverBackend = OhlcvStore.serverBackend
-      var stockLowerCase = stock.toLowerCase()
-      var resultUrl = template(url, { stock, stockLowerCase, pair, timeframe, serverBackend })
-      var key = `${stock}--${pair}--${timeframe}--${resultUrl}`
-      return key
-    }	catch(err) { return undefined }
-  }
-  componentWillMount() {
-    var key = this.getKey()
-    OhlcvStore.count(1, key)
-  }
-  componentWillUnmount() {
-    var key = this.getKey()
-    OhlcvStore.count(-1, key)
-  }
-  componentWillUpdate() {
-    var key = this.getKey()
-    OhlcvStore.count(-1, key)
-  }
-  componentDidUpdate() {
-    var key = this.getKey()
-    OhlcvStore.count(1, key)
+  // getKey() {
+  //   try {
+  //     var {stock, pair, timeframe, url} = this.props.data
+  //     var serverBackend = OhlcvStore.serverBackend
+  //     var stockLowerCase = stock.toLowerCase()
+  //     var resultUrl = template(url, { stock, stockLowerCase, pair, timeframe, serverBackend })
+  //     var key = `${stock}--${pair}--${timeframe}--${resultUrl}`
+  //     return key
+  //   }	catch(err) { return undefined }
+  // }
+  async fetchOhlcv_kupi(stockLowerCase, pair, timeframe) {
+    return axios.get(`${this.state.serverBackend}/api/${stockLowerCase}/candles/${pair}/${timeframe}`)
+    .then((response) => {
+      return response.data
+    })
+    .catch(() => {
+      this.state.tube = 'ccxt'
+      return []
+    })
   }
 
+  async fetchOhlcv_ccxt(stockLowerCase, pair, timeframe) {
+    return axios.get(`/user-api/ccxt/${stockLowerCase}/candles/${pair}/${timeframe}`)
+    .then((response) => {
+      return response.data
+    })
+    .catch(() => {
+      return []
+    })
+  }
+
+  async fetchOhlcv() {
+    const {stock, pair, timeframe} = this.props.data
+    var stockLowerCase = stock.toLowerCase()
+
+    var data
+    if (this.state.tube === 'ccxt') {
+      data = await this.fetchOhlcv_ccxt(stockLowerCase, pair, timeframe)
+    } else {
+      data = await this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe)
+    }
+    if (this.state.hash === JSON.stringify(data)) return true
+    this.state.hash = JSON.stringify(data)
+
+    data = _.map(data, (item)=>{
+      return {
+        'date': new Date(item[0]),
+        'open': item[1],
+        'high': item[2],
+        'low': item[3],
+        'close': item[4],
+        'volume': item[5],
+        'absoluteChange': '',
+        'dividend': '',
+        'percentChange': '',
+        'split': '',
+      }
+    })
+    this.setState({
+      data: data
+    })
+  }
+
+  start() {
+    this.setState({
+      interval: setInterval(()=>{
+        this.fetchOhlcv()
+      }, this.state.timer)
+    })
+  }
+  finish() {
+    if (this.state.interval) {
+      clearInterval(this.state.interval)
+      this.setState({ interval: null })
+    }
+  }
+  componentDidMount() {
+    this.start()
+  }
+  componentWillUnmount() {
+    this.finish()
+  }
+  // componentWillUpdate() {
+  //   this.finish()
+  // }
+  // componentDidUpdate() {
+  //   this.start()
+  // }
 }
 
 
