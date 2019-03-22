@@ -6,27 +6,21 @@ import InputAdornment from '@material-ui/core/InputAdornment'
 import axios from 'axios'
 import Alert from 'react-s-alert'
 
-// import CreateOrderStore from 'stores/CreateOrderStore'
-import BalanceStore from 'stores/BalanceStore'
-
 @observer
 class CreateOrder extends React.Component {
   state = {
     interval: '',
-    data: [],
+    timer: 1000,
     form: { price: "", amount: "", total: ""},
-    available: {
+    data: {
       buy: 0,
       sell: 0
     }
   }
   render() {
-    const {pair, type, stock, accountId} = this.props.data
+    const {pair, type} = this.props.data
     var form = this.state.form
-    // var available = this.state.available
-    // var available = this.state.available
-    var key = `${type}--${stock}--${accountId}`
-    var available = BalanceStore.available(stock, pair, accountId)
+    var available = this.state.data
     return (
       <div className="simpleForm">
         <div className="createOrder-header">
@@ -124,54 +118,48 @@ class CreateOrder extends React.Component {
     })
   }
 
-  // setPrice(price) {
-  //   var form = this.state.form
-  //   if (form === undefined) form = { price: "", amount: "", total: ""}
-  //   form.price = price
-  //   form.price = price
-  // }
+  fetchBalanceAvailable(){
+    var {stock, pair, accountId} = this.props.data
+    axios.post(`/user-api/balance/available`, {
+      stock, pair, accountId
+    })
+    .then(response => {
+      if (this.state.hash === JSON.stringify(response.data)) return true
+      this.setState({
+        hash: JSON.stringify(response.data),
+        data: response.data
+      })
+    })
+    .catch(error => {
+      console.log(error)
+      this.setState({
+        data: {
+          buy: 0,
+          sell: 0
+        }
+      })
+    })
+  }
 
-  // setAmount(amount) {
-  //   var form = this.state.form
-  //   if (form === undefined) form = { price: "", amount: "", total: ""}
-  //   form.amount = amount
-  //   form.amount = amount
-  // }
-
-  // setTotal(total) {
-  //   var form = this.state.form
-  //   if (form === undefined) form = { price: "", amount: "", total: ""}
-  //   form.total = total.toFixed(8)
-  //   form.total = total.toFixed(8)
-  // }
-
-  // componentDidMount() {
-  //   const {stock, type, pair, accountId} = this.props.data
-  //   var key = `${type}--${stock}--${accountId}`
-  //   BalanceStore.fetchBalance(stock, key, type, accountId)
-  //   setTimeout(()=>{
-  //     BalanceStore.fetchBalance(stock, key, type, accountId)
-  //   }, 3000)
-
-  //   this.setState({
-  //     interval: setInterval(()=>{
-  //       var available = BalanceStore.available(stock, pair, accountId)
-  //       console.log(available)
-  //       if (JSON.stringify(available) !== JSON.stringify(this.state.available)) {
-  //         this.setState({
-  //           available: available
-  //         })
-  //       }
-  //     }, 1000)
-  //   })
-  // }
-
-  // componentWillUnmount() {
-  //   if (this.state.interval) {
-  //     clearInterval(this.state.interval)
-  //     this.setState({ timer: null })
-  //   }
-  // }
+  start() {
+    this.setState({
+      interval: setInterval(()=>{
+        this.fetchBalanceAvailable()
+      }, this.state.timer)
+    })
+  }
+  finish() {
+    if (this.state.interval) {
+      clearInterval(this.state.interval)
+      this.setState({ interval: null })
+    }
+  }
+  componentDidMount() {
+    this.start()
+  }
+  componentWillUnmount() {
+    this.finish()
+  }
 }
 
 export default CreateOrder
