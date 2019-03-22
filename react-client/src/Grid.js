@@ -29,6 +29,9 @@ class Grid extends React.Component {
     var drawer = (this.props.data && this.props.data.aside)
     var drawerName = drawer ? 'aside-right-second' : 'aside-left-first'
     var dashboardActiveId = (this.props.data && this.props.data.dashboardId) || DashboardsStore.dashboardActiveId
+    if (dashboardActiveId === '') {
+      return <div></div>
+    }
     return (
       <div>
         <GridLayout

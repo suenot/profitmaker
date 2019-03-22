@@ -6,15 +6,21 @@ import moment from 'moment'
 import Preloader from 'core_components/Preloader'
 import WidgetNotification from 'core_components/WidgetNotification'
 import Demo from './Demo'
-
-import OpenOrdersStore from 'stores/OpenOrdersStore'
+import axios from 'axios'
+import Alert from 'react-s-alert'
 
 @observer
 class OpenOrders extends React.Component {
+  state = {
+    interval: '',
+    hash: '',
+    data: [],
+    timer: 10000,
+  }
+
   render() {
     const {stock, accountId, pair, demo} = this.props.data
-    var key = `${stock}--${pair}--${accountId}`
-    var data = OpenOrdersStore.openOrders[key]
+    var data = this.state.data
 
     if (demo) {
       data = Demo
@@ -26,7 +32,6 @@ class OpenOrders extends React.Component {
     } else if (data === undefined || _.isEmpty(data) || data.length === 0 ) {
       return <div className="preloader-center">
         <WidgetNotification type="info" msg="No data"/>
-        <Preloader />
       </div>
     }
 
@@ -83,21 +88,72 @@ class OpenOrders extends React.Component {
       </div>
     )
   }
-  cancelOrder(id, symbol, _id, stock, accountId, e) {
-    OpenOrdersStore.cancelOrder(id, symbol, _id, stock, accountId)
+  cancelOrder(id, symbol, _id, stock, accountId) {
+    var cancelMsg = stock + ': '+ symbol + ' canceling #' + id
+    Alert.warning(cancelMsg)
+    axios.post(`/user-api/cancelOrder/`, {
+      id: id,
+      _id: _id,
+      symbol: symbol,
+      stock: stock,
+      accountId: accountId
+    }).then((response) => {
+      Alert.success('orderCanceled')
+    }).catch((error) => {
+      try {
+        Alert.error(error.response.data.error)
+      } catch(err) {
+        Alert.error(JSON.stringify(error))
+      }
+
+    })
   }
-  componentWillMount() {
-    OpenOrdersStore.count(1, this.props.data)
+
+
+  fetchOpenOrders(){
+    var {stock, pair, accountId} = this.props.data
+    axios.get(`/user-api/openOrders/${accountId}/${pair}`)
+    .then((response) => {
+      if (this.state.hash === JSON.stringify(response.data)) return true
+      this.setState({
+        hash: JSON.stringify(response.data)
+      })
+      this.setState({
+        data: response.data
+      })
+    })
+    .catch((error) => {
+      this.setState({
+        data: 'error'
+      })
+    })
+  }
+
+  start() {
+    this.setState({
+      interval: setInterval(()=>{
+        this.fetchOpenOrders()
+      }, this.state.timer)
+    })
+  }
+  finish() {
+    if (this.state.interval) {
+      clearInterval(this.state.interval)
+      this.setState({ interval: null })
+    }
+  }
+  componentDidMount() {
+    this.start()
   }
   componentWillUnmount() {
-    OpenOrdersStore.count(-1, this.props.data)
+    this.finish()
   }
-  componentWillUpdate() {
-    OpenOrdersStore.count(-1, this.props.data)
-  }
-  componentDidUpdate() {
-    OpenOrdersStore.count(1, this.props.data)
-  }
+  // componentWillUpdate() {
+  //   this.finish()
+  // }
+  // componentDidUpdate() {
+  //   this.start()
+  // }
 }
 
 export default OpenOrders

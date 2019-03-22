@@ -2,6 +2,7 @@ const _ = require('lodash')
 const express = require('express')
 const serializeError = require('serialize-error')
 var balanceHistory = require('../core_components/balanceHistory')
+var {balanceAvailable} = require('../core_components/balanceAvailable')
 var {getOpenOrders} = require('../core_components/openOrders')
 var {getMyTradesFromVariable} = require('../core_components/getMyTrades')
 var createOrder = require('../core_components/createOrder')
@@ -47,6 +48,16 @@ router.post('/balance', authMiddleware, async function (req, res) {
       var result = await balanceHistory(stock)
       res.json(result)
     }
+  } catch (err) {
+    res.status(500).send({error: serializeError(err).message})
+  }
+})
+
+router.post('/balance/available', authMiddleware, async function (req, res) {
+  try {
+    var {stock, pair, accountId} = req.body
+    var result = balanceAvailable(stock, pair, accountId)
+    res.json(result)
   } catch (err) {
     res.status(500).send({error: serializeError(err).message})
   }

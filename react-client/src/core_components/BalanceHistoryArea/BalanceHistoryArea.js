@@ -4,16 +4,22 @@ import ReactEcharts from 'echarts-for-react'
 import Preloader from 'core_components/Preloader'
 import WidgetNotification from 'core_components/WidgetNotification'
 import Demo from './Demo'
-
-import BalanceStore from 'stores/BalanceStore'
+import axios from 'axios'
 
 @observer
 class BalancePie extends React.Component {
-  render() {
-    const {type, stock, demo, accountId} = this.props.data
-    const key = `${type}--${stock}--${accountId}`
+  state = {
+    interval: '',
+    hash: '',
+    data: [],
+    timer: 10000,
 
-    var data = BalanceStore.balance[key]
+    precision: 8,
+  }
+
+  render() {
+    const {demo} = this.props.data
+    var data = this.state.data
 
     if (demo) {
       data = Demo
@@ -79,22 +85,51 @@ class BalancePie extends React.Component {
       </div>
     )
   }
-  componentDidMount() {
-    BalanceStore.count(1, this.props.data)
-    // TODO: fix thix hack
-    setTimeout(()=>{
-      this.forceUpdate()
-    }, 2000)
+  fetchBalance(){
+    var {stock, type, accountId} = this.props.data
+    const key = `${type}--${stock}--${accountId}`
+    axios.post(`/user-api/balance/`, {
+      type, key, stock, accountId
+    })
+    .then(response => {
+      if (this.state.hash === JSON.stringify(response.data)) return true
+      this.setState({
+        hash: JSON.stringify(response.data),
+        data: response.data
+      })
+    })
+    .catch(error => {
+      this.setState({
+        data: 'error'
+      })
+    })
   }
-  componentDidUpdate() {
-    BalanceStore.count(1, this.props.data)
+
+  start() {
+    this.setState({
+      interval: setInterval(()=>{
+        this.fetchBalance()
+      }, this.state.timer)
+    })
+  }
+  finish() {
+    if (this.state.interval) {
+      clearInterval(this.state.interval)
+      this.setState({ interval: null })
+    }
+  }
+  componentDidMount() {
+    this.start()
   }
   componentWillUnmount() {
-    BalanceStore.count(-1, this.props.data)
+    this.finish()
   }
-  componentWillUpdate() {
-    BalanceStore.count(-1, this.props.data)
-  }
+  // componentWillUpdate() {
+  //   this.finish()
+  // }
+  // componentDidUpdate() {
+  //   this.start()
+  // }
 }
 
 export default BalancePie
