@@ -12,13 +12,14 @@ import SettingsStore from './SettingsStore'
 import DrawersStore from './DrawersStore'
 
 
-@version(15)
+@version(16)
 class DashboardsStore {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'dashboards' })
     trunk.init().then(() => {
       if (_.isEmpty(this.dashboards)) {
         this.dashboards = dashboards
+        this.dashboardActiveId = _.find(this.dashboards, ['side', 'left']) && _.find(this.dashboards, ['side', 'left']).id || ''
       }
     })
     reaction(
@@ -30,7 +31,7 @@ class DashboardsStore {
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
   @observable dashboards = {}
-  @observable dashboardActiveId = _.find(this.dashboards, ['side', 'left']) && _.find(this.dashboards, ['side', 'left']).id || ''
+  @observable dashboardActiveId = ''
   @ignore @observable drawerDashboardActiveId = ''
 
   @computed get name() { return this.dashboards[this.dashboardActiveId].name }
