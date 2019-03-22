@@ -13,6 +13,10 @@ Vue.use(VueVirtualScroller)
 import VueBus from 'vue-bus'
 Vue.use(VueBus)
 
+import ElementUI from 'element-ui'
+import 'element-ui/lib/theme-chalk/index.css'
+Vue.use(ElementUI)
+
 import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
 Vue.use(Vuetify, {

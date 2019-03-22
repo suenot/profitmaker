@@ -2,6 +2,26 @@
   <div>
     <div class="aside-left">
       <ul>
+        <el-tooltip content="Trade" placement="right">
+          <li><img src="/img/widgets/002-business-and-finance.svg"></li>
+        </el-tooltip>
+        <el-tooltip content="Balance" placement="right">
+          <li><img src="/img/widgets/040-business-and-finance-18.svg"></li>
+        </el-tooltip>
+
+
+
+      </ul>
+      <div class="spacer"></div>
+      <ul class="ul-bottom">
+        <el-tooltip content="Login" placement="right">
+          <li><img src="/img/widgets/051-user.svg"></li>
+        </el-tooltip>
+        <el-tooltip content="User" placement="right">
+          <li class="avatar"><img src="/_img/avatar.jpeg"></li>
+        </el-tooltip>
+      </ul>
+      <!-- <ul>
         <li @click="state.addDashboard()"><v-icon>add_to_queue</v-icon></li>
         <li
           v-for="dashboard in state.dashboards"
@@ -12,9 +32,9 @@
         >
           <img :src="dashboard.icon" alt="">
         </li>
-        <!-- <li @click="addWidget()"><v-icon>add</v-icon></li> -->
+        <li @click="addWidget()"><v-icon>add</v-icon></li>
         <li @click="drawerRightToggle()"><v-icon>add</v-icon></li>
-      </ul>
+      </ul> -->
     </div>
     <div class="main">
        <router-view :key="$route.path" />
@@ -75,7 +95,8 @@ export default observer({
 <style lang="sass">
 .divider
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
-
+.spacer
+  flex: 1 0 auto
 .aside-left
   width: 72px
   max-width: 72px
@@ -84,6 +105,8 @@ export default observer({
   position: fixed
   left: 0
   top: 0
+  display: flex
+  flex-direction: column
   ul
     list-style: none
     margin: 0
@@ -108,6 +131,13 @@ export default observer({
       img
         width: 24px
         height: 24px
+    .avatar
+      img
+        border-radius: 100%
+
+  .ul-bottom
+    li:first-child
+      border-top: 1px solid rgba(0, 0, 0, 0.12)
 .aside-right
   width: 320px
   display: none
@@ -121,4 +151,17 @@ export default observer({
     display: block
 .main
   margin-left: 72px
+.kupi-table
+  table
+    border-collapse: collapse
+    width: 100%
+    tbody
+      tr:hover
+        cursor: pointer
+        background: rgba(0,0,0,0.08)
+      tr.died
+        opacity: 0.5
+    td, th
+      border: 1px solid rgba(0,0,0,0.12)
+      padding: 5px
 </style>
