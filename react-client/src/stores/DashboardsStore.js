@@ -12,20 +12,25 @@ import SettingsStore from './SettingsStore'
 import DrawersStore from './DrawersStore'
 
 
-@version(13)
+@version(15)
 class DashboardsStore {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'dashboards' })
-    trunk.init()
+    trunk.init().then(() => {
+      if (_.isEmpty(this.dashboards)) {
+        this.dashboards = dashboards
+      }
+    })
     reaction(
       () => this.widgets,
       () => trunk.updateStore(this)
     )
+
   }
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
 
-  @observable dashboards = dashboards
-  @observable dashboardActiveId = _.find(this.dashboards, ['side', 'left']).id || ''
+  @observable dashboards = {}
+  @observable dashboardActiveId = _.find(this.dashboards, ['side', 'left']) && _.find(this.dashboards, ['side', 'left']).id || ''
   @ignore @observable drawerDashboardActiveId = ''
 
   @computed get name() { return this.dashboards[this.dashboardActiveId].name }
@@ -183,12 +188,12 @@ class DashboardsStore {
   removeWidgetWithData(key, value) {
     DrawersStore.drawersClose()
     var dashboards = _.cloneDeep(this.dashboards)
-    _.forEach(dashboards, (dashboard, i)=>{
+    dashboards = _.map(dashboards, (dashboard, i)=>{
       var _dashboard = _.cloneDeep(dashboard)
       _dashboard.widgets = _.filter(_dashboard.widgets, function(widget) {
         return widget.data[key] !== value
       })
-      dashboards[i] = _dashboard
+      return _dashboard
     })
     this.dashboards = dashboards
   }
