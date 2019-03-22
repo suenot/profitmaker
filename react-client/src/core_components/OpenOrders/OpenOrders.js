@@ -115,7 +115,9 @@ class OpenOrders extends React.Component {
     axios.get(`/user-api/openOrders/${accountId}/${pair}`)
     .then((response) => {
       if (this.state.hash === JSON.stringify(response.data)) return true
-      this.state.hash = JSON.stringify(response.data)
+      this.setState({
+        hash: JSON.stringify(response.data)
+      })
       this.setState({
         data: response.data
       })

@@ -106,7 +106,9 @@ class Pairs extends React.Component {
 
 
     if (this.hash === JSON.stringify(data)) return true
-    this.hash = JSON.stringify(data)
+    this.setState({
+      hash: JSON.stringify(data)
+    })
 
     this.setState({
       data: data

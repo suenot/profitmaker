@@ -10,7 +10,7 @@ class BalanceStore {
       _.forEach(this.counters, (counter, key) => {
         if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) {
           var [type, stock, accountId] = key.split('--')
-          console.log(type, stock, accountId)
+          // console.log(type, stock, accountId)
 
           this.fetchBalance(stock, key, type, accountId)
         }
@@ -19,7 +19,7 @@ class BalanceStore {
     start()
     setInterval(() => {
       start()
-    }, 2000)
+    }, 5000)
   }
 
   @computed get terminalBackend() {return SettingsStore.terminalBackend.value }
@@ -46,13 +46,14 @@ class BalanceStore {
     catch(err) {
       console.log(err)
       return {
-        buy: availableBuy ? availableBuy.free : 0,
-        sell: availableSell ? availableSell.free : 0
+        buy: 0,
+        sell: 0
       }
     }
   }
 
   @action fetchBalance(stock, key, type, accountId){
+    if (this.balance[key] === undefined) this.balance[key] = {}
     // axios.post(`/user-api/balance/${type}/${stock}`)
     axios.post(`/user-api/balance/`, {
      type, key, stock, accountId
@@ -64,6 +65,7 @@ class BalanceStore {
     })
     .catch(error => {
       this.balance[key] = 'error'
+      this.calculateAwailable()
     })
   }
 

@@ -213,7 +213,9 @@ class Orders extends React.Component {
     }
 
     if (this.state.hash === JSON.stringify(data)) return true
-    this.state.hash = JSON.stringify(data)
+    this.setState({
+      hash: JSON.stringify(data)
+    })
 
     var sum = {asks: 0, bids: 0}
 

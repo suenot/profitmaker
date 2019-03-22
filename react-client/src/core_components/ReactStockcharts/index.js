@@ -93,7 +93,9 @@ export default class ChartComponent extends React.Component {
       data = await this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe)
     }
     if (this.state.hash === JSON.stringify(data)) return true
-    this.state.hash = JSON.stringify(data)
+    this.setState({
+      hash: JSON.stringify(data)
+    })
 
     data = _.map(data, (item)=>{
       return {

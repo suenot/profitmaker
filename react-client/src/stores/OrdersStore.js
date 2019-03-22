@@ -16,6 +16,7 @@ class OrdersStore {
 
   @action start() {
     _.forEach(this.counters, (counter, key) => {
+      console.log(counter, key)
       var [stock, pair] = key.split('--')
       if ( counter > 0 && (SettingsStore.fetchEnabled.value) ) this.fetchOrders(stock, pair)
     })

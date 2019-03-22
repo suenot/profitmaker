@@ -82,8 +82,9 @@ class MyTrades extends React.Component {
     axios.get(`/user-api/myTrades/${accountId}/${pair}`)
     .then((response) => {
       if (this.state.hash === JSON.stringify(response.data)) return true
-      this.state.hash = JSON.stringify(response.data)
-
+      this.setState({
+        hash: JSON.stringify(response.data)
+      })
       var myTrades = response.data
       myTrades = myTrades.map((trade)=>{
         trade.uuid = uuidv1()

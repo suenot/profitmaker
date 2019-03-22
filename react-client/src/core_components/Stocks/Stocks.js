@@ -142,9 +142,8 @@ class Stocks extends React.Component {
     if (this.state.hash === JSON.stringify(data)) {
       return true
     }
-    this.state.hash = JSON.stringify(data)
-
     this.setState({
+      hash: JSON.stringify(data),
       dataComputed: data
     })
   }
