@@ -18,7 +18,8 @@ export default class ChartComponent extends React.Component {
     hash: '',
     data: [],
     timer: 1000,
-    serverBackend: 'https://kupi.network'
+    serverBackend: 'https://kupi.network',
+    firstFetch: true,
   }
 
   componentDidCatch (error, info) {
@@ -90,7 +91,17 @@ export default class ChartComponent extends React.Component {
     if (this.state.tube === 'ccxt') {
       data = await this.fetchOhlcv_ccxt(stockLowerCase, pair, timeframe)
     } else {
-      data = await this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe)
+      if (this.state.firstFetch) {
+        data = await Promise.race([
+          this.fetchOhlcv_ccxt(stockLowerCase, pair, timeframe),
+          this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe)
+        ])
+        this.setState({
+          firstFetch: false
+        })
+      } else {
+        data = await this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe)
+      }
     }
     if (this.state.hash === JSON.stringify(data)) return true
     this.setState({
