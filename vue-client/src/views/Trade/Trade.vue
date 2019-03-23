@@ -8,17 +8,24 @@
         <div class="candles-wrapper">
           <Candles/>
         </div>
-        <div class="create-order-wrapper">create order</div>
+        <div class="create-order-wrapper">
+          <div class="createOrder">
+            <CreateOrder type="buy"/>
+          </div>
+          <div class="createOrder">
+            <CreateOrder type="sell"/>
+          </div>
+        </div>
       </div>
       <div class="flex-column trades-wrapper section">
         <Trades/>
       </div>
     </div>
     <div class="flex open-orders-wrapper">
-      open orders
+      <OpenOrders/>
     </div>
     <div class="flex my-trades-wrapper">
-      my trades
+      <MyTrades/>
     </div>
 
 
@@ -47,6 +54,11 @@
   flex: 1 0 auto
   border-bottom: 1px solid #d9d9d9
   // background: orange
+.create-order-wrapper
+  display: flex
+  flex: 1 0 auto
+  .createOrder
+    flex: 0 0 50%
 .my-trades-wrapper
   flex: 1 0 auto
   // background: purple
