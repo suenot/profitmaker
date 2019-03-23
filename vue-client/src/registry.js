@@ -1,25 +1,21 @@
 import Vue from 'vue'
 
-import Candles from './core_components/Candles/Candles.vue'
-import Orders from './core_components/Orders/Orders.vue'
-import CreateOrder from './core_components/CreateOrder/CreateOrder.vue'
-import OpenOrders from './core_components/OpenOrders/OpenOrders.vue'
-import Trades from './core_components/Trades/Trades.vue'
-import MyTrades from './core_components/MyTrades/MyTrades.vue'
-import Handsontable from './core_components/Handsontable/Handsontable.vue'
-import Grid from 'vue-grid-canvas'
-import GridCanvas from './core_components/GridCanvas/GridCanvas.vue'
-import KupiTable from './core_components/KupiTable/KupiTable.vue'
-import Market from './utils_components/Market/Market.vue'
-Vue.component('Candles', Candles)
-Vue.component('Orders', Orders)
-Vue.component('CreateOrder', CreateOrder)
-Vue.component('OpenOrders', OpenOrders)
-Vue.component('Trades', Trades)
-Vue.component('MyTrades', MyTrades)
-Vue.component('Handsontable', Handsontable)
-Vue.component('GridCanvasBase', Grid)
-Vue.component('GridCanvas', GridCanvas)
-Vue.component('KupiTable', KupiTable)
-Vue.component('Market', Market)
+
+Vue.component('Candles', require('./core_components/Candles/Candles.vue').default)
+Vue.component('Orders', require('./core_components/Orders/Orders.vue').default)
+Vue.component('CreateOrder', require('./core_components/CreateOrder/CreateOrder.vue').default)
+Vue.component('OpenOrders', require('./core_components/OpenOrders/OpenOrders.vue').default)
+Vue.component('Trades', require('./core_components/Trades/Trades.vue').default)
+Vue.component('MyTrades', require('./core_components/MyTrades/MyTrades.vue').default)
+Vue.component('Balance', require('./core_components/Balance/Balance.vue').default)
+Vue.component('BalanceTable', require('./core_components/Balance/BalanceTable.vue').default)
+Vue.component('BalancePie', require('./core_components/Balance/BalancePie.vue').default)
+
+
+Vue.component('Market', require('./utils_components/Market/Market.vue').default)
+// Vue.component('GridCanvasBase', require('vue-grid-canvas'))
+// Vue.component('GridCanvas', require('./core_components/GridCanvas/GridCanvas.vue'))
+// Vue.component('KupiTable', require('./core_components/KupiTable/KupiTable.vue'))
+// Vue.component('Handsontable', require('./core_components/Handsontable/Handsontable.vue'))
+
 

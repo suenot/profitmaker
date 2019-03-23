@@ -1,5 +1,5 @@
 <template>
-  <div></div>
+  <div><Balance/></div>
 </template>
 
 <script></script>
