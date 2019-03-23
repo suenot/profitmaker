@@ -13,21 +13,21 @@ export default new Router({
       path: '/dashboard/:id',
       name: 'Dashboard',
       component: Dashboard,
-      // props: true,
+      props: true,
       meta: { reuse: false }
     },
     {
       path: '/trade',
       name: 'Trade',
       component: Trade,
-      // props: true,
+      props: true,
       meta: { reuse: false }
     },
     {
       path: '/balance',
       name: 'Balance',
       component: Balance,
-      // props: true,
+      props: true,
       meta: { reuse: false }
     }
   ]

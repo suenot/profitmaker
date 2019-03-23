@@ -10,6 +10,9 @@ Vue.component('MyTrades', require('./core_components/MyTrades/MyTrades.vue').def
 Vue.component('Balance', require('./core_components/Balance/Balance.vue').default)
 Vue.component('BalanceTable', require('./core_components/Balance/BalanceTable.vue').default)
 Vue.component('BalancePie', require('./core_components/Balance/BalancePie.vue').default)
+Vue.component('Selector', require('./core_components/Selector/Selector.vue').default)
+Vue.component('Stocks', require('./core_components/Stocks/Stocks.vue').default)
+Vue.component('Pairs', require('./core_components/Pairs/Pairs.vue').default)
 
 
 Vue.component('Market', require('./utils_components/Market/Market.vue').default)

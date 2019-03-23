@@ -1,5 +1,5 @@
 <template>
-  <ve-candle :data="dataComputed" :settings="chartSettings"></ve-candle>
+  <ve-candle :data="dataComputed" :settings="chartSettings" height="500px"></ve-candle>
 </template>
 
 

@@ -6,6 +6,10 @@ import './registry'
 // import Chart from './utils_components/Chart.vue'
 // Vue.component('Chart', Chart)
 
+import Movue from 'movue'
+import * as mobx from 'mobx'
+Vue.use(Movue, mobx)
+
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css"
 import VueVirtualScroller from 'vue-virtual-scroller'
 Vue.use(VueVirtualScroller)

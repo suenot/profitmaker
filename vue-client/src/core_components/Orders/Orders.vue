@@ -23,13 +23,13 @@
 </template>
 
 <script>
-  // import monitorComputed from "./Demo.js"
-  import axios from 'axios'
-  import moment from 'moment'
-  import _ from 'lodash'
-  import uuidv1 from 'uuid/v1'
+import CoinsStore from '../../stores/CoinsStore'
+import axios from 'axios'
+import moment from 'moment'
+import _ from 'lodash'
+import uuidv1 from 'uuid/v1'
 
-  export default {
+export default {
   data() {
     return {
       data: require('./data.js').default,

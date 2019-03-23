@@ -17,8 +17,13 @@
           </div>
         </div>
       </div>
-      <div class="flex-column trades-wrapper section">
-        <Trades/>
+      <div>
+        <div class="flex selector-wrapper">
+          <Selector/>
+        </div>
+        <div class="flex-column trades-wrapper section">
+          <Trades/>
+        </div>
       </div>
     </div>
     <div class="flex open-orders-wrapper">
@@ -27,8 +32,6 @@
     <div class="flex my-trades-wrapper">
       <MyTrades/>
     </div>
-
-
   </div>
 </template>
 
@@ -37,32 +40,32 @@
 <style lang="sass">
 
 .orders-wrapper
-  // background: blue
-  flex: 0 0 320px
+  flex: 0 0 420px
   height: 100vh
+  max-height: 100vh
 .market-wrapper
   flex: 1 0 auto
+  height: 100vh
+  max-height: 100vh
   .candles-wrapper
     border-bottom: 1px solid #d9d9d9
-    height: 400px
-  // background: red
+    height: 500px
 .trades-wrapper
   flex: 0 0 320px
-
-  // background: yellow
+  height: calc(100vh - 79px)
+  max-height: calc(100vh - 79px)
 .open-orders-wrapper
   flex: 1 0 auto
   border-bottom: 1px solid #d9d9d9
-  // background: orange
 .create-order-wrapper
   display: flex
   flex: 1 0 auto
+  width: 100%
   .createOrder
     flex: 0 0 50%
 .my-trades-wrapper
+  width: 100%
   flex: 1 0 auto
-  // background: purple
-  // color: white
 
 .flex
   display: flex
@@ -73,4 +76,6 @@
   border: 1px solid #d9d9d9
   margin: -1px
   background: white
+  overflow-y: scroll
+  overflow-x: hidden
 </style>

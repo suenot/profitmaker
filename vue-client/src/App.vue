@@ -3,14 +3,11 @@
     <div class="aside-left">
       <ul>
         <el-tooltip content="Trade" placement="right">
-          <li><img src="/img/widgets/002-business-and-finance.svg"></li>
+          <router-link tag="li" to="/trade"><img src="/img/widgets/002-business-and-finance.svg"></router-link>
         </el-tooltip>
         <el-tooltip content="Balance" placement="right">
-          <li><img src="/img/widgets/040-business-and-finance-18.svg"></li>
+          <router-link tag="li" to="/balance"><img src="/img/widgets/040-business-and-finance-18.svg"></router-link>
         </el-tooltip>
-
-
-
       </ul>
       <div class="spacer"></div>
       <ul class="ul-bottom">
@@ -93,6 +90,10 @@ export default observer({
 </script>
 
 <style lang="sass">
+body
+  font-family: 'Helvetica', 'Arial', sans-serif
+.muted
+  color: #969595
 .divider
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
 .spacer
@@ -152,6 +153,7 @@ export default observer({
 .main
   margin-left: 72px
 .kupi-table
+  width: 100%
   table
     border-collapse: collapse
     width: 100%
