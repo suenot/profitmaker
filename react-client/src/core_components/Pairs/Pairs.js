@@ -93,7 +93,17 @@ class Pairs extends React.Component {
     if (this.state.tube === 'ccxt') {
       data = await this.fetchPairs_ccxt(stockLowerCase)
     } else {
-      data = await this.fetchPairs_kupi(stockLowerCase)
+      if (this.state.firstFetch) {
+        data = await Promise.race([
+          this.fetchPairs_ccxt(stockLowerCase),
+          this.fetchPairs_kupi(stockLowerCase)
+        ])
+        this.setState({
+          firstFetch: false
+        })
+      } else {
+        data = await this.fetchPairs_kupi(stockLowerCase)
+      }
     }
 
     data = data.map((pair) => {
