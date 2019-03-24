@@ -32,6 +32,12 @@
     <div class="flex my-trades-wrapper">
       <MyTrades/>
     </div>
+    <div class="flex stocks-wrapper">
+      <Stocks/>
+    </div>
+    <div class="flex pairs-wrapper">
+      <Pairs/>
+    </div>
   </div>
 </template>
 
