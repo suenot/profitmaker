@@ -1,5 +1,6 @@
 <template>
   <div class="kupi-table">
+    {{percentInverseToFixed}}
     <table>
       <thead>
         <tr>
@@ -10,7 +11,9 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="order in dataComputed.asks" :key="order.id">
+        <tr v-for="order in dataComputed.asks" :key="order.id"
+          :style="`background: linear-gradient(to right, #ffffff 0%, #ffffff ${order.percentInverseToFixed}%, ${color} ${order.percentInverseToFixed}%, ${color} 100%)`"
+        >
           <td>{{order.price.toFixed(8)}}</td>
           <td>{{order.amount.toFixed(8)}}</td>
           <td>{{order.total.toFixed(8)}}</td>
@@ -34,11 +37,14 @@ export default {
     return {
       data: require('./data.js').default,
       type: "asks",
-      visualMode: "crocodile",
-      visualModeMax: "total sum",
+      visualMode: "walls",
+      visualModeMax: "fixed",
       visualModeCrocodileMax: 10000,
       visualModeWallsMax: 1000,
-      pair: 'ETH_BTC'
+      pair: 'ETH_BTC',
+
+      color: '',
+      percentInverseToFixed: '',
     }
   },
   created() {
@@ -54,6 +60,9 @@ export default {
     },
     dataComputed() {
       var data = _.cloneDeep(this.data)
+
+      data.asks = data.asks.slice(0, 40)
+      data.bids = data.bids.slice(0, 40)
 
       var sum = {asks: 0, bids: 0}
       for( let type of Object.keys(sum) ) {
@@ -79,6 +88,41 @@ export default {
           })
         }
       }
+
+      var [coinFrom, coinTo] = this.pair.split('_')
+      this.color = this.type === 'asks' ? 'rgba(255, 138, 138, 0.42)' : 'rgba(78, 136, 71, 0.42)'
+
+      var asks = data['asks'].slice(0, 30)
+      if (this.type === 'both') {
+        asks = _.reverse(_.clone(asks))
+      }
+      var percent = 0
+
+      for( let type of Object.keys(sum) ) {
+        if ( !_.isEmpty(data[type]) ) {
+          data[type] = _.map(data[type], (order)=>{
+            if (this.visualMode !== 'none') {
+              if (this.visualModeMax === 'total sum') {
+                percent = this.visualMode === 'crocodile' ? order.sumPercent : order.totalPercent
+              } else { // fixed
+                if (this.visualMode === 'crocodile') {
+                  var visualModeCrocodileMaxInQuote = (CoinsStore.coins[coinTo] && CoinsStore.coins[coinTo].price_usd) ? (this.visualModeCrocodileMax / CoinsStore.coins[coinTo].price_usd) : 30
+                  if (visualModeCrocodileMaxInQuote >= order.total) percent = 100
+                  percent = order.sum / visualModeCrocodileMaxInQuote * 100
+                } else { // wall
+                  var visualModeWallsMaxInQuote = (CoinsStore.coins[coinTo] && CoinsStore.coins[coinTo].price_usd) ? (this.visualModeWallsMax / CoinsStore.coins[coinTo].price_usd) : 1
+                  if (visualModeWallsMaxInQuote >= order.total) percent = 100
+                  percent = order.total / visualModeWallsMaxInQuote * 100
+                }
+              }
+            }
+            var percentInverse = 100 - percent
+            order.percentInverseToFixed = percentInverse.toFixed(2)
+            return order
+          })
+        }
+      }
+
       return data
     }
 
