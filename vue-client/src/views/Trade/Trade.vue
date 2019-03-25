@@ -38,8 +38,6 @@
   </div>
 </template>
 
-<script></script>
-
 <style lang="sass">
 .main-container
   display: grid
