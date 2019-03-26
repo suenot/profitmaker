@@ -29,20 +29,20 @@
     <div class="flex my-trades-wrapper">
       <MyTrades/>
     </div>
-    <div class="flex stocks-wrapper">
+    <!-- <div class="flex stocks-wrapper">
       <Stocks/>
     </div>
     <div class="flex pairs-wrapper">
       <Pairs/>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <style lang="sass">
 .main-container
   display: grid
-  grid-template-columns: [start] 320px [line1] auto [line2] 320px [end]
-  grid-template-rows: [row1-start] 100px [selector] 500px [third-line] auto [last-line]
+  grid-template-columns: [start] 380px [line1] auto [line2] 290px [end]
+  grid-template-rows: [row1-start] 78px [selector] 500px [third-line] auto [last-line];
 .orders-wrapper
   grid-column: start / line1
   grid-row: row1-start / last-line

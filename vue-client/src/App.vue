@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="main"
-      :style="`margin: 0 ${left}px 0 ${right}px`"
+      :style="`margin: 0 ${right}px 0 ${left}px`"
     >
       <router-view :key="$route.path" />
     </div>
@@ -23,6 +23,7 @@ import Store from './stores/Store'
 
 export default observer({
   data: () => ({
+      flag: true,
       // dialog: false,
       // drawer: null,
       // drawerRight: null,
@@ -39,24 +40,18 @@ export default observer({
           width: 60,
           component: 'Menu',
         },
-        {
-          key: '3',
-          side: 'left',
-          width: 320,
-          component: 'Pairs',
-        },
-        {
-          key: '2',
-          side: 'right',
-          width: 320,
-          component: 'Stocks',
-        },
-        {
-          key: '4',
-          side: 'right',
-          width: 60,
-          component: 'Stocks',
-        },
+        // {
+        //   key: '3',
+        //   side: 'left',
+        //   width: 320,
+        //   component: 'Pairs',
+        // },
+        // {
+        //   key: '2',
+        //   side: 'right',
+        //   width: 320,
+        //   component: 'Stocks',
+        // },
       ]
     }
   ),
@@ -74,6 +69,18 @@ export default observer({
   },
   created() {
     // if (this.$route.name === 'Dashboard') this.dashboardActiveId = this.$route.params.id
+    // document.addEventListener('resize', this.asidesComputed)
+    // setTimeout(()=>{
+    //   // this.asidesComputed()
+    //   // this.flag = !this.flag
+    //   window.dispatchEvent(new Event('resize'))
+    // }, 10)
+    this.$nextTick(() => {
+      window.dispatchEvent(new Event('resize'))
+    })
+  },
+  mounted() {
+
   },
   methods: {
     // openDashboard: function(id) {
@@ -101,7 +108,13 @@ export default observer({
       this.right = right
       return asides
     }
-  }
+  },
+  // created() {
+  //   document.addEventListener('resize', this.asidesComputed)
+  // },
+  // destroyed() {
+  //   document.removeEventListener('resize', this.asidesComputed)
+  // }
 })
 </script>
 
