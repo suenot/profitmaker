@@ -16,6 +16,13 @@ export default {
       used: 0.1,
       totalBTC: 4,
       totalUSD: 40000,
+    },
+    {
+      shortName: 'DNT',
+      free: 0,
+      used: 0.00001,
+      totalBTC: 0.00001,
+      totalUSD: 1000,
     }
-  ],
+  ]
 }

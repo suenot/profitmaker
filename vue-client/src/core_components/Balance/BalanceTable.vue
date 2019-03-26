@@ -57,9 +57,7 @@ export default {
       data.datetime = data.datetime !== undefined ? moment(data.datetime).format('DD.MM.YY HH:mm') : '-'
       data.totalBTC = data.totalBTC ? data.totalBTC.toFixed(8) + ' BTC' : '0 BTC'
       data.totalUSD = data.totalUSD ? data.totalUSD.toFixed(2) + ' USD' : '0 USD'
-      // console.log(data.data)
       data.data = _.map(data.data, (item)=>{
-        // console.log(item)
         item.free = item.free ? item.free.toFixed(8) : 0
         item.used = item.used ? item.used.toFixed(8) : 0
         item.totalBTC = item.totalBTC ? item.totalBTC.toFixed(8) : 0
