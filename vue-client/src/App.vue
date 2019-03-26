@@ -1,44 +1,15 @@
 <template>
   <div>
-    <div class="aside-left">
-      <ul>
-        <el-tooltip content="Trade" placement="right">
-          <router-link tag="li" to="/trade"><img src="/img/widgets/002-business-and-finance.svg"></router-link>
-        </el-tooltip>
-        <el-tooltip content="Balance" placement="right">
-          <router-link tag="li" to="/balance"><img src="/img/widgets/040-business-and-finance-18.svg"></router-link>
-        </el-tooltip>
-      </ul>
-      <div class="spacer"></div>
-      <ul class="ul-bottom">
-        <el-tooltip content="Login" placement="right">
-          <li><img src="/img/widgets/051-user.svg"></li>
-        </el-tooltip>
-        <el-tooltip content="User" placement="right">
-          <li class="avatar"><img src="/_img/avatar.jpeg"></li>
-        </el-tooltip>
-      </ul>
-      <!-- <ul>
-        <li @click="state.addDashboard()"><v-icon>add_to_queue</v-icon></li>
-        <li
-          v-for="dashboard in state.dashboards"
-          :key="dashboard.id"
-          @click.left="openDashboard(dashboard.id)"
-          @click.right="state.removeDashboard(dashboard.id)"
-          :class="dashboard.id === dashboardActiveId ? 'active' : ''"
-        >
-          <img :src="dashboard.icon" alt="">
-        </li>
-        <li @click="addWidget()"><v-icon>add</v-icon></li>
-        <li @click="drawerRightToggle()"><v-icon>add</v-icon></li>
-      </ul> -->
+    <div class="main"
+      :style="`margin: 0 ${left}px 0 ${right}px`"
+    >
+      <router-view :key="$route.path" />
     </div>
-    <div class="main">
-       <router-view :key="$route.path" />
-    </div>
-    <div id="aside-right" :class="'aside-right' + (drawersStore.drawerRightOpen ? ' active' : '')">
-      <!-- <component is="Market"></component> -->
-      <Market />
+    <div
+      v-for="aside in asidesComputed" :key="aside.key" :class="`aside active aside-${aside.side}`"
+      :style="`left: ${aside.left}px; right: ${aside.right}px; width: ${aside.width}px;`"
+    >
+      <component :is="aside.component" />
     </div>
   </div>
 </template>
@@ -47,111 +18,128 @@
 import { observer } from 'mobx-vue'
 
 import DashboardsStore from './stores/DashboardsStore'
-import DrawersStore from './stores/DrawersStore'
+import Store from './stores/Store'
+// import DrawersStore from './stores/DrawersStore'
 
 export default observer({
   data: () => ({
-      dialog: false,
-      drawer: null,
-      drawerRight: null,
-      newId: '3',
-      state: DashboardsStore,
-      drawersStore: DrawersStore,
-      dashboardActiveId: ''
+      // dialog: false,
+      // drawer: null,
+      // drawerRight: null,
+      // newId: '3',
+      // state: DashboardsStore,
+      // drawersStore: DrawersStore,
+      // dashboardActiveId: '',
+      left: 0,
+      right: 0,
+      asides: [
+        {
+          key: '1',
+          side: 'left',
+          width: 60,
+          component: 'Menu',
+        },
+        {
+          key: '3',
+          side: 'left',
+          width: 320,
+          component: 'Pairs',
+        },
+        {
+          key: '2',
+          side: 'right',
+          width: 320,
+          component: 'Stocks',
+        },
+        {
+          key: '4',
+          side: 'right',
+          width: 60,
+          component: 'Stocks',
+        },
+      ]
     }
   ),
+  fromMobx: {
+    background: {
+      get() {
+        return Store.background
+      }
+    },
+    color: {
+      get() {
+        return Store.color
+      }
+    },
+  },
   created() {
-    if (this.$route.name === 'Dashboard') this.dashboardActiveId = this.$route.params.id
+    // if (this.$route.name === 'Dashboard') this.dashboardActiveId = this.$route.params.id
   },
   methods: {
-    openDashboard: function(id) {
-      this.$router.push({ name: 'Dashboard', params: { id: id } })
-      this.dashboardActiveId = id
-      // console.log(this.$route)
-      // console.log(id)
-    },
-    // addDashboard: function() {
-    //   this
-    // }
-    // editDashboard: function() {
-    //   this.drawerRight = !this.drawerRight
+    // openDashboard: function(id) {
+    //   this.$router.push({ name: 'Dashboard', params: { id: id } })
+    //   this.dashboardActiveId = id
     // },
-    // removeDashboard: function(id) {
-    //   this.$delete(this.dashboards, id)
-    // }
-    // addWidget: function() {
-    //   this.$bus.emit('addWidget')
-    // },
-    drawerRightToggle: function() {
-      DrawersStore.drawerRightToggle()
-    }
   },
+  computed: {
+    asidesComputed() {
+      var asides = _.cloneDeep(this.asides)
+      var left = 0
+      var right = 0
+      asides = _.map(asides, (aside)=>{
+        if (aside.side === 'left') {
+          aside.left = left
+          left += aside.width
+        } else {
+          aside.right = right
+          right += aside.width
+        }
+        return aside
+      })
+      console.log(asides)
+      this.left = left
+      this.right = right
+      return asides
+    }
+  }
 })
 </script>
 
 <style lang="sass">
 body
   font-family: 'Helvetica', 'Arial', sans-serif
+  &.day
+    background: #fff
+    color: #000
+  &.night
+    background: #000
+    color: #fff
 .muted
   color: #969595
 .divider
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
 .spacer
   flex: 1 0 auto
-.aside-left
-  width: 72px
-  max-width: 72px
-  border-right: 1px solid rgba(0, 0, 0, 0.12)
+
+.aside
+  width: 320px
+  z-index: 500000
   height: 100vh
   position: fixed
   left: 0
   top: 0
   display: flex
   flex-direction: column
-  ul
-    list-style: none
-    margin: 0
-    padding: 0
-    li
-      border-bottom: 1px solid rgba(0, 0, 0, 0.12)
-      padding: 10px
-      display: flex
-      justify-content: center
-      align-items: center
-      position: relative
-      &:hover
-        background: rgba(0, 0, 0, 0.08)
-        cursor: pointer
-      &.active:after
-        display: block
-        content: ''
-        position: absolute
-        right: 0px
-        border-right: 1px solid #049bfd
-        height: 100%
-      img
-        width: 24px
-        height: 24px
-    .avatar
-      img
-        border-radius: 100%
+  background: white
+  overflow-x: hidden
+  overflow-y: auto
+  &.aside-left
+    border-right: 1px solid rgba(0, 0, 0, 0.12)
+  &.aside-right
+    border-left: 1px solid rgba(0, 0, 0, 0.12)
+    left: auto
+    right: 0
 
-  .ul-bottom
-    li:first-child
-      border-top: 1px solid rgba(0, 0, 0, 0.12)
-.aside-right
-  width: 320px
-  display: none
-  position: fixed
-  right: 0
-  top: 0
-  height: 100%
-  border-left: 1px solid rgba(0, 0, 0, 0.12)
-  background: #fff
-  &.active
-    display: block
-.main
-  margin-left: 72px
 .kupi-table
   width: 100%
   table

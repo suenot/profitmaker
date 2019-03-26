@@ -47,10 +47,6 @@ export default {
     }
   },
   props: ['type', 'sort', 'thead'],
-  created() {
-  },
-  methods: {
-  },
   computed: {
     coinFrom() {
       return this.pair.split('_')[0]
@@ -61,9 +57,7 @@ export default {
     dataComputed() {
       var type = this.type
       var data = _.cloneDeep(this.data)
-
       data = data[type].slice(0, 40)
-
       var sum = {asks: 0, bids: 0}
       for( let [key, order] of Object.entries(data) ) {
         var price = order[0]
@@ -84,16 +78,10 @@ export default {
         order.totalPercentInverse = 100 - order.totalPercent
         order.sumPercentInverse = 100 - order.sumPercent
       })
-
-
       var [coinFrom, coinTo] = this.pair.split('_')
       this.color = type === 'asks' ? 'rgb(234, 0, 112)' : 'rgb(112, 168, 0)'
       this.background = type === 'asks' ? '#faeaf1' : '#f1fae8'
-
-
       var percent = 0
-
-
       data = _.map(data, (order)=>{
         if (this.visualMode !== 'none') {
           if (this.visualModeMax === 'total sum') {
@@ -114,14 +102,9 @@ export default {
         order.percentInverseToFixed = percentInverse.toFixed(2)
         return order
       })
-
-
       data = _.orderBy(data, ['price'], [this.sort])
-
       return data
     }
-
-
   }
 }
 </script>

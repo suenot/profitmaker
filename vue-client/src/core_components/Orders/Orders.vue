@@ -11,7 +11,6 @@
         <img src="/img/icons/type_asks.png" />
       </button>
     </div>
-
     <template v-if="type === 'both'">
       <OrdersSide type="asks" sort="desc" :thead="true"/>
       <OrdersSide type="bids" sort="desc" :thead="false"/>
@@ -27,12 +26,6 @@ export default {
     return {
       type: 'both'
     }
-  },
-  created() {
-  },
-  methods: {
-  },
-  computed: {
   }
 }
 </script>

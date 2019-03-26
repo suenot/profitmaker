@@ -7,6 +7,9 @@ import { observable, action, reaction, computed } from 'mobx'
 
 // @version(1)
 class Store {
+  @observable background = '#000'
+  @observable color = '#fff'
+
   @observable stock = 'BINANCE'
   @observable pair = 'ETH_BTC'
   @observable accountId = undefined
