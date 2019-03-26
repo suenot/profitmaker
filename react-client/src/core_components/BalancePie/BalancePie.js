@@ -46,7 +46,7 @@ class BalancePie extends React.Component {
         if ( (coin.totalUSD/totalUSD*100 ) > 5) {
           seriesData.push({
             name: coin.shortName,
-            value: coin.totalUSD.toFixed(8)
+            value: coin.totalUSD.toFixed(2)
           })
           legendData.push(coin.shortName)
           selected[coin.shortName] = true
@@ -58,7 +58,7 @@ class BalancePie extends React.Component {
     if (otherUSD !==0) {
       seriesData.push({
         name: 'Other',
-        value: otherUSD.toFixed(8)
+        value: otherUSD.toFixed(2)
       })
     }
     selected['Other'] = true
