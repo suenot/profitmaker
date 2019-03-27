@@ -1,4 +1,5 @@
 import { observable, action } from 'mobx'
+import uuidv1 from 'uuid/v1'
 
 class AsidesStore {
   constructor() {
@@ -10,18 +11,40 @@ class AsidesStore {
   }
 
   @observable asides = [
-
+    {
+      key: '1',
+      side: 'left',
+      width: 60,
+      component: 'Menu',
+    },
+    // {
+    //   key: '3',
+    //   side: 'left',
+    //   width: 320,
+    //   component: 'Pairs',
+    // },
+    // {
+    //   key: '2',
+    //   side: 'right',
+    //   width: 320,
+    //   component: 'Stocks',
+    // },
   ]
 
   @action getAsides(side) {
 
   }
 
-  @action asideAdd(aside, component, width, side, data, dashboardId, widgetId) {
-
+  @action addAside(component, side, width, data, dashboardId, widgetId) {
+    this.asides.push({
+      key: uuidv1(),
+      side: side || 'left',
+      width: width || 320,
+      component: component || 'Empty',
+    })
   }
 
-  @action asidesClose() {
+  @action closeAsides() {
 
   }
 }

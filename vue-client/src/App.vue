@@ -18,6 +18,7 @@
 import { observer } from 'mobx-vue'
 
 import DashboardsStore from './stores/DashboardsStore'
+import AsidesStore from './stores/AsidesStore'
 import Store from './stores/Store'
 // import DrawersStore from './stores/DrawersStore'
 
@@ -33,26 +34,26 @@ export default observer({
       // dashboardActiveId: '',
       left: 0,
       right: 0,
-      asides: [
-        {
-          key: '1',
-          side: 'left',
-          width: 60,
-          component: 'Menu',
-        },
-        // {
-        //   key: '3',
-        //   side: 'left',
-        //   width: 320,
-        //   component: 'Pairs',
-        // },
-        // {
-        //   key: '2',
-        //   side: 'right',
-        //   width: 320,
-        //   component: 'Stocks',
-        // },
-      ]
+      // asides: [
+      //   {
+      //     key: '1',
+      //     side: 'left',
+      //     width: 60,
+      //     component: 'Menu',
+      //   },
+      //   // {
+      //   //   key: '3',
+      //   //   side: 'left',
+      //   //   width: 320,
+      //   //   component: 'Pairs',
+      //   // },
+      //   // {
+      //   //   key: '2',
+      //   //   side: 'right',
+      //   //   width: 320,
+      //   //   component: 'Stocks',
+      //   // },
+      // ]
     }
   ),
   fromMobx: {
@@ -64,6 +65,11 @@ export default observer({
     color: {
       get() {
         return Store.color
+      }
+    },
+    asides: {
+      get() {
+        return AsidesStore.asides
       }
     },
   },

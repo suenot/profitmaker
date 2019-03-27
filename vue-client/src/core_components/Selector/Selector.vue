@@ -2,13 +2,13 @@
   <table>
     <tbody>
       <tr>
-        <td>
+        <td @click="showStocks()">
           {{stock}}
           <span v-if="accountId" class="muted">
             <br/>{{accountId}}
           </span>
         </td>
-        <td>{{pair}}</td>
+        <td @click="showPairs()">{{pair}}</td>
       </tr>
     </tbody>
   </table>
@@ -16,6 +16,7 @@
 
 <script>
 import Store from '../../stores/Store'
+import AsidesStore from '../../stores/AsidesStore'
 
 export default {
   data() {
@@ -42,6 +43,20 @@ export default {
   created() {
   },
   methods: {
+    showStocks() {
+      console.log('showStocks')
+      var component = 'Stocks'
+      var side = 'left'
+      var width = 320
+      AsidesStore.addAside(component, side, width)
+    },
+    showPairs() {
+      console.log('showPairs')
+      var component = 'Pairs'
+      var side = 'left'
+      var width = 320
+      AsidesStore.addAside(component, side, width)
+    },
   },
   computed: {
   }
