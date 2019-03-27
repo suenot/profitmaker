@@ -103,7 +103,7 @@ export default observer({
         }
         return aside
       })
-      console.log(asides)
+      // console.log(asides)
       this.left = left
       this.right = right
       return asides

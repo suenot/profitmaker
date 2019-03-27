@@ -35,7 +35,6 @@ import uuidv1 from 'uuid/v1'
 export default {
   data() {
     return {
-      data: require('./data.js').default,
       visualMode: "walls",
       visualModeMax: "fixed",
       visualModeCrocodileMax: 10000,
@@ -46,7 +45,7 @@ export default {
       percentInverseToFixed: '',
     }
   },
-  props: ['type', 'sort', 'thead'],
+  props: ['data', 'type', 'sort', 'thead'],
   computed: {
     coinFrom() {
       return this.pair.split('_')[0]
@@ -57,6 +56,7 @@ export default {
     dataComputed() {
       var type = this.type
       var data = _.cloneDeep(this.data)
+      console.log(data)
       data = data[type].slice(0, 40)
       var sum = {asks: 0, bids: 0}
       for( let [key, order] of Object.entries(data) ) {

@@ -26,7 +26,6 @@ export default {
   computed: {
     dataComputed: function() {
       var data = _.cloneDeep(this.data)
-      console.log(data)
       return _.map(data, (item)=>{
         return {
           uuid: item.uuid,

@@ -12,20 +12,36 @@
       </button>
     </div>
     <template v-if="type === 'both'">
-      <OrdersSide type="asks" sort="desc" :thead="true"/>
-      <OrdersSide type="bids" sort="desc" :thead="false"/>
+      <OrdersSide type="asks" :data="data" sort="desc" :thead="true"/>
+      <OrdersSide type="bids" :data="data" sort="desc" :thead="false"/>
     </template>
-    <OrdersSide v-if="type === 'asks'" type="asks" sort="asc" :thead="true" />
-    <OrdersSide v-if="type === 'bids'" type="bids" sort="desc" :thead="true" />
+    <OrdersSide v-if="type === 'asks'" :data="data" type="asks" sort="asc" :thead="true" />
+    <OrdersSide v-if="type === 'bids'" :data="data" type="bids" sort="desc" :thead="true" />
   </div>
 </template>
 
 <script>
+const io = require('socket.io-client')
 export default {
   data() {
     return {
+      data: require('./data.js').default,
       type: 'both'
     }
+  },
+  mounted() {
+    const socket = io('http://144.76.109.194:8051/')
+    socket.on('connect', () => {
+      console.log('connect')
+      socket.emit('room', 'orders')
+      socket.on('BINANCE--ETH--BTC', (data) => {
+        this.data = data
+      })
+      socket.on('disconnect', () => {
+        console.log('----')
+      })
+    })
+
   }
 }
 </script>
