@@ -1,5 +1,5 @@
 <template>
-  <ve-candle :data="dataComputed" :settings="chartSettings" height="500px"></ve-candle>
+  <ve-candle :data="dataComputed" :settings="chartSettings" height="500px" key="echarts-candles" :key="componentKey"></ve-candle>
 </template>
 
 
@@ -25,14 +25,18 @@ export default {
       showDataZoom: true
     }
     return {
-      data: require('./data.js').default
+      data: require('./data.js').default,
+      componentKey: 0,
+    }
+  },
+  methods: {
+    forceRerender() {
+      this.componentKey += 1
     }
   },
   computed: {
     dataComputed: function() {
-
       var data = _.cloneDeep(this.data)
-      // console.log(data)
       data = _.map(data, (item)=>{
         return {
           date: moment(item[0]).format('DD.MM.YY HH:mm'),
@@ -43,10 +47,12 @@ export default {
           vol: item[5]
         }
       })
-      return {
+      data = {
         columns: ['date', 'open', 'close', 'lowest', 'highest', 'vol'],
         rows: data
       }
+      this.forceRerender()
+      return data
     }
   },
 }

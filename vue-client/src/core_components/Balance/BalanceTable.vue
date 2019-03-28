@@ -41,15 +41,10 @@ import moment from 'moment'
 import _ from 'lodash'
 
 export default {
-
   data() {
     return {
       data: require('./data.js').default
     }
-  },
-  created() {
-  },
-  methods: {
   },
   computed: {
     dataComputed() {
@@ -69,7 +64,3 @@ export default {
   }
 }
 </script>
-
-<style lang="sass" scoped>
-
-</style>

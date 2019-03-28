@@ -1,23 +1,24 @@
 <template>
-  <div>
-    <ve-pie :data="dataComputed"></ve-pie>
-  </div>
+  <ve-pie :data="dataComputed" :key="componentKey"></ve-pie>
 </template>
 
 <script>
-
 import axios from 'axios'
 import moment from 'moment'
 import _ from 'lodash'
 export default {
   data () {
     return {
-      data: require('./data.js').default
+      data: require('./data.js').default,
+      componentKey: 0,
     }
   },
   created() {
   },
   methods: {
+    forceRerender() {
+      this.componentKey += 1
+    }
   },
   computed: {
     dataComputed() {
@@ -54,12 +55,9 @@ export default {
         rows: seriesData
       }
 
+      this.forceRerender()
       return chartData
     }
   }
 }
 </script>
-
-<style lang="sass" scoped>
-
-</style>
