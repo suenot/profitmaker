@@ -70,7 +70,7 @@ export default {
         'amount': this.amount
       }
       console.log(post)
-      axios.post('http://localhost:8040/createOrder/', post)
+      axios.post('/user-api/createOrder/', post)
       .then((response) => {
         // console.log(response.data)
         this.error = response.data

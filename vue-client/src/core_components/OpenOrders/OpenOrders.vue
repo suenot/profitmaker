@@ -60,17 +60,17 @@
   },
   created() {
   },
-  mounted: function() {
-    // var accountId = 'ID_Binance_2'
-    // var pair = 'ETH_BTC'
-    // axios.get(`http://localhost:8040/openOrders/${accountId}/${pair}`)
-    // .then((response) => {
-    //   this.openOrders = response.data
-    // })
-    // .catch((error) => {
-    //   this.error = error
-    // })
-  },
+  // mounted: function() {
+  //   // var accountId = 'ID_Binance_2'
+  //   // var pair = 'ETH_BTC'
+  //   // axios.get(`http://localhost:8040/openOrders/${accountId}/${pair}`)
+  //   // .then((response) => {
+  //   //   this.openOrders = response.data
+  //   // })
+  //   // .catch((error) => {
+  //   //   this.error = error
+  //   // })
+  // },
   methods: {
     cancelOrder: function(order) {
       var post = {
@@ -80,7 +80,7 @@
         symbol: order.symbol
       }
       console.log(post)
-      axios.post('http://localhost:8040/cancelOrder', post)
+      axios.post('/user-api/cancelOrder', post)
       .then((response) => {
         console.log(response)
       })
@@ -92,7 +92,7 @@
   mounted: function() {
     var accountId = 'ID_Binance_2'
     var pair = 'ETH_BTC'
-    axios.get(`http://localhost:8040/openOrders/${accountId}/${pair}`)
+    axios.get(`/user-api/openOrders/${accountId}/${pair}`)
     .then((response) => {
       this.openOrders = response.data
     })

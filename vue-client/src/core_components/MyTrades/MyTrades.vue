@@ -32,6 +32,7 @@
 </template>
 
 <script>
+  import axios from 'axios'
   import moment from 'moment'
   import _ from 'lodash'
   export default {
@@ -41,6 +42,17 @@
     }
   },
   created() {
+  },
+  mounted: function() {
+    var accountId = 'ID_Binance_2'
+    var pair = 'ETH_BTC'
+    axios.get(`/user-api/myTrades/${accountId}/${pair}`)
+    .then((response) => {
+      this.data = response.data
+    })
+    .catch((error) => {
+      this.error = error
+    })
   },
   methods: {
   },
