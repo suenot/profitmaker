@@ -19,6 +19,7 @@ Vue.component('Pairs', require('./core_components/Pairs/Pairs.vue').default)
 
 Vue.component('Market', require('./utils_components/Market/Market.vue').default)
 Vue.component('Menu', require('./utils_components/Menu/Menu.vue').default)
+Vue.component('Aside', require('./utils_components/Aside/Aside.vue').default)
 // Vue.component('GridCanvasBase', require('vue-grid-canvas'))
 // Vue.component('GridCanvas', require('./core_components/GridCanvas/GridCanvas.vue'))
 // Vue.component('KupiTable', require('./core_components/KupiTable/KupiTable.vue'))

@@ -5,12 +5,11 @@
     >
       <router-view :key="$route.path" />
     </div>
-    <div
-      v-for="aside in asidesComputed" :key="aside.key" :class="`aside active aside-${aside.side}`"
+    <Aside
+      v-for="aside in asidesComputed" :key="aside.id" :class="`aside active aside-${aside.side}`"
       :style="`left: ${aside.left}px; right: ${aside.right}px; width: ${aside.width}px;`"
-    >
-      <component :is="aside.component" />
-    </div>
+      :aside="aside"
+    />
   </div>
 </template>
 
@@ -72,6 +71,11 @@ export default observer({
         return AsidesStore.asides
       }
     },
+    asidesTrigger: {
+      get() {
+        return AsidesStore.asidesTrigger
+      }
+    }
   },
   created() {
     // if (this.$route.name === 'Dashboard') this.dashboardActiveId = this.$route.params.id
@@ -82,13 +86,16 @@ export default observer({
     //   window.dispatchEvent(new Event('resize'))
     // }, 10)
     this.$nextTick(() => {
-      window.dispatchEvent(new Event('resize'))
+      this.rerender()
     })
   },
   mounted() {
 
   },
   methods: {
+    rerender() {
+      window.dispatchEvent(new Event('resize'))
+    }
     // openDashboard: function(id) {
     //   this.$router.push({ name: 'Dashboard', params: { id: id } })
     //   this.dashboardActiveId = id
@@ -96,22 +103,27 @@ export default observer({
   },
   computed: {
     asidesComputed() {
+      var trigger = this.asidesTrigger
       var asides = _.cloneDeep(this.asides)
       var left = 0
       var right = 0
+      var paddingLeft = 0
+      var paddingRight = 0
       asides = _.map(asides, (aside)=>{
         if (aside.side === 'left') {
           aside.left = left
           left += aside.width
+          if (aside.permanent) paddingLeft += aside.width
         } else {
           aside.right = right
           right += aside.width
+          if (aside.permanent) paddingRight += aside.width
         }
         return aside
       })
-      // console.log(asides)
-      this.left = left
-      this.right = right
+      this.left = paddingLeft
+      this.right = paddingRight
+      this.rerender()
       return asides
     }
   },
