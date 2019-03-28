@@ -32,13 +32,13 @@ export default {
   mounted() {
     const socket = io('http://144.76.109.194:8051/')
     socket.on('connect', () => {
-      console.log('connect')
+      // console.log('connect')
       socket.emit('room', 'orders')
       socket.on('BINANCE--ETH--BTC', (data) => {
         this.data = data
       })
       socket.on('disconnect', () => {
-        console.log('----')
+        // console.log('disconnect')
       })
     })
 

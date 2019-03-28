@@ -56,7 +56,6 @@ export default {
     dataComputed() {
       var type = this.type
       var data = _.cloneDeep(this.data)
-      console.log(data)
       data = data[type].slice(0, 40)
       var sum = {asks: 0, bids: 0}
       for( let [key, order] of Object.entries(data) ) {

@@ -44,14 +44,12 @@ export default {
   },
   methods: {
     showStocks() {
-      console.log('showStocks')
       var component = 'Stocks'
       var side = 'left'
       var width = 320
       AsidesStore.addAside(component, side, width)
     },
     showPairs() {
-      console.log('showPairs')
       var component = 'Pairs'
       var side = 'left'
       var width = 320
