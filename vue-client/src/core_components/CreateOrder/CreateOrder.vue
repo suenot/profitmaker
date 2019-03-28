@@ -8,13 +8,13 @@
       <!-- <label>Price</label> -->
       <el-input placeholder="Price" v-model="price">
         <template slot="prepend">Price</template>
-        <template slot="append">{{coinFrom}}</template>
+        <template slot="append">{{coinTo}}</template>
       </el-input>
     </div>
     <div style="margin-top: 15px;">
       <el-input placeholder="Price" v-model="amount">
         <template slot="prepend">Amount</template>
-        <template slot="append">{{coinTo}}</template>
+        <template slot="append">{{coinFrom}}</template>
       </el-input>
     </div>
 

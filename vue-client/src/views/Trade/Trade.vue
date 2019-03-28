@@ -46,6 +46,7 @@
 .orders-wrapper
   grid-column: start / line1
   grid-row: row1-start / last-line
+  height: 100vh
 .candles-wrapper
   grid-column: line1 / span line2
   grid-row: row1-start / span third-line
@@ -65,6 +66,7 @@
 .trades-wrapper
   grid-column: line2 / span end
   grid-row: selector / span last-line
+  height: calc(100vh - 78px)
 
 
 
