@@ -12,10 +12,9 @@
 <script>
 import { observer } from 'mobx-vue'
 
-import DashboardsStore from './stores/DashboardsStore'
+// import DashboardsStore from './stores/DashboardsStore'
 import AsidesStore from './stores/AsidesStore'
 import Store from './stores/Store'
-// import DrawersStore from './stores/DrawersStore'
 
 export default observer({
   data: () => ({
@@ -101,4 +100,21 @@ body
     td, th
       border: 1px solid rgba(0,0,0,0.12)
       padding: 5px
+
+.el-input
+  font-size: 18px
+  .el-input__inner
+    height: 54px
+    line-height: 54px
+  .el-input-group__prepend
+    padding: 0 10px
+.el-button
+  border-radius: 0 !important
+  width: 100%
+.el-input__inner
+  border-radius: 0 !important
+.el-input-group__prepend
+  border-radius: 0 !important
+.el-input-group__append
+  border-radius: 0 !important
 </style>

@@ -5,6 +5,7 @@ Vue.component('Candles', require('./core_components/Candles/Candles.vue').defaul
 Vue.component('Orders', require('./core_components/Orders/Orders.vue').default)
 Vue.component('OrdersSide', require('./core_components/Orders/OrdersSide.vue').default)
 Vue.component('CreateOrder', require('./core_components/CreateOrder/CreateOrder.vue').default)
+Vue.component('CreateOrderAside', require('./core_components/CreateOrder/CreateOrderAside.vue').default)
 Vue.component('OpenOrders', require('./core_components/OpenOrders/OpenOrders.vue').default)
 Vue.component('Trades', require('./core_components/Trades/Trades.vue').default)
 Vue.component('MyTrades', require('./core_components/MyTrades/MyTrades.vue').default)

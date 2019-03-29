@@ -7,6 +7,9 @@
       <el-tooltip content="Balance" placement="right">
         <router-link tag="li" to="/balance"><img src="/img/widgets/040-business-and-finance-18.svg"></router-link>
       </el-tooltip>
+      <el-tooltip content="Create order" placement="right">
+        <li @click="showCreateOrder()"><img src="/img/widgets/auction.svg"></li>
+      </el-tooltip>
     </ul>
     <div class="spacer"></div>
     <ul class="ul-bottom">
@@ -33,6 +36,14 @@ export default {
       var title = 'Profile'
       var side = 'left'
       var width = 640
+      var data = {}
+      AsidesStore.addAside(component, title, side, width, data)
+    },
+    showCreateOrder() {
+      var component = 'CreateOrderAside'
+      var title = 'Create order'
+      var side = 'left'
+      var width = 320
       var data = {}
       AsidesStore.addAside(component, title, side, width, data)
     }
