@@ -2,7 +2,7 @@
   <div class="kupi-table">
     <table>
       <tbody>
-        <tr v-for="item in dataComputed" :key="item.uuid">
+        <tr v-for="item in dataComputed" :key="item.id" @click="setStock(item)">
           <td>{{item['stock']}}</td>
         </tr>
       </tbody>
@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import moment from 'moment'
+import Store from '../../stores/Store'
 import _ from 'lodash'
 export default {
   data() {
@@ -19,23 +19,23 @@ export default {
       data: require('./data.js').default
     }
   },
-  created() {
-  },
   methods: {
+    setStock(item) {
+      Store.setStock(item.stock)
+      Store.setAccountId("user@gmail.com") // TODO
+    }
   },
   computed: {
     dataComputed: function() {
       var data = _.cloneDeep(this.data)
       return _.map(data, (item)=>{
         return {
-          uuid: item.uuid,
-          stock: item.name
+          id: item.name,
+          stock: item.name,
+          accountId: item.accountId || undefined
         }
       })
-
     }
   }
 }
 </script>
-
-<style lang="sass"></style>
