@@ -10,15 +10,35 @@
     </ul>
     <div class="spacer"></div>
     <ul class="ul-bottom">
-      <el-tooltip content="Login" placement="right">
-        <li><img src="/img/widgets/051-user.svg"></li>
+      <el-tooltip content="Profile" placement="right">
+        <li v-if="user" @click="showProfile()" class="avatar"><img src="/_img/avatar.jpeg"></li>
+        <li v-else @click="showProfile()"><img src="/img/widgets/051-user.svg"></li>
       </el-tooltip>
       <el-tooltip content="User" placement="right">
-        <li class="avatar"><img src="/_img/avatar.jpeg"></li>
       </el-tooltip>
     </ul>
   </div>
 </template>
+
+<script>
+import AsidesStore from '../../stores/AsidesStore'
+export default {
+  data: () => ({
+      user: false
+    }
+  ),
+  methods: {
+    showProfile() {
+      var component = 'Profile'
+      var title = 'Profile'
+      var side = 'left'
+      var width = 640
+      var data = {}
+      AsidesStore.addAside(component, title, side, width, data)
+    }
+  },
+}
+</script>
 
 <style lang="sass" scoped>
 .menu

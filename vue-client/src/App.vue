@@ -25,21 +25,6 @@ export default observer({
     }
   ),
   fromMobx: {
-    background: {
-      get() {
-        return Store.background
-      }
-    },
-    color: {
-      get() {
-        return Store.color
-      }
-    },
-    asides: {
-      get() {
-        return AsidesStore.asides
-      }
-    },
     asidesTrigger: {
       get() {
         return AsidesStore.asidesTrigger
@@ -51,9 +36,6 @@ export default observer({
       this.rerender()
     })
   },
-  mounted() {
-
-  },
   methods: {
     rerender() {
       window.dispatchEvent(new Event('resize'))
@@ -62,7 +44,7 @@ export default observer({
   computed: {
     asidesComputed() {
       var trigger = this.asidesTrigger
-      var asides = _.cloneDeep(this.asides)
+      var asides = _.cloneDeep(AsidesStore.asides)
       var left = 0
       var right = 0
       var paddingLeft = 0

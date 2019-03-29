@@ -45,17 +45,19 @@ export default {
   methods: {
     showStocks() {
       var component = 'Stocks'
+      var title = 'Stocks'
       var side = 'left'
       var width = 320
       var data = {}
-      AsidesStore.addAside(component, side, width, data)
+      AsidesStore.addAside(component, title, side, width, data)
     },
     showPairs() {
       var component = 'Pairs'
+      var title = 'Pairs'
       var side = 'left'
       var width = 320
       var data = {}
-      AsidesStore.addAside(component, side, width, data)
+      AsidesStore.addAside(component, title, side, width, data)
     },
   },
   computed: {

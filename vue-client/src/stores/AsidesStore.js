@@ -18,7 +18,7 @@ class AsidesStore {
       side: 'left',
       width: 60,
       component: 'Menu',
-      header: false,
+      title: '',
       permanent: true,
     },
     // {
@@ -35,7 +35,7 @@ class AsidesStore {
     // },
   ]
 
-  @action addAside(component, side, width, data, dashboardId, widgetId) {
+  @action addAside(component, title, side, width, data, dashboardId, widgetId) {
     var id = false
     for (let aside of this.asides) {
       if (
@@ -56,7 +56,7 @@ class AsidesStore {
         side: side || 'left',
         width: width || 320,
         component: component || 'Empty',
-        header: true,
+        title: title || '',
         permanent: false,
         data: data
       })

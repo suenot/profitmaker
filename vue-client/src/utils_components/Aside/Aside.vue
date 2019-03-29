@@ -1,7 +1,7 @@
 <template>
   <div :class="`aside active aside-${aside.side}`" :style="`left: ${aside.left}px; right: ${aside.right}px; width: ${aside.width}px;`">
-    <div class="aside-header" v-if="aside.header">
-      <span class="aside-title">Title</span>
+    <div class="aside-header" v-if="aside.title">
+      <span class="aside-title">{{aside.title}}</span>
       <span class="aside-actions">
         <i class="el-icon-close" @click="removeAside(aside.id)"></i>
       </span>
