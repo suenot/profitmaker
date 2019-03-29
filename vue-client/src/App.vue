@@ -5,11 +5,7 @@
     >
       <router-view :key="$route.path" />
     </div>
-    <Aside
-      v-for="aside in asidesComputed" :key="aside.id" :class="`aside active aside-${aside.side}`"
-      :style="`left: ${aside.left}px; right: ${aside.right}px; width: ${aside.width}px;`"
-      :aside="aside"
-    />
+    <Aside v-for="aside in asidesComputed" :key="aside.id" :aside="aside"/>
   </div>
 </template>
 
@@ -24,35 +20,8 @@ import Store from './stores/Store'
 export default observer({
   data: () => ({
       flag: true,
-      // dialog: false,
-      // drawer: null,
-      // drawerRight: null,
-      // newId: '3',
-      // state: DashboardsStore,
-      // drawersStore: DrawersStore,
-      // dashboardActiveId: '',
       left: 0,
       right: 0,
-      // asides: [
-      //   {
-      //     key: '1',
-      //     side: 'left',
-      //     width: 60,
-      //     component: 'Menu',
-      //   },
-      //   // {
-      //   //   key: '3',
-      //   //   side: 'left',
-      //   //   width: 320,
-      //   //   component: 'Pairs',
-      //   // },
-      //   // {
-      //   //   key: '2',
-      //   //   side: 'right',
-      //   //   width: 320,
-      //   //   component: 'Stocks',
-      //   // },
-      // ]
     }
   ),
   fromMobx: {
@@ -78,13 +47,6 @@ export default observer({
     }
   },
   created() {
-    // if (this.$route.name === 'Dashboard') this.dashboardActiveId = this.$route.params.id
-    // document.addEventListener('resize', this.asidesComputed)
-    // setTimeout(()=>{
-    //   // this.asidesComputed()
-    //   // this.flag = !this.flag
-    //   window.dispatchEvent(new Event('resize'))
-    // }, 10)
     this.$nextTick(() => {
       this.rerender()
     })
@@ -96,10 +58,6 @@ export default observer({
     rerender() {
       window.dispatchEvent(new Event('resize'))
     }
-    // openDashboard: function(id) {
-    //   this.$router.push({ name: 'Dashboard', params: { id: id } })
-    //   this.dashboardActiveId = id
-    // },
   },
   computed: {
     asidesComputed() {
@@ -127,12 +85,6 @@ export default observer({
       return asides
     }
   },
-  // created() {
-  //   document.addEventListener('resize', this.asidesComputed)
-  // },
-  // destroyed() {
-  //   document.removeEventListener('resize', this.asidesComputed)
-  // }
 })
 </script>
 
@@ -152,24 +104,6 @@ body
 .spacer
   flex: 1 0 auto
 
-.aside
-  width: 320px
-  z-index: 500000
-  height: 100vh
-  position: fixed
-  left: 0
-  top: 0
-  display: flex
-  flex-direction: column
-  background: white
-  overflow-x: hidden
-  overflow-y: auto
-  &.aside-left
-    border-right: 1px solid rgba(0, 0, 0, 0.12)
-  &.aside-right
-    border-left: 1px solid rgba(0, 0, 0, 0.12)
-    left: auto
-    right: 0
 
 .kupi-table
   width: 100%
