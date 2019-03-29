@@ -2,8 +2,8 @@
   <div class="kupi-table">
     <table>
       <tbody>
-        <tr v-for="item in dataComputed" :key="item.uuid">
-          <td>{{item['pair']}}</td>
+        <tr v-for="item in data" :key="item" @click="setPair(item)">
+          <td>{{item}}</td>
         </tr>
       </tbody>
     </table>
@@ -11,30 +11,17 @@
 </template>
 
 <script>
-import moment from 'moment'
-import _ from 'lodash'
+import Store from '../../stores/Store'
 export default {
   data() {
     return {
       data: require('./data.js').default
     }
   },
-  created() {
-  },
   methods: {
-  },
-  computed: {
-    dataComputed: function() {
-      var data = _.cloneDeep(this.data)
-      return _.map(data, (item)=>{
-        return {
-          uuid: item.uuid,
-          pair: item
-        }
-      })
+    setPair(item) {
+      Store.setPair(item)
     }
-  }
+  },
 }
 </script>
-
-<style lang="sass"></style>
