@@ -1,5 +1,6 @@
 import { observable, action } from 'mobx'
 import uuidv1 from 'uuid/v1'
+import { ID } from 'postcss-selector-parser';
 
 class AsidesStore {
   constructor() {
@@ -35,15 +36,35 @@ class AsidesStore {
   ]
 
   @action addAside(component, side, width, data, dashboardId, widgetId) {
-    this.asides.push({
-      id: uuidv1(),
-      side: side || 'left',
-      width: width || 320,
-      component: component || 'Empty',
-      header: true,
-      permanent: false,
-    })
-    this.asidesTrigger = !this.asidesTrigger
+    var id = false
+    for (let aside of this.asides) {
+      if (
+        aside.permanent === false &&
+        JSON.stringify(aside.data) === JSON.stringify(data) &&
+        aside.side === side &&
+        aside.width === width &&
+        aside.component === component
+      ) {
+        id = aside.id
+        break
+      }
+    }
+    if (!id) {
+      // add new aside
+      this.asides.push({
+        id: uuidv1(),
+        side: side || 'left',
+        width: width || 320,
+        component: component || 'Empty',
+        header: true,
+        permanent: false,
+        data: data
+      })
+      this.asidesTrigger = !this.asidesTrigger
+    } else {
+      // remove aside
+      this.removeAside(id)
+    }
   }
 
   @action removeAside(id) {
