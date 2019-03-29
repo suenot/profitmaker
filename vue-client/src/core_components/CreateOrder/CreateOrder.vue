@@ -1,25 +1,19 @@
 <template>
   <div class="create-order">
-    <div>
-      <el-input placeholder="Price" v-model="price">
-        <template slot="prepend">Price</template>
-        <template slot="append">{{coinTo}}</template>
-      </el-input>
-    </div>
+    <el-input placeholder="Price" v-model="price">
+      <template slot="prepend">Price</template>
+      <template slot="append">{{coinTo}}</template>
+    </el-input>
 
-    <div>
-      <el-input placeholder="Price" v-model="amount">
-        <template slot="prepend">Amount</template>
-        <template slot="append">{{coinFrom}}</template>
-      </el-input>
-    </div>
+    <el-input placeholder="Price" v-model="amount">
+      <template slot="prepend">Amount</template>
+      <template slot="append">{{coinFrom}}</template>
+    </el-input>
 
-    <div>
-      <el-input placeholder="Price" v-model="totalComputed">
-        <template slot="prepend">Total</template>
-        <template slot="append">{{coinTo}}</template>
-      </el-input>
-    </div>
+    <el-input placeholder="Price" v-model="totalComputed">
+      <template slot="prepend">Total</template>
+      <template slot="append">{{coinTo}}</template>
+    </el-input>
 
     <el-button v-if="type === 'buy'" type="primary" plain @click="createOrder()">Buy</el-button>
     <el-button v-if="type === 'sell'" type="danger" plain @click="createOrder()">Sell</el-button>

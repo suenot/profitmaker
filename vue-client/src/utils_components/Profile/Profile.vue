@@ -1,12 +1,17 @@
 <template>
-  <div>
-    <h1>Profile</h1>
+  <div class="profile">
+    <Login />
+    <Accounts />
   </div>
 </template>
 
 
 <script>
 export default {
+  data: () => ({
+
+    }
+  ),
 }
 </script>
 

@@ -7,12 +7,20 @@
       <div class="candles-wrapper">
         <Candles/>
       </div>
-      <div class="create-order-wrapper">
+      <!-- <div class="create-order-wrapper">
         <div class="createOrder">
           <CreateOrder type="buy"/>
         </div>
         <div class="createOrder">
           <CreateOrder type="sell"/>
+        </div>
+      </div> -->
+      <div class="info-wrapper">
+        <div class="flex my-trades-wrapper">
+          <MyTrades/>
+        </div>
+        <div class="flex open-orders-wrapper">
+          <OpenOrders/>
         </div>
       </div>
       <div class="selector-wrapper">
@@ -23,12 +31,7 @@
       </div>
     </div>
 
-    <div class="flex open-orders-wrapper">
-      <OpenOrders/>
-    </div>
-    <div class="flex my-trades-wrapper">
-      <MyTrades/>
-    </div>
+
     <!-- <div class="flex stocks-wrapper">
       <Stocks/>
     </div>
@@ -42,7 +45,7 @@
 .main-container
   display: grid
   grid-template-columns: [start] 380px [line1] auto [line2] 290px [end]
-  grid-template-rows: [row1-start] 78px [selector] 500px [third-line] auto [last-line];
+  grid-template-rows: [row1-start] 78px [selector] 390px [third-line] auto [last-line];
 .orders-wrapper
   grid-column: start / line1
   grid-row: row1-start / last-line
@@ -52,14 +55,11 @@
   grid-row: row1-start / span third-line
   justify-self: stretch
   align-self: stretch
-.create-order-wrapper
+.info-wrapper
   grid-column: line1 / span line2
   grid-row: third-line / span last-line
   justify-self: stretch
   align-self: stretch
-  display: flex
-  .createOrder
-    flex: 0 0 50%
 .selector-wrapper
   grid-column: line2 / span end
   grid-row: row1-start / span selector
@@ -67,6 +67,11 @@
   grid-column: line2 / span end
   grid-row: selector / span last-line
   height: calc(100vh - 78px)
+.my-trades-wrapper
+  height: 236px
+.open-orders-wrapper
+  height: 236px
+
 
 
 
