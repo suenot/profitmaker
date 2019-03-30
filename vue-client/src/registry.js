@@ -24,9 +24,5 @@ Vue.component('Aside', require('./utils_components/Aside/Aside.vue').default)
 Vue.component('Profile', require('./utils_components/Profile/Profile.vue').default)
 Vue.component('Login', require('./utils_components/Profile/Login.vue').default)
 Vue.component('Accounts', require('./utils_components/Profile/Accounts.vue').default)
-// Vue.component('GridCanvasBase', require('vue-grid-canvas'))
-// Vue.component('GridCanvas', require('./core_components/GridCanvas/GridCanvas.vue'))
-// Vue.component('KupiTable', require('./core_components/KupiTable/KupiTable.vue'))
-// Vue.component('Handsontable', require('./core_components/Handsontable/Handsontable.vue'))
 
 
