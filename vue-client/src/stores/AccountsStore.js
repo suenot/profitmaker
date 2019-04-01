@@ -4,9 +4,14 @@ import axios from 'axios'
 
 import { Notification } from 'element-ui'
 class AccountsStore {
+  constructor() {
+    this.fetchUserData()
+  }
+
   @observable user = {}
   @observable accounts = {}
   @observable accountsHash = ''
+
   @action fetchAccounts() {
     axios.get(`/user-api/auth/accounts`)
     .then((response) => {
@@ -22,12 +27,20 @@ class AccountsStore {
   @action toLogout() {
     axios.get("/user-api/auth/logout")
     .then(() => {
-      this.user = {}
-      // Alert.success('Logged out') // TODO
+      Notification({
+        title: 'Success',
+        message: 'Logged out',
+        type: 'success'
+      })
+      this.fetchUserData()
 
     })
     .catch(() => {
-      // Alert.error('Cannot logout') // TODO
+      this.fetchUserData()
+      Notification.error({
+        title: 'Error',
+        message: 'Cannot logout'
+      })
     })
   }
 

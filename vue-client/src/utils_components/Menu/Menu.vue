@@ -32,7 +32,7 @@ export default {
   ),
   methods: {
     showProfile() {
-      var component = 'Profile'
+      var component = 'ProfileAside'
       var title = 'Profile'
       var side = 'left'
       var width = 640

@@ -22,7 +22,9 @@ Vue.component('Market', require('./utils_components/Market/Market.vue').default)
 Vue.component('Menu', require('./utils_components/Menu/Menu.vue').default)
 Vue.component('Aside', require('./utils_components/Aside/Aside.vue').default)
 Vue.component('Profile', require('./utils_components/Profile/Profile.vue').default)
+Vue.component('ProfileAside', require('./utils_components/Profile/ProfileAside.vue').default)
 Vue.component('Login', require('./utils_components/Profile/Login.vue').default)
+Vue.component('Logout', require('./utils_components/Profile/Logout.vue').default)
 Vue.component('Accounts', require('./utils_components/Profile/Accounts.vue').default)
 
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="accounts">
+  <div class="accounts" v-if="JSON.stringify(accounts) !== '{}'">
     <el-table
       :data="accountsComputed"
       style="width: 100%">
@@ -35,7 +35,8 @@ import AccountsStore from '../../stores/AccountsStore'
 export default {
   data() {
     return {
-      accounts: require('./data.js').default
+      // accounts: require('./data.js').default
+      accounts: AccountsStore.accounts
     }
   },
   computed: {

@@ -1,17 +1,18 @@
 <template>
-  <div class="profile">
-    <Login />
-    <Accounts />
+  <div class="profile" v-if="JSON.stringify(user) !== '{}'">
+    <h1>{{user.name}} <span class="muted">{{user.email}}</span></h1>
   </div>
 </template>
 
 
 <script>
+import AccountsStore from '../../stores/AccountsStore'
 export default {
-  data: () => ({
-
-    }
-  ),
+  fromMobx: {
+    user() {
+      return AccountsStore.user
+    },
+  },
 }
 </script>
 

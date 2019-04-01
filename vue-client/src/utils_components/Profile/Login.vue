@@ -1,6 +1,6 @@
 <template>
-  <div class="login">
-    <el-input placeholder="Price" v-model="email">
+  <div class="login" v-if="JSON.stringify(user) === '{}'">
+    <el-input placeholder="Email" v-model="email">
       <template slot="prepend">Email</template>
     </el-input>
     <el-input placeholder="Password" v-model="password" type="password">
@@ -15,10 +15,14 @@
 import AccountsStore from '../../stores/AccountsStore'
 export default {
   data: () => ({
-      email: '',
-      password: ''
-    }
-  ),
+    email: '',
+    password: '',
+  }),
+  fromMobx: {
+    user() {
+      return AccountsStore.user
+    },
+  },
   methods: {
     toLogin() {
       AccountsStore.toLogin(this.email, this.password)
