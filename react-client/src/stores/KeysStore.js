@@ -81,7 +81,7 @@ class KeysStore {
   @action fetchUserData() {
     axios.get("/user-api/auth/user")
     .then((response) => {
-      this.user = response.data.user
+      this.user = response.data
     })
     .catch(() => {
       this.user = {}

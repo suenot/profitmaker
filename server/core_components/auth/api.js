@@ -39,7 +39,12 @@ router.get("/user", authMiddleware, (req, res) => {
   let user = global.USERS.find((user) => {
     return user.id === req.session.passport.user
   })
-  res.send({user: user})
+  user = {
+    id: user.id,
+    name: user.name,
+    email: user.email
+  }
+  res.send(user)
 })
 
 
