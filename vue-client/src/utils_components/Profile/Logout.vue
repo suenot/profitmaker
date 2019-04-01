@@ -1,5 +1,5 @@
 <template>
-  <div class="logout" v-if="JSON.stringify(user) !== '{}'">
+  <div class="logout">
     <el-button type="danger" plain @click="toLogout()">Logout</el-button>
   </div>
 </template>

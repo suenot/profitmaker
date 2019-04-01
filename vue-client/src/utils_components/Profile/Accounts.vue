@@ -1,5 +1,5 @@
 <template>
-  <div class="accounts" v-if="JSON.stringify(accounts) !== '{}'">
+  <div class="accounts">
     <el-table
       :data="accountsComputed"
       style="width: 100%">
@@ -32,12 +32,12 @@
 
 <script>
 import AccountsStore from '../../stores/AccountsStore'
+import _ from 'lodash'
 export default {
-  data() {
-    return {
-      // accounts: require('./data.js').default
-      accounts: AccountsStore.accounts
-    }
+  fromMobx: {
+    accounts() {
+      return AccountsStore.accounts
+    },
   },
   computed: {
     accountsComputed() {

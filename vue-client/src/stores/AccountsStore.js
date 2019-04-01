@@ -1,27 +1,27 @@
 import { observable, action, computed } from 'mobx'
 // import { version, AsyncTrunk } from 'mobx-sync'
 import axios from 'axios'
+import _ from 'lodash'
 
 import { Notification } from 'element-ui'
 class AccountsStore {
-  constructor() {
-    this.fetchUserData()
-  }
-
   @observable user = {}
   @observable accounts = {}
-  @observable accountsHash = ''
-
   @action fetchAccounts() {
     axios.get(`/user-api/auth/accounts`)
     .then((response) => {
-      if (this.accountsHash === JSON.stringify(response.data)) return true
-      this.accountsHash = JSON.stringify(response.data)
       this.accounts = response.data
     })
     .catch(() => {
       this.accounts = {}
     })
+  }
+
+  @computed get userRender() {
+    return JSON.stringify(this.user) === '{}' ? false : true
+  }
+  @computed get accountsRender() {
+    return JSON.stringify(this.accounts) === '{}' ? false : true
   }
 
   @action toLogout() {
@@ -33,14 +33,13 @@ class AccountsStore {
         type: 'success'
       })
       this.fetchUserData()
-
     })
     .catch(() => {
-      this.fetchUserData()
       Notification.error({
         title: 'Error',
         message: 'Cannot logout'
       })
+      this.fetchUserData()
     })
   }
 
@@ -48,22 +47,20 @@ class AccountsStore {
     axios.get("/user-api/auth/user")
     .then((response) => {
       this.user = response.data
+      this.fetchAccounts()
     })
     .catch(() => {
       this.user = {}
+      this.fetchAccounts()
     })
-    this.fetchAccounts()
   }
 
   @action toLogin(email, password) {
-    console.log('toLogin')
-    console.log(this.$notify)
     axios.post("/user-api/auth/login", {
       email,
       password
     })
     .then(() => {
-      console.log('win')
       this.fetchUserData()
       Notification({
         title: 'Success',
@@ -72,7 +69,7 @@ class AccountsStore {
       })
     })
     .catch(() => {
-      console.log('fail')
+      this.fetchUserData()
       Notification.error({
         title: 'Error',
         message: 'Cannot login'

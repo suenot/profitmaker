@@ -1,5 +1,5 @@
 <template>
-  <div class="login" v-if="JSON.stringify(user) === '{}'">
+  <div class="login">
     <el-input placeholder="Email" v-model="email">
       <template slot="prepend">Email</template>
     </el-input>
