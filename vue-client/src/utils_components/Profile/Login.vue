@@ -1,13 +1,13 @@
 <template>
-  <div class="login">
+  <form class="login" @submit.prevent="toLogin()">
     <el-input placeholder="Email" v-model="email">
       <template slot="prepend">Email</template>
     </el-input>
     <el-input placeholder="Password" v-model="password" type="password">
       <template slot="prepend">Password</template>
     </el-input>
-    <el-button type="primary" plain @click="toLogin()">Login</el-button>
-  </div>
+    <el-button type="primary" plain native-type="submit">Login</el-button>
+  </form>
 </template>
 
 
