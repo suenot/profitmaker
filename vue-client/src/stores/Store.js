@@ -13,10 +13,13 @@ class Store {
   @observable stock = 'BINANCE'
   @observable pair = 'ETH_BTC'
   @observable accountId = undefined
+  @observable accountName = undefined
   @observable serverBackend = 'https://kupi.network/api'
 
   @action setStock(stock) {
-    this.stock = stock
+    this.stock = stock.name
+    this.accountId = stock.accountId
+    this.accountName = stock.accountName
   }
 
   @action setPair(pair) {

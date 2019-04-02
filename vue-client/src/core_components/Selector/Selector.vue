@@ -4,8 +4,8 @@
       <tr>
         <td @click="showStocks()">
           {{stock}}
-          <span v-if="accountId" class="muted">
-            <br/>{{accountId}}
+          <span v-if="accountName" class="muted">
+            <br/>{{accountName}}
           </span>
         </td>
         <td @click="showPairs()">{{pair}}</td>
@@ -34,9 +34,9 @@ export default {
         return Store.pair
       }
     },
-    accountId: {
+    accountName: {
       get() {
-        return Store.accountId
+        return Store.accountName
       }
     }
   },
