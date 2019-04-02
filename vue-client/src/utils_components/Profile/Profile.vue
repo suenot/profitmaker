@@ -1,6 +1,6 @@
 <template>
   <div class="profile">
-    <h1>{{user.name}} <span class="muted">{{user.email}}</span></h1>
+    <h2>{{user.name}} <span class="muted">{{user.email}}</span></h2>
   </div>
 </template>
 
@@ -14,3 +14,9 @@ export default {
   },
 }
 </script>
+
+<style lang="sass">
+.profile
+  text-align: center
+  padding: 16px
+</style>

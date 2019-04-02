@@ -1,9 +1,13 @@
 <template>
   <div class="profile-aside">
-    <Profile v-if="userRender" />
-    <Login  v-if="!userRender" />
-    <Logout v-if="userRender"/>
-    <Accounts v-if="accountsRender"/>
+    <div class="body">
+      <Profile v-if="userRender" />
+      <Login  v-if="!userRender" />
+      <Accounts v-if="accountsRender"/>
+    </div>
+    <div class="footer">
+      <Logout v-if="userRender"/>
+    </div>
   </div>
 </template>
 
@@ -20,3 +24,12 @@ export default {
   }
 }
 </script>
+
+<style lang="sass">
+.profile-aside
+  display: flex
+  flex-direction: column
+  height: calc(100vh - 38px)
+  .body
+    flex: 1 0 auto
+</style>

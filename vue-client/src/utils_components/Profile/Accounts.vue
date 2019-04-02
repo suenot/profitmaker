@@ -1,5 +1,6 @@
 <template>
   <div class="accounts">
+    <span class="subtitle">Accounts</span>
     <el-table
       :data="accountsComputed"
       style="width: 100%">
@@ -56,4 +57,8 @@ export default {
 }
 </script>
 
-<style lang="sass"></style>
+<style lang="sass">
+.subtitle
+  padding: 16px
+  font-size: 16px
+</style>
