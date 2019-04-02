@@ -47,7 +47,7 @@ export default {
       var component = 'Stocks'
       var title = 'Stocks'
       var side = 'left'
-      var width = 320
+      var width = 380
       var data = {}
       AsidesStore.addAside(component, title, side, width, data)
     },
@@ -55,7 +55,7 @@ export default {
       var component = 'Pairs'
       var title = 'Pairs'
       var side = 'left'
-      var width = 320
+      var width = 380
       var data = {}
       AsidesStore.addAside(component, title, side, width, data)
     },
