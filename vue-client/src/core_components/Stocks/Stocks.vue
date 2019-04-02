@@ -24,7 +24,7 @@ export default {
     return {
       data: [],
       demo: false,
-      hash: '',
+      // hash: '',
       timer: 1000,
       serverBackend: 'https://kupi.network',
       filter: '',
@@ -63,7 +63,7 @@ export default {
         return []
       })
     },
-    async fetchStocks() {
+    async fetch() {
       // create empty vars
       var kupiStocks = await this.fetchStocks_kupi()
       var ccxtStocks = await this.fetchStocks_ccxt()
@@ -82,12 +82,10 @@ export default {
       var stocks = _.uniqBy([...kupiStocks, ...ccxtStocks], 'name')
       // write to state
       this.data = stocks
-      // run computed
-      // this.stocksComputed()
     },
     start() {
       this.interval = setInterval(()=>{
-        this.fetchStocks()
+        this.fetch()
       }, this.timer)
     },
     finish() {
