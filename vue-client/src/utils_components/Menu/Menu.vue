@@ -7,12 +7,12 @@
       <el-tooltip content="Balance" placement="right">
         <router-link tag="li" to="/balance"><img src="/img/widgets/040-business-and-finance-18.svg"></router-link>
       </el-tooltip>
-      <el-tooltip content="Create order" placement="right">
-        <li @click="showCreateOrder()"><img src="/img/widgets/auction.svg"></li>
-      </el-tooltip>
     </ul>
     <div class="spacer"></div>
     <ul class="ul-bottom">
+      <el-tooltip content="Create order" placement="right" v-if="$route.name === 'Trade'">
+        <li @click="showCreateOrder()"><img src="/img/widgets/auction.svg"></li>
+      </el-tooltip>
       <el-tooltip content="Profile" placement="right">
         <li v-if="user" @click="showProfile()" class="avatar"><img src="/_img/avatar.jpeg"></li>
         <li v-else @click="showProfile()"><img src="/img/widgets/051-user.svg"></li>
