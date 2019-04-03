@@ -68,9 +68,9 @@
   grid-row: selector / span last-line
   height: calc(100vh - 78px)
 .my-trades-wrapper
-  height: 236px
+  height: 214px
 .open-orders-wrapper
-  height: 236px
+  height: 214px
 
 
 
