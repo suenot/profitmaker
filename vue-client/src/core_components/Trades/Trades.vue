@@ -23,17 +23,93 @@
 </template>
 
 <script>
-  import moment from 'moment'
-  import _ from 'lodash'
-  export default {
+import Store from '../../stores/Store'
+import axios from 'axios'
+import moment from 'moment'
+import _ from 'lodash'
+export default {
   data() {
     return {
-      data: require('./data.js').default
+      demo: false,
+      interval: '',
+      tube: '',
+      hash: '',
+      data: [],
+      timer: 3000,
+      serverBackend: 'https://kupi.network',
     }
+  },
+  fromMobx: {
+    stock: {
+      get() {
+        return Store.stock
+      }
+    },
+    pair: {
+      get() {
+        return Store.pair
+      }
+    },
   },
   created() {
   },
+  mounted() {
+    if (this.demo) {
+      this.data = require('./data.js').default
+      return
+    }
+    this.start()
+  },
   methods: {
+    start() {
+      this.interval = setInterval(()=>{
+        this.fetch()
+      }, this.timer)
+    },
+    finish() {
+      if (this.interval) {
+        clearInterval(this.interval)
+        this.interval = null
+      }
+    },
+    async fetch() {
+      var stock = this.stock
+      var stockLowerCase = stock.toLowerCase()
+      var pair = this.pair
+      var data
+      if (this.tube === 'ccxt') {
+        data = await this.fetchTrades_ccxt(stockLowerCase, pair)
+      } else {
+        data = await this.fetchTrades_kupi(stockLowerCase, pair)
+      }
+      // if (this.hash === JSON.stringify(data)) return true
+      // this.hash = JSON.stringify(data)
+      this.data = data
+      if (this.type === 'both' && !this.center) {
+        setTimeout(()=>{
+          this.toCenter()
+        }, 200)
+      }
+    },
+    async fetchTrades_kupi(stockLowerCase, pair) {
+      return axios.get(`${this.serverBackend}/api/${stockLowerCase}/trades/${pair}`)
+      .then((response) => {
+        return response.data
+      })
+      .catch(() => {
+        this.tube = 'ccxt'
+        return []
+      })
+    },
+    async fetchTrades_ccxt(stockLowerCase, pair) {
+      return axios.get(`/user-api/ccxt/${stockLowerCase}/trades/${pair}`)
+      .then((response) => {
+        return response.data
+      })
+      .catch(() => {
+        return []
+      })
+    }
   },
   computed: {
     dataComputed: function() {
@@ -48,7 +124,7 @@
 </script>
 
 <style lang="sass" scoped>
+// TODO: rm trash
 table
   margin: -1px
-
 </style>

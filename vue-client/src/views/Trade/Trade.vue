@@ -44,7 +44,7 @@
 <style lang="sass">
 .main-container
   display: grid
-  grid-template-columns: [start] 380px [line1] auto [line2] 290px [end]
+  grid-template-columns: [start] 380px [line1] auto [line2] 310px [end]
   grid-template-rows: [row1-start] 78px [selector] 390px [third-line] auto [last-line];
 .orders-wrapper
   grid-column: start / line1
