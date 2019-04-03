@@ -85,11 +85,6 @@ export default {
       // if (this.hash === JSON.stringify(data)) return true
       // this.hash = JSON.stringify(data)
       this.data = data
-      if (this.type === 'both' && !this.center) {
-        setTimeout(()=>{
-          this.toCenter()
-        }, 200)
-      }
     },
     async fetchTrades_kupi(stockLowerCase, pair) {
       return axios.get(`${this.serverBackend}/api/${stockLowerCase}/trades/${pair}`)

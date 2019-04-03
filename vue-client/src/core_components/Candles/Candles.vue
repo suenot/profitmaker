@@ -4,6 +4,8 @@
 
 
 <script>
+import Store from '../../stores/Store'
+import axios from 'axios'
 import moment from 'moment'
 import _ from 'lodash'
 export default {
@@ -25,13 +27,107 @@ export default {
       showDataZoom: true
     }
     return {
-      data: require('./data.js').default,
       componentKey: 0,
+      demo: false,
+      interval: '',
+      tube: '',
+      hash: '',
+      data: [],
+      timer: 5000,
+      serverBackend: 'https://kupi.network',
+      timeframe: '1m',
+      firstFetch: true
     }
+  },
+  fromMobx: {
+    stock: {
+      get() {
+        return Store.stock
+      }
+    },
+    pair: {
+      get() {
+        return Store.pair
+      }
+    },
+  },
+  mounted() {
+    if (this.demo) {
+      this.data = require('./data.js').default
+      return
+    }
+    this.start()
   },
   methods: {
     forceRerender() {
-      this.componentKey += 1
+      // this.componentKey += 1
+    },
+    start() {
+      this.interval = setInterval(()=>{
+        this.fetch()
+      }, this.timer)
+    },
+    finish() {
+      if (this.interval) {
+        clearInterval(this.interval)
+        this.interval = null
+      }
+    },
+    async fetch() {
+      var stock = this.stock
+      var stockLowerCase = stock.toLowerCase()
+      var pair = this.pair
+      var data
+      if (this.tube === 'ccxt') {
+        data = await this.fetchOhlcv_ccxt(stockLowerCase, pair, timeframe)
+      } else {
+        data = await this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe)
+      }
+      // if (this.hash === JSON.stringify(data)) return true
+      // this.hash = JSON.stringify(data)
+      this.data = data
+    },
+    async fetchOhlcv_kupi(stockLowerCase, pair, timeframe) {
+      return axios.get(`${this.serverBackend}/api/${stockLowerCase}/candles/${pair}/${timeframe}`)
+      .then((response) => {
+        return response.data
+      })
+      .catch(() => {
+        this.tube = 'ccxt'
+        return []
+      })
+    },
+    async fetchOhlcv_ccxt(stockLowerCase, pair, timeframe) {
+      return axios.get(`/user-api/ccxt/${stockLowerCase}/candles/${pair}/${timeframe}`)
+      .then((response) => {
+        return response.data
+      })
+      .catch(() => {
+        return []
+      })
+    },
+    async fetch() {
+      var stock = this.stock
+      var stockLowerCase = stock.toLowerCase()
+      var pair = this.pair
+      var timeframe = this.timeframe
+      var data
+      if (this.tube === 'ccxt') {
+        data = await this.fetchOhlcv_ccxt(stockLowerCase, pair, timeframe)
+      } else {
+        if (this.firstFetch) {
+          data = await Promise.race([
+            this.fetchOhlcv_ccxt(stockLowerCase, pair, timeframe),
+            this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe)
+          ])
+          this.firstFetch = false
+        } else {
+          data = await this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe)
+        }
+      }
+      // if (this.hash === JSON.stringify(data)) return true
+      // this.hash = JSON.stringify(data)
+      this.data = data
     }
   },
   computed: {

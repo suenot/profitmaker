@@ -17,7 +17,7 @@ export default class ChartComponent extends React.Component {
     tube: '',
     hash: '',
     data: [],
-    timer: 1000,
+    timer: 5000,
     serverBackend: 'https://kupi.network',
     firstFetch: true,
   }
