@@ -2,7 +2,7 @@
   <div>
     <div class="main-container">
       <div class="orders-wrapper section">
-        <Orders/>
+        <Orders type="both" />
       </div>
       <div class="candles-wrapper">
         <Candles/>

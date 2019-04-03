@@ -19,7 +19,7 @@ class Orders extends React.Component {
     hash: '',
     data: [],
     timer: 1000,
-    serverBackend: 'https://kupi.network'
+    serverBackend: 'https://kupi.network',
   }
 
   render() {

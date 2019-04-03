@@ -21,7 +21,6 @@
         </tr>
       </tbody>
     </table>
-
   </div>
 </template>
 
@@ -43,17 +42,25 @@ export default {
       color: '',
       background: '',
       percentInverseToFixed: '',
+      dataComputed: [],
     }
   },
   props: ['data', 'type', 'sort', 'thead'],
+  watch: {
+    data() {
+      this.computeData()
+    }
+  },
   computed: {
     coinFrom() {
       return this.pair.split('_')[0]
     },
     coinTo() {
       return this.pair.split('_')[1]
-    },
-    dataComputed() {
+    }
+  },
+  methods: {
+    computeData() {
       var type = this.type
       var data = _.cloneDeep(this.data)
       data = data[type].slice(0, 40)
@@ -102,7 +109,7 @@ export default {
         return order
       })
       data = _.orderBy(data, ['price'], [this.sort])
-      return data
+      this.dataComputed = data
     }
   }
 }

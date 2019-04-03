@@ -12,7 +12,6 @@
 <script>
 import { observer } from 'mobx-vue'
 
-// import DashboardsStore from './stores/DashboardsStore'
 import AsidesStore from './stores/AsidesStore'
 import Store from './stores/Store'
 
