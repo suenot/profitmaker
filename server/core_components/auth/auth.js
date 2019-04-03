@@ -1,3 +1,4 @@
+const uuidv1 = require('uuid/v1')
 // PASSPORT
 // const cookieSession = require('cookie-session')
 // const passport = require('passport')
@@ -7,9 +8,23 @@
 
 const auth = function(app) {
   try {
-    global.USERS = require('../../../private/auth.json')
+    global.USERS = require('../../../private/auth.json').users
   } catch(err) {
     global.USERS = []
+  }
+
+  var serverSession
+  try {
+    serverSession = require('../../../private/auth.json').session
+  } catch(err) {
+    serverSession = undefined
+  }
+  if (serverSession === undefined) {
+    serverSession = {
+      "name": uuidv1(),
+      "keys": [uuidv1()],
+      "maxAge": 86400000
+    }
   }
 
   const cookieSession = require('cookie-session')
@@ -39,11 +54,7 @@ const auth = function(app) {
     })
     done(null, user)
   })
-  app.use(cookieSession({
-    name: 'mysession',
-    keys: ['authrandomkey'],
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }))
+  app.use(cookieSession(serverSession))
   app.use(passport.initialize())
   app.use(passport.session())
   // try {
