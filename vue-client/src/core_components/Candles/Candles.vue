@@ -1,5 +1,5 @@
 <template>
-  <ve-candle :data="dataComputed" :settings="chartSettings" height="500px" key="echarts-candles" :key="componentKey"></ve-candle>
+  <ve-candle :data="dataComputed" :settings="chartSettings" :events="chartEvents" height="500px" key="echarts-candles" :key="componentKey"></ve-candle>
 </template>
 
 
@@ -10,21 +10,11 @@ import moment from 'moment'
 import _ from 'lodash'
 export default {
   data () {
-    this.chartSettings = {
-      showMA: true,
-      showVol: true,
-      digit: 8,
-      MA: [5, 10, 20, 30],
-      downColor: '#ec0000',
-      upColor: '#00da3c',
-      dataType: 'normal', // 'KMB', 'normal', 'percent'
-      labelMap: {
-        '日K': '5m'
-      },
-      legendName: {
-        '日K': 'ETH_BTC 15m',
-      },
-      showDataZoom: true
+    this.chartEvents = {
+      dataZoom: (e)=>{
+        this.chartSettings.start = e.start
+        this.chartSettings.end = e.end
+      }
     }
     return {
       componentKey: 0,
@@ -36,7 +26,23 @@ export default {
       timer: 5000,
       serverBackend: 'https://kupi.network',
       timeframe: '1m',
-      firstFetch: true
+      firstFetch: true,
+      chartSettings: {
+        showMA: true,
+        showVol: true,
+        digit: 8,
+        MA: [5, 10, 20, 30],
+        downColor: '#ec0000',
+        upColor: '#00da3c',
+        dataType: 'normal', // 'KMB', 'normal', 'percent'
+        labelMap: {
+          '日K': '5m'
+        },
+        legendName: {
+          '日K': 'ETH_BTC 15m',
+        },
+        showDataZoom: true,
+      }
     }
   },
   fromMobx: {
