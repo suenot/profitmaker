@@ -79,6 +79,7 @@ export default {
   },
   methods: {
     start() {
+      this.fetch()
       this.interval = setInterval(()=>{
         this.fetch()
       }, this.timer)

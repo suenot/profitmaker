@@ -108,6 +108,7 @@ export default {
       }
     },
     start() {
+      this.fetch()
       this.interval = setInterval(()=>{
         this.fetch()
       }, this.timer)
