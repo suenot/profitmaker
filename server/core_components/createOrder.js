@@ -4,21 +4,16 @@ var {getCCXTId} = require('./getCCXTId')
 var {fetchOpenOrder} = require('./openOrders')
 
 const createOrder = async function(data) {
-  try {
-    var accountId = data.accountId
-    var ccxtId = getCCXTId(accountId, 'notSafe')
-    var ccxtSymbol = data.pair.split('_').join('/')
-    var side =  data.type.toLowerCase()
-    var amount = data.amount
-    var price = data.price
-    var rateLimit = global.CCXT[ccxtId]['rateLimit']
-    await catchHead(rateLimit, ccxtId)
-    var result = await global.CCXT[ccxtId].createOrder(ccxtSymbol, 'limit', side, amount, price) /// ('BTC/USD', 'limit', 'buy', 1, 2500.00)
-    fetchOpenOrder(accountId, symbol, result.id)
-    return result
-  } catch (err) {
-    return err
-  }
-
+  var accountId = data.accountId
+  var ccxtId = getCCXTId(accountId, 'notSafe')
+  var ccxtSymbol = data.pair.split('_').join('/')
+  var side =  data.type.toLowerCase()
+  var amount = data.amount
+  var price = data.price
+  var rateLimit = global.CCXT[ccxtId]['rateLimit']
+  await catchHead(rateLimit, ccxtId)
+  var result = await global.CCXT[ccxtId].createOrder(ccxtSymbol, 'limit', side, amount, price) /// ('BTC/USD', 'limit', 'buy', 1, 2500.00)
+  fetchOpenOrder(accountId, symbol, result.id)
+  return result
 }
 module.exports = createOrder

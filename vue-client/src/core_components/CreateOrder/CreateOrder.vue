@@ -22,26 +22,42 @@
 
 <script>
 import axios from 'axios'
+import { Notification } from 'element-ui'
 export default {
   data() {
     return {
-      coinFrom: 'ETH',
-      coinTo: 'BTC',
-      pair: 'ETH_BTC',
-      accountId: 'ID_Binance_2',
-      price: 0.02,
-      amount: 0.1,
-      // type: 'sell',
+      price: 0,
+      amount: 0,
       error: ''
     }
   },
   props: [
     'type'
   ],
-  mounted: function() {
-
+  fromMobx: {
+    stock: {
+      get() {
+        return Store.stock
+      }
+    },
+    pair: {
+      get() {
+        return Store.pair
+      }
+    },
+    accountId: {
+      get() {
+        return Store.accountId
+      }
+    },
   },
   computed: {
+    coinFrom() {
+      return this.pair ? this.pair.split('_')[0] : ''
+    },
+    coinTo() {
+      return this.pair ? this.pair.split('_')[1] : ''
+    },
     totalComputed: function() {
       return this.price * this.amount
     }
@@ -55,23 +71,29 @@ export default {
         'price': this.price,
         'amount': this.amount
       }
-      console.log(post)
       axios.post('/user-api/createOrder/', post)
       .then((response) => {
-        // console.log(response.data)
-        this.error = response.data
+        Notification({
+          title: 'Success',
+          message: `Order created`,
+          type: 'success'
+        })
       })
       .catch((error) => {
-        // console.log(error)
-        this.error = error
+        console.log(error)
+        Notification({
+          title: 'Success',
+          message: `Order cannot be created: ${error}`,
+          type: 'error'
+        })
       })
     }
-
   }
 }
 </script>
 
 <style lang="sass">
+// TODO: rm
 .create-order
   button
     font-size: 22px

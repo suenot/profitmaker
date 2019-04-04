@@ -119,7 +119,7 @@ export default {
       .catch((error) => {
         Notification({
           title: 'Error',
-          message: `The order #${order.id} cannot be canceled`,
+          message: `Order #${order.id} cannot be canceled: ${error}`,
           type: 'error'
         })
       })

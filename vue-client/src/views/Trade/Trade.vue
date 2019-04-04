@@ -23,9 +23,9 @@
           <OpenOrders/>
         </div>
       </div>
-      <div class="selector-wrapper">
+      <!-- <div class="selector-wrapper">
         <Selector/>
-      </div>
+      </div> -->
       <div class="trades-wrapper section">
         <Trades/>
       </div>
@@ -65,8 +65,8 @@
   grid-row: row1-start / span selector
 .trades-wrapper
   grid-column: line2 / span end
-  grid-row: selector / span last-line
-  height: calc(100vh - 78px)
+  grid-row: row1-start / span last-line
+  height: 100vh
 .my-trades-wrapper
   overflow-y: auto
   height: 214px
