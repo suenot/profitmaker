@@ -45,7 +45,8 @@
 .main-container
   display: grid
   grid-template-columns: [start] 380px [line1] auto [line2] 310px [end]
-  grid-template-rows: [row1-start] 78px [selector] 390px [third-line] auto [last-line];
+  grid-template-rows: [row1-start] 78px [selector] 390px [third-line] auto [last-line]
+
 .orders-wrapper
   grid-column: start / line1
   grid-row: row1-start / last-line
@@ -74,48 +75,6 @@
   height: 214px
   overflow-y: auto
 
-
-
-
-
-
-
-
-
-
-// .orders-wrapper
-//   flex: 0 0 420px
-//   height: 100vh
-//   max-height: 100vh
-// .market-wrapper
-//   flex: 1 0 auto
-//   height: 100vh
-//   max-height: 100vh
-//   .candles-wrapper
-//     border-bottom: 1px solid #d9d9d9
-//     height: 500px
-// .trades-wrapper
-//   flex: 0 0 320px
-//   height: calc(100vh - 79px)
-//   max-height: calc(100vh - 79px)
-// .open-orders-wrapper
-//   flex: 1 0 auto
-//   border-bottom: 1px solid #d9d9d9
-// .create-order-wrapper
-//   display: flex
-//   flex: 1 0 auto
-//   width: 100%
-//   .createOrder
-//     flex: 0 0 50%
-// .my-trades-wrapper
-//   width: 100%
-//   flex: 1 0 auto
-
-// .flex
-//   display: flex
-// .flex-column
-//   display: flex
-//   flex-direction: column
 .section
   border: 1px solid #d9d9d9
   margin: -1px
