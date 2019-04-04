@@ -35,16 +35,72 @@
 </template>
 
 <script>
-
+import Store from '../../stores/Store'
 import axios from 'axios'
 import moment from 'moment'
 import _ from 'lodash'
-
 export default {
   data() {
     return {
-      data: require('./data.js').default
+      demo: false,
+      interval: '',
+      tube: '',
+      hash: '',
+      data: [],
+      timer: 10000,
     }
+  },
+  fromMobx: {
+    stock: {
+      get() {
+        return Store.stock
+      }
+    },
+    pair: {
+      get() {
+        return Store.pair
+      }
+    },
+    accountId: {
+      get() {
+        return Store.accountId
+      }
+    },
+  },
+  mounted() {
+    if (this.demo) {
+      this.data = require('./data.js').default
+      return
+    }
+    this.start()
+  },
+  methods: {
+    start() {
+      this.interval = setInterval(()=>{
+        this.fetch()
+      }, this.timer)
+    },
+    finish() {
+      if (this.interval) {
+        clearInterval(this.interval)
+        this.interval = null
+      }
+    },
+    fetch() {
+      var {stock, accountId} = this
+      var type = 'now'
+      stock = 'TOTAL'
+      const key = `${type}--${stock}--${accountId}`
+      axios.post(`/user-api/balance/`, {
+        type, key, stock, accountId
+      })
+      .then(response => {
+        this.data = response.data
+      })
+      .catch(error => {
+        this.data = {}
+      })
+    },
   },
   computed: {
     dataComputed() {
