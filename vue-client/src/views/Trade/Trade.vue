@@ -68,9 +68,11 @@
   grid-row: selector / span last-line
   height: calc(100vh - 78px)
 .my-trades-wrapper
+  overflow-y: auto
   height: 214px
 .open-orders-wrapper
   height: 214px
+  overflow-y: auto
 
 
 

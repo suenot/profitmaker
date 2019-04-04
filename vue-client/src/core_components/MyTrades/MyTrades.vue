@@ -38,28 +38,71 @@
   export default {
   data() {
     return {
-      data: require('./data.js').default
+      demo: false,
+      interval: '',
+      tube: '',
+      hash: '',
+      data: [],
+      timer: 5000,
+      serverBackend: 'https://kupi.network',
     }
+  },
+  fromMobx: {
+    // stock: {
+    //   get() {
+    //     return Store.stock
+    //   }
+    // },
+    pair: {
+      get() {
+        return Store.pair
+      }
+    },
+    accountId: {
+      get() {
+        return Store.accountId
+      }
+    },
   },
   created() {
   },
-  mounted: function() {
-    var accountId = 'ID_Binance_2'
-    var pair = 'ETH_BTC'
-    axios.get(`/user-api/myTrades/${accountId}/${pair}`)
-    .then((response) => {
-      this.data = response.data
-    })
-    .catch((error) => {
-      this.error = error
-    })
+  mounted() {
+    if (this.demo) {
+      this.data = require('./data.js').default
+      return
+    }
+    this.start()
   },
   methods: {
+    start() {
+      this.interval = setInterval(()=>{
+        this.fetch()
+      }, this.timer)
+    },
+    finish() {
+      if (this.interval) {
+        clearInterval(this.interval)
+        this.interval = null
+      }
+    },
+    fetch() {
+      console.log('fetch')
+      var accountId = this.accountId
+      var pair = this.pair
+      axios.get(`/user-api/myTrades/${accountId}/${pair}`)
+      .then((response) => {
+        this.data = response.data
+        console.log(response)
+      })
+      .catch((error) => {
+        // this.data = 'error'
+        this.data = []
+      })
+    }
   },
   computed: {
     dataComputed: function() {
       var data = _.cloneDeep(this.data)
-      // console.log(data)
       return _.map(data, (item)=>{
         return {
           uuid: item.uuid,

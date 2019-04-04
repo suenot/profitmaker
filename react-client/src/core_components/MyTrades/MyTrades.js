@@ -15,7 +15,7 @@ class MyTrades extends React.Component {
     interval: '',
     hash: '',
     data: [],
-    timer: 1000,
+    timer: 5000,
   }
 
   render() {

@@ -11,7 +11,7 @@
 
 <script>
 import { observer } from 'mobx-vue'
-
+import AccountsStore from './stores/AccountsStore'
 import AsidesStore from './stores/AsidesStore'
 import Store from './stores/Store'
 
@@ -33,6 +33,7 @@ export default observer({
     this.$nextTick(() => {
       this.rerender()
     })
+    AccountsStore.fetchUserData()
   },
   methods: {
     rerender() {

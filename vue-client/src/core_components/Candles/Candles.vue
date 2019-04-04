@@ -1,5 +1,5 @@
 <template>
-  <ve-candle :data="dataComputed" :settings="chartSettings" :events="chartEvents" height="500px" key="echarts-candles" :key="componentKey"></ve-candle>
+  <ve-candle :data="dataComputed" :settings="chartSettings" :events="chartEvents" height="468px" key="echarts-candles" :key="componentKey"></ve-candle>
 </template>
 
 
@@ -14,7 +14,10 @@ export default {
       dataZoom: (e)=>{
         this.chartSettings.start = e.start
         this.chartSettings.end = e.end
-      }
+      },
+      // legendselectchanged: (e)=>{
+      //   console.log(e)
+      // }
     }
     return {
       componentKey: 0,
@@ -114,6 +117,7 @@ export default {
     },
     async fetch() {
       var stock = this.stock
+      if (!stock) return
       var stockLowerCase = stock.toLowerCase()
       var pair = this.pair
       var timeframe = this.timeframe
@@ -153,7 +157,7 @@ export default {
         columns: ['date', 'open', 'close', 'lowest', 'highest', 'vol'],
         rows: data
       }
-      this.forceRerender()
+      // this.forceRerender()
       return data
     }
   },
