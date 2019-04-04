@@ -47,6 +47,7 @@ export default {
   },
   methods: {
     start() {
+      this.fetch()
       this.interval = setInterval(()=>{
         this.fetch()
       }, this.timer)
@@ -105,7 +106,7 @@ export default {
         columns: columns,
         rows: rows
       }
-      this.forceRerender()
+      // this.forceRerender()
       return chartData
     }
   }
