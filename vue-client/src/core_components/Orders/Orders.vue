@@ -58,6 +58,9 @@ export default {
     }
     this.start()
   },
+  beforeDestroy() {
+    this.finish()
+  },
   methods: {
     async fetchOrders_kupi(stockLowerCase, pair) {
       return axios.get(`${this.serverBackend}/api/${stockLowerCase}/orders/${pair}`)

@@ -1,5 +1,5 @@
 <template>
-  <ve-pie :data="dataComputed" :key="componentKey"></ve-pie>
+  <ve-pie :data="dataComputed" :key="'balancePie_'+componentKey"></ve-pie>
 </template>
 
 <script>
@@ -41,6 +41,9 @@ export default {
       return
     }
     this.start()
+  },
+  beforeDestroy() {
+    this.finish()
   },
   methods: {
     start() {

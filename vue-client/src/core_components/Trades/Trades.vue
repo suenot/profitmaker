@@ -60,6 +60,9 @@ export default {
     }
     this.start()
   },
+  beforeDestroy() {
+    this.finish()
+  },
   methods: {
     start() {
       this.interval = setInterval(()=>{

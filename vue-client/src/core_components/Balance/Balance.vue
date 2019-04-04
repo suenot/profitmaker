@@ -1,7 +1,7 @@
 <template>
   <div>
-    <!-- <BalanceTable /> -->
-    <!-- <BalancePie /> -->
+    <BalanceTable />
+    <BalancePie />
     <BalanceTimeseries />
   </div>
 </template>

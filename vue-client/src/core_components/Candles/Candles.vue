@@ -67,6 +67,9 @@ export default {
     }
     this.start()
   },
+  beforeDestroy() {
+    this.finish()
+  },
   methods: {
     forceRerender() {
       // this.componentKey += 1

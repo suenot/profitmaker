@@ -47,7 +47,7 @@ export default {
       tube: '',
       hash: '',
       data: [],
-      timer: 10000,
+      timer: 1000,
     }
   },
   fromMobx: {
@@ -73,6 +73,9 @@ export default {
       return
     }
     this.start()
+  },
+  beforeDestroy() {
+    this.finish()
   },
   methods: {
     start() {

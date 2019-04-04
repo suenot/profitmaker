@@ -1,5 +1,5 @@
 <template>
-  <ve-line :data="dataComputed" :settings="settingsComputed" :key="componentKey"></ve-line>
+  <ve-line :data="dataComputed" :settings="settingsComputed" :key="'balanceTimeseries_'+componentKey"></ve-line>
 </template>
 
 <script>
@@ -41,6 +41,9 @@ export default {
       return
     }
     this.start()
+  },
+  beforeDestroy() {
+    this.finish()
   },
   methods: {
     start() {

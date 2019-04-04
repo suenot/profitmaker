@@ -59,14 +59,15 @@
       }
     },
   },
-  created() {
-  },
   mounted() {
     if (this.demo) {
       this.data = require('./data.js').default
       return
     }
     this.start()
+  },
+  beforeDestroy() {
+    this.finish()
   },
   methods: {
     start() {
