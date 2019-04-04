@@ -18,7 +18,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr :key="order._id" v-for="order in openOrdersComputed" >
+        <tr :key="order._id" v-for="order in dataComputed" >
           <td>{{order.data.id || ""}}</td>
           <td>{{order.data.status || ""}}</td>
           <td>{{order.data.type || ""}}</td>
@@ -48,33 +48,67 @@
 </template>
 
 <script>
-  import axios from 'axios'
-  import moment from 'moment'
-  import _ from 'lodash'
-  export default {
+import axios from 'axios'
+import moment from 'moment'
+import _ from 'lodash'
+import { Notification } from 'element-ui'
+export default {
   data() {
     return {
-      openOrders: require('./data.js').default,
-      error: ''
+      demo: false,
+      interval: '',
+      tube: '',
+      hash: '',
+      data: [],
+      timer: 5000,
+      serverBackend: 'https://kupi.network',
     }
   },
-  created() {
+  fromMobx: {
+    pair: {
+      get() {
+        return Store.pair
+      }
+    },
+    accountId: {
+      get() {
+        return Store.accountId
+      }
+    },
   },
-  // mounted: function() {
-  //   // var accountId = 'ID_Binance_2'
-  //   // var pair = 'ETH_BTC'
-  //   // axios.get(`http://localhost:8040/openOrders/${accountId}/${pair}`)
-  //   // .then((response) => {
-  //   //   this.openOrders = response.data
-  //   // })
-  //   // .catch((error) => {
-  //   //   this.error = error
-  //   // })
-  // },
+  mounted: function() {
+    if (this.demo) {
+      this.data = require('./data.js').default
+      return
+    }
+    this.start()
+  },
   methods: {
+    start() {
+      this.interval = setInterval(()=>{
+        this.fetch()
+      }, this.timer)
+    },
+    finish() {
+      if (this.interval) {
+        clearInterval(this.interval)
+        this.interval = null
+      }
+    },
+    fetch() {
+      var accountId = this.accountId
+      var pair = this.pair
+      axios.get(`/user-api/openOrders/${accountId}/${pair}`)
+      .then((response) => {
+        this.data = response.data
+      })
+      .catch((error) => {
+        this.data = []
+      })
+    },
     cancelOrder: function(order) {
       var post = {
-        accountId: 'ID_Binance_2',
+        accountId: this.accountId,
         id: order.id,
         _id: order._id,
         symbol: order.symbol
@@ -83,27 +117,26 @@
       axios.post('/user-api/cancelOrder', post)
       .then((response) => {
         console.log(response)
+        Notification({
+          title: 'Success',
+          message: `Order #${order.id} cancelled`,
+          type: 'success'
+        })
       })
       .catch((error) => {
+        Notification({
+          title: 'Error',
+          message: `The order #${order.id} cannot be canceled`,
+          type: 'error'
+        })
         console.log(error)
       })
     }
   },
-  mounted: function() {
-    var accountId = 'ID_Binance_2'
-    var pair = 'ETH_BTC'
-    axios.get(`/user-api/openOrders/${accountId}/${pair}`)
-    .then((response) => {
-      this.openOrders = response.data
-    })
-    .catch((error) => {
-      this.error = error
-    })
-  },
   computed: {
-    openOrdersComputed: function() {
-      var openOrders = _.cloneDeep(this.openOrders)
-      return _.forEach(openOrders, (order)=>{
+    dataComputed: function() {
+      var data = _.cloneDeep(this.data)
+      return _.forEach(data, (order)=>{
         order.data.datetime = order.data.datetime ? moment(order.data.datetime).format('DD.MM.YY HH:mm:ss') : 'None'
         order.data.lastTradeTimestamp = order.data.lastTradeTimestamp ? moment(order.data.lastTradeTimestamp).format('DD.MM.YY HH:mm:ss') : 'None'
       })
