@@ -48,11 +48,6 @@
     }
   },
   fromMobx: {
-    // stock: {
-    //   get() {
-    //     return Store.stock
-    //   }
-    // },
     pair: {
       get() {
         return Store.pair
@@ -86,16 +81,13 @@
       }
     },
     fetch() {
-      console.log('fetch')
       var accountId = this.accountId
       var pair = this.pair
       axios.get(`/user-api/myTrades/${accountId}/${pair}`)
       .then((response) => {
         this.data = response.data
-        console.log(response)
       })
       .catch((error) => {
-        // this.data = 'error'
         this.data = []
       })
     }
@@ -122,5 +114,3 @@
   }
 }
 </script>
-
-<style lang="sass"></style>

@@ -31,14 +31,9 @@
           <td>{{order.data.remaining || ""}}</td>
           <td>
             {{order.data.lastTradeTimestamp}}
-            <!-- {{ ( order['data']['lastTradeTimestamp'] && moment(order['data']['lastTradeTimestamp']).format('DD.MM.YY HH:mm:ss') ) || 'None'}} -->
           </td>
           <td>
             <el-button type="primary" @click="cancelOrder(order)">Cancel</el-button>
-            <!-- <Button.Group>
-              <Button type="warning" size="mini" onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], item['stock'])}>change</Button>
-              <Button type="danger" size="mini" onClick={this.cancelOrder.bind(this, item['data']['id'], item['data']['symbol'], item['data']['_id'], item['stock'])}>close</Button>
-            </Button.Group> -->
           </td>
         </tr>
       </tbody>
@@ -113,10 +108,8 @@ export default {
         _id: order._id,
         symbol: order.symbol
       }
-      console.log(post)
       axios.post('/user-api/cancelOrder', post)
       .then((response) => {
-        console.log(response)
         Notification({
           title: 'Success',
           message: `Order #${order.id} cancelled`,
@@ -129,7 +122,6 @@ export default {
           message: `The order #${order.id} cannot be canceled`,
           type: 'error'
         })
-        console.log(error)
       })
     }
   },
@@ -144,5 +136,3 @@ export default {
   },
 }
 </script>
-
-<style lang="sass"></style>
