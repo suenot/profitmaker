@@ -7,26 +7,82 @@ import axios from 'axios'
 import moment from 'moment'
 import _ from 'lodash'
 export default {
-  data () {
+  data() {
     return {
-      data: require('./dataTimeseries.js').default,
-      componentKey: 0,
+      demo: false,
+      interval: '',
+      tube: '',
+      hash: '',
+      data: [],
+      timer: 10000,
+      componentKey: 0
     }
   },
+  fromMobx: {
+    stock: {
+      get() {
+        return Store.stock
+      }
+    },
+    pair: {
+      get() {
+        return Store.pair
+      }
+    },
+    accountId: {
+      get() {
+        return Store.accountId
+      }
+    },
+  },
+  mounted() {
+    if (this.demo) {
+      this.data = require('./data.js').default
+      return
+    }
+    this.start()
+  },
   methods: {
+    start() {
+      this.interval = setInterval(()=>{
+        this.fetch()
+      }, this.timer)
+    },
+    finish() {
+      if (this.interval) {
+        clearInterval(this.interval)
+        this.interval = null
+      }
+    },
+    fetch() {
+      var {stock, accountId} = this
+      var type = 'history'
+      stock = 'TOTAL'
+      const key = `${type}--${stock}--${accountId}`
+      axios.post(`/user-api/balance/`, {
+        type, key, stock, accountId
+      })
+      .then(response => {
+        this.data = response.data
+      })
+      .catch(error => {
+        this.data = {}
+      })
+    },
     forceRerender() {
       this.componentKey += 1
-    }
+    },
   },
   computed: {
     settingsComputed() {
-      this.forceU
+      // this.forceRerender()
       return {
         stack: { 'group1': this.data.coins },
         area: true
       }
     },
     dataComputed() {
+      if (_.isEmpty(this.data)) return []
       var data = _.cloneDeep(this.data)
       var columns = ['date']
       var rows = []

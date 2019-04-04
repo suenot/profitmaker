@@ -14,7 +14,7 @@ export default {
       tube: '',
       hash: '',
       data: [],
-      timer: 1000,
+      timer: 10000,
       componentKey: 0
     }
   },
@@ -75,13 +75,13 @@ export default {
   },
   computed: {
     dataComputed() {
+      if (_.isEmpty(this.data)) return []
       var data = _.cloneDeep(this.data)
       var legendData = ['name', 'USD', 'BTC', 'free', 'used']
       var seriesData = []
       var totalUSD = data.totalUSD
       var otherUSD = 0
       // var otherBTC = 0
-      if (_.isEmpty(data)) return []
       data.data.forEach(function(coin){
         if (coin.totalUSD !== 0) {
           if ( (coin.totalUSD/totalUSD*100 ) > 5) {
