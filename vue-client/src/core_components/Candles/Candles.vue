@@ -25,7 +25,7 @@ export default {
       tube: '',
       hash: '',
       data: [],
-      timer: 5000,
+      timer: 1000,
       serverBackend: 'https://kupi.network',
       timeframe: '1m',
       firstFetch: true,
@@ -96,20 +96,6 @@ export default {
         this.interval = null
       }
     },
-    async fetch() {
-      var stock = this.stock
-      var stockLowerCase = stock.toLowerCase()
-      var pair = this.pair
-      var data
-      if (this.tube === 'ccxt') {
-        data = await this.fetchOhlcv_ccxt(stockLowerCase, pair, timeframe)
-      } else {
-        data = await this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe)
-      }
-      // if (this.hash === JSON.stringify(data)) return true
-      // this.hash = JSON.stringify(data)
-      this.data = data
-    },
     async fetchOhlcv_kupi(stockLowerCase, pair, timeframe) {
       return axios.get(`${this.serverBackend}/api/${stockLowerCase}/candles/${pair}/${timeframe}`)
       .then((response) => {
@@ -144,7 +130,7 @@ export default {
       if (!stock) return
       var stockLowerCase = stock.toLowerCase()
       var pair = this.pair
-      var timeframe = this.timeframe
+      var timeframe = this.widget.timeframe
       var data
       if (this.tube === 'ccxt') {
         data = await this.fetchOhlcv_ccxt(stockLowerCase, pair, timeframe)

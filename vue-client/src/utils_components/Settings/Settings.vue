@@ -1,11 +1,26 @@
 <template>
   <div>
     <el-switch
-      v-model="data"
+      v-model="demo"
       active-text="Demo data"
       inactive-text="Real data"
       class="m-16">
     </el-switch>
+    <div class="candles-settings" v-if="timeframe">
+      <el-button size="mini" :disabled="timeframe === '1m'">1m</el-button>
+      <el-button size="mini" :disabled="timeframe === '3m'">3m</el-button>
+      <el-button size="mini" :disabled="timeframe === '5m'">5m</el-button>
+      <el-button size="mini" :disabled="timeframe === '15m'">15m</el-button>
+      <el-button size="mini" :disabled="timeframe === '30m'">30m</el-button>
+      <el-button size="mini" :disabled="timeframe === '1H'">1H</el-button>
+      <el-button size="mini" :disabled="timeframe === '2H'">2H</el-button>
+      <el-button size="mini" :disabled="timeframe === '4H'">4H</el-button>
+      <el-button size="mini" :disabled="timeframe === '6H'">6H</el-button>
+      <el-button size="mini" :disabled="timeframe === '12H'">12H</el-button>
+      <el-button size="mini" :disabled="timeframe === 'D'">D</el-button>
+      <el-button size="mini" :disabled="timeframe === 'W'">W</el-button>
+      <el-button size="mini" :disabled="timeframe === 'M'">M</el-button>
+    </div>
   </div>
 </template>
 
@@ -15,7 +30,7 @@ import { toJS } from 'mobx'
 export default {
   props: ['aside'],
   fromMobx: {
-    data: {
+    demo: {
       get() {
         return toJS(Store.blocks[this.aside.data.component].demo)
       },
@@ -26,6 +41,24 @@ export default {
         Store.setBlockData(name, param, value)
       }
     },
+    timeframe: {
+      get() {
+        return toJS(Store.blocks[this.aside.data.component].timeframe)
+      }
+    }
   },
+  mounted() {
+  }
 }
 </script>
+
+<style lang="sass">
+.candles-settings
+  display: flex
+  flex-wrap: wrap
+  margin: 0 16px 16px 16px
+  .el-button
+    flex: 0 1 auto
+    margin: 1px 1px !important
+    width: 58px
+</style>

@@ -46,13 +46,12 @@ export default {
     right: 0
   .aside-header
     display: flex
-    font-size: 18px
     border-bottom: 1px solid rgba(0, 0, 0, 0.12)
     justify-content: space-between
     .aside-title
       padding: 8px 16px
     .aside-actions
       i
-        padding: 8px 16px
+        padding: 9px 16px
         cursor: pointer
 </style>

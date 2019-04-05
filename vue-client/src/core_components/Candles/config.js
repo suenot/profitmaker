@@ -11,6 +11,7 @@ export default {
   authorLink: "https://github.com/kupi-network/kupi-terminal",
   source: "",
   demo: false,
+  timeframe: "1m",
   // stock: undefined,
   // pair: undefined,
   categories: ["Trades", "Candles"],
