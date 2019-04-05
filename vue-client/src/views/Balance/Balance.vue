@@ -26,7 +26,7 @@ export default {
 .main-container
   display: grid
   grid-template-columns: [fist-column] 470px [second-column] auto [third-column]
-  grid-template-rows: [first-row] 360px [second-row] calc(100vh - 360px)
+  grid-template-rows: [first-row] 440px [second-row] calc(100vh - 440px)
 
 .balance-table-wrapper
   grid-column: fist-column / second-column
@@ -34,7 +34,7 @@ export default {
   height: 100vh
 .balance-pie-wrapper
   grid-column: second-column / third-column
-  grid-row: first-row / third-row
+  grid-row: first-row / second-row
   justify-self: stretch
   align-self: stretch
 .balance-history

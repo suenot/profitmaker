@@ -22,7 +22,7 @@ export default [
     settings: "",
     settingsWidth: 300,
     img: "core_components/Balance/BalancePie.png",
-    title: "My trades",
+    title: "Balance pie",
     customTitle: "",
     description: "",
     author: "#core",

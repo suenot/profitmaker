@@ -9,7 +9,6 @@ import _ from 'lodash'
 export default {
   data() {
     return {
-      demo: false,
       interval: '',
       tube: '',
       hash: '',
@@ -18,6 +17,7 @@ export default {
       componentKey: 0
     }
   },
+  props: ['widget'],
   fromMobx: {
     stock: {
       get() {
@@ -36,10 +36,14 @@ export default {
     },
   },
   mounted() {
-    if (this.demo) {
+    if (this.widget.demo) {
       this.data = require('./data.js').default
+      this.$parent.notification = {
+        type: "warning",
+        msg: "Demo mode: using test data",
+      }
       return
-    }
+    } else this.$parent.notification = {}
     this.start()
   },
   beforeDestroy() {
@@ -68,9 +72,14 @@ export default {
       })
       .then(response => {
         this.data = response.data
+        this.$parent.notification = {}
       })
       .catch(error => {
         this.data = {}
+        this.$parent.notification = {
+          type: "alert",
+          msg: "Can't get data",
+        }
       })
     },
     forceRerender() {
