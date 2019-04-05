@@ -3,7 +3,6 @@
     <div class="main-container">
       <div class="orders-wrapper section">
         <Widget :widget="widgetOrders" />
-        <!-- <Orders type="both" /> -->
       </div>
       <div class="candles-wrapper">
         <Candles/>
@@ -28,7 +27,7 @@
         <Selector/>
       </div> -->
       <div class="trades-wrapper section">
-        <Trades/>
+        <Widget :widget="widgetTrades" />
       </div>
     </div>
 
@@ -57,15 +56,28 @@ export default {
       author: "#core",
       authorLink: "https://github.com/kupi-network/kupi-terminal",
       source: "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Orders/Orders.js",
-      stock: "BINANCE",
-      pair: "ETH_BTC",
+      // stock: undefined,
+      // pair: undefined,
       type: "both",
       visualMode: "crocodile",
       visualModeMax: "total sum",
       visualModeCrocodileMax: 10000,
       visualModeWallsMax: 1000,
-      group: "",
-      groupColor: "",
+    },
+    widgetTrades: {
+      name: "trades",
+      component: "Trades",
+      settings: "",
+      settingsWidth: 300,
+      img: "core_components/Trades/Trades.png",
+      title: "Trades",
+      customTitle: "",
+      description: "People trades",
+      author: "#core",
+      authorLink: "https://github.com/kupi-network/kupi-terminal",
+      source: "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Trades/Trades.js",
+      // stock: undefined,
+      // pair: undefined,
     },
   }),
 }
