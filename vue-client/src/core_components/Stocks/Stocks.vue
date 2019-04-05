@@ -31,15 +31,18 @@ export default {
       interval: '',
     }
   },
+  props: ['widget'],
   mounted() {
-    if (this.demo) {
-      this.data = require('./data.js').default
-      return
-    }
     this.start()
   },
   beforeDestroy() {
     this.finish()
+  },
+  watch: {
+    widget: function () {
+      this.finish()
+      this.start()
+    }
   },
   methods: {
     setStock(stock) {
@@ -48,18 +51,28 @@ export default {
     async fetchStocks_kupi() {
       return axios.get(`${this.serverBackend}/api/stocks`)
       .then((response) => {
+        this.$parent.notification = {}
         return response.data
       })
       .catch(() => {
+        this.$parent.notification = {
+          type: "alert",
+          msg: "Can't get data",
+        }
         return []
       })
     },
     async fetchStocks_ccxt() {
       return axios.get(`/user-api/ccxt/stocks`)
       .then((response) => {
+        this.$parent.notification = {}
         return response.data
       })
       .catch(() => {
+        this.$parent.notification = {
+          type: "alert",
+          msg: "Can't get data",
+        }
         return []
       })
     },
@@ -84,6 +97,14 @@ export default {
       this.data = stocks
     },
     start() {
+      if (this.widget.demo) {
+        this.data = require('./data.js').default
+        this.$parent.notification = {
+          type: "warning",
+          msg: "Demo mode: using test data",
+        }
+        return
+      } else this.$parent.notification = {}
       this.fetch()
       this.interval = setInterval(()=>{
         this.fetch()

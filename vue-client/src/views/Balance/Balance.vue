@@ -1,24 +1,28 @@
 <template>
   <div class="main-container">
     <div class="balance-table-wrapper section">
-      <Widget :widget="widgetBalanceTable" />
+      <Widget :widget="blocks.BalanceTable" />
     </div>
     <div class="balance-pie-wrapper section">
-      <Widget :widget="widgetBalancePie" />
+      <Widget :widget="blocks.BalancePie" />
     </div>
     <div class="balance-history section">
-      <Widget :widget="widgetBalanceHistory" />
+      <Widget :widget="blocks.BalanceHistory" />
     </div>
   </div>
 </template>
 
 <script>
+import Store from '../../stores/Store'
+import { toJS } from 'mobx'
 export default {
-  data: () => ({
-    widgetBalanceTable: require('@/core_components/Balance/config.js').default[0],
-    widgetBalancePie: require('@/core_components/Balance/config.js').default[1],
-    widgetBalanceHistory: require('@/core_components/Balance/config.js').default[2],
-  }),
+  fromMobx: {
+    blocks: {
+      get() {
+        return toJS(Store.blocks)
+      }
+    },
+  },
 }
 </script>
 

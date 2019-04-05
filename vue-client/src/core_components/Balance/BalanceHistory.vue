@@ -37,21 +37,27 @@ export default {
     },
   },
   mounted() {
-    if (this.widget.demo) {
-      this.data = require('./data.js').default
-      this.$parent.notification = {
-        type: "warning",
-        msg: "Demo mode: using test data",
-      }
-      return
-    } else this.$parent.notification = {}
     this.start()
   },
   beforeDestroy() {
     this.finish()
   },
+  watch: {
+    widget: function () {
+      this.finish()
+      this.start()
+    }
+  },
   methods: {
     start() {
+      if (this.widget.demo) {
+        this.data = require('./dataHistory.js').default
+        this.$parent.notification = {
+          type: "warning",
+          msg: "Demo mode: using test data",
+        }
+        return
+      } else this.$parent.notification = {}
       this.fetch()
       this.interval = setInterval(()=>{
         this.fetch()
@@ -83,9 +89,9 @@ export default {
         }
       })
     },
-    forceRerender() {
-      this.componentKey += 1
-    },
+    // forceRerender() {
+    //   this.componentKey += 1
+    // },
   },
   computed: {
     settingsComputed() {

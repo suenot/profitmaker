@@ -1,16 +1,39 @@
 import { observable, action, reaction, computed } from 'mobx'
 import { version, AsyncTrunk } from 'mobx-sync'
-// import _ from 'lodash'
+import _ from 'lodash'
 // import uuidv1 from 'uuid/v1'
 // import axios from 'axios'
 
 
-@version(1)
+@version(3)
 class Store {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'store' })
-    trunk.init().then(() => {})
+    trunk.init().then(() => {
+      if ( _.isEmpty(this.blocks) ) {
+        this.blocks = {
+          Orders: require('@/core_components/Orders/config.js').default,
+          Trades: require('@/core_components/Trades/config.js').default,
+          Candles: require('@/core_components/Candles/config.js').default,
+          MyTrades: require('@/core_components/MyTrades/config.js').default,
+          OpenOrders: require('@/core_components/OpenOrders/config.js').default,
+          BalanceTable: require('@/core_components/Balance/config.js').default[0],
+          BalancePie: require('@/core_components/Balance/config.js').default[1],
+          BalanceHistory: require('@/core_components/Balance/config.js').default[2],
+        }
+      }
+    })
   }
+
+  @observable blocks = {}
+
+  @action setBlockData(name, param, value) {
+    this.blocks[name][param] = value
+    this.blocksTrigger = !this.blocksTrigger
+    console.log(this.blocks)
+  }
+  @observable blocksTrigger = false
+
   @observable background = '#000' // TODO
   @observable color = '#fff' // TODO
 

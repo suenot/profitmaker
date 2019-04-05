@@ -28,6 +28,7 @@ export default {
       tube: '',
     }
   },
+  props: ['widget'],
   fromMobx: {
     stock: {
       get() {
@@ -36,17 +37,27 @@ export default {
     },
   },
   mounted() {
-    if (this.demo) {
-      this.data = require('./data.js').default
-      return
-    }
     this.start()
   },
   beforeDestroy() {
     this.finish()
   },
+  watch: {
+    widget: function () {
+      this.finish()
+      this.start()
+    }
+  },
   methods: {
     start() {
+      if (this.widget.demo) {
+        this.data = require('./data.js').default
+        this.$parent.notification = {
+          type: "warning",
+          msg: "Demo mode: using test data",
+        }
+        return
+      } else this.$parent.notification = {}
       this.fetch()
       this.interval = setInterval(()=>{
         this.fetch()
@@ -61,19 +72,29 @@ export default {
     async fetchPairs_kupi(stockLowerCase) {
       return axios.get(`${this.serverBackend}/api/${stockLowerCase}/pairs/`)
       .then((response) => {
+        this.$parent.notification = {}
         return response.data
       })
       .catch(() => {
         this.tube = 'ccxt'
+        this.$parent.notification = {
+          type: "alert",
+          msg: "Can't get data",
+        }
         return []
       })
     },
     async fetchPairs_ccxt(stockLowerCase) {
       return axios.get(`/user-api/ccxt/${stockLowerCase}/pairs/`)
       .then((response) => {
+        this.$parent.notification = {}
         return response.data
       })
       .catch(() => {
+        this.$parent.notification = {
+          type: "alert",
+          msg: "Can't get data",
+        }
         return []
       })
     },

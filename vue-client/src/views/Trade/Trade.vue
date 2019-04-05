@@ -2,35 +2,37 @@
   <div>
     <div class="main-container">
       <div class="orders-wrapper section">
-        <Widget :widget="widgetOrders" />
+        <Widget :widget="blocks.Orders" />
       </div>
       <div class="candles-wrapper">
-        <Widget :widget="widgetCandles" />
+        <Widget :widget="blocks.Candles" />
       </div>
       <div class="info-wrapper">
         <div class="flex my-trades-wrapper">
-          <Widget :widget="widgetMyTrades" />
+          <Widget :widget="blocks.MyTrades" />
         </div>
         <div class="flex open-orders-wrapper">
-          <Widget :widget="widgetOpenOrders" />
+          <Widget :widget="blocks.OpenOrders" />
         </div>
       </div>
       <div class="trades-wrapper section">
-        <Widget :widget="widgetTrades" />
+        <Widget :widget="blocks.Trades" />
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import Store from '../../stores/Store'
+import { toJS } from 'mobx'
 export default {
-  data: () => ({
-    widgetOrders: require('@/core_components/Orders/config.js').default,
-    widgetTrades: require('@/core_components/Trades/config.js').default,
-    widgetCandles: require('@/core_components/Candles/config.js').default,
-    widgetMyTrades: require('@/core_components/MyTrades/config.js').default,
-    widgetOpenOrders:require('@/core_components/OpenOrders/config.js').default,
-  }),
+  fromMobx: {
+    blocks: {
+      get() {
+        return toJS(Store.blocks)
+      }
+    },
+  },
 }
 </script>
 
