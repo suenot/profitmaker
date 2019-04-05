@@ -11,10 +11,7 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'Trade',
-      component: Trade,
-      props: true,
-      meta: { reuse: false }
+      redirect: { name: 'Trade' }
     },
     // {
     //   path: '/dashboard/:id',
