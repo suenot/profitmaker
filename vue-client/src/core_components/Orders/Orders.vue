@@ -90,6 +90,7 @@ export default {
     },
     async fetch() {
       var stock = this.stock
+      console.log(this.stock.toLowerCase())
       var stockLowerCase = stock.toLowerCase()
       var pair = this.pair
       var data

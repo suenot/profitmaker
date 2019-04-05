@@ -12,7 +12,7 @@
   </div>
 </template>
 
-<style lang="sass">
+<style lang="sass" scoped>
 .main-container
   display: grid
   grid-template-columns: [fist-column] 470px [second-column] auto [third-column]

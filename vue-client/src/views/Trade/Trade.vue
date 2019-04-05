@@ -41,7 +41,7 @@
   </div>
 </template>
 
-<style lang="sass">
+<style lang="sass" scoped>
 .main-container
   display: grid
   grid-template-columns: [start] 380px [line1] auto [line2] 310px [end]
