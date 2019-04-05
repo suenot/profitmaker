@@ -1,16 +1,26 @@
 <template>
   <div class="main-container">
     <div class="balance-table-wrapper section">
-      <BalanceTable />
+      <Widget :widget="widgetBalanceTable" />
     </div>
     <div class="balance-pie-wrapper section">
-      <BalancePie />
+      <Widget :widget="widgetBalancePie" />
     </div>
-    <div class="balance-timeseries section">
-      <BalanceTimeseries />
+    <div class="balance-history section">
+      <Widget :widget="widgetBalanceHistory" />
     </div>
   </div>
 </template>
+
+<script>
+export default {
+  data: () => ({
+    widgetBalanceTable: require('@/core_components/Balance/config.js').default[0],
+    widgetBalancePie: require('@/core_components/Balance/config.js').default[1],
+    widgetBalanceHistory: require('@/core_components/Balance/config.js').default[2],
+  }),
+}
+</script>
 
 <style lang="sass" scoped>
 .main-container
@@ -27,7 +37,7 @@
   grid-row: first-row / third-row
   justify-self: stretch
   align-self: stretch
-.balance-timeseries
+.balance-history
   grid-column: second-column / third-column
   grid-row: second-row / third-row
   justify-self: stretch
