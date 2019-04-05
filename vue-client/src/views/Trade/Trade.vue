@@ -7,14 +7,6 @@
       <div class="candles-wrapper">
         <Widget :widget="widgetCandles" />
       </div>
-      <!-- <div class="create-order-wrapper">
-        <div class="createOrder">
-          <CreateOrder type="buy"/>
-        </div>
-        <div class="createOrder">
-          <CreateOrder type="sell"/>
-        </div>
-      </div> -->
       <div class="info-wrapper">
         <div class="flex my-trades-wrapper">
           <Widget :widget="widgetMyTrades" />
@@ -23,117 +15,21 @@
           <Widget :widget="widgetOpenOrders" />
         </div>
       </div>
-      <!-- <div class="selector-wrapper">
-        <Selector/>
-      </div> -->
       <div class="trades-wrapper section">
         <Widget :widget="widgetTrades" />
       </div>
     </div>
-
-
-    <!-- <div class="flex stocks-wrapper">
-      <Stocks/>
-    </div>
-    <div class="flex pairs-wrapper">
-      <Pairs/>
-    </div> -->
   </div>
 </template>
 
 <script>
 export default {
   data: () => ({
-    widgetOrders: {
-      name: "Orders",
-      component: "Orders",
-      settings: "",
-      settingsWidth: 300,
-      img: "core_components/Orders/Orders.png",
-      title: "Orders",
-      customTitle: "",
-      description: "Combined asks and bids",
-      author: "#core",
-      authorLink: "https://github.com/kupi-network/kupi-terminal",
-      source: "",
-      // stock: undefined,
-      // pair: undefined,
-      demo: false,
-      type: "both",
-      visualMode: "crocodile",
-      visualModeMax: "total sum",
-      visualModeCrocodileMax: 10000,
-      visualModeWallsMax: 1000,
-      categories: ["Orders"],
-    },
-    widgetTrades: {
-      name: "Trades",
-      component: "Trades",
-      settings: "",
-      settingsWidth: 300,
-      img: "core_components/Trades/Trades.png",
-      title: "Trades",
-      customTitle: "",
-      description: "People trades",
-      author: "#core",
-      authorLink: "https://github.com/kupi-network/kupi-terminal",
-      source: "",
-      demo: false,
-      // stock: undefined,
-      // pair: undefined,
-      categories: ["Trades"],
-    },
-    widgetCandles: {
-      name: "Candles",
-      component: "Candles",
-      settings: "",
-      settingsWidth: 300,
-      img: "core_components/Candles/Candles.png",
-      title: "Candles",
-      customTitle: "",
-      description: "Open-High-Low-Close-Value candles chart",
-      author: "#core",
-      authorLink: "https://github.com/kupi-network/kupi-terminal",
-      source: "",
-      demo: false,
-      // stock: undefined,
-      // pair: undefined,
-      categories: ["Trades", "Candles"],
-    },
-    widgetMyTrades: {
-      name: "MyTrades",
-      component: "MyTrades",
-      settings: "",
-      settingsWidth: 300,
-      img: "core_components/MyTrades/MyTrades.png",
-      title: "My trades",
-      customTitle: "",
-      description: "History of my trades",
-      author: "#core",
-      authorLink: "https://github.com/kupi-network/kupi-terminal",
-      source: "",
-      demo: false,
-      // stock: undefined,
-      // pair: undefined,
-      categories: ["Private api", "Trades"],
-    },
-    widgetOpenOrders: {
-      name: "OpenOrders",
-      component: "OpenOrders",
-      settings: "",
-      settingsWidth: 300,
-      img: "core_components/OpenOrders/OpenOrders.png",
-      title: "Open orders",
-      customTitle: "",
-      description: "My open orders",
-      author: "#core",
-      authorLink: "https://github.com/kupi-network/kupi-terminal",
-      source: "",
-      demo: false,
-      // stock: undefined,
-      // pair: undefined,
-      categories: ["Private api", "Orders"],
-    },
+    widgetOrders: require('@/core_components/Orders/config.js').default,
+    widgetTrades: require('@/core_components/Trades/config.js').default,
+    widgetCandles: require('@/core_components/Candles/config.js').default,
+    widgetMyTrades: require('@/core_components/MyTrades/config.js').default,
+    widgetOpenOrders:require('@/core_components/OpenOrders/config.js').default,
   }),
 }
 </script>
