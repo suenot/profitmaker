@@ -30,7 +30,6 @@ class Store {
   @action setBlockData(name, param, value) {
     this.blocks[name][param] = value
     this.blocksTrigger = !this.blocksTrigger
-    console.log(this.blocks)
   }
   @observable blocksTrigger = false
 

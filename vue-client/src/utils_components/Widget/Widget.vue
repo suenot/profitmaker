@@ -5,7 +5,7 @@
         {{widget.title}}
       </div>
       <div class="widget-actions">
-        <i class="el-icon-more pointer"></i>
+        <i class="el-icon-more pointer" @click="showSettings()"></i>
       </div>
     </div>
     <div class="widget-body">
@@ -28,6 +28,16 @@ export default {
     }
   },
   props: ['widget'],
+  methods: {
+    showSettings() {
+      var component = 'Settings'
+      var title = `${this.widget.title} settings`
+      var side = 'right'
+      var width = 380
+      var data = this.widget
+      AsidesStore.addAside(component, title, side, width, data)
+    }
+  },
 }
 </script>
 

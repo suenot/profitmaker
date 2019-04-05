@@ -7,7 +7,7 @@
       </span>
     </div>
     <div class="aside-body">
-      <component :is="aside.component" />
+      <component :is="aside.component" :aside="aside" />
     </div>
   </div>
 </template>

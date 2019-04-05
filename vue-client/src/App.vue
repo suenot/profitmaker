@@ -86,6 +86,10 @@ body
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
 .spacer
   flex: 1 0 auto
+.pointer
+  cursor: pointer
+.m-16
+  margin: 16px
 
 
 .kupi-table
