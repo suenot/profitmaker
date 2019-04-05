@@ -20,7 +20,7 @@
           <Widget :widget="widgetMyTrades" />
         </div>
         <div class="flex open-orders-wrapper">
-          <OpenOrders/>
+          <Widget :widget="widgetOpenOrders" />
         </div>
       </div>
       <!-- <div class="selector-wrapper">
@@ -58,11 +58,13 @@ export default {
       source: "",
       // stock: undefined,
       // pair: undefined,
+      demo: false,
       type: "both",
       visualMode: "crocodile",
       visualModeMax: "total sum",
       visualModeCrocodileMax: 10000,
       visualModeWallsMax: 1000,
+      categories: ["Orders"],
     },
     widgetTrades: {
       name: "Trades",
@@ -76,8 +78,10 @@ export default {
       author: "#core",
       authorLink: "https://github.com/kupi-network/kupi-terminal",
       source: "",
+      demo: false,
       // stock: undefined,
       // pair: undefined,
+      categories: ["Trades"],
     },
     widgetCandles: {
       name: "Candles",
@@ -91,8 +95,10 @@ export default {
       author: "#core",
       authorLink: "https://github.com/kupi-network/kupi-terminal",
       source: "",
+      demo: false,
       // stock: undefined,
       // pair: undefined,
+      categories: ["Trades", "Candles"],
     },
     widgetMyTrades: {
       name: "MyTrades",
@@ -106,9 +112,27 @@ export default {
       author: "#core",
       authorLink: "https://github.com/kupi-network/kupi-terminal",
       source: "",
+      demo: false,
       // stock: undefined,
       // pair: undefined,
       categories: ["Private api", "Trades"],
+    },
+    widgetOpenOrders: {
+      name: "OpenOrders",
+      component: "OpenOrders",
+      settings: "",
+      settingsWidth: 300,
+      img: "core_components/OpenOrders/OpenOrders.png",
+      title: "Open orders",
+      customTitle: "",
+      description: "My open orders",
+      author: "#core",
+      authorLink: "https://github.com/kupi-network/kupi-terminal",
+      source: "",
+      demo: false,
+      // stock: undefined,
+      // pair: undefined,
+      categories: ["Private api", "Orders"],
     },
   }),
 }
