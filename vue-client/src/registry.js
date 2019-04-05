@@ -26,5 +26,6 @@ Vue.component('ProfileAside', require('./utils_components/Profile/ProfileAside.v
 Vue.component('Login', require('./utils_components/Profile/Login.vue').default)
 Vue.component('Logout', require('./utils_components/Profile/Logout.vue').default)
 Vue.component('Accounts', require('./utils_components/Profile/Accounts.vue').default)
+Vue.component('Widget', require('./utils_components/Widget/Widget.vue').default)
 
 

@@ -1,23 +1,23 @@
 <template>
   <div>
     <div class="actions">
-      <button @click="type = 'both'">
+      <button @click="widget.type = 'both'">
         <img src="/img/icons/type_both.png" />
       </button>
-      <button @click="type = 'bids'">
+      <button @click="widget.type = 'bids'">
         <img src="/img/icons/type_bids.png" />
       </button>
-      <button @click="type = 'asks'">
+      <button @click="widget.type = 'asks'">
         <img src="/img/icons/type_asks.png" />
       </button>
     </div>
-    <template v-if="type === 'both'">
+    <template v-if="widget.type === 'both'">
       <OrdersSide type="asks" :data="data" sort="desc" :thead="true"/>
       <div ref="ordersCenter"></div>
       <OrdersSide type="bids" :data="data" sort="desc" :thead="false"/>
     </template>
-    <OrdersSide v-if="type === 'asks'" :data="data" type="asks" sort="asc" :thead="true" />
-    <OrdersSide v-if="type === 'bids'" :data="data" type="bids" sort="desc" :thead="true" />
+    <OrdersSide v-if="widget.type === 'asks'" :data="data" type="asks" sort="asc" :thead="true" />
+    <OrdersSide v-if="widget.type === 'bids'" :data="data" type="bids" sort="desc" :thead="true" />
   </div>
 </template>
 
@@ -38,7 +38,7 @@ export default {
       center: false,
     }
   },
-  props: ['type'],
+  props: ['widget'],
   fromMobx: {
     stock: {
       get() {
@@ -90,7 +90,6 @@ export default {
     },
     async fetch() {
       var stock = this.stock
-      console.log(this.stock.toLowerCase())
       var stockLowerCase = stock.toLowerCase()
       var pair = this.pair
       var data
@@ -102,7 +101,7 @@ export default {
       // if (this.hash === JSON.stringify(data)) return true
       // this.hash = JSON.stringify(data)
       this.data = data
-      if (this.type === 'both' && !this.center) {
+      if (this.widget.type === 'both' && !this.center) {
         setTimeout(()=>{
           this.toCenter()
         }, 200)
