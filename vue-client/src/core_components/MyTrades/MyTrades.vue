@@ -38,7 +38,6 @@
   export default {
   data() {
     return {
-      demo: false,
       interval: '',
       tube: '',
       hash: '',
@@ -47,6 +46,7 @@
       serverBackend: 'https://kupi.network',
     }
   },
+  props: ['widget'],
   fromMobx: {
     pair: {
       get() {
@@ -60,10 +60,14 @@
     },
   },
   mounted() {
-    if (this.demo) {
+    if (this.widget.demo) {
       this.data = require('./data.js').default
+      this.$parent.notification = {
+        type: "warning",
+        msg: "Demo mode: using test data",
+      }
       return
-    }
+    } else this.$parent.notification = {}
     this.start()
   },
   beforeDestroy() {
@@ -88,9 +92,14 @@
       axios.get(`/user-api/myTrades/${accountId}/${pair}`)
       .then((response) => {
         this.data = response.data
+        this.$parent.notification = {}
       })
       .catch((error) => {
         this.data = []
+        this.$parent.notification = {
+          type: "alert",
+          msg: "Can't get data",
+        }
       })
     }
   },

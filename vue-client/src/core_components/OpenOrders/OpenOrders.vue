@@ -50,7 +50,6 @@ import { Notification } from 'element-ui'
 export default {
   data() {
     return {
-      demo: false,
       interval: '',
       tube: '',
       hash: '',
@@ -59,6 +58,7 @@ export default {
       serverBackend: 'https://kupi.network',
     }
   },
+  props: ['widget'],
   fromMobx: {
     pair: {
       get() {
@@ -72,10 +72,14 @@ export default {
     },
   },
   mounted: function() {
-    if (this.demo) {
+    if (this.widget.demo) {
       this.data = require('./data.js').default
+      this.$parent.notification = {
+        type: "warning",
+        msg: "Demo mode: using test data",
+      }
       return
-    }
+    } else this.$parent.notification = {}
     this.start()
   },
   beforeDestroy() {
@@ -100,9 +104,14 @@ export default {
       axios.get(`/user-api/openOrders/${accountId}/${pair}`)
       .then((response) => {
         this.data = response.data
+        this.$parent.notification = {}
       })
       .catch((error) => {
         this.data = []
+        this.$parent.notification = {
+          type: "alert",
+          msg: "Can't get data",
+        }
       })
     },
     cancelOrder: function(order) {

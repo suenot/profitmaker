@@ -21,7 +21,6 @@ export default {
     }
     return {
       componentKey: 0,
-      demo: false,
       interval: '',
       tube: '',
       hash: '',
@@ -48,6 +47,7 @@ export default {
       }
     }
   },
+  props: ['widget'],
   fromMobx: {
     stock: {
       get() {
@@ -61,10 +61,14 @@ export default {
     },
   },
   mounted() {
-    if (this.demo) {
+    if (this.widget.demo) {
       this.data = require('./data.js').default
+      this.$parent.notification = {
+        type: "warning",
+        msg: "Demo mode: using test data",
+      }
       return
-    }
+    } else this.$parent.notification = {}
     this.start()
   },
   beforeDestroy() {
@@ -103,19 +107,29 @@ export default {
     async fetchOhlcv_kupi(stockLowerCase, pair, timeframe) {
       return axios.get(`${this.serverBackend}/api/${stockLowerCase}/candles/${pair}/${timeframe}`)
       .then((response) => {
+        this.$parent.notification = {}
         return response.data
       })
       .catch(() => {
         this.tube = 'ccxt'
+        this.$parent.notification = {
+          type: "alert",
+          msg: "Can't get data",
+        }
         return []
       })
     },
     async fetchOhlcv_ccxt(stockLowerCase, pair, timeframe) {
       return axios.get(`/user-api/ccxt/${stockLowerCase}/candles/${pair}/${timeframe}`)
       .then((response) => {
+        this.$parent.notification = {}
         return response.data
       })
       .catch(() => {
+        this.$parent.notification = {
+          type: "alert",
+          msg: "Can't get data",
+        }
         return []
       })
     },
