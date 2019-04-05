@@ -5,7 +5,7 @@
         <Widget :widget="widgetOrders" />
       </div>
       <div class="candles-wrapper">
-        <Candles/>
+        <Widget :widget="widgetCandles" />
       </div>
       <!-- <div class="create-order-wrapper">
         <div class="createOrder">
@@ -76,6 +76,21 @@ export default {
       author: "#core",
       authorLink: "https://github.com/kupi-network/kupi-terminal",
       source: "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Trades/Trades.js",
+      // stock: undefined,
+      // pair: undefined,
+    },
+    widgetCandles: {
+      name: "candles",
+      component: "Candles",
+      settings: "",
+      settingsWidth: 300,
+      img: "core_components/Candles/Candles.png",
+      title: "Candles",
+      customTitle: "",
+      description: "Open-High-Low-Close-Value candles chart",
+      author: "#core",
+      authorLink: "https://github.com/kupi-network/kupi-terminal",
+      source: "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/ReactStockcharts/index.js",
       // stock: undefined,
       // pair: undefined,
     },

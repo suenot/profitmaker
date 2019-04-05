@@ -70,6 +70,8 @@ export default observer({
 </script>
 
 <style lang="sass">
+html
+  overflow-y: auto !important
 body
   font-family: 'Helvetica', 'Arial', sans-serif
   &.day
