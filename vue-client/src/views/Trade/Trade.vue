@@ -17,7 +17,7 @@
       </div> -->
       <div class="info-wrapper">
         <div class="flex my-trades-wrapper">
-          <MyTrades/>
+          <Widget :widget="widgetMyTrades" />
         </div>
         <div class="flex open-orders-wrapper">
           <OpenOrders/>
@@ -45,7 +45,7 @@
 export default {
   data: () => ({
     widgetOrders: {
-      name: "orders",
+      name: "Orders",
       component: "Orders",
       settings: "",
       settingsWidth: 300,
@@ -55,7 +55,7 @@ export default {
       description: "Combined asks and bids",
       author: "#core",
       authorLink: "https://github.com/kupi-network/kupi-terminal",
-      source: "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Orders/Orders.js",
+      source: "",
       // stock: undefined,
       // pair: undefined,
       type: "both",
@@ -65,7 +65,7 @@ export default {
       visualModeWallsMax: 1000,
     },
     widgetTrades: {
-      name: "trades",
+      name: "Trades",
       component: "Trades",
       settings: "",
       settingsWidth: 300,
@@ -75,12 +75,12 @@ export default {
       description: "People trades",
       author: "#core",
       authorLink: "https://github.com/kupi-network/kupi-terminal",
-      source: "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/Trades/Trades.js",
+      source: "",
       // stock: undefined,
       // pair: undefined,
     },
     widgetCandles: {
-      name: "candles",
+      name: "Candles",
       component: "Candles",
       settings: "",
       settingsWidth: 300,
@@ -90,9 +90,25 @@ export default {
       description: "Open-High-Low-Close-Value candles chart",
       author: "#core",
       authorLink: "https://github.com/kupi-network/kupi-terminal",
-      source: "https://github.com/kupi-network/kupi-terminal/blob/master/react-client/src/core_components/ReactStockcharts/index.js",
+      source: "",
       // stock: undefined,
       // pair: undefined,
+    },
+    widgetMyTrades: {
+      name: "MyTrades",
+      component: "MyTrades",
+      settings: "",
+      settingsWidth: 300,
+      img: "core_components/MyTrades/MyTrades.png",
+      title: "My trades",
+      customTitle: "",
+      description: "History of my trades",
+      author: "#core",
+      authorLink: "https://github.com/kupi-network/kupi-terminal",
+      source: "",
+      // stock: undefined,
+      // pair: undefined,
+      categories: ["Private api", "Trades"],
     },
   }),
 }

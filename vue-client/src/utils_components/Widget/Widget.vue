@@ -23,6 +23,7 @@ export default {
 <style lang="sass">
 .widget
   height: 100%
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12)
 .widget-header
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
   height: 33px
