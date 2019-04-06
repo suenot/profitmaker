@@ -35,13 +35,13 @@ export default {
   fromMobx: {
     block: {
       get() {
-        return toJS(Store.blocks[this.aside.data.component])
+        return toJS(Store.blocks[this.aside.widget.component])
       }
     }
   },
   methods: {
     setData(e, param) {
-      var name = this.aside.data.component
+      var name = this.aside.widget.component
       if (typeof(e) === 'boolean') {
         var value = e
       } else {
