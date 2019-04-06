@@ -35,12 +35,12 @@ class AsidesStore {
     // },
   ]
 
-  @action addAside(component, title, side, width, data, dashboardId, widgetId) {
+  @action addAside(component, title, side, width, widget, dashboardId, widgetId) {
     var id = false
     for (let aside of this.asides) {
       if (
         aside.permanent === false &&
-        JSON.stringify(aside.data) === JSON.stringify(data) &&
+        JSON.stringify(aside.widget) === JSON.stringify(widget) &&
         aside.side === side &&
         aside.width === width &&
         aside.component === component
@@ -58,7 +58,7 @@ class AsidesStore {
         component: component || 'Empty',
         title: title || '',
         permanent: false,
-        data: data
+        widget: widget
       })
       this.asidesTrigger = !this.asidesTrigger
     } else {

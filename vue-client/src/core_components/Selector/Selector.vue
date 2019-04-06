@@ -48,16 +48,16 @@ export default {
       var title = 'Stocks'
       var side = 'left'
       var width = 380
-      var data = {}
-      AsidesStore.addAside(component, title, side, width, data)
+      var widget = {demo: false}
+      AsidesStore.addAside(component, title, side, width, widget)
     },
     showPairs() {
       var component = 'Pairs'
       var title = 'Pairs'
       var side = 'left'
       var width = 380
-      var data = {}
-      AsidesStore.addAside(component, title, side, width, data)
+      var widget = {demo: false}
+      AsidesStore.addAside(component, title, side, width, widget)
     },
   },
   computed: {
