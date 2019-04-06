@@ -1,15 +1,17 @@
 # Kupi-terminal – crypto currency trading terminal
 
-[![License](https://img.shields.io/badge/licence-GPL--2.0-blue.svg)](https://raw.githubusercontent.com/kupi-network/kupi-terminal/master/LICENSE) [![Discord](https://img.shields.io/discord/430374279343898624.svg?color=4D64BA&label=chat%20on%20discord)](https://discord.gg/2PtuMAg) ![Version](https://img.shields.io/badge/express_server-0.4.0-blue.svg) ![Version](https://img.shields.io/badge/react_client-0.4.0-blue.svg) ![Version](https://img.shields.io/badge/vue_client-0.0.1-orange.svg) [![codecov](https://codecov.io/gh/kupi-network/kupi-terminal/branch/master/graph/badge.svg)](https://codecov.io/gh/kupi-network/kupi-terminal) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a0b7b6b595fd4b3db3818fed7665b1bf)](https://www.codacy.com/app/suenot/kupi-terminal?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=kupi-network/kupi-terminal&amp;utm_campaign=Badge_Grade) [![Build Status](https://travis-ci.org/kupi-network/kupi-terminal.svg?branch=master)](https://travis-ci.org/kupi-network/kupi-terminal)
+[![License](https://img.shields.io/badge/licence-GPL--2.0-blue.svg)](https://raw.githubusercontent.com/kupi-network/kupi-terminal/master/LICENSE) [![Discord](https://img.shields.io/discord/430374279343898624.svg?color=4D64BA&label=chat%20on%20discord)](https://discord.gg/2PtuMAg) ![Version](https://img.shields.io/badge/express_server-0.5.0-blue.svg) ![Version](https://img.shields.io/badge/react_client-0.5.0-blue.svg) ![Version](https://img.shields.io/badge/vue_client-0.1.0-blue.svg) [![codecov](https://codecov.io/gh/kupi-network/kupi-terminal/branch/master/graph/badge.svg)](https://codecov.io/gh/kupi-network/kupi-terminal) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a0b7b6b595fd4b3db3818fed7665b1bf)](https://www.codacy.com/app/suenot/kupi-terminal?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=kupi-network/kupi-terminal&amp;utm_campaign=Badge_Grade) [![Build Status](https://travis-ci.org/kupi-network/kupi-terminal.svg?branch=master)](https://travis-ci.org/kupi-network/kupi-terminal)
 
-Open source, customized, extendable trading terminal that supports multiple crypto stocks. 
+Open source, customized, extendable trading terminal that supports multiple crypto stocks.
 
 [![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/demo.png?raw=true)](http://demo.kupi.network/)
 
 ### [Demo](#demo) ·[How it works](#how-it-works) · [Features](#features) · [Technologies](#technologies) · [Warning](#warning) · [Quick start](#quick-start) · [Exchange markets](#supported-cryptocurrency-exchange-markets) · [API](#api) · [Plan for development](#plan-for-development) · [Crypto](#crypto) · [Team](#team) · [Contact us](#contact-us)
 
 ## Demo
-[https://kupi.network/](https://kupi.network/)
+React version: [https://kupi.network/](https://kupi.network/)
+
+Vue version: [https://vue.kupi.network/](https://vue.kupi.network/)
 
 ## How it works
 ![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/structure.png?raw=true)
@@ -30,12 +32,13 @@ Want this place? Contact us: https://www.facebook.com/dexenot
 
 ## Technologies
 - [React](https://github.com/facebook/react), [react-grid-layout](https://github.com/STRML/react-grid-layout), [material-ui](https://github.com/mui-org/material-ui)
-- [Vue](https://github.com/vuejs/vue), [vue-grid-layout](https://github.com/jbaysolutions/vue-grid-layout), [vuetify](https://github.com/vuetifyjs/vuetify)
+- [Vue](https://github.com/vuejs/vue), [vue-grid-layout](https://github.com/jbaysolutions/vue-grid-layout), [element](https://github.com/ElemeFE/element), [movue](https://github.com/nighca/movue), [v-charts](https://github.com/ElemeFE/v-charts)
 - [Mobx](https://github.com/mobxjs/mobx)
 - [Express](https://github.com/expressjs/express)
 - [Mongo](https://github.com/mongodb/mongo)
 - [CCXT](https://github.com/ccxt/ccxt)
 - [Flaticon](https://www.flaticon.com/)
+- [Echarts](https://github.com/apache/incubator-echarts)
 
 ## WARNING
 THE SOFTWARE UNDER HEAVY DEVELOPMENT. PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
