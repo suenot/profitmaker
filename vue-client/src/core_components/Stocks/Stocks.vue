@@ -23,7 +23,7 @@ export default {
   data() {
     return {
       data: [],
-      demo: false,
+      // demo: false,
       // hash: '',
       timer: 1000,
       serverBackend: 'https://kupi.network',
@@ -97,7 +97,7 @@ export default {
       this.data = stocks
     },
     start() {
-      if (this.widget.demo) {
+      if (this.widget && this.widget.demo) {
         this.data = require('./data.js').default
         this.$parent.notification = {
           type: "warning",
