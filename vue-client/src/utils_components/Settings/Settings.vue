@@ -7,19 +7,19 @@
       class="m-16">
     </el-switch>
     <div class="candles-settings" v-if="timeframe">
-      <el-button size="mini" :disabled="timeframe === '1m'">1m</el-button>
-      <el-button size="mini" :disabled="timeframe === '3m'">3m</el-button>
-      <el-button size="mini" :disabled="timeframe === '5m'">5m</el-button>
-      <el-button size="mini" :disabled="timeframe === '15m'">15m</el-button>
-      <el-button size="mini" :disabled="timeframe === '30m'">30m</el-button>
-      <el-button size="mini" :disabled="timeframe === '1H'">1H</el-button>
-      <el-button size="mini" :disabled="timeframe === '2H'">2H</el-button>
-      <el-button size="mini" :disabled="timeframe === '4H'">4H</el-button>
-      <el-button size="mini" :disabled="timeframe === '6H'">6H</el-button>
-      <el-button size="mini" :disabled="timeframe === '12H'">12H</el-button>
-      <el-button size="mini" :disabled="timeframe === 'D'">D</el-button>
-      <el-button size="mini" :disabled="timeframe === 'W'">W</el-button>
-      <el-button size="mini" :disabled="timeframe === 'M'">M</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === '1m'">1m</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === '3m'">3m</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === '5m'">5m</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === '15m'">15m</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === '30m'">30m</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === '1H'">1H</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === '2H'">2H</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === '4H'">4H</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === '6H'">6H</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === '12H'">12H</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === 'D'">D</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === 'W'">W</el-button>
+      <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="timeframe === 'M'">M</el-button>
     </div>
   </div>
 </template>
@@ -47,7 +47,12 @@ export default {
       }
     }
   },
-  mounted() {
+  methods: {
+    setData(e, param) {
+      var name = this.aside.data.component
+      var value = e.target.innerText
+      Store.setBlockData(name, param, value)
+    }
   }
 }
 </script>

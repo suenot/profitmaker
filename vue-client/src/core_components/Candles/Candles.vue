@@ -1,5 +1,5 @@
 <template>
-  <ve-candle :data="dataComputed" :settings="chartSettings" :events="chartEvents" height="435px" key="echarts-candles" :key="componentKey"></ve-candle>
+  <ve-candle :data="dataComputed" :settings="chartSettings" :events="chartEvents" height="435px" key="echarts-candles"></ve-candle>
 </template>
 
 
@@ -15,12 +15,8 @@ export default {
         this.chartSettings.start = e.start
         this.chartSettings.end = e.end
       },
-      // legendselectchanged: (e)=>{
-      //   console.log(e)
-      // }
     }
     return {
-      componentKey: 0,
       interval: '',
       tube: '',
       hash: '',
@@ -29,22 +25,6 @@ export default {
       serverBackend: 'https://kupi.network',
       timeframe: '1m',
       firstFetch: true,
-      chartSettings: {
-        showMA: true,
-        showVol: true,
-        digit: 8,
-        MA: [5, 10, 20, 30],
-        downColor: '#ec0000',
-        upColor: '#00da3c',
-        dataType: 'normal', // 'KMB', 'normal', 'percent'
-        labelMap: {
-          '日K': '5m'
-        },
-        legendName: {
-          '日K': 'ETH_BTC 15m',
-        },
-        showDataZoom: true,
-      }
     }
   },
   props: ['widget'],
@@ -73,9 +53,6 @@ export default {
     }
   },
   methods: {
-    // forceRerender() {
-    //   // this.componentKey += 1
-    // },
     start() {
       if (this.widget.demo) {
         this.data = require('./data.js').default
@@ -167,8 +144,25 @@ export default {
         columns: ['date', 'open', 'close', 'lowest', 'highest', 'vol'],
         rows: data
       }
-      // this.forceRerender()
       return data
+    },
+    chartSettings: function() {
+      return {
+        showMA: true,
+        showVol: true,
+        digit: 8,
+        MA: [5, 10, 20, 30],
+        downColor: '#ec0000',
+        upColor: '#00da3c',
+        dataType: 'normal', // 'KMB', 'normal', 'percent'
+        labelMap: {
+          '日K': `${this.widget.timeframe}`
+        },
+        legendName: {
+          '日K': `${this.widget.timeframe}`,
+        },
+        showDataZoom: true,
+      }
     }
   },
 }

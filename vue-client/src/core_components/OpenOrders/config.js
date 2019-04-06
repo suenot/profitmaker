@@ -10,7 +10,7 @@ export default {
   author: "#core",
   authorLink: "https://github.com/kupi-network/kupi-terminal",
   source: "",
-  demo: false,
+  demo: true,
   // stock: undefined,
   // pair: undefined,
   categories: ["Private api", "Orders"],
