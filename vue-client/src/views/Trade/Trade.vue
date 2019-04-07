@@ -49,16 +49,22 @@ export default {
   height: 100vh
   max-height: 100vh
   overflow: hidden
+  width: 100%
+  max-width: 100%
 
 .left-column
   flex: 0 0 360px
+  max-width: 360px
+  min-width: 360px
 .middle-column
-  flex: 0 1 auto
+  flex: 1 0 auto
   display: flex
   flex-direction: column
   heigth: 100vh
 .right-column
-  flex: 0 0 250px
+  flex: 0 0 280px
+  max-width: 280px
+  min-width: 280px
 
 .orders-wrapper
   height: calc(100vh + 2px)

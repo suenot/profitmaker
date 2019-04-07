@@ -33,12 +33,18 @@ export default {
 <style lang="sass" scoped>
 .main-container
   display: flex
+  min-width: 100%
+  max-width: 100%
+  width: 100%
+  height: 100%
   // display: grid
   // grid-template-columns: [fist-column] 470px [second-column] auto [third-column]
   // grid-template-rows: [first-row] 440px [second-row] calc(100vh - 440px)
 
 .left-column
   flex: 0 0 400px
+  max-width: 400px
+  min-width: 400px
 .right-column
   flex: 1 0 auto
   display: flex
