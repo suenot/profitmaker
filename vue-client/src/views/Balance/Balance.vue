@@ -1,13 +1,17 @@
 <template>
   <div class="main-container">
-    <div class="balance-table-wrapper section">
-      <Widget :widget="blocks.BalanceTable" />
+    <div class="left-column">
+      <div class="balance-table-wrapper section">
+        <Widget :widget="blocks.BalanceTable" />
+      </div>
     </div>
-    <div class="balance-pie-wrapper section">
-      <Widget :widget="blocks.BalancePie" />
-    </div>
-    <div class="balance-history section">
-      <Widget :widget="blocks.BalanceHistory" />
+    <div class="right-column">
+      <div class="balance-pie-wrapper section">
+        <Widget :widget="blocks.BalancePie" />
+      </div>
+      <div class="balance-history section">
+        <Widget :widget="blocks.BalanceHistory" />
+      </div>
     </div>
   </div>
 </template>
@@ -28,24 +32,26 @@ export default {
 
 <style lang="sass" scoped>
 .main-container
-  display: grid
-  grid-template-columns: [fist-column] 470px [second-column] auto [third-column]
-  grid-template-rows: [first-row] 440px [second-row] calc(100vh - 440px)
+  display: flex
+  // display: grid
+  // grid-template-columns: [fist-column] 470px [second-column] auto [third-column]
+  // grid-template-rows: [first-row] 440px [second-row] calc(100vh - 440px)
 
+.left-column
+  flex: 0 0 400px
+.right-column
+  flex: 1 0 auto
+  display: flex
+  flex-direction: column
 .balance-table-wrapper
-  grid-column: fist-column / second-column
-  grid-row: first-row / second-row
   height: 100vh
 .balance-pie-wrapper
-  grid-column: second-column / third-column
-  grid-row: first-row / second-row
-  justify-self: stretch
-  align-self: stretch
+  flex: 0 0 auto
+  height: calc(50vh + 2px)
 .balance-history
-  grid-column: second-column / third-column
-  grid-row: second-row / third-row
-  justify-self: stretch
-  align-self: stretch
+  flex: 0 0 auto
+  height: 50vh
+
 
 .section
   border: 1px solid #d9d9d9
