@@ -61,8 +61,7 @@ export default {
   flex: 0 0 250px
 
 .orders-wrapper
-  height: 100vh
-  max-height: 100vh
+  height: calc(100vh + 2px)
 .candles-wrapper
   flex: 0 0 430px
 .info-wrapper
@@ -71,7 +70,7 @@ export default {
   flex-direction: column
 
 .trades-wrapper
-  height: 100vh
+  height: calc(100vh + 2px)
 .my-trades-wrapper
   overflow-y: auto
   flex: 0 0 50%
