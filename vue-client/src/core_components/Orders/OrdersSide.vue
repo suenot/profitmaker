@@ -1,26 +1,26 @@
 <template>
-  <div class="kupi-table">
+  <div class="kupi-pseudoTable">
     {{percentInverseToFixed}}
-    <table>
-      <thead v-if="thead">
-        <tr>
-          <th>price <span className="muted">{{coinTo}}</span></th>
-          <th>amount <span className="muted">{{coinFrom}}</span></th>
-          <th>total <span className="muted">{{coinTo}}</span></th>
-          <th>sum <span className="muted">{{coinTo}}</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="order in dataComputed" :key="order.id"
+    <div class="pseudotable">
+      <div v-if="thead" class="pseudotable-header">
+        <div class="pseudotable-row">
+          <div :style="`flex: 0 0 25%`" >price <span className="muted">{{coinTo}}</span></div>
+          <div :style="`flex: 0 0 25%`">amount <span className="muted">{{coinFrom}}</span></div>
+          <div :style="`flex: 0 0 25%`">total <span className="muted">{{coinTo}}</span></div>
+          <div :style="`flex: 0 0 25%`">sum <span className="muted">{{coinTo}}</span></div>
+        </div>
+      </div>
+      <div class="pseudotable-body">
+        <div class="pseudotable-row" v-for="order in dataComputed" :key="order.id"
           :style="`background: linear-gradient(to right, #ffffff 0%, #ffffff ${order.percentInverseToFixed}%, ${background} ${order.percentInverseToFixed}%, ${background} 100%)`"
         >
-          <td :style="`color: ${color}`">{{order.price.toFixed(8)}}</td>
-          <td>{{order.amount.toFixed(8)}}</td>
-          <td>{{order.total.toFixed(8)}}</td>
-          <td>{{order.sum.toFixed(8)}}</td>
-        </tr>
-      </tbody>
-    </table>
+          <div :style="`color: ${color}; flex: 0 0 25%;`">{{order.price.toFixed(8)}}</div>
+          <div :style="`flex: 0 0 25%`" >{{order.amount.toFixed(8)}}</div>
+          <div :style="`flex: 0 0 25%`" >{{order.total.toFixed(8)}}</div>
+          <div :style="`flex: 0 0 25%`" >{{order.sum.toFixed(8)}}</div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 

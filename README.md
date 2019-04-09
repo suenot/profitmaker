@@ -265,7 +265,7 @@ Thank you!
 
 ## Team
 
-- [Eugen Soloviov](https://github.com/suenot)
+- [Eugen Soloviov](https://github.com/suenot) [(facebook)](https://www.facebook.com/dexenot)
 - [Sergey Soloviov](https://github.com/soloviofff)
 
 ## Contact Us

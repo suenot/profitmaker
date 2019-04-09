@@ -115,6 +115,38 @@ body
       border: 1px solid rgba(0,0,0,0.12)
       padding: 5px
 
+.kupi-pseudoTable
+  .pseudotable
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12)
+    max-width: 100%
+    .pseudotable-header
+      .pseudotable-row
+        display: flex
+        flex-wrap: nowrap
+        border-top: 1px solid rgba(0, 0, 0, 0.12)
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12)
+        div
+          border-left: 1px solid rgba(0, 0, 0, 0.12)
+          padding: 5px
+          font-size: 12px
+          text-align: center
+          font-weight: 700
+    .pseudotable-body
+      .pseudotable-row
+        display: flex
+        flex-wrap: nowrap
+        border-top: 1px solid rgba(0, 0, 0, 0.12)
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12)
+        div
+          display: flex
+          flex-wrap: nowrap
+          border-left: 1px solid rgba(0, 0, 0, 0.12)
+          padding: 5px
+          overflow: hidden
+          white-space: nowrap
+          text-overflow: clip
+
+
 .el-input
   font-size: 18px
   .el-input__inner
