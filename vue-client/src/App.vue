@@ -93,12 +93,11 @@ body
 
 
 // TODO: make only global
-.el-button
+.el-button.large
   font-size: 22px !important
-.el-input-group__prepend
+.el-input-group__prepend.large
   min-width: 90px
   font-weight: 700
-//
 
 .kupi-table
   width: 100%

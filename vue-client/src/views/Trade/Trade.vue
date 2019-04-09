@@ -45,12 +45,13 @@ export default {
 
 <style lang="sass" scoped>
 .main-container
-  display: flex
   height: 100vh
   max-height: 100vh
   overflow: hidden
   width: 100%
   max-width: 100%
+  display: -webkit-box !important
+  display: flex
 
 .left-column
   flex: 0 0 360px
