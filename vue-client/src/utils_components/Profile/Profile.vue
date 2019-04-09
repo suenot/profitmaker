@@ -7,9 +7,11 @@
 <script>
 import AccountsStore from '../../stores/AccountsStore'
 export default {
+  props: ['server'],
   fromMobx: {
     user() {
-      return AccountsStore.user
+      if (this.server === 'terminal') return AccountsStore.user
+      else return AccountsStore.kupiUser
     }
   },
 }

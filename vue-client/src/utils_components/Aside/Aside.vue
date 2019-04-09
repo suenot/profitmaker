@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import AsidesStore from '../../stores/AsidesStore'
+import AsidesStore from '@/stores/AsidesStore'
 
 export default {
   props: ['aside'],

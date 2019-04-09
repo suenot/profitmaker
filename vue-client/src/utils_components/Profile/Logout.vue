@@ -20,13 +20,3 @@ export default {
   }
 }
 </script>
-
-<style lang="sass">
-// TODO trash
-.logout
-  button
-    font-size: 22px
-  .el-input-group__prepend
-    min-width: 90px
-    font-weight: 700
-</style>

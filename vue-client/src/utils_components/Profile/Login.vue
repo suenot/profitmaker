@@ -33,10 +33,10 @@ export default {
 
 <style lang="sass">
 // TODO trash
-.login
-  button
-    font-size: 22px
-  .el-input-group__prepend
-    min-width: 90px
-    font-weight: 700
+// .login
+//   button
+//     font-size: 22px
+//   .el-input-group__prepend
+//     min-width: 90px
+//     font-weight: 700
 </style>

@@ -14,7 +14,7 @@
         <li @click="showCreateOrder()"><img src="/img/widgets/auction.svg"></li>
       </el-tooltip>
       <el-tooltip content="Profile" placement="right">
-        <li v-if="user" @click="showProfile()" class="avatar"><img src="/_img/avatar.jpeg"></li>
+        <li v-if="avatar" @click="showProfile()" class="avatar"><img :src="avatar"></li>
         <li v-else @click="showProfile()"><img src="/img/widgets/051-user.svg"></li>
       </el-tooltip>
       <el-tooltip content="User" placement="right">
@@ -24,18 +24,26 @@
 </template>
 
 <script>
-import AsidesStore from '../../stores/AsidesStore'
+import AccountsStore from '@/stores/AccountsStore'
+import AsidesStore from '@/stores/AsidesStore'
 export default {
   data: () => ({
       user: false
     }
   ),
+  fromMobx: {
+    avatar: {
+      get() {
+        return AccountsStore.kupiUser.picture.data.url
+      }
+    },
+  },
   methods: {
     showProfile() {
       var component = 'ProfileAside'
       var title = 'Profile'
       var side = 'left'
-      var width = 380
+      var width = 340*2
       var data = {}
       AsidesStore.addAside(component, title, side, width, data)
     },

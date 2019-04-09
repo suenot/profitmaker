@@ -1,11 +1,11 @@
 import { observable, action, computed } from 'mobx'
-// import { version, AsyncTrunk } from 'mobx-sync'
 import axios from 'axios'
 import _ from 'lodash'
 
 import { Notification } from 'element-ui'
 class AccountsStore {
   @observable user = {}
+  @observable kupiUser = {}
   @observable accounts = {}
   @action fetchAccounts() {
     axios.get(`/user-api/auth/accounts`)
@@ -20,12 +20,34 @@ class AccountsStore {
   @computed get userRender() {
     return JSON.stringify(this.user) === '{}' ? false : true
   }
+  @computed get userRenderKupi() {
+    return JSON.stringify(this.kupiUser) === '{}' ? false : true
+  }
   @computed get accountsRender() {
     return JSON.stringify(this.accounts) === '{}' ? false : true
   }
 
   @action toLogout() {
     axios.get("/user-api/auth/logout")
+    .then(() => {
+      Notification({
+        title: 'Success',
+        message: 'Logged out',
+        type: 'success'
+      })
+      this.fetchUserData()
+    })
+    .catch(() => {
+      Notification.error({
+        title: 'Error',
+        message: 'Cannot logout'
+      })
+      this.fetchUserData()
+    })
+  }
+
+  @action toLogoutKupi() {
+    axios.get("/api/auth/logout")
     .then(() => {
       Notification({
         title: 'Success',
@@ -53,7 +75,27 @@ class AccountsStore {
       this.user = {}
       this.fetchAccounts()
     })
+
+    axios.get('/api/auth/user_data')
+    .then((response) => {
+      this.kupiUser = response.data.user._json
+    })
+    .catch((error) => {
+      this.kupiUser = {}
+    })
   }
+
+  // @action toLoginKupi() {
+  //   axios.get('/api/auth/facebook')
+  //   .then((response) => {
+  //     // this.result = response.data
+  //     console.log(response.data)
+  //   })
+  //   .catch((error) => {
+  //     // this.result = JSON.stringify(error)
+  //     console.log(error)
+  //   })
+  // }
 
   @action toLogin(email, password) {
     axios.post("/user-api/auth/login", {

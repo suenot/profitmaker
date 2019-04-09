@@ -1,10 +1,10 @@
 <template>
   <div class="widget">
-    <div class="widget-header">
-      <div class="widget-title">
+    <div class="block-header">
+      <div class="block-title">
         {{widget.title}}
       </div>
-      <div class="widget-actions">
+      <div class="block-actions">
         <i class="el-icon-more pointer" @click="showSettings()"></i>
       </div>
     </div>
@@ -46,13 +46,13 @@ export default {
   height: 100%
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
   position: relative
-.widget-header
+.block-header
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
   height: 33px
   display: flex
   justify-content: space-between
   align-items: center
-  .widget-title, .widget-actions i
+  .block-title, .block-actions i
     padding: 8px 16px
 .widget-body
   height: calc(100% - 33px)

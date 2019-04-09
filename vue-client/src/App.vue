@@ -92,6 +92,14 @@ body
   margin: 16px
 
 
+// TODO: make only global
+.el-button
+  font-size: 22px !important
+.el-input-group__prepend
+  min-width: 90px
+  font-weight: 700
+//
+
 .kupi-table
   width: 100%
   table
