@@ -3,6 +3,7 @@ import Router from 'vue-router'
 // import Dashboard from './views/Dashboard/Dashboard.vue'
 import Trade from './views/Trade/Trade.vue'
 import Balance from './views/Balance/Balance.vue'
+import Signals from './views/Signals/Signals.vue'
 // import Chart from './components/Chart.vue'
 
 Vue.use(Router)
@@ -33,6 +34,13 @@ export default new Router({
       component: Balance,
       props: true,
       meta: { reuse: false }
-    }
+    },
+    {
+      path: '/signals',
+      name: 'Signals',
+      component: Signals,
+      props: true,
+      meta: { reuse: false }
+    },
   ]
 })

@@ -7,6 +7,9 @@
       <el-tooltip content="Balance" placement="right">
         <router-link tag="li" to="/balance"><img src="/img/widgets/040-business-and-finance-18.svg"></router-link>
       </el-tooltip>
+      <!-- <el-tooltip content="Signals" placement="right">
+        <router-link tag="li" to="/signals"><img src="/img/widgets/021-order.svg"></router-link>
+      </el-tooltip> -->
     </ul>
     <div class="spacer"></div>
     <ul class="ul-bottom">

@@ -37,6 +37,12 @@ import VCharts from 'v-charts'
 Vue.use(VCharts)
 
 
+import vueShortkey from 'vue-shortkey'
+Vue.use(vueShortkey, { prevent: ['input', 'textarea'] })
+
+import vuejsStorage from 'vuejs-storage'
+Vue.use(vuejsStorage)
+
 
 Vue.config.productionTip = false
 

@@ -155,7 +155,7 @@ body
     padding: 0 10px
 .el-button
   border-radius: 0 !important
-  width: 100%
+  // width: 100%
 .el-input__inner
   border-radius: 0 !important
 .el-input-group__prepend

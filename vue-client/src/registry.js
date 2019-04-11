@@ -16,6 +16,7 @@ Vue.component('BalanceHistory', require('./core_components/Balance/BalanceHistor
 Vue.component('Selector', require('./core_components/Selector/Selector.vue').default)
 Vue.component('Stocks', require('./core_components/Stocks/Stocks.vue').default)
 Vue.component('Pairs', require('./core_components/Pairs/Pairs.vue').default)
+Vue.component('Signals', require('./core_components/Signals/Signals.vue').default)
 
 
 Vue.component('Market', require('./utils_components/Market/Market.vue').default)
