@@ -36,21 +36,21 @@ class Orders extends React.Component {
       asks = _.reverse(_.clone(asks))
     }
     return (
-      <div id={type === 'both' ? 'orders-both' : ''}>
-        <table className="simpleTable">
+      <div id={type === 'both' ? 'orders-both' : ''} className="kupi-pseudoTable">
+        <div className="pseudotable">
 
           { (type !== 'both') &&
-            <thead>
-                <tr>
-                  <th className="simpleTable-header">price <span className="muted">{coinTo}</span></th>
-                  <th className="simpleTable-header">amount <span className="muted">{coinFrom}</span></th>
-                  <th className="simpleTable-header">total <span className="muted">{coinTo}</span></th>
-                  <th className="simpleTable-header">sum <span className="muted">{coinTo}</span></th>
-                </tr>
-            </thead>
+            <div className="pseudotable-header">
+                <div className="pseudotable-row">
+                  <div style={{flex: '0 0 25%'}}>price <span className="muted">{coinTo}</span></div>
+                  <div style={{flex: '0 0 25%'}}>amount <span className="muted">{coinFrom}</span></div>
+                  <div style={{flex: '0 0 25%'}}>total <span className="muted">{coinTo}</span></div>
+                  <div style={{flex: '0 0 25%'}}>sum <span className="muted">{coinTo}</span></div>
+                </div>
+            </div>
           }
 
-          <tbody>
+          <div className="pseudotable-body">
             {
               (type === 'both' || type === 'asks') &&
               _.map(asks, (order) => {
@@ -75,31 +75,33 @@ class Orders extends React.Component {
 
                 var percentInverse = 100 - percent
                 var percentInverseToFixed = percentInverse.toFixed(2)
-                return <tr
+                return <div className="pseudotable-row"
                   key={order.id + '--asks'}
                   onClick={this.setAll.bind(this, order.price, order.amount, order.total)}
                   style={{background: `linear-gradient(to right, #ffffff 0%, #ffffff ${percentInverseToFixed}%, ${color} ${percentInverseToFixed}%, ${color} 100%)`}}
                 >
-                  <td>{order.price.toFixed(8)}</td>
-                  <td>{order.amount.toFixed(8)}</td>
-                  <td>{order.total.toFixed(8)}</td>
-                  <td>{order.sum.toFixed(8)}</td>
-                </tr>
+                  <div style={{flex: '0 0 25%'}}>{order.price.toFixed(8)}</div>
+                  <div style={{flex: '0 0 25%'}}>{order.amount.toFixed(8)}</div>
+                  <div style={{flex: '0 0 25%'}}>{order.total.toFixed(8)}</div>
+                  <div style={{flex: '0 0 25%'}}>{order.sum.toFixed(8)}</div>
+                </div>
               })
             }
 
             { (type === 'both') &&
-              <tr
-                className="orders-center"
-                ref={input => {
-                  this.ordersCenter = input;
-                }}
-                >
-                <th className="simpleTable-header">price <span className="muted">{coinTo}</span></th>
-                <th className="simpleTable-header">amount <span className="muted">{coinFrom}</span></th>
-                <th className="simpleTable-header">total <span className="muted">{coinTo}</span></th>
-                <th className="simpleTable-header">sum <span className="muted">{coinTo}</span></th>
-              </tr>
+              <div className="pseudotable-header">
+                <div
+                  className="pseudotable-row"
+                  ref={input => {
+                    this.ordersCenter = input;
+                  }}
+                  >
+                  <div style={{flex: '0 0 25%'}}>price  <span className="muted">{coinTo}</span></div>
+                  <div style={{flex: '0 0 25%'}}>amount <span className="muted">{coinFrom}</span></div>
+                  <div style={{flex: '0 0 25%'}}>total <span className="muted">{coinTo}</span></div>
+                  <div style={{flex: '0 0 25%'}}>sum <span className="muted">{coinTo}</span></div>
+                </div>
+              </div>
             }
 
             {
@@ -126,20 +128,21 @@ class Orders extends React.Component {
 
                 var percentInverse = 100 - percent
                 var percentInverseToFixed = percentInverse.toFixed(2)
-                return <tr
+                return <div
+                  className="pseudotable-row"
                   key={order.id + '--bids'}
                   onClick={this.setAll.bind(this, order.price, order.amount, order.total)}
                   style={{background: `linear-gradient(to right, #ffffff 0%, #ffffff ${percentInverseToFixed}%, ${color} ${percentInverseToFixed}%, ${color} 100%)`}}
                 >
-                  <td>{order.price.toFixed(8)}</td>
-                  <td>{order.amount.toFixed(8)}</td>
-                  <td>{order.total.toFixed(8)}</td>
-                  <td>{order.sum.toFixed(8)}</td>
-                </tr>
+                  <div style={{flex: '0 0 25%'}} >{order.price.toFixed(8)}</div>
+                  <div style={{flex: '0 0 25%'}} >{order.amount.toFixed(8)}</div>
+                  <div style={{flex: '0 0 25%'}} >{order.total.toFixed(8)}</div>
+                  <div style={{flex: '0 0 25%'}} >{order.sum.toFixed(8)}</div>
+                </div>
               })
             }
-          </tbody>
-        </table>
+          </div>
+        </div>
       </div>
     )
   }
