@@ -4,8 +4,12 @@
       :style="`margin: 0 ${right}px 0 ${left}px`"
     >
       <router-view :key="$route.path" />
+      <div class="notificationCookies" v-if="privacy_policy">
+        <span>Pressing this button you agree with our <a href="#">Privacy Policy</a> <el-button type="success" icon="el-icon-check" circle @click="acceptConditions()"></el-button> </span>
+      </div>
     </div>
     <Aside v-for="aside in asidesComputed" :key="aside.id" :aside="aside"/>
+
   </div>
 </template>
 
@@ -17,11 +21,16 @@ import Store from './stores/Store'
 
 export default observer({
   data: () => ({
+      privacy_policy: true,
       flag: true,
       left: 0,
       right: 0,
     }
   ),
+  storage: {
+    keys: ['privacy_policy'],
+    namespace: 'app',
+  },
   fromMobx: {
     asidesTrigger: {
       get() {
@@ -38,6 +47,9 @@ export default observer({
   methods: {
     rerender() {
       window.dispatchEvent(new Event('resize'))
+    },
+    acceptConditions() {
+      this.privacy_policy = false
     }
   },
   computed: {
@@ -90,6 +102,24 @@ body
   cursor: pointer
 .m-16
   margin: 16px
+
+.notificationCookies
+  position: fixed !important
+  top: calc(100vh - 40px)
+  height: 40px
+  left: 60px
+  right: 0
+  z-index: 1000
+  background: #919191
+  text-align: center
+  color: #fff
+  font-size: 18px
+  box-shadow: 0 0 14px grey
+  a
+    color: #6eff6e
+  button
+    margin-left: 20px
+
 
 
 // TODO: make only global
