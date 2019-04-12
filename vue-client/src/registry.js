@@ -20,6 +20,8 @@ Vue.component('Signals', require('./core_components/Signals/Signals.vue').defaul
 Vue.component('SignalCalculations', require('./core_components/Signals/Calculations/Calculations.vue').default)
 Vue.component('SignalHistory', require('./core_components/Signals/History/History.vue').default)
 
+Vue.component('Trade', require('./views/Trade/Trade.vue').default)
+
 
 Vue.component('Market', require('./utils_components/Market/Market.vue').default)
 Vue.component('Menu', require('./utils_components/Menu/Menu.vue').default)
