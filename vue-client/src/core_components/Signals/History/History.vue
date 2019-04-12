@@ -14,7 +14,7 @@ export default {
   components: { VeLine },
   data () {
     return {
-      server: 'https://kupi.network/api/',
+      server: 'https://kupi.network/api/signal-history',
       chartSettings: {
         axisSite: { right: ['profitUSD'] },
         yAxisType: ['normal', 'KMB' ],
@@ -29,7 +29,7 @@ export default {
     }
   },
   mounted() {
-    axios.get(`${this.server}/signal-history/${this.$route.params.id}`)
+    axios.get(`${this.server}/${this.$route.params.id}`)
     .then((response) => {
       var data = response.data
       data.forEach(function(item){

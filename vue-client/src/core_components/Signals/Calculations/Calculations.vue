@@ -81,11 +81,11 @@ export default {
       max: 0,
       index: 0,
       tableData: [],
-      server: 'https://kupi.network/api/',
+      server: 'https://kupi.network/api/signal-calculations',
     }
   },
   mounted() {
-    axios.get(`${this.server}/signal-calculations/${this.$route.params.id}`)
+    axios.get(`${this.server}/${this.$route.params.id}`)
     .then((response) => {
       var rsp = response.data
       this.tableData = rsp

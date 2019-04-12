@@ -279,7 +279,7 @@ export default {
     return {
       page: 1,
       demo: true,
-      server: 'https://kupi.network/api/',
+      server: 'https://kupi.network/api/signals',
       aside: true,
       table: [],
       table_classes: [],
@@ -430,7 +430,7 @@ export default {
         this.table = require('./data.js').data
         // console.log(this.table)
       } else {
-        axios.get(`${this.server}/signals`)
+        axios.get(`${this.server}`)
         .then((response) => {
           this.table = response.data
         })
