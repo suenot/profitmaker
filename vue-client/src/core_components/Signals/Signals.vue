@@ -19,7 +19,7 @@
             inactive-text="Real data"
             class="m-16">
           </el-switch>
-          <el-input placeholder="Server url" v-model="server_url" class="m-16"></el-input>
+          <el-input placeholder="Server url" v-model="server" class="m-16"></el-input>
         </div>
       </section>
 
@@ -233,7 +233,7 @@
         </thead>
         <tbody>
           <tr v-for="(tr, trIndex) in tableComputed" :key="tr.id" :class="tr.status">
-            <td v-for="(td, tdIndex) in tr" :key="tdIndex" @click="$router.push({ name: 'IntuitionSignal', params: { id: tr.id } })" :class="table_classes[trIndex][tdIndex]">
+            <td v-for="(td, tdIndex) in tr" :key="tdIndex" @click="$router.push({ name: 'Signal', params: { id: tr.id } })" :class="table_classes[trIndex][tdIndex]">
               <template>
                 {{td}}
               </template>
@@ -279,7 +279,7 @@ export default {
     return {
       page: 1,
       demo: true,
-      server_url: 'https://kupi.network/api/signals',
+      server: 'https://kupi.network/api/',
       aside: true,
       table: [],
       table_classes: [],
@@ -352,19 +352,19 @@ export default {
     }
   },
   storage: {
-    keys: ['demo', 'sound_enabled', 'server_url', 'sound_volume', 'sound_interval', 'accordion', 'sorts', 'filters', 'filters_profit', 'filters_profit_sound', 'columns', 'aside'],
+    keys: ['demo', 'sound_enabled', 'server', 'sound_volume', 'sound_interval', 'accordion', 'sorts', 'filters', 'filters_profit', 'filters_profit_sound', 'columns', 'aside'],
     namespace: 'list'
   },
   // fromMobx: {
   //   Store
   // },
   // fromMobx: {
-  //   server_url: {
+  //   server: {
   //     get() {
-  //       return Store.server_url
+  //       return Store.server
   //     },
-  //     set(server_url) {
-  //       Store.setServer_url(server_url)
+  //     set(server) {
+  //       Store.setserver(server)
   //     }
   //   }
   // },
@@ -430,7 +430,7 @@ export default {
         this.table = require('./data.js').data
         // console.log(this.table)
       } else {
-        axios.get(`${this.server_url}`)
+        axios.get(`${this.server}/signals`)
         .then((response) => {
           this.table = response.data
         })

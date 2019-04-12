@@ -17,6 +17,8 @@ Vue.component('Selector', require('./core_components/Selector/Selector.vue').def
 Vue.component('Stocks', require('./core_components/Stocks/Stocks.vue').default)
 Vue.component('Pairs', require('./core_components/Pairs/Pairs.vue').default)
 Vue.component('Signals', require('./core_components/Signals/Signals.vue').default)
+Vue.component('SignalCalculations', require('./core_components/Signals/Calculations/Calculations.vue').default)
+Vue.component('SignalHistory', require('./core_components/Signals/History/History.vue').default)
 
 
 Vue.component('Market', require('./utils_components/Market/Market.vue').default)
