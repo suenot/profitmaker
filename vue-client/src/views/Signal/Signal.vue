@@ -1,13 +1,11 @@
 <template>
   <div>
     <div class="kupi-tabs">
-      <div class="kupi-tab" @click="activateTab('history')">History</div>
-      <div class="kupi-tab" @click="activateTab('calculations')">Calculations</div>
-      <div class="kupi-tab" @click="activateTab('trade')">Trade</div>
+      <div v-for="(tabValue, tabKey) in tabs" :key="tabKey" :class="`kupi-tab ${tabValue}`" @click="activateTab(tabKey)">{{tabKey}}</div>
     </div>
-    <SignalHistory v-if="tabs.history"/>
-    <SignalCalculations v-if="tabs.calculations"/>
-    <Trade v-if="tabs.trade"/>
+    <SignalHistory v-if="tabs.History"/>
+    <SignalCalculations v-if="tabs.Calculations"/>
+    <Trade v-if="tabs.Trade"/>
   </div>
 </template>
 
@@ -17,9 +15,10 @@ export default {
   data() {
     return {
       tabs: {
-        history: true,
-        calculations: false,
-        trade: false,
+        History: true,
+        Calculations: false,
+        Trade: false,
+        Accounting: false,
       }
     }
   },
@@ -51,6 +50,8 @@ export default {
     align-items: center
     justify-content: center
     cursor: pointer
+    &.true
+      background: rgba(0,0,0,0.08)
     &:hover
       background: rgba(0,0,0,0.08)
 </style>
