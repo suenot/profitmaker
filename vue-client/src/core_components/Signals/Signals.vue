@@ -31,14 +31,14 @@
             <i v-else class="el-icon-arrow-down" @click="toggleAccordion('pagination')"></i>
           </div>
         </div>
+        <el-pagination
+          layout="pager"
+          :page-size="limit"
+          :total="903"
+          @current-change="paginationChanged($event)"
+        >
+        </el-pagination>
         <div class="aside-padding" v-if="accordion.pagination">
-          <el-pagination
-            layout="pager"
-            :page-size="limit"
-            :total="903"
-            @current-change="paginationChanged($event)"
-          >
-          </el-pagination>
           <el-input placeholder="Limit" v-model="limit" class="m-16">
             <el-button slot="prepend">Limit by</el-button>
             <el-button slot="append">of {{table.length}}</el-button>
@@ -89,7 +89,7 @@
           </div>
         </div>
         <div class="aside-padding" v-if="accordion.sort && sorts.length > 0">
-          <div class="select-arrow m-16 sort" v-for="(sort, sortIndex) in sorts" :key="sort.id">
+          <div class="select-arrow sort" v-for="(sort, sortIndex) in sorts" :key="sort.id">
             <el-select
               v-model="sort.key"
               filterable
@@ -105,7 +105,7 @@
             </el-select>
             <i v-if="sorts[sortIndex].direction === 'asc'" class="sort-arrow el-icon-arrow-up" @click="toggleSortDirection(sortIndex)"></i>
             <i v-if="sorts[sortIndex].direction === 'desc'" class="sort-arrow el-icon-arrow-down" @click="toggleSortDirection(sortIndex)"></i>
-            <i v-else class="el-icon-minus" @click="removeFilter('sorts', sortIndex)"></i>
+            <i class="el-icon-minus" @click="removeFilter('sorts', sortIndex)"></i>
             <!-- <el-button v-if="sorts[sortIndex].direction === 'desc'" class="sort-arrow" type="primary" size="mini" plain @click="toggleSortDirection(sortIndex)"><v-icon>arrow_downward</v-icon></el-button> -->
             <!-- <el-button v-if="sorts[sortIndex].direction === 'asc'" class="sort-arrow" type="primary" size="mini" plain @click="toggleSortDirection(sortIndex)"><v-icon>arrow_upward</v-icon></el-button> -->
             <!-- <el-button icon="el-icon-minus" size="mini" class="m-16 btn-rm" circle @click="removeFilter('sorts', sortIndex)"></el-button> -->
@@ -681,13 +681,14 @@ body
     .btn-rm
       position: absolute
       right: -12px
-      top: 36px
+      top: 48px // top: 36px
   &.filter
     position: relative
     .button-center
       position: absolute
-      right: 16px
-      top: 63px
+      top: 85px // top: 63px
+      right: -12px
+      border-radius: 100% !important
   &+.aside-padding
     border-top: 1px solid rgba(0, 0, 0, 0.12)
     &.combined
@@ -718,6 +719,13 @@ body
     border-right: 0px
   .sort-arrow
     border-radius: 0 4px 4px 0 !important
+    display: flex
+    justify-content: center
+    align-items: center
+    border: 1px solid #dcdfe6
+    padding: 16px
+  .el-icon-minus
+    padding: 16px
 
 
 .kupi-table
