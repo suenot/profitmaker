@@ -6,9 +6,13 @@ const initCCXT = async function(privateKeys) {
   var stocks = _.clone(ccxt.exchanges)
   for (let stock of stocks) {
     if (global.CCXT[`${stock}--public`] === undefined) {
-      global.CCXT[`${stock}--public`] = new ccxt[stock] ({
-        'enableRateLimit': true
-      })
+      try {
+        global.CCXT[`${stock}--public`] = new ccxt[stock] ({
+          'enableRateLimit': true
+        })
+      } catch(err) {
+        console.log(`Can't create ${stock} instance`)
+      }
     }
   }
 

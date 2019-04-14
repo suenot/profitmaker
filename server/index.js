@@ -3,7 +3,6 @@ const app = express()
 const api = require('./api/api')
 const privateKeys = require('../private/keys.json')
 
-
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 
@@ -59,9 +58,14 @@ const main = async () => {
 
     try {
       await initCCXT(privateKeys)
+    } catch(err) {
+      console.log(err)
+      // console.log('No ccxt keys, no problems')
+    }
+    try {
       await initEthplorer(privateKeys)
     } catch(err) {
-      console.log('No keys, no problems')
+      console.log('No ethplorer keys, no problems')
     }
     // console.log(global.ACCOUNTS)
     // console.log(global.CCXT)
