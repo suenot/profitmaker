@@ -10,6 +10,8 @@ import Movue from 'movue'
 import * as mobx from 'mobx'
 Vue.use(Movue, mobx)
 
+import { VuePlugin } from 'vuera'
+Vue.use(VuePlugin)
 
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css"
 import VueVirtualScroller from 'vue-virtual-scroller'

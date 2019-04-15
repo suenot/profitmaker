@@ -58,6 +58,7 @@ export default {
   height: calc(100% - 33px)
   overflow-x: hidden
   overflow-y: auto
+  position: relative
 .widget-footer
   position: absolute
   bottom: 0

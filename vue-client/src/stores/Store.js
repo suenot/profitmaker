@@ -15,6 +15,7 @@ class Store {
           Orders: require('@/core_components/Orders/config.js').default,
           Trades: require('@/core_components/Trades/config.js').default,
           Candles: require('@/core_components/Candles/config.js').default,
+          ReactStockcharts: require('@/react_components/ReactStockcharts/config.js').default,
           MyTrades: require('@/core_components/MyTrades/config.js').default,
           OpenOrders: require('@/core_components/OpenOrders/config.js').default,
           BalanceTable: require('@/core_components/Balance/config.js').default[0],
