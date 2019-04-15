@@ -1,4 +1,7 @@
 {
+  "name": "kupi-terminal-express",
+  "version": "0.5.0",
+  "private": true,
   "dependencies": {
     "assert": "^1.4.1",
     "async-each-series": "^1.1.0",
