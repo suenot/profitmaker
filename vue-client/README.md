@@ -1,4 +1,4 @@
-# vue-project
+# Kupi terminal: vue client
 
 ## Project setup
 ```
