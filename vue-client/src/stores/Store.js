@@ -5,7 +5,7 @@ import _ from 'lodash'
 // import axios from 'axios'
 
 
-@version(4)
+@version(5)
 class Store {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'store' })

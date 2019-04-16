@@ -128,6 +128,8 @@ body
 .el-input-group__prepend.large
   min-width: 90px
   font-weight: 700
+.el-select-dropdown.el-popper
+  z-index: 1000000 !important
 
 .kupi-table
   width: 100%

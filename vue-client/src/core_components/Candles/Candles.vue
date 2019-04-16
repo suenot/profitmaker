@@ -1,6 +1,6 @@
 <template>
   <div v-loading="data.length < 3" class="candles">
-    <CandlesVchart v-if="widget.library === 'v-chart'" :data="data" :widget="widget" />
+    <CandlesVchart v-if="widget.library === 'v-charts'" :data="data" :widget="widget" />
     <ReactStockcharts v-if="widget.library === 'react-stockcharts' && reactStockChartsRender" type="hybrid" :data="reactStockChartsComputed" :_data="widget" :height="471"/>
   </div>
 </template>

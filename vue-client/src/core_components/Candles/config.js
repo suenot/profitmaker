@@ -13,6 +13,7 @@ export default {
   demo: false,
   timeframe: "1m",
   library: "react-stockcharts",
+  libraries: ["react-stockcharts", "v-charts"],
   // stock: undefined,
   // pair: undefined,
   categories: ["Trades", "Candles"],
