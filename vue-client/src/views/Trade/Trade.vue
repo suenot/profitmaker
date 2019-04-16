@@ -8,7 +8,7 @@
       </div>
       <div class="middle-column">
         <div class="candles-wrapper">
-          <Widget :widget="blocks.ReactStockcharts"/>
+          <Widget :widget="blocks.Candles"/>
         </div>
         <div class="info-wrapper">
           <div class="flex my-trades-wrapper">
@@ -29,37 +29,9 @@
 </template>
 
 <script>
-import { ReactWrapper } from 'vuera'
-import { ReactInVue } from 'vuera'
-// import ReactStockcharts from '@/react_components/ReactStockcharts/index.js'
 import Store from '../../stores/Store'
 import { toJS } from 'mobx'
 export default {
-  data() {
-    return {
-      // component: ReactStockcharts,
-      data: {
-        stock: 'BINANCE',
-        pair: 'ETH_BTC',
-        name: "Candles",
-        component: "ReactStockcharts",
-        settings: "",
-        settingsWidth: 300,
-        img: "core_components/Candles/Candles.png",
-        title: "Candles",
-        customTitle: "",
-        description: "Open-High-Low-Close-Value candles chart",
-        author: "#core",
-        authorLink: "https://github.com/kupi-network/kupi-terminal",
-        source: "",
-        demo: false,
-        timeframe: "1m",
-        // stock: undefined,
-        // pair: undefined,
-        categories: ["Trades", "Candles"],
-      }
-    }
-  },
   fromMobx: {
     blocks: {
       get() {
@@ -67,9 +39,6 @@ export default {
       }
     },
   },
-  // components: { 'react-stock-charts': ReactStockcharts },
-  // components: { react: ReactWrapper },
-  // components: { 'react-stock-charts': ReactStockcharts },
 }
 </script>
 

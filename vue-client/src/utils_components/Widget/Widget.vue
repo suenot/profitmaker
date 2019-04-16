@@ -63,6 +63,7 @@ export default {
   position: absolute
   bottom: 0
   width: 100%
+  z-index: 5000
 .notification
   border: 1px solid rgba(0, 0, 0, 0.12)
   font-size: 12px

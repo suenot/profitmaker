@@ -1,21 +1,17 @@
 <template>
-  <ve-candle :data="dataComputed" :settings="chartSettings" :events="chartEvents" height="435px" key="echarts-candles"></ve-candle>
+  <div v-loading="data.length < 3" class="candles">
+    <CandlesVchart v-if="widget.library === 'v-chart'" :data="data" :widget="widget" />
+    <ReactStockcharts v-if="widget.library === 'react-stockcharts' && reactStockChartsRender" type="hybrid" :data="reactStockChartsComputed" :_data="widget" :height="471"/>
+  </div>
 </template>
 
 
 <script>
-import Store from '../../stores/Store'
+import Store from '@/stores/Store'
 import axios from 'axios'
-import moment from 'moment'
 import _ from 'lodash'
 export default {
   data () {
-    this.chartEvents = {
-      dataZoom: (e)=>{
-        this.chartSettings.start = e.start
-        this.chartSettings.end = e.end
-      },
-    }
     return {
       interval: '',
       tube: '',
@@ -29,16 +25,8 @@ export default {
   },
   props: ['widget'],
   fromMobx: {
-    stock: {
-      get() {
-        return Store.stock
-      }
-    },
-    pair: {
-      get() {
-        return Store.pair
-      }
-    },
+    stock: { get() { return Store.stock } },
+    pair: { get() { return Store.pair } },
   },
   mounted() {
     this.start()
@@ -128,47 +116,33 @@ export default {
     }
   },
   computed: {
-    dataComputed: function() {
+    reactStockChartsComputed() {
       var data = _.cloneDeep(this.data)
-      data = _.map(data, (item)=>{
+      data = data.map((order) => {
         return {
-          date: moment(item[0]).format('DD.MM.YY HH:mm'),
-          open: item[1],
-          close: item[4],
-          lowest: item[3],
-          highest: item[2],
-          vol: item[5]
+          'date': new Date(order[0]),
+          'open': order[1],
+          'high': order[2],
+          'low': order[3],
+          'close': order[4],
+          'volume': order[5],
+          'absoluteChange': '',
+          'dividend': '',
+          'percentChange': '',
+          'split': '',
         }
       })
-      data = {
-        columns: ['date', 'open', 'close', 'lowest', 'highest', 'vol'],
-        rows: data
-      }
       return data
     },
-    chartSettings: function() {
-      return {
-        showMA: true,
-        showVol: true,
-        digit: 8,
-        MA: [5, 10, 20, 30],
-        downColor: '#ec0000',
-        upColor: '#00da3c',
-        dataType: 'normal', // 'KMB', 'normal', 'percent'
-        labelMap: {
-          '日K': `${this.widget.timeframe}`
-        },
-        legendName: {
-          '日K': `${this.widget.timeframe}`,
-        },
-        showDataZoom: true,
-      }
+    reactStockChartsRender() {
+      if (this.reactStockChartsComputed.length > 3) return true
+      else return false
     }
-  },
+  }
 }
 </script>
 
 <style lang="sass">
-.ve-candle
-  height: auto
+.candles
+  height: 100%
 </style>

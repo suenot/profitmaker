@@ -1,4 +1,5 @@
 /* eslint-disable */
+import './theme.sass'
 import React from "react"
 import PropTypes from "prop-types"
 
@@ -7,24 +8,24 @@ import { timeFormat } from "d3-time-format"
 
 import { ChartCanvas, Chart } from "react-stockcharts"
 import {
-	BarSeries,
-	AreaSeries,
-	CandlestickSeries,
-	LineSeries,
+  BarSeries,
+  AreaSeries,
+  CandlestickSeries,
+  LineSeries,
 } from "react-stockcharts/lib/series"
 import { XAxis, YAxis } from "react-stockcharts/lib/axes"
 import {
-	CrossHairCursor,
-	EdgeIndicator,
-	CurrentCoordinate,
-	MouseCoordinateX,
-	MouseCoordinateY,
+  CrossHairCursor,
+  EdgeIndicator,
+  CurrentCoordinate,
+  MouseCoordinateX,
+  MouseCoordinateY,
 } from "react-stockcharts/lib/coordinates"
 
 import { discontinuousTimeScaleProvider } from "react-stockcharts/lib/scale"
 import {
-	OHLCTooltip,
-	MovingAverageTooltip,
+  OHLCTooltip,
+  MovingAverageTooltip,
 } from "react-stockcharts/lib/tooltip"
 import { ema, heikinAshi, sma } from "react-stockcharts/lib/indicator"
 import { fitDimensions } from "react-stockcharts/lib/helper"
@@ -34,43 +35,41 @@ import { last } from "react-stockcharts/lib/utils"
 import _ from 'lodash'
 
 class HeikinAshi extends React.Component {
-	render() {
-		const ha = heikinAshi()
-		const ema20 = ema()
-			.id(0)
-			.options({ windowSize: 20 })
-			.merge((d, c) => { d.ema20 = c })
-			.accessor(d => d.ema20)
+  render() {
+    const ha = heikinAshi()
+    const ema20 = ema()
+      .id(0)
+      .options({ windowSize: 20 })
+      .merge((d, c) => { d.ema20 = c })
+      .accessor(d => d.ema20)
 
-		const ema50 = ema()
-			.id(2)
-			.options({ windowSize: 50 })
-			.merge((d, c) => { d.ema50 = c })
-			.accessor(d => d.ema50)
+    const ema50 = ema()
+      .id(2)
+      .options({ windowSize: 50 })
+      .merge((d, c) => { d.ema50 = c })
+      .accessor(d => d.ema50)
 
-		const smaVolume50 = sma()
-			.id(3)
-			.options({ windowSize: 50, sourcePath: "volume" })
-			.merge((d, c) => { d.smaVolume50 = c })
-			.accessor(d => d.smaVolume50)
+    const smaVolume50 = sma()
+      .id(3)
+      .options({ windowSize: 50, sourcePath: "volume" })
+      .merge((d, c) => { d.smaVolume50 = c })
+      .accessor(d => d.smaVolume50)
 
-		const { type, data: initialData, width, height, ratio } = this.props
-
-		const calculatedData = smaVolume50(ema50(ema20(ha(initialData))))
-		const xScaleProvider = discontinuousTimeScaleProvider
-			.inputDateAccessor(d => d.date)
-		const {
-			data,
-			xScale,
-			xAccessor,
-			displayXAccessor,
-		} = xScaleProvider(calculatedData)
-    console.log(data)
-		const start = xAccessor(last(data))
+    const { type, data: initialData, width, height, ratio } = this.props
+    const calculatedData = smaVolume50(ema50(ema20(ha(initialData))))
+    const xScaleProvider = discontinuousTimeScaleProvider
+      .inputDateAccessor(d => d.date)
+    const {
+      data,
+      xScale,
+      xAccessor,
+      displayXAccessor,
+    } = xScaleProvider(calculatedData)
+    const start = xAccessor(last(data))
     const end = xAccessor(data[Math.max(0, data.length - 150)])
-		const xExtents = [start, end]
+    const xExtents = [start, end]
     const {timeframe} = this.props._data
-		return (
+    return (
       <div>
         <div class="react-stockcharts-timeframe">{timeframe}</div>
         <ChartCanvas
@@ -171,21 +170,21 @@ class HeikinAshi extends React.Component {
           <CrossHairCursor />
         </ChartCanvas>
       </div>
-		)
-	}
+    )
+  }
 }
 
 HeikinAshi.propTypes = {
   id: PropTypes.string.isRequired,
-	data: PropTypes.array.isRequired,
-	width: PropTypes.number.isRequired,
-	height: PropTypes.number.isRequired,
-	ratio: PropTypes.number.isRequired,
-	type: PropTypes.oneOf(["svg", "hybrid"]).isRequired,
+  data: PropTypes.array.isRequired,
+  width: PropTypes.number.isRequired,
+  height: PropTypes.number.isRequired,
+  ratio: PropTypes.number.isRequired,
+  type: PropTypes.oneOf(["svg", "hybrid"]).isRequired,
 }
 
 HeikinAshi.defaultProps = {
-	type: "svg",
+  type: "svg",
 }
 
 HeikinAshi = fitDimensions(HeikinAshi)
