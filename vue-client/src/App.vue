@@ -109,7 +109,7 @@ body
   height: 40px
   left: 60px
   right: 0
-  z-index: 1000
+  z-index: 5000
   background: #919191
   text-align: center
   color: #fff
@@ -166,8 +166,10 @@ body
       .pseudotable-row
         display: flex
         flex-wrap: nowrap
-        border-top: 1px solid rgba(0, 0, 0, 0.12)
+        // border-top: 1px solid rgba(0, 0, 0, 0.12)
         border-bottom: 1px solid rgba(0, 0, 0, 0.12)
+        // &+.pseudotable-row
+          // border-top: none
         div
           display: flex
           flex-wrap: nowrap
