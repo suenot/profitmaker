@@ -46,6 +46,8 @@ export default {
   height: 100%
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
   position: relative
+  display: flex
+  flex-direction: column
 .block-header
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
   height: 33px

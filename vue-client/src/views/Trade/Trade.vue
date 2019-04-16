@@ -72,6 +72,8 @@ export default {
 .candles-wrapper
   flex: 0 0 430px
   height: 505px
+  min-height: 505px
+  // border-bottom: 1px solid #d9d9d9
 .info-wrapper
   flex: 0 1 auto
   display: flex
