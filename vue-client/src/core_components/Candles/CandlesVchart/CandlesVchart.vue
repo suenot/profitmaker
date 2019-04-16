@@ -1,5 +1,5 @@
 <template>
-  <ve-candle :data="dataComputed" :settings="chartSettings" :events="chartEvents" height="435px" key="echarts-candles"></ve-candle>
+  <ve-candle :data="dataComputed" :settings="chartSettings" :events="chartEvents" :height="height.toString() + 'px'" key="echarts-candles"></ve-candle>
 </template>
 
 
@@ -17,7 +17,7 @@ export default {
     return {
     }
   },
-  props: ['widget', 'data'],
+  props: ['widget', 'data', 'height'],
   computed: {
     dataComputed: function() {
       var data = _.cloneDeep(this.data)

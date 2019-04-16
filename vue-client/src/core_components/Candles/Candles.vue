@@ -1,7 +1,7 @@
 <template>
   <div v-loading="data.length < 3" class="candles">
-    <CandlesVchart v-if="widget.library === 'v-charts'" :data="data" :widget="widget" />
-    <ReactStockcharts v-if="widget.library === 'react-stockcharts' && reactStockChartsRender" type="hybrid" :data="reactStockChartsComputed" :_data="widget" :height="471"/>
+    <CandlesVchart v-if="widget.library === 'v-charts'" :data="data" :widget="widget" :height="height" />
+    <ReactStockcharts v-if="widget.library === 'react-stockcharts' && reactStockChartsRender" type="hybrid" :data="reactStockChartsComputed" :_data="widget" :height="height" />
   </div>
 </template>
 
@@ -13,6 +13,7 @@ import _ from 'lodash'
 export default {
   data () {
     return {
+      height: 471,
       interval: '',
       tube: '',
       hash: '',
