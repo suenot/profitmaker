@@ -46,8 +46,6 @@ export default {
   height: 100%
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
   position: relative
-  display: flex
-  flex-direction: column
 .block-header
   border-bottom: 1px solid rgba(0, 0, 0, 0.12)
   height: 33px
@@ -65,7 +63,6 @@ export default {
   position: absolute
   bottom: 0
   width: 100%
-  z-index: 5000
 .notification
   border: 1px solid rgba(0, 0, 0, 0.12)
   font-size: 12px

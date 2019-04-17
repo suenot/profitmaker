@@ -4,9 +4,9 @@
     <div class="aside" v-if="aside">
 
       <section class="section">
-        <div class="section-header">
-          <div class="section-title">Fetch</div>
-          <div class="section-actions">
+        <div class="aside-header">
+          <h1 class="aside-header-text">Fetch</h1>
+          <div>
             <i v-if="accordion.fetch" class="el-icon-arrow-up" @click="toggleAccordion('fetch')"></i>
             <i v-else class="el-icon-arrow-down" @click="toggleAccordion('fetch')"></i>
             <i class="el-icon-close" @click="toggleAside()"></i>
@@ -24,9 +24,9 @@
       </section>
 
       <section class="section">
-        <div class="section-header">
-          <div class="section-title">Pagination</div>
-          <div class="section-actions">
+        <div class="aside-header">
+          <h1 class="aside-header-text">Pagination</h1>
+          <div>
             <i v-if="accordion.pagination" class="el-icon-arrow-up" @click="toggleAccordion('pagination')"></i>
             <i v-else class="el-icon-arrow-down" @click="toggleAccordion('pagination')"></i>
           </div>
@@ -47,9 +47,9 @@
       </section>
 
       <section class="section">
-        <div class="section-header">
-          <div class="section-title">Sound</div>
-          <div class="section-actions">
+        <div class="aside-header">
+          <h1 class="aside-header-text">Sound</h1>
+          <div>
             <i v-if="accordion.sound" class="el-icon-arrow-up" @click="toggleAccordion('sound')"></i>
             <i v-else class="el-icon-arrow-down" @click="toggleAccordion('sound')"></i>
           </div>
@@ -65,8 +65,8 @@
       </section>
 
       <section class="section">
-      <div class="section-header">
-        <div class="section-title">Show</div>
+      <div class="aside-header">
+        <h1 class="aside-header-text">Show</h1>
         <i v-if="accordion.show" class="el-icon-arrow-up" @click="toggleAccordion('show')"></i>
         <i v-else class="el-icon-arrow-down" @click="toggleAccordion('show')"></i>
       </div>
@@ -80,9 +80,9 @@
       </section>
 
       <section class="section">
-        <div class="section-header">
-          <div class="section-title">Sort</div>
-          <div class="section-actions">
+        <div class="aside-header">
+          <h1 class="aside-header-text">Sort</h1>
+          <div>
             <i class="el-icon-plus" @click="addFilter('sorts')"></i>
             <i v-if="accordion.sort" class="el-icon-arrow-up" @click="toggleAccordion('sort')"></i>
             <i v-else class="el-icon-arrow-down" @click="toggleAccordion('sort')"></i>
@@ -114,9 +114,9 @@
       </section>
 
       <section class="section">
-        <div class="section-header">
-          <div class="section-title">Filter profit</div>
-          <div class="section-actions">
+        <div class="aside-header">
+          <h1 class="aside-header-text">Filter profit</h1>
+          <div>
             <!-- <v-icon @click="addFilter('filters_profit')">add</v-icon>
             <v-icon v-if="accordion.filter_profit" @click="toggleAccordion('filter_profit')">keyboard_arrow_up</v-icon>
             <v-icon v-else @click="toggleAccordion('filter_profit')">keyboard_arrow_down</v-icon> -->
@@ -139,9 +139,9 @@
       </section>
 
       <section class="section">
-        <div class="section-header">
-          <div class="section-title">Filter profit sound</div>
-          <div class="section-actions">
+        <div class="aside-header">
+          <h1 class="aside-header-text">Filter profit sound</h1>
+          <div>
             <!-- <v-icon @click="addFilter('filters_profit_sound')">add</v-icon>
             <v-icon v-if="accordion.filter_profit_sound" @click="toggleAccordion('filter_profit_sound')">keyboard_arrow_up</v-icon>
             <v-icon v-else @click="toggleAccordion('filter_profit_sound')">keyboard_arrow_down</v-icon> -->
@@ -164,9 +164,9 @@
       </section>
 
       <section class="section">
-        <div class="section-header">
-          <div class="section-title">Filter</div>
-          <div class="section-actions">
+        <div class="aside-header">
+          <h1 class="aside-header-text">Filter</h1>
+          <div>
             <!-- <v-icon @click="addFilter('filters')">add</v-icon>
             <v-icon v-if="accordion.filter" @click="toggleAccordion('filter')">keyboard_arrow_up</v-icon>
             <v-icon v-else @click="toggleAccordion('filter')">keyboard_arrow_down</v-icon> -->
@@ -620,7 +620,6 @@ export default {
 }
 </script>
 
-
 <style lang="sass">
 .el-input, .el-select
   margin: 0
@@ -628,9 +627,9 @@ export default {
 body
   overflow: hidden
   overflow-y: auto
-// .kupi-table
-  // table
-    // height: 100vh !important
+.kupi-table
+  table
+    height: 100vh !important
 .scroller
   height: 100%
   height: 100vh
@@ -645,15 +644,6 @@ body
 .aside
   .section+.section
     border-top: 1px solid rgba(0, 0, 0, 0.12)
-  .section-header
-    display: flex
-    justify-content: space-between
-    .section-title
-      padding: 8px 16px
-    .section-actions
-      i
-        padding: 9px 16px
-        cursor: pointer
 .aside
   z-index: 1000
   position: fixed
@@ -666,17 +656,17 @@ body
   overflow-y: auto
   &.hide
     display: none
-// .section-header
-  // display: flex
-  // justify-content: space-between
-  // align-items: center
-  // height: 48px
-  // padding: 16px
+.aside-header
+  display: flex
+  justify-content: space-between
+  align-items: center
+  height: 48px
+  padding: 16px
   // background: rgba(0, 0, 0, 0.12)
   // border-bottom: 1px solid rgba(0, 0, 0, 0.12)
-// .section-title
-//   font-size: 14px
-//   font-weight: 400
+.aside-header-text
+  font-size: 14px
+  font-weight: 400
 .aside-padding
   padding: 16px
   .sort
