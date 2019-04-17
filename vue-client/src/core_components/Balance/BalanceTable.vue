@@ -1,5 +1,6 @@
 <template>
   <div class="kupi-table">
+    <h1>BALANCE</h1>
     <table>
       <thead>
         <tr>
@@ -101,9 +102,20 @@ export default {
       }
     },
     fetch() {
-      var {stock, accountId} = this
+      console.log('fetch')
       var type = 'now'
-      stock = 'TOTAL'
+      if (this.widget.accountId !== undefined && this.widget.accountId !== '') {
+        var accountId = this.widget.accountId
+      } else {
+        var accountId = this.accountId
+      }
+
+      if (this.widget.stock !== undefined && this.widget.stock !== '') {
+        var stock = this.widget.stock
+      } else {
+        var stock = 'TOTAL'
+      }
+      console.log(accountId, stock)
       const key = `${type}--${stock}--${accountId}`
       axios.post(`/user-api/balance/`, {
         type, key, stock, accountId
