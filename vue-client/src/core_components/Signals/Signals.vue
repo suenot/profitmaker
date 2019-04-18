@@ -627,9 +627,9 @@ export default {
 body
   overflow: hidden
   overflow-y: auto
-.kupi-table
-  table
-    height: 100vh !important
+// .kupi-table
+//   table
+//     height: 100vh !important
 .scroller
   height: 100%
   height: 100vh
