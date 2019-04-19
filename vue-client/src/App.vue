@@ -123,6 +123,8 @@ body
 
 
 // TODO: make only global
+.el-button.block
+  width: 100%
 .el-button.large
   font-size: 22px !important
 .el-input-group__prepend.large

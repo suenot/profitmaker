@@ -645,6 +645,7 @@ body
   .section+.section
     border-top: 1px solid rgba(0, 0, 0, 0.12)
 .aside
+  display: flex
   z-index: 1000
   position: fixed
   right: 0
@@ -654,14 +655,15 @@ body
   border-left: 1px solid rgba(0,0,0,0.18)
   height: 100%
   overflow-y: auto
+  flex-direction: column
   &.hide
     display: none
 .aside-header
   display: flex
   justify-content: space-between
-  align-items: center
-  height: 48px
-  padding: 16px
+  // align-items: center
+  // height: 48px
+  // padding: 16px
   // background: rgba(0, 0, 0, 0.12)
   // border-bottom: 1px solid rgba(0, 0, 0, 0.12)
 .aside-header-text

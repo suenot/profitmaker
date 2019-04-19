@@ -6,7 +6,7 @@
     <el-input placeholder="Password" v-model="password" type="password">
       <template slot="prepend">Password</template>
     </el-input>
-    <el-button type="primary" plain native-type="submit">Login</el-button>
+    <el-button type="primary" plain native-type="submit" class="block">Login</el-button>
   </form>
 </template>
 
@@ -30,13 +30,3 @@ export default {
   }
 }
 </script>
-
-<style lang="sass">
-// TODO trash
-// .login
-//   button
-//     font-size: 22px
-//   .el-input-group__prepend
-//     min-width: 90px
-//     font-weight: 700
-</style>

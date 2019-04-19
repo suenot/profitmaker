@@ -1,6 +1,6 @@
 <template>
   <div class="logout">
-    <el-button type="danger" plain @click="toLogout()">Logout</el-button>
+    <el-button type="danger" plain class="block" @click="toLogout()">Logout</el-button>
   </div>
 </template>
 
