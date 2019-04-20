@@ -1,6 +1,5 @@
 <template>
   <div class="kupi-table">
-    <h1>BALANCE</h1>
     <table>
       <thead>
         <tr>
