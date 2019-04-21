@@ -19,6 +19,7 @@ Vue.component('Pairs', require('./core_components/Pairs/Pairs.vue').default)
 Vue.component('Signals', require('./core_components/Signals/Signals.vue').default)
 Vue.component('SignalCalculations', require('./core_components/Signals/Calculations/Calculations.vue').default)
 Vue.component('SignalHistory', require('./core_components/Signals/History/History.vue').default)
+Vue.component('SignalDetails', require('./core_components/Signals/Details/Details.vue').default)
 
 Vue.component('ReactStockcharts', require('./core_components/Candles/ReactStockcharts/ReactStockcharts.js').default)
 Vue.component('CandlesVchart', require('./core_components/Candles/CandlesVchart/CandlesVchart.vue').default)
