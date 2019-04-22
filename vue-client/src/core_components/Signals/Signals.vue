@@ -352,7 +352,7 @@ export default {
     }
   },
   storage: {
-    keys: ['demo', 'sound_enabled', 'server', 'sound_volume', 'sound_interval', 'accordion', 'sorts', 'filters', 'filters_profit', 'filters_profit_sound', 'columns', 'aside'],
+    keys: ['demo', 'sound_enabled', 'server', 'sound_volume', 'sound_interval', 'accordion', 'sorts', 'filters', 'filters_profit', 'filters_profit_sound', 'columns', 'aside', 'limit'],
     namespace: 'list'
   },
   // fromMobx: {
@@ -554,6 +554,7 @@ export default {
             else if (tdKey === 'updated') table[trKey][tdKey] = td !== undefined ? moment(td).fromNow() : ''
             else if (tdKey === 'created') table[trKey][tdKey] = td !== undefined ? moment(td).fromNow() : ''
             else if (tdKey === 'timelife') table[trKey][tdKey] = td !== undefined ? moment.duration(td, 'milliseconds').format('h:mm:ss') : ''
+            else if (tdKey === 'lag') table[trKey][tdKey] = td !== undefined ? moment.duration(td, 'milliseconds').format('h:mm:ss') : ''
             else if (tdKey === 'maxProfitUSD') table[trKey][tdKey] = td !== undefined ? td.toFixed(0) + ' USD' : ''
             else if (tdKey === 'maxProfitBTC') table[trKey][tdKey] = td !== undefined ? td.toFixed(8) + ' BTC' : ''
             else if (tdKey === 'maxTotalUSD') table[trKey][tdKey] = td !== undefined ? td.toFixed(0) + ' USD' : ''

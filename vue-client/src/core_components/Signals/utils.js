@@ -108,6 +108,11 @@ export const columns = [
     label: 'timelife',
     value: 'timelife',
     display: true,
+  },
+  {
+    label: 'lag',
+    value: 'lag',
+    display: true,
   }
 ]
 

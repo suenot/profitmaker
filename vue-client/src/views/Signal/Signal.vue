@@ -9,12 +9,12 @@
     <Trade v-if="tabs.Trade"/>
     <div v-if="tabs.BalanceFrom">
       <div v-for="accountId in accountsFrom" :key="accountId">
-        <BalanceTable :widget="{demo: false, stock: stockFrom, accountId: accountId}" />
+        <BalanceTable :widget="{demo: true, stock: stockFrom, accountId: accountId}" />
       </div>
     </div>
     <div v-if="tabs.BalanceTo">
       <div v-for="accountId in accountsTo" :key="accountId">
-        <BalanceTable :widget="{demo: false, stock: stockTo, accountId: accountId}" />
+        <BalanceTable :widget="{demo: true, stock: stockTo, accountId: accountId}" />
       </div>
     </div>
   </div>
