@@ -75,17 +75,25 @@
 import axios from 'axios'
 const uuidv1 = require('uuid/v1')
 
+import Store from '@/stores/Store'
 export default {
   data() {
     return {
       max: 0,
       index: 0,
       tableData: [],
-      server: 'https://kupi.network/api/signal-calculations',
+      // server: 'https://kupi.network/api/signal-calculations',
     }
   },
+  fromMobx: {
+    signalDetailsUrl: {
+      get() {
+        return Store.signalDetailsUrl
+      }
+    },
+  },
   mounted() {
-    axios.get(`${this.server}/${this.$route.params.id}`)
+    axios.get(`${this.signalDetailsUrl}/${this.$route.params.id}`)
     .then((response) => {
       var rsp = response.data
       this.tableData = rsp

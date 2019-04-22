@@ -41,6 +41,8 @@ class Store {
   @observable accountId = undefined
   @observable accountName = undefined
   @observable serverBackend = 'https://kupi.network/api' // TODO
+  @observable signalHistoryUrl = 'https://kupi.network/api/signals-history'
+  @observable signalDetailsUrl = 'https://kupi.network/api/signals-details'
 
   @action setStock(stock) {
     this.stock = stock.name
@@ -54,6 +56,14 @@ class Store {
 
   @action setAccountId(accountId) {
     this.accountId = accountId
+  }
+
+  @action setSignalHistoryUrl(url) {
+    this.signalHistoryUrl = url
+  }
+
+  @action setSignalDetailsUrl(url) {
+    this.signalDetailsUrl = url
   }
 }
 

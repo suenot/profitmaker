@@ -1,8 +1,8 @@
 <template>
   <div v-shortkey="['esc']" @shortkey="toggleAside()">
     <audio id="signal-audio" src="/sound/signal.mp3"></audio>
+    <el-button class="toggleAside" type="danger" icon="el-icon-tickets" circle @click="toggleAside()"></el-button>
     <div class="aside" v-if="aside">
-
       <section class="section">
         <div class="aside-header">
           <h1 class="aside-header-text">Fetch</h1>
@@ -20,6 +20,8 @@
             class="m-16">
           </el-switch>
           <el-input placeholder="Server url" v-model="server" class="m-16"></el-input>
+          <el-input placeholder="History url" v-model="signalHistoryUrl" class="m-16"></el-input>
+          <el-input placeholder="Details url" v-model="signalDetailsUrl" class="m-16"></el-input>
         </div>
       </section>
 
@@ -271,6 +273,8 @@ function isFalse(bool) {
   return bool === false
 }
 
+
+import Store from '@/stores/Store'
 export default {
   components: {
     draggable,
@@ -358,16 +362,24 @@ export default {
   // fromMobx: {
   //   Store
   // },
-  // fromMobx: {
-  //   server: {
-  //     get() {
-  //       return Store.server
-  //     },
-  //     set(server) {
-  //       Store.setserver(server)
-  //     }
-  //   }
-  // },
+  fromMobx: {
+    signalHistoryUrl: {
+      get() {
+        return Store.signalHistoryUrl
+      },
+      set(server) {
+        Store.setSignalHistoryUrl(server)
+      }
+    },
+    signalDetailsUrl: {
+      get() {
+        return Store.signalDetailsUrl
+      },
+      set(server) {
+        Store.setSignalDetailsUrl(server)
+      }
+    },
+  },
   mounted() {
     this.fetchList()
     this.interval = setInterval(this.fetchList, 10000)
@@ -645,6 +657,12 @@ body
 .aside
   .section+.section
     border-top: 1px solid rgba(0, 0, 0, 0.12)
+
+.toggleAside
+  position: fixed
+  bottom: 20px
+  left: 80px
+  z-index: 1
 .aside
   display: flex
   z-index: 1000
@@ -657,8 +675,10 @@ body
   height: 100%
   overflow-y: auto
   flex-direction: column
+
   &.hide
     display: none
+
 .aside-header
   display: flex
   justify-content: space-between
