@@ -13,7 +13,8 @@
     </ul>
     <div class="spacer"></div>
     <ul class="ul-bottom">
-      <el-tooltip content="Create order" placement="right" v-if="$route.name === 'Trade'">
+      <!-- v-if="$route.name === 'Trade'" -->
+      <el-tooltip content="Create order" placement="right">
         <li @click="showCreateOrder()"><img src="/img/widgets/auction.svg"></li>
       </el-tooltip>
       <el-tooltip content="Profile" placement="right">

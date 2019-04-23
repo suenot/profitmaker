@@ -71,7 +71,7 @@ class HeikinAshi extends React.Component {
     const {timeframe} = this.props._data
     return (
       <div>
-        <div class="react-stockcharts-timeframe">{timeframe}</div>
+        <div className="react-stockcharts-timeframe">{timeframe}</div>
         <ChartCanvas
           height={height}
           ratio={ratio}
@@ -175,7 +175,6 @@ class HeikinAshi extends React.Component {
 }
 
 HeikinAshi.propTypes = {
-  id: PropTypes.string.isRequired,
   data: PropTypes.array.isRequired,
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,

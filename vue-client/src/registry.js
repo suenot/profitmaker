@@ -9,7 +9,6 @@ Vue.component('CreateOrderAside', require('./core_components/CreateOrder/CreateO
 Vue.component('OpenOrders', require('./core_components/OpenOrders/OpenOrders.vue').default)
 Vue.component('Trades', require('./core_components/Trades/Trades.vue').default)
 Vue.component('MyTrades', require('./core_components/MyTrades/MyTrades.vue').default)
-Vue.component('Balance', require('./core_components/Balance/Balance.vue').default)
 Vue.component('BalanceTable', require('./core_components/Balance/BalanceTable.vue').default)
 Vue.component('BalancePie', require('./core_components/Balance/BalancePie.vue').default)
 Vue.component('BalanceHistory', require('./core_components/Balance/BalanceHistory.vue').default)
@@ -20,12 +19,14 @@ Vue.component('Signals', require('./core_components/Signals/Signals.vue').defaul
 Vue.component('SignalCalculations', require('./core_components/Signals/Calculations/Calculations.vue').default)
 Vue.component('SignalHistory', require('./core_components/Signals/History/History.vue').default)
 Vue.component('SignalDetails', require('./core_components/Signals/Details/Details.vue').default)
+Vue.component('SignalAccounts', require('./core_components/Signals/Accounts/Accounts.vue').default)
 
 Vue.component('ReactStockcharts', require('./core_components/Candles/ReactStockcharts/ReactStockcharts.js').default)
 Vue.component('CandlesVchart', require('./core_components/Candles/CandlesVchart/CandlesVchart.vue').default)
 // Vue.component('ReactStockcharts', require('./react_components/ReactStockcharts/index.js').default)
 
 Vue.component('Trade', require('./views/Trade/Trade.vue').default)
+Vue.component('Balance', require('./views/Balance/Balance.vue').default)
 
 
 Vue.component('Market', require('./utils_components/Market/Market.vue').default)

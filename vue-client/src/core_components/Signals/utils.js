@@ -204,6 +204,9 @@ export const scheme = [
   "updated",
   "created",
   "timelife",
+  "updatedFrom",
+  "updatedTo",
+  "lag",
 ]
 export const data = [
   {

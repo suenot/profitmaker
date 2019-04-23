@@ -15,8 +15,8 @@
 </template>
 
 <script>
-import Store from '../../stores/Store'
-import AsidesStore from '../../stores/AsidesStore'
+import Store from '@/stores/Store'
+import AsidesStore from '@/stores/AsidesStore'
 
 export default {
   data() {
