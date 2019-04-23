@@ -38,13 +38,13 @@ export default {
   data() {
     return {
       tabs: {
-        Details: false,
+        Details: true,
         History: false,
         Calculations: false,
         TradeFrom: false,
         TradeTo: false,
         Accounting: false,
-        BalanceFrom: true,
+        BalanceFrom: false,
         BalanceTo: false
       },
       stockFrom: '',

@@ -32,17 +32,17 @@
           <div>updated: {{dataComputed.updatedFrom}}</div>
         </div>
         <br />
-        <el-checkbox v-model="from.white" @change="changeData($event, data.stockFrom, data.pairFrom, 'white')">White</el-checkbox>
-        <el-checkbox v-model="from.black" @change="changeData($event, data.stockFrom, data.pairFrom, 'black')">Black</el-checkbox>
-        <el-checkbox v-model="from.favorite" @change="changeData($event, data.stockFrom, data.pairFrom, 'favorite')">Favorite</el-checkbox>
+        <el-checkbox v-model="from.white" @change="changeData($event, data.stockFrom, data.baseFrom, 'white')">White</el-checkbox>
+        <el-checkbox v-model="from.black" @change="changeData($event, data.stockFrom, data.baseFrom, 'black')">Black</el-checkbox>
+        <el-checkbox v-model="from.favorite" @change="changeData($event, data.stockFrom, data.baseFrom, 'favorite')">Favorite</el-checkbox>
         <br />
         <br />
         <div>Full name</div>
-        <el-input placeholder="Full name" v-model="from.full_name" class="m-16" @change="changeData($event, data.stockFrom, data.pairFrom, 'full_name')"></el-input>
+        <el-input placeholder="Full name" v-model="from.full_name" class="m-16" @change="changeData($event, data.stockFrom, data.baseFrom, 'full_name')"></el-input>
         <br />
         <br />
         <div>Note</div>
-        <el-input type="textarea" v-model="from.note" @change="changeData($event, data.stockFrom, data.pairFrom, 'note')"></el-input>
+        <el-input type="textarea" v-model="from.note" @change="changeData($event, data.stockFrom, data.baseFrom, 'note')"></el-input>
       </div>
       <div class="cont-30">
         <div class="common-info">
@@ -51,17 +51,17 @@
           <div>updated: {{dataComputed.updatedTo}}</div>
         </div>
         <br />
-        <el-checkbox v-model="to.white" @change="changeData($event, data.stockTo, data.pairTo, 'white')">White</el-checkbox>
-        <el-checkbox v-model="to.black" @change="changeData($event, data.stockTo, data.pairTo, 'black')">Black</el-checkbox>
-        <el-checkbox v-model="to.favorite" @change="changeData($event, data.stockTo, data.pairTo, 'favorite')">Favorite</el-checkbox>
+        <el-checkbox v-model="to.white" @change="changeData($event, data.stockTo, data.baseTo, 'white')">White</el-checkbox>
+        <el-checkbox v-model="to.black" @change="changeData($event, data.stockTo, data.baseTo, 'black')">Black</el-checkbox>
+        <el-checkbox v-model="to.favorite" @change="changeData($event, data.stockTo, data.baseTo, 'favorite')">Favorite</el-checkbox>
         <br />
         <br />
         <div>Full name</div>
-        <el-input placeholder="Full name" v-model="to.full_name" class="m-16" @change="changeData($event, data.stockTo, data.pairTo, 'full_name')"></el-input>
+        <el-input placeholder="Full name" v-model="to.full_name" class="m-16" @change="changeData($event, data.stockTo, data.baseTo, 'full_name')"></el-input>
         <br>
         <br>
         <div>Note</div>
-        <el-input type="textarea" v-model="to.note" @change="changeData($event, data.stockTo, data.pairTo, 'note')"></el-input>
+        <el-input type="textarea" v-model="to.note" @change="changeData($event, data.stockTo, data.baseTo, 'note')"></el-input>
       </div>
     </div>
   </div>
@@ -132,23 +132,24 @@ export default {
       })
     },
     getData() {
-      axios.get(`${this.server}/pairs/${this.data.stockFrom}--${this.data.pairFrom}`)
+      // TODO: rename pairs to coins
+      axios.get(`${this.server}/pairs/${this.data.stockFrom}--${this.data.baseFrom}`)
       .then((response) => {
         this.from = response.data
       })
       .catch((error) => {
       }),
 
-      axios.get(`${this.server}/pairs/${this.data.stockTo}--${this.data.pairTo}`)
+      axios.get(`${this.server}/pairs/${this.data.stockTo}--${this.data.baseTo}`)
       .then((response) => {
         this.to = response.data
       })
       .catch((error) => {
       })
     },
-    changeData(value, stock, pair, key) {
+    changeData(value, stock, baseTo, key) {
       axios.post(`${this.server}/pairs/core`, {
-        id: `${stock}--${pair}`,
+        id: `${stock}--${baseTo}`,
         key,
         value
       })
