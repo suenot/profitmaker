@@ -1,53 +1,65 @@
 <template>
   <div>
-    <!-- {{dataComputed}} -->
-    lag: {{dataComputed.lag}}
-    timelife:{{dataComputed.timelife}}
-    updated:{{dataComputed.updated}}
-    created:{{dataComputed.created}}
+    <div class="cont-30 common-info">
+      <div>lag: {{dataComputed.lag}}</div>
+      <div>timelife: {{dataComputed.timelife}}</div>
+      <div>updated: {{dataComputed.updated}}</div>
+      <div>created: {{dataComputed.created}}</div>
 
-    type: {{dataComputed.type}}
-    status:{{dataComputed.status}}
-    action:{{dataComputed.action}}
+      <div>type: {{dataComputed.type}}</div>
+      <div>status: {{dataComputed.status}}</div>
+      <div>action: {{dataComputed.action}}</div>
 
-    percent:{{dataComputed.percent}}
-    profitUSD:{{dataComputed.profitUSD}}
-    profitBTC:{{dataComputed.profitBTC}}
-    totalUSD:{{dataComputed.totalUSD}}
-    totalBTC:{{dataComputed.totalBTC}}
+      <div>percent: {{dataComputed.percent}}</div>
+      <div>profitUSD: {{dataComputed.profitUSD}}</div>
+      <div>profitBTC: {{dataComputed.profitBTC}}</div>
+      <div>totalUSD: {{dataComputed.totalUSD}}</div>
+      <div>totalBTC: {{dataComputed.totalBTC}}</div>
 
 
-    maxProfitUSD:{{dataComputed.maxProfitUSD}}
-    maxProfitBTC:{{dataComputed.maxProfitBTC}}
-    maxPercent:{{dataComputed.maxPercent}}
-    maxTotalUSD:{{dataComputed.maxTotalUSD}}
-    maxTotalBTC:{{dataComputed.maxTotalBTC}}
-
+      <div>maxProfitUSD: {{dataComputed.maxProfitUSD}}</div>
+      <div>maxProfitBTC: {{dataComputed.maxProfitBTC}}</div>
+      <div>maxPercent: {{dataComputed.maxPercent}}</div>
+      <div>maxTotalUSD: {{dataComputed.maxTotalUSD}}</div>
+      <div>maxTotalBTC: {{dataComputed.maxTotalBTC}}</div>
+    </div>
 
     <div class="detailsWrap">
-      <div>
-        {{from}}
-        pair: {{dataComputed.pairFrom}}
-        stock: {{dataComputed.stockFrom}}
-        updated: {{dataComputed.updatedFrom}}
-        <el-checkbox v-model="from.white">White</el-checkbox>
-        <el-checkbox v-model="from.black">Black</el-checkbox>
-        <el-checkbox v-model="from.favorite">Favorite</el-checkbox>
+      <div class="cont-30">
+        <div class="common-info">
+          <div>pair: {{dataComputed.pairFrom}}</div>
+          <div>stock: {{dataComputed.stockFrom}}</div>
+          <div>updated: {{dataComputed.updatedFrom}}</div>
+        </div>
+        <br />
+        <el-checkbox v-model="from.white" @change="changeData($event, data.stockFrom, data.pairFrom, 'white')">White</el-checkbox>
+        <el-checkbox v-model="from.black" @change="changeData($event, data.stockFrom, data.pairFrom, 'black')">Black</el-checkbox>
+        <el-checkbox v-model="from.favorite" @change="changeData($event, data.stockFrom, data.pairFrom, 'favorite')">Favorite</el-checkbox>
+        <br />
+        <br />
         <div>Full name</div>
-        <el-input placeholder="Full name" v-model="from.full_name" class="m-16" @change="changeData($event)"></el-input>
+        <el-input placeholder="Full name" v-model="from.full_name" class="m-16" @change="changeData($event, data.stockFrom, data.pairFrom, 'full_name')"></el-input>
+        <br />
+        <br />
         <div>Note</div>
-        <el-input type="textarea" v-model="from.note" @change="changeData($event)"></el-input>
+        <el-input type="textarea" v-model="from.note" @change="changeData($event, data.stockFrom, data.pairFrom, 'note')"></el-input>
       </div>
-      <div>
-        {{to}}
-        pair: {{dataComputed.pairTo}}
-        stock: {{dataComputed.stockTo}}
-        updated: {{dataComputed.updatedTo}}
-        <el-checkbox v-model="to.white">White</el-checkbox>
-        <el-checkbox v-model="to.black">Black</el-checkbox>
-        <el-checkbox v-model="to.favorite">Favorite</el-checkbox>
+      <div class="cont-30">
+        <div class="common-info">
+          <div>pair: {{dataComputed.pairTo}}</div>
+          <div>stock: {{dataComputed.stockTo}}</div>
+          <div>updated: {{dataComputed.updatedTo}}</div>
+        </div>
+        <br />
+        <el-checkbox v-model="to.white" @change="changeData($event, data.stockTo, data.pairTo, 'white')">White</el-checkbox>
+        <el-checkbox v-model="to.black" @change="changeData($event, data.stockTo, data.pairTo, 'black')">Black</el-checkbox>
+        <el-checkbox v-model="to.favorite" @change="changeData($event, data.stockTo, data.pairTo, 'favorite')">Favorite</el-checkbox>
+        <br />
+        <br />
         <div>Full name</div>
         <el-input placeholder="Full name" v-model="to.full_name" class="m-16" @change="changeData($event, data.stockTo, data.pairTo, 'full_name')"></el-input>
+        <br>
+        <br>
         <div>Note</div>
         <el-input type="textarea" v-model="to.note" @change="changeData($event, data.stockTo, data.pairTo, 'note')"></el-input>
       </div>
@@ -154,9 +166,13 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+.common-info
+  column-count: 4
+  column-rule-style: solid
+  column-gap: 40px
+  column-rule: 1px solid lightblue
 .detailsWrap
   display: flex
   & > div
     flex: 0 0 50%
-    padding: 30px
 </style>

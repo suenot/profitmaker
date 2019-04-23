@@ -6,7 +6,8 @@
     <SignalDetails v-if="tabs.Details"/>
     <SignalHistory v-if="tabs.History"/>
     <SignalCalculations v-if="tabs.Calculations"/>
-    <Trade v-if="tabs.Trade"/>
+    <Trade v-if="tabs.TradeFrom" stock="" pair="" />
+    <Trade v-if="tabs.TradeTo" stock="" pair="" />
     <div v-if="tabs.BalanceFrom">
       <div v-for="accountId in accountsFrom" :key="accountId">
         <BalanceTable :widget="{demo: true, stock: stockFrom, accountId: accountId}" />
@@ -30,7 +31,8 @@ export default {
         Details: true,
         History: false,
         Calculations: false,
-        Trade: false,
+        TradeFrom: false,
+        TradeTo: false,
         Accounting: false,
         BalanceFrom: false,
         BalanceTo: false

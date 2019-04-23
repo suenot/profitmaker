@@ -92,6 +92,8 @@ body
   &.night
     background: #000
     color: #fff
+.cont-30
+  padding: 30px
 .muted
   color: #969595
 .divider
