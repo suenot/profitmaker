@@ -132,15 +132,14 @@ export default {
       })
     },
     getData() {
-      // TODO: rename pairs to coins
-      axios.get(`${this.server}/pairs/${this.data.stockFrom}--${this.data.baseFrom}`)
+      axios.get(`${this.server}/coins/${this.data.stockFrom}--${this.data.baseFrom}`)
       .then((response) => {
         this.from = response.data
       })
       .catch((error) => {
       }),
 
-      axios.get(`${this.server}/pairs/${this.data.stockTo}--${this.data.baseTo}`)
+      axios.get(`${this.server}/coins/${this.data.stockTo}--${this.data.baseTo}`)
       .then((response) => {
         this.to = response.data
       })
@@ -148,7 +147,7 @@ export default {
       })
     },
     changeData(value, stock, baseTo, key) {
-      axios.post(`${this.server}/pairs/core`, {
+      axios.post(`${this.server}/coins/core`, {
         id: `${stock}--${baseTo}`,
         key,
         value
