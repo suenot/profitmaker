@@ -1,21 +1,22 @@
 <template>
   <div>
+    <div v-if="accountsComputed"></div>
     <div class="kupi-tabs">
       <div v-for="(tabValue, tabKey) in tabs" :key="tabKey" :class="`kupi-tab ${tabValue}`" @click="activateTab(tabKey)">{{tabKey}}</div>
     </div>
-    <SignalDetails v-if="tabs.Details"/>
-    <SignalHistory v-if="tabs.History"/>
-    <SignalCalculations v-if="tabs.Calculations"/>
-    <Trade v-if="tabs.TradeFrom" stock="" pair="" />
-    <Trade v-if="tabs.TradeTo" stock="" pair="" />
+    <SignalDetails v-if="tabs.Details" />
+    <SignalHistory v-if="tabs.History" />
+    <SignalCalculations v-if="tabs.Calculations" />
+    <Trade v-if="tabs.TradeFrom" />
+    <Trade v-if="tabs.TradeTo" />
     <div v-if="tabs.BalanceFrom">
       <div v-for="accountId in accountsFrom" :key="accountId">
-        <BalanceTable :widget="{demo: true, stock: stockFrom, accountId: accountId}" />
+        <BalanceTable :widget="{demo: false, stock: stockFrom, accountId: accountId}" />
       </div>
     </div>
     <div v-if="tabs.BalanceTo">
       <div v-for="accountId in accountsTo" :key="accountId">
-        <BalanceTable :widget="{demo: true, stock: stockTo, accountId: accountId}" />
+        <BalanceTable :widget="{demo: false, stock: stockTo, accountId: accountId}" />
       </div>
     </div>
   </div>
@@ -23,6 +24,7 @@
 
 <script>
 import _ from 'lodash'
+import { toJS } from 'mobx'
 import AccountsStore from '@/stores/AccountsStore'
 export default {
   data() {
@@ -39,9 +41,23 @@ export default {
       },
       stockFrom: '',
       stockTo: '',
-      accountsFrom: [],
-      accountsTo: []
+      // accountsFrom: [],
+      // accountsTo: []
     }
+  },
+  fromMobx: {
+    accounts: {
+      get() {
+        // if (AccountsStore.accountsTrigger) {
+          return AccountsStore.accounts
+        // }
+      }
+    },
+    accountsTrigger: {
+      get() {
+        return AccountsStore.accountsTrigger
+      }
+    },
   },
   methods: {
     activateTab(newTab) {
@@ -53,22 +69,35 @@ export default {
       this.tabs = tabs
     }
   },
-  mounted() {
+  async mounted() {
+    await AccountsStore.fetchAccounts()
+    var accounts = _.cloneDeep(this.accounts)
     var splitPath = this.$route.params.id.split('--')
     this.stockFrom = splitPath[0].toLowerCase()
     this.stockTo = splitPath[3].toLowerCase()
-    var accountsFrom = []
-    var accountsTo = []
-    for (let [key, account] of Object.entries(AccountsStore.accounts)) {
-      if(account.stock === this.stockFrom) {
-        accountsFrom.push(key)
+  },
+  computed: {
+    accountsComputed() {
+      return this.accounts
+    },
+    accountsFrom() {
+      var accounts = []
+      for (let [key, account] of Object.entries(this.accountsComputed)) {
+        if(account.stock === this.stockFrom) {
+          accounts.push(key)
+        }
       }
-      if(account.stock === this.stockTo) {
-        accountsTo.push(key)
+      return accounts
+    },
+    accountsTo() {
+      var accounts = []
+      for (let [key, account] of Object.entries(this.accountsComputed)) {
+        if(account.stock === this.stockTo) {
+          accounts.push(key)
+        }
       }
-    }
-    this.accountsFrom = accountsFrom
-    this.accountsTo = accountsTo
+      return accounts
+    },
   }
 }
 </script>

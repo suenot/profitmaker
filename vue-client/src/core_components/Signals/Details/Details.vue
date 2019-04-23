@@ -141,7 +141,6 @@ export default {
 
       axios.get(`${this.server}/pairs/${this.data.stockTo}--${this.data.pairTo}`)
       .then((response) => {
-        console.log(response.data)
         this.to = response.data
       })
       .catch((error) => {

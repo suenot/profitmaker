@@ -101,7 +101,6 @@ export default {
       }
     },
     fetch() {
-      console.log('fetch')
       var type = 'now'
       if (this.widget.accountId !== undefined && this.widget.accountId !== '') {
         var accountId = this.widget.accountId
@@ -114,7 +113,6 @@ export default {
       } else {
         var stock = 'TOTAL'
       }
-      console.log(accountId, stock)
       const key = `${type}--${stock}--${accountId}`
       axios.post(`/user-api/balance/`, {
         type, key, stock, accountId
