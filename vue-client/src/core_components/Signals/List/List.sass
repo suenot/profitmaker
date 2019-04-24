@@ -1,0 +1,153 @@
+.el-input, .el-select
+  margin: 0
+
+body
+  overflow: hidden
+  overflow-y: auto
+// .kupi-table
+//   table
+//     height: 100vh !important
+.scroller
+  height: 100%
+  height: 100vh
+  scroll: auto
+.test
+  max-height: 32px
+  height: 32px
+  // height: 32%
+  // padding: 0 12px
+  // display: flex
+  // align-items: center
+.aside
+  .section+.section
+    border-top: 1px solid rgba(0, 0, 0, 0.12)
+
+.toggleAside
+  position: fixed
+  bottom: 20px
+  left: 80px
+  z-index: 1
+.aside
+  display: flex
+  z-index: 1000
+  position: fixed
+  right: 0
+  top: 0
+  width: 320px
+  background: white
+  border-left: 1px solid rgba(0,0,0,0.18)
+  height: 100%
+  overflow-y: auto
+  flex-direction: column
+
+  &.hide
+    display: none
+
+.aside-header
+  display: flex
+  justify-content: space-between
+  // align-items: center
+  // height: 48px
+  // padding: 16px
+  // background: rgba(0, 0, 0, 0.12)
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.12)
+.aside-header-text
+  font-size: 14px
+  font-weight: 400
+.aside-padding
+  padding: 16px
+  .sort
+    position: relative
+  .btn-rm
+    position: absolute
+    right: -28px
+    top: 5px
+    border-radius: 100% !important
+  &.filter-profit, &.filter-profit-sound
+    position: relative
+    .btn-rm
+      position: absolute
+      right: -12px
+      top: 48px // top: 36px
+  &.filter
+    position: relative
+    .button-center
+      position: absolute
+      top: 85px // top: 63px
+      right: -12px
+      border-radius: 100% !important
+  &+.aside-padding
+    border-top: 1px solid rgba(0, 0, 0, 0.12)
+    &.combined
+      border-top: none
+      padding-top: 0
+.sound-block
+  display: flex
+  .el-slider
+    flex: 1 0 auto
+    margin-right: 16px
+
+.m-16+.m-16
+  margin-top: 16px
+
+
+.el-select
+  width: 100%
+  &.action
+    width: 70px
+    margin-left: auto
+    margin-right: auto
+    display: block
+
+.select-arrow
+  display: flex
+  .el-input__inner
+    border-radius: 4px 0 0 4px !important
+    border-right: 0px
+  .sort-arrow
+    border-radius: 0 4px 4px 0 !important
+    display: flex
+    justify-content: center
+    align-items: center
+    border: 1px solid #dcdfe6
+    padding: 16px
+  .el-icon-minus
+    padding: 16px
+
+
+.kupi-table
+  table
+    border-collapse: collapse
+    width: 100%
+    tbody
+      tr:hover
+        cursor: pointer
+        background: rgba(0,0,0,0.08)
+      tr.died
+        opacity: 0.5
+    td, th
+      border: 1px solid rgba(0,0,0,0.12)
+      padding: 5px
+
+.buy
+  background: rgba(88, 110, 74, .2)
+.sell
+  background: rgba(241, 61, 24, .2)
+.ltc
+  &, & td
+    background: rgba(230, 230, 230, .2)
+.eth
+  &, & td
+    background: rgba(125, 133, 179, .2)
+.btc
+  &, & td
+    background: rgba(248, 160, 54, .2)
+.usd
+  &, & td
+    background: rgba(88, 110, 74, .2)
+.cny
+  &, & td
+    background: rgba(241, 61, 24, .2)
+.rub
+  &, & td
+    background: rgba(45, 114, 176, .2)

@@ -59,8 +59,6 @@
         <div class="aside-padding" v-if="accordion.sound">
           <div class="sound-block">
             <el-slider v-model="sound_volume"></el-slider>
-            <!-- <v-icon v-if="sound_enabled" @click="toggleSound()">volume_up</v-icon> -->
-            <!-- <v-icon v-else @click="toggleSound()">volume_off</v-icon> -->
           </div>
           <el-slider v-model="sound_interval" show-input :max="60"></el-slider>
         </div>
@@ -108,9 +106,6 @@
             <i v-if="sorts[sortIndex].direction === 'asc'" class="sort-arrow el-icon-arrow-up" @click="toggleSortDirection(sortIndex)"></i>
             <i v-if="sorts[sortIndex].direction === 'desc'" class="sort-arrow el-icon-arrow-down" @click="toggleSortDirection(sortIndex)"></i>
             <i class="el-icon-minus" @click="removeFilter('sorts', sortIndex)"></i>
-            <!-- <el-button v-if="sorts[sortIndex].direction === 'desc'" class="sort-arrow" type="primary" size="mini" plain @click="toggleSortDirection(sortIndex)"><v-icon>arrow_downward</v-icon></el-button> -->
-            <!-- <el-button v-if="sorts[sortIndex].direction === 'asc'" class="sort-arrow" type="primary" size="mini" plain @click="toggleSortDirection(sortIndex)"><v-icon>arrow_upward</v-icon></el-button> -->
-            <!-- <el-button icon="el-icon-minus" size="mini" class="m-16 btn-rm" circle @click="removeFilter('sorts', sortIndex)"></el-button> -->
           </div>
         </div>
       </section>
@@ -119,9 +114,6 @@
         <div class="aside-header">
           <h1 class="aside-header-text">Filter profit</h1>
           <div>
-            <!-- <v-icon @click="addFilter('filters_profit')">add</v-icon>
-            <v-icon v-if="accordion.filter_profit" @click="toggleAccordion('filter_profit')">keyboard_arrow_up</v-icon>
-            <v-icon v-else @click="toggleAccordion('filter_profit')">keyboard_arrow_down</v-icon> -->
             <i class="el-icon-plus" @click="addFilter('filters_profit')"></i>
             <i v-if="accordion.filter_profit" class="el-icon-arrow-up" @click="toggleAccordion('filter_profit')"></i>
             <i v-else class="el-icon-arrow-down" @click="toggleAccordion('filter_profit')"></i>
@@ -144,9 +136,6 @@
         <div class="aside-header">
           <h1 class="aside-header-text">Filter profit sound</h1>
           <div>
-            <!-- <v-icon @click="addFilter('filters_profit_sound')">add</v-icon>
-            <v-icon v-if="accordion.filter_profit_sound" @click="toggleAccordion('filter_profit_sound')">keyboard_arrow_up</v-icon>
-            <v-icon v-else @click="toggleAccordion('filter_profit_sound')">keyboard_arrow_down</v-icon> -->
             <i class="el-icon-plus" @click="addFilter('filters_profit_sound')"></i>
             <i v-if="accordion.filter_profit_sound" class="el-icon-arrow-up" @click="toggleAccordion('filter_profit_sound')"></i>
             <i v-else class="el-icon-arrow-down" @click="toggleAccordion('filter_profit_sound')"></i>
@@ -169,9 +158,6 @@
         <div class="aside-header">
           <h1 class="aside-header-text">Filter</h1>
           <div>
-            <!-- <v-icon @click="addFilter('filters')">add</v-icon>
-            <v-icon v-if="accordion.filter" @click="toggleAccordion('filter')">keyboard_arrow_up</v-icon>
-            <v-icon v-else @click="toggleAccordion('filter')">keyboard_arrow_down</v-icon> -->
             <i class="el-icon-plus" @click="addFilter('filters')"></i>
             <i v-if="accordion.filter" class="el-icon-arrow-up" @click="toggleAccordion('filter')"></i>
             <i v-else class="el-icon-arrow-down" @click="toggleAccordion('filter')"></i>
@@ -249,32 +235,24 @@
 
 <script>
 import axios from 'axios'
-import moment from 'moment'
 import uuidv1 from 'uuid/v1'
-
-var momentDurationFormatSetup = require("moment-duration-format")
-momentDurationFormatSetup(moment)
-
 import _ from 'lodash'
 import draggable from 'vuedraggable'
-
-// import Store from '@/stores/Store'
-
+import Store from '@/stores/Store'
+import moment from 'moment'
+var momentDurationFormatSetup = require("moment-duration-format")
+momentDurationFormatSetup(moment)
 const operators = {
   '!=': function(a, b) { return a !== b },
   '==': function(a, b) { return a === b },
-  '>=': function(a, b) { return a >= b },
-  '<=': function(a, b) { return a <= b },
+  '>=': function(a, b) { return parseFloat(a) >= parseFloat(b) },
+  '<=': function(a, b) { return parseFloat(a) <= parseFloat(b) },
   'and': function(a, b) { return a && b },
   'or': function(a, b) { return a || b },
 }
-
 function isFalse(bool) {
   return bool === false
 }
-
-
-import Store from '@/stores/Store'
 export default {
   components: {
     draggable,
@@ -307,50 +285,10 @@ export default {
         filter_profit_sound: true,
         filter: true,
       },
-      sorts: [
-        // {
-        //   id: 'sorts_aaa',
-        //   key: '',
-        //   direction: 'asc',
-        // },
-        // {
-        //   id: 'sorts_bbb',
-        //   key: '',
-        //   direction: 'desc',
-        // },
-      ],
-      filters_profit: [
-        // {
-        //   id: 'filters_profit_aaa',
-        //   usd: 20,
-        //   percent: 20,
-        // },
-        // {
-        //   id: 'filters_profit_bbb',
-        //   usd: 100,
-        //   percent: 5,
-        // },
-      ],
-      filters_profit_sound: [
-        // {
-        //   id: 'filters_profit_sound_aaa',
-        //   usd: 20,
-        //   percent: 30,
-        // },
-        // {
-        //   id: 'filters_profit_sound_bbb',
-        //   usd: 200,
-        //   percent: 5,
-        // },
-      ],
-      filters: [
-        // {
-        //   id: 'filters_aaa',
-        //   columns: [],
-        //   operator: '',
-        //   values: [],
-        // },
-      ],
+      sorts: [],
+      filters_profit: [],
+      filters_profit_sound: [],
+      filters: [],
       notes: [],
       limit: 20,
     }
@@ -359,9 +297,6 @@ export default {
     keys: ['demo', 'sound_enabled', 'server', 'sound_volume', 'sound_interval', 'accordion', 'sorts', 'filters', 'filters_profit', 'filters_profit_sound', 'columns', 'aside', 'limit'],
     namespace: 'list'
   },
-  // fromMobx: {
-  //   Store
-  // },
   fromMobx: {
     signalHistoryUrl: {
       get() {
@@ -440,7 +375,6 @@ export default {
     fetchList() {
       if(this.demo) {
         this.table = require('./data.js').data
-        // console.log(this.table)
       } else {
         axios.get(`${this.server}`)
         .then((response) => {
@@ -455,14 +389,7 @@ export default {
     demoToggle() {
       this.demo = !this.demo
     },
-  },
-  computed: {
-    tableComputed: function() {
-      var table = _.cloneDeep(this.table)
-
-      if (table.length === 0) return []
-
-
+    to_filters_profit(table) {
       // Удаление лишних строк: filters_profit
       if (this.filters_profit.length > 0) {
         table = _.filter(table, (tr)=>{
@@ -477,7 +404,9 @@ export default {
           } catch(err) {}
         })
       }
-
+      return table
+    },
+    to_filters_profit_sound(table) {
       // Фильтр для звукогового сигнала
       if (this.filters_profit_sound.length > 0) {
         if (this.sound_enabled) {
@@ -496,8 +425,9 @@ export default {
           this.sound_playing = false
         }
       }
-
-      // Удаление лишних строк: filters
+      return table
+    },
+    to_filters(table) {
       if (this.filters.length > 0) {
         table = _.filter(table, (tr)=>{
           try {
@@ -526,7 +456,9 @@ export default {
           } catch(err) {}
         })
       }
-
+      return table
+    },
+    to_sorts(table) {
       // Сортировка данных
       // TODO: сортировка без указания индексов
       if (this.sorts.length > 0) {
@@ -538,12 +470,9 @@ export default {
         }
         table = _.orderBy(table, sorts_keys, sorts_directions)
       }
-
-
-      // Limit
-      table = table.slice((this.page-1)*this.limit, this.page*this.limit)
-
-
+      return table
+    },
+    to_modify(table) {
       // Преобразование данных и сбор уникальных классов
       var table_classes = []
       if (table.length > 0) {
@@ -576,7 +505,10 @@ export default {
           table_classes.push(td_classes)
         }
       }
-
+      this.table_classes = table_classes
+      return table
+    },
+    to_rm_columns(table) {
       // Удаление лишних колонок
       var _table = _.clone(table)
       var table = []
@@ -584,7 +516,6 @@ export default {
         var _tr = {}
         for (let column of this.columns) {
           for (let [tdKey, tdValue] of Object.entries(tr)) {
-            // console.log(tdKey, tdValue)
             if (column.value === tdKey && column.display === true) {
               _tr[tdKey] = tdValue
             }
@@ -592,9 +523,35 @@ export default {
         }
         table.push(_tr)
       })
+      return table
+    }
+  },
+  computed: {
+    tableComputed: function() {
+      var table = _.cloneDeep(this.table)
 
+      if (table.length === 0) return []
 
-      this.table_classes = table_classes
+      // Удаление лишних строк: filters_profit
+      table = this.to_filters_profit(table)
+
+      // Фильтр для звукогового сигнала
+      table = this.to_filters_profit_sound(table)
+
+      // Удаление лишних строк: filters
+      table = this.to_filters(table)
+
+      // Сортировка данных
+      table = this.to_sorts(table)
+
+      // Limit
+      table = table.slice((this.page-1)*this.limit, this.page*this.limit)
+
+      // Преобразование данных и сбор уникальных классов
+      table = this.to_modify(table)
+
+      // Удаление лишних колонок
+      table = this.to_rm_columns(table)
 
       return table
     },
@@ -633,158 +590,4 @@ export default {
 }
 </script>
 
-<style lang="sass">
-.el-input, .el-select
-  margin: 0
-
-body
-  overflow: hidden
-  overflow-y: auto
-// .kupi-table
-//   table
-//     height: 100vh !important
-.scroller
-  height: 100%
-  height: 100vh
-  scroll: auto
-.test
-  max-height: 32px
-  height: 32px
-  // height: 32%
-  // padding: 0 12px
-  // display: flex
-  // align-items: center
-.aside
-  .section+.section
-    border-top: 1px solid rgba(0, 0, 0, 0.12)
-
-.toggleAside
-  position: fixed
-  bottom: 20px
-  left: 80px
-  z-index: 1
-.aside
-  display: flex
-  z-index: 1000
-  position: fixed
-  right: 0
-  top: 0
-  width: 320px
-  background: white
-  border-left: 1px solid rgba(0,0,0,0.18)
-  height: 100%
-  overflow-y: auto
-  flex-direction: column
-
-  &.hide
-    display: none
-
-.aside-header
-  display: flex
-  justify-content: space-between
-  // align-items: center
-  // height: 48px
-  // padding: 16px
-  // background: rgba(0, 0, 0, 0.12)
-  // border-bottom: 1px solid rgba(0, 0, 0, 0.12)
-.aside-header-text
-  font-size: 14px
-  font-weight: 400
-.aside-padding
-  padding: 16px
-  .sort
-    position: relative
-  .btn-rm
-    position: absolute
-    right: -28px
-    top: 5px
-    border-radius: 100% !important
-  &.filter-profit, &.filter-profit-sound
-    position: relative
-    .btn-rm
-      position: absolute
-      right: -12px
-      top: 48px // top: 36px
-  &.filter
-    position: relative
-    .button-center
-      position: absolute
-      top: 85px // top: 63px
-      right: -12px
-      border-radius: 100% !important
-  &+.aside-padding
-    border-top: 1px solid rgba(0, 0, 0, 0.12)
-    &.combined
-      border-top: none
-      padding-top: 0
-.sound-block
-  display: flex
-  .el-slider
-    flex: 1 0 auto
-    margin-right: 16px
-
-.m-16+.m-16
-  margin-top: 16px
-
-
-.el-select
-  width: 100%
-  &.action
-    width: 70px
-    margin-left: auto
-    margin-right: auto
-    display: block
-
-.select-arrow
-  display: flex
-  .el-input__inner
-    border-radius: 4px 0 0 4px !important
-    border-right: 0px
-  .sort-arrow
-    border-radius: 0 4px 4px 0 !important
-    display: flex
-    justify-content: center
-    align-items: center
-    border: 1px solid #dcdfe6
-    padding: 16px
-  .el-icon-minus
-    padding: 16px
-
-
-.kupi-table
-  table
-    border-collapse: collapse
-    width: 100%
-    tbody
-      tr:hover
-        cursor: pointer
-        background: rgba(0,0,0,0.08)
-      tr.died
-        opacity: 0.5
-    td, th
-      border: 1px solid rgba(0,0,0,0.12)
-      padding: 5px
-
-.buy
-  background: rgba(88, 110, 74, .2)
-.sell
-  background: rgba(241, 61, 24, .2)
-.ltc
-  &, & td
-    background: rgba(230, 230, 230, .2)
-.eth
-  &, & td
-    background: rgba(125, 133, 179, .2)
-.btc
-  &, & td
-    background: rgba(248, 160, 54, .2)
-.usd
-  &, & td
-    background: rgba(88, 110, 74, .2)
-.cny
-  &, & td
-    background: rgba(241, 61, 24, .2)
-.rub
-  &, & td
-    background: rgba(45, 114, 176, .2)
-</style>
+<style lang="sass" src="./List.sass"></style>
