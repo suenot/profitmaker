@@ -13,6 +13,11 @@ import CoinsStore from 'stores/CoinsStore'
 
 @observer
 class Orders extends React.Component {
+  constructor(props) {
+    super(props)
+    this.ordersCenter = React.createRef()
+  }
+
   state = {
     interval: '',
     tube: '',
@@ -20,6 +25,7 @@ class Orders extends React.Component {
     data: [],
     timer: 1000,
     serverBackend: 'https://kupi.network',
+    center: false,
   }
 
   render() {
@@ -36,7 +42,7 @@ class Orders extends React.Component {
       asks = _.reverse(_.clone(asks))
     }
     return (
-      <div id={type === 'both' ? 'orders-both' : ''} className="kupi-pseudoTable">
+      <div id={type === 'both' ? 'orders-both' : ''} className="kupi-pseudotable">
         <div className="pseudotable">
 
           { (type !== 'both') &&
@@ -89,12 +95,10 @@ class Orders extends React.Component {
             }
 
             { (type === 'both') &&
-              <div className="pseudotable-header">
+              <div className="pseudotable-header ">
                 <div
                   className="pseudotable-row"
-                  ref={input => {
-                    this.ordersCenter = input;
-                  }}
+                  ref={this.ordersCenter}
                   >
                   <div style={{flex: '0 0 25%'}}>price  <span className="muted">{coinTo}</span></div>
                   <div style={{flex: '0 0 25%'}}>amount <span className="muted">{coinFrom}</span></div>
@@ -168,7 +172,7 @@ class Orders extends React.Component {
       if (!(data === undefined || data['asks'] === undefined || data['bids'] === undefined)) {
         if (this.props.data.type === 'both') {
           var widgetHeight = ReactDOM.findDOMNode(this).parentNode.parentNode.parentNode.offsetHeight
-          var top = ReactDOM.findDOMNode(this).querySelector('.orders-center').offsetTop
+          var top = this.ordersCenter.current.offsetTop
           ReactDOM.findDOMNode(this).parentNode.scrollTop = top - widgetHeight / 2 + 24
         }
       }
@@ -248,7 +252,14 @@ class Orders extends React.Component {
     this.setState({
       data: data
     })
-
+    if (this.props.data.type === 'both' && !this.state.center) {
+      setTimeout(()=>{
+        this.toCenter()
+        this.setState({
+          center: true
+        })
+      }, 200)
+    }
   }
 
   start() {
