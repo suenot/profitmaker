@@ -94,7 +94,7 @@ export default {
     .widget-body
       height: auto
       flex: 0 1 auto
-      max-height: calc( (100vh - 505px - 66px) / 2)
+      height: calc( (100vh - 505px - 66px) / 2)
 
 .section
   border: 1px solid #d9d9d9
