@@ -137,6 +137,7 @@ body
 
 .kupi-table
   width: 100%
+  min-height: 44px
   table
     border-collapse: collapse
     width: 100%
