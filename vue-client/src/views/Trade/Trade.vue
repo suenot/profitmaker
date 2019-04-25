@@ -11,10 +11,10 @@
           <Widget :widget="blocks.Candles"/>
         </div>
         <div class="info-wrapper">
-          <div class="flex my-trades-wrapper">
+          <div class="my-trades-wrapper">
             <Widget :widget="blocks.MyTrades" />
           </div>
-          <div class="flex open-orders-wrapper">
+          <div class="open-orders-wrapper">
             <Widget :widget="blocks.OpenOrders" />
           </div>
         </div>
@@ -43,7 +43,7 @@ export default {
 </script>
 
 
-<style lang="sass" scoped>
+<style lang="sass">
 .main-container
   height: 100vh
   max-height: 100vh
@@ -70,23 +70,31 @@ export default {
 .orders-wrapper
   height: calc(100vh + 2px)
 .candles-wrapper
-  flex: 0 0 430px
+  flex: 0 0 505px
   height: 505px
   min-height: 505px
   // border-bottom: 1px solid #d9d9d9
 .info-wrapper
-  flex: 1 0 auto
+  flex: 0 0 calc(100vh - 505px)
   display: flex
   flex-direction: column
 
 .trades-wrapper
   height: calc(100vh + 2px)
-.my-trades-wrapper
-  overflow-y: auto
-  flex: 1 1 50%
-.open-orders-wrapper
-  flex: 1 1 50%
-  overflow-y: auto
+
+.open-orders-wrapper, .my-trades-wrapper
+  flex: 0 1 50%
+  display: flex
+  flex-direction: column
+  .widget
+    display: flex
+    flex-direction: column
+    .block-header
+      flex: 0 0 auto
+    .widget-body
+      height: auto
+      flex: 0 1 auto
+      max-height: calc( (100vh - 505px - 66px) / 2)
 
 .section
   border: 1px solid #d9d9d9
