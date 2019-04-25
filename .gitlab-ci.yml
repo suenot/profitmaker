@@ -1,4 +1,15 @@
-build site:
+vue test:
+  image: node:8
+  stage: test
+  before_script:
+    - cd vue-client
+  script:
+    - npm install --progress=false
+    - npm run test
+  only:
+    - master
+
+vue build:
   image: node:8
   stage: build
   before_script:
@@ -9,4 +20,60 @@ build site:
   artifacts:
     expire_in: 1 week
     paths:
-      - dist
+      - vue-client/dist
+  only:
+    - master
+
+vue electron build:
+  image: node:8
+  stage: build
+  before_script:
+    - cd vue-client
+  script:
+    - npm install --progress=false
+    - npm run electron:generate-icons
+    - npm run electron:build
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - vue-client/dist_electron
+  only:
+    - master
+
+react test:
+  image: node:8
+  stage: test
+  before_script:
+    - cd vue-client
+  script:
+    - npm install --progress=false
+    - npm run test
+  only:
+    - master
+
+react build:
+  image: node:8
+  stage: build
+  before_script:
+    - cd react-client
+  script:
+    - npm install --progress=false
+    - npm run build
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - react-client/build
+  only:
+    - master
+
+server test:
+  image: node:8
+  stage: test
+  before_script:
+    - cd server
+  script:
+    - npm install --progress=false
+    - npm run test
+  only:
+    - master
+
