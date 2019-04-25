@@ -75,7 +75,7 @@ export default {
   min-height: 505px
   // border-bottom: 1px solid #d9d9d9
 .info-wrapper
-  flex: 0 1 auto
+  flex: 1 0 auto
   display: flex
   flex-direction: column
 
