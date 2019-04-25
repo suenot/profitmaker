@@ -1,0 +1,12 @@
+build site:
+  image: node:8
+  stage: build
+  before_script:
+    - cd vue-client
+  script:
+    - npm install --progress=false
+    - npm run build
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - dist
