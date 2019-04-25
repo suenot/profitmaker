@@ -1,6 +1,17 @@
-build vue:
+vue test:
   image: node:8
-  stage: build
+  stage: vue-test
+  before_script:
+    - cd vue-client
+  script:
+    - npm install --progress=false
+    - npm run test
+  only:
+    - master
+
+vue build:
+  image: node:8
+  stage: vue-build
   before_script:
     - cd vue-client
   script:
@@ -13,9 +24,20 @@ build vue:
   only:
     - master
 
-build react:
+react test:
   image: node:8
-  stage: build
+  stage: react-test
+  before_script:
+    - cd vue-client
+  script:
+    - npm install --progress=false
+    - npm run test
+  only:
+    - master
+
+react build:
+  image: node:8
+  stage: react-build
   before_script:
     - cd react-client
   script:
@@ -25,6 +47,17 @@ build react:
     expire_in: 1 week
     paths:
       - react-client/build
+  only:
+    - master
+
+server test:
+  image: node:8
+  stage: server-test
+  before_script:
+    - cd server
+  script:
+    - npm install --progress=false
+    - npm run test
   only:
     - master
 
