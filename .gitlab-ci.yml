@@ -1,4 +1,4 @@
-build site:
+build vue:
   image: node:8
   stage: build
   before_script:
@@ -9,4 +9,22 @@ build site:
   artifacts:
     expire_in: 1 week
     paths:
-      - dist
+      - vue-client/dist
+  only:
+    - master
+
+build react:
+  image: node:8
+  stage: build
+  before_script:
+    - cd react-client
+  script:
+    - npm install --progress=false
+    - npm run build
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - react-client/build
+  only:
+    - master
+
