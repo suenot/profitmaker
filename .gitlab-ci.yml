@@ -24,6 +24,22 @@ vue build:
   only:
     - master
 
+vue electron build:
+  image: node:8
+  stage: build
+  before_script:
+    - cd vue-client
+  script:
+    - npm install --progress=false
+    - npm run electron:generate-icons
+    - npm run electron:build
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - vue-client/dist_electron
+  only:
+    - master
+
 react test:
   image: node:8
   stage: test
