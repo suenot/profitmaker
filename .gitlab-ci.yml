@@ -1,6 +1,6 @@
 vue test:
   image: node:8
-  stage: vue-test
+  stage: test
   before_script:
     - cd vue-client
   script:
@@ -11,7 +11,7 @@ vue test:
 
 vue build:
   image: node:8
-  stage: vue-build
+  stage: build
   before_script:
     - cd vue-client
   script:
@@ -26,7 +26,7 @@ vue build:
 
 react test:
   image: node:8
-  stage: react-test
+  stage: test
   before_script:
     - cd vue-client
   script:
@@ -37,7 +37,7 @@ react test:
 
 react build:
   image: node:8
-  stage: react-build
+  stage: build
   before_script:
     - cd react-client
   script:
@@ -52,7 +52,7 @@ react build:
 
 server test:
   image: node:8
-  stage: server-test
+  stage: test
   before_script:
     - cd server
   script:
