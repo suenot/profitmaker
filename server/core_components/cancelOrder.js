@@ -1,5 +1,5 @@
 const ccxt = require ('ccxt')
-var {catchHead} = require('../../utils')
+var {catchHead} = require('@kupi/catchHead')
 var {fetchOpenOrder} = require('./openOrders')
 var {getCCXTId} = require('./getCCXTId')
 

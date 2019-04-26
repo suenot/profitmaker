@@ -1,7 +1,9 @@
 const ccxt = require ('ccxt')
 const _ = require ('lodash')
 const axios = require('axios')
-var {calculateCoin, catchHead, sleep} = require('../../utils')
+var {sleep} = require('@kupi/sleep')
+var {catchHead} = require('@kupi/catchHead')
+var {calculateCoin} = require('@kupi/calculateCoin')
 
 const updateBalance = async function(timeout) {
     while (true) {

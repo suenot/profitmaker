@@ -1,4 +1,4 @@
-var {catchHead} = require('../../../utils')
+var {catchHead} = require('@kupi/catchHead')
 var {initExchange} = require('./initExchange')
 
 const getExchangeOrderBook = function(exchange, symbol) {

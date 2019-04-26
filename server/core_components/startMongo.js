@@ -1,7 +1,7 @@
 var MongoClient = require('mongodb').MongoClient
 const mongoConf = require('../../private/mongo.json').mongo
 var localMongoUrl = ''
-var {sleep} = require('../../utils')
+var {sleep} = require('@kupi/sleep')
 
 if (process.env.DOCKER === 'DOCKER') {
   localMongoUrl = 'mongodb://'+mongoConf.username+':'+mongoConf.password+'@'+mongoConf.dockerHost+':'+'27017'+'/'+mongoConf.db+'?authSource=admin'

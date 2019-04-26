@@ -1,4 +1,4 @@
-var catchHead = require('../../utils').catchHead
+var {catchHead} = require('@kupi/catchHead')
 
 const getMyTrades = async function(account, symbol) {
   try {

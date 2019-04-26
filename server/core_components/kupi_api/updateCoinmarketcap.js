@@ -1,4 +1,4 @@
-var sleep = require('../../../utils').sleep
+var {sleep} = require('@kupi/sleep')
 const axios = require('axios')
 
 const updateCoinmarketcapCycle = async function(timeout) {

@@ -1,4 +1,5 @@
-var {sleep, catchHead} = require('../../utils')
+var {sleep} = require('@kupi/sleep')
+var {catchHead} = require('@kupi/catchHead')
 var {getCCXTId} = require('./getCCXTId')
 const {ObjectId} = require('mongodb')
 const _ = require ('lodash')

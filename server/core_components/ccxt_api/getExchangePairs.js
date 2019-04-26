@@ -1,5 +1,5 @@
 var {initExchange} = require('./initExchange')
-var {catchHead} = require('../../../utils')
+var {catchHead} = require('@kupi/catchHead')
 
 const getExchangePairs = function(exchange) {
   if (global.PAIRS[`${exchange}`] === undefined) {

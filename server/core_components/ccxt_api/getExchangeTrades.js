@@ -1,4 +1,4 @@
-var {catchHead} = require('../../../utils')
+var {catchHead} = require('@kupi/catchHead')
 const _ = require ('lodash')
 var {initExchange} = require('./initExchange')
 

@@ -1,0 +1,9 @@
+{
+  "name": "@kupi/catchHead",
+  "version": "0.0.1",
+  "private": true,
+  "main": "catchHead",
+  "devDependencies": {
+    "@kupi/sleep": "*"
+  }
+}

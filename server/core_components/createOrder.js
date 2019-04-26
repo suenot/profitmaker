@@ -1,5 +1,5 @@
 
-var {catchHead} = require('../../utils')
+var {catchHead} = require('@kupi/catchHead')
 var {getCCXTId} = require('./getCCXTId')
 var {fetchOpenOrder} = require('./openOrders')
 
