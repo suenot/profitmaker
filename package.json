@@ -1,5 +1,5 @@
 {
-  "name": "kupi-terminal",
+  "name": "kupi",
   "version": "0.5.0",
   "private": true,
   "dependencies": {
@@ -17,5 +17,11 @@
     ],
     "coverageDirectory": "./coverage/",
     "collectCoverage": true
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "packages/express-server/utils/*"
+    ]
   }
 }
