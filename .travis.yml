@@ -10,6 +10,7 @@ before_install:
 install:
   - yarn global add codecov
   - yarn global add jest
+  - yarn
   - cd server && yarn && cd ..
 script:
   - jest
