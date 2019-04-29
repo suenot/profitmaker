@@ -10,9 +10,7 @@ describe('Orders.vue', () => {
         widget: {
           demo: true,
           type: 'both'
-        },
-        demo: true,
-        type: 'both'
+        }
       }
     })
     expect(wrapper.contains('button')).toBe(true)

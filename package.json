@@ -13,6 +13,7 @@
       "/react-client/node_modules/",
       "/react-client/scripts/",
       "/vue-client/node_modules/",
+      "/vue-client/",
       "/server/node_modules/"
     ],
     "coverageDirectory": "./coverage/",
@@ -20,8 +21,12 @@
   },
   "workspaces": {
     "packages": [
-      "packages/*",
       "packages/express-server/utils/*"
     ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
+    "babel-jest": "^24.7.1"
   }
 }
