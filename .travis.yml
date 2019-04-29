@@ -3,9 +3,9 @@ language:
 node_js:
   - 10
 install:
-  - npm install -g codecov
-  - npm install -g jest
-  - cd server && npm install && cd ..
+  - yarn global add codecov
+  - yarn global add jest
+  - cd server && yarn && cd ..
 script:
   - jest
   - codecov
