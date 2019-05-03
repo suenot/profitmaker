@@ -43,7 +43,7 @@ export default {
 </script>
 
 
-<style lang="sass">
+<style lang="sass" scoped>
 .main-container
   height: 100vh
   max-height: 100vh

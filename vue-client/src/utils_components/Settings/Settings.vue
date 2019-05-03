@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="aside-padding" v-if="block.demo !== undefined">
+    <div class="p-16" v-if="block.demo !== undefined">
       <div class="sub-title">Source of data</div>
       <el-switch
         :value="block.demo"
@@ -12,7 +12,7 @@
       </el-switch>
     </div>
 
-    <div class="aside-padding" v-if="block.timeframe !== undefined">
+    <div class="p-16" v-if="block.timeframe !== undefined">
       <div class="sub-title">Timeframe</div>
       <div class="candles-settings">
         <el-button size="mini" @click="setData($event, 'timeframe')" :disabled="block.timeframe === '1m'">1m</el-button>
@@ -31,7 +31,7 @@
       </div>
     </div>
 
-    <div class="aside-padding" v-if="block.library !== undefined">
+    <div class="p-16" v-if="block.library !== undefined">
       <div class="sub-title">Library</div>
       <el-select :value="block.library" placeholder="Library" @change="setData($event, 'library')">
         <el-option

@@ -104,6 +104,13 @@ body
   cursor: pointer
 .m-16
   margin: 16px
+.m-16+.m-16
+  margin-top: 16px !important
+.p-16
+  margin: 16px
+.el-input, .el-select
+  margin: 0
+
 
 .notificationCookies
   position: fixed !important
@@ -134,6 +141,8 @@ body
   font-weight: 700
 .el-select-dropdown.el-popper
   z-index: 1000000 !important
+.el-select
+  width: 100%
 
 .kupi-table
   width: 100%
@@ -201,4 +210,38 @@ body
   border-radius: 0 !important
 .el-input-group__append
   border-radius: 0 !important
+
+
+.aside
+  width: 320px
+  z-index: 500000
+  height: 100vh
+  position: fixed
+  left: 0
+  top: 0
+  display: flex
+  flex-direction: column
+  background: white
+  overflow-x: hidden
+  overflow-y: auto
+  &.aside-left
+    border-right: 1px solid rgba(0, 0, 0, 0.12)
+  &.aside-right
+    border-left: 1px solid rgba(0, 0, 0, 0.12)
+    left: auto
+    right: 0
+  .aside-header
+    display: flex
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12)
+    justify-content: space-between
+    .aside-title
+      padding: 8px 16px
+    .aside-actions
+      i
+        padding: 9px 16px
+        cursor: pointer
+  // align-items: center
+.aside
+  .section+.section
+    border-top: 1px solid rgba(0, 0, 0, 0.12)
 </style>

@@ -12,7 +12,7 @@
             <i class="el-icon-close" @click="toggleAside()"></i>
           </div>
         </div>
-        <div class="aside-padding" v-if="accordion.fetch">
+        <div class="p-16" v-if="accordion.fetch">
           <el-switch
             v-model="demo"
             active-text="Demo data"
@@ -40,7 +40,7 @@
           @current-change="paginationChanged($event)"
         >
         </el-pagination>
-        <div class="aside-padding" v-if="accordion.pagination">
+        <div class="p-16" v-if="accordion.pagination">
           <el-input placeholder="Limit" v-model="limit" class="m-16">
             <el-button slot="prepend">Limit by</el-button>
             <el-button slot="append">of {{table.length}}</el-button>
@@ -56,7 +56,7 @@
             <i v-else class="el-icon-arrow-down" @click="toggleAccordion('sound')"></i>
           </div>
         </div>
-        <div class="aside-padding" v-if="accordion.sound">
+        <div class="p-16" v-if="accordion.sound">
           <div class="sound-block">
             <el-slider v-model="sound_volume"></el-slider>
           </div>
@@ -70,7 +70,7 @@
         <i v-if="accordion.show" class="el-icon-arrow-up" @click="toggleAccordion('show')"></i>
         <i v-else class="el-icon-arrow-down" @click="toggleAccordion('show')"></i>
       </div>
-      <div class="aside-padding" v-if="accordion.show">
+      <div class="p-16" v-if="accordion.show">
         <draggable v-model="columns" @start="drag=true" @end="drag=false">
           <div v-for="item in columns" :key="item.name">
             <el-checkbox :label="item.label" v-model="item.display"></el-checkbox>
@@ -88,7 +88,7 @@
             <i v-else class="el-icon-arrow-down" @click="toggleAccordion('sort')"></i>
           </div>
         </div>
-        <div class="aside-padding" v-if="accordion.sort && sorts.length > 0">
+        <div class="p-16" v-if="accordion.sort && sorts.length > 0">
           <div class="select-arrow sort" v-for="(sort, sortIndex) in sorts" :key="sort.id">
             <el-select
               v-model="sort.key"
@@ -120,7 +120,7 @@
           </div>
         </div>
         <template v-if="accordion.filter_profit">
-          <div class="aside-padding filter-profit" v-for="(filter, filterIndex) in filters_profit" :key="filter.id">
+          <div class="p-16 filter-profit" v-for="(filter, filterIndex) in filters_profit" :key="filter.id">
             <el-input placeholder="" class="m-16" v-model="filter.usd">
               <el-button slot="append">$</el-button>
             </el-input>
@@ -142,7 +142,7 @@
           </div>
         </div>
         <template v-if="accordion.filter_profit_sound">
-          <div class="aside-padding filter-profit-sound" v-for="(filter, filterIndex) in filters_profit_sound" :key="filter.id">
+          <div class="p-16 filter-profit-sound" v-for="(filter, filterIndex) in filters_profit_sound" :key="filter.id">
             <el-input placeholder="" class="m-16" v-model="filter.usd">
               <el-button slot="append">$</el-button>
             </el-input>
@@ -164,7 +164,7 @@
           </div>
         </div>
         <template v-if="accordion.filter">
-          <div class="aside-padding filter" v-for="(filter, filterIndex) in filters" :key="filter.id">
+          <div class="p-16 filter" v-for="(filter, filterIndex) in filters" :key="filter.id">
             <el-select
               class="m-16"
               v-model="filter.columns"
@@ -590,4 +590,4 @@ export default {
 }
 </script>
 
-<style lang="sass" src="./List.sass"></style>
+<style lang="sass" src="./List.sass" scoped></style>
