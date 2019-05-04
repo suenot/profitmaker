@@ -1,0 +1,9 @@
+{
+  "npmClient": "yarn",
+  "packages": [
+    "packages/*",
+    "packages/express-server/utils/*"
+  ],
+  "version": "independent",
+  "useWorkspaces": true
+}
