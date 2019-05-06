@@ -1,11 +1,44 @@
 {
   "name": "kupi",
-  "version": "0.5.0",
+  "productName": "Kupi",
+  "version": "0.7.0",
   "private": true,
+  "scripts": {
+    "rm": "rm -rf ./node_modules yarn.lock package-lock.json && lerna exec -- rm -rf ./node_modules yarn.lock package-lock.json",
+    "start": "lerna run start --stream",
+    "react-server:start": "lerna run start --scope @kupi/express-server --scope @kupi/react-client",
+    "vue-server:start": "lerna run start --scope @kupi/express-server --scope @kupi/vue-client",
+    "test": "lerna run test --stream",
+    "update:version": "lerna version --no-push",
+    "server:start": "lerna run start --scope @kupi/express-server",
+    "server:docker": "lerna run docker --scope @kupi/express-server",
+    "server:test": "lerna run test --scope @kupi/express-server",
+    "react:start": "lerna run start --scope @kupi/react-client",
+    "react:docker": "lerna run docker --scope @kupi/react-client",
+    "react:build": "lerna run build --scope @kupi/react-client",
+    "react:test": "lerna run test --scope @kupi/react-client",
+    "vue:serve": "lerna run serve --scope @kupi/vue-client",
+    "vue:start": "lerna run start --scope @kupi/vue-client",
+    "vue:build": "lerna run build --scope @kupi/vue-client",
+    "vue:eb": "lerna run electron:build",
+    "vue:electron:build": "lerna run electron:build",
+    "vue:electron:generate-icons": "lerna run electron:generate-icons",
+    "vue:electron:serve": "lerna run electron:serve",
+    "vue:electron:start": "lerna run electron:start",
+    "vue:postinstall": "lerna run postinstall --scope @kupi/vue-client",
+    "vue:postuninstall": "lerna run postuninstall --scope @kupi/vue-client",
+    "vue:test:unit": "lerna run test:unit --scope @kupi/vue-client",
+    "vue:test": "lerna run test --scope @kupi/vue-client"
+  },
   "dependencies": {
     "codecov": "^3.2.0",
     "istanbul": "^0.4.5",
-    "jest": "^24.3.1"
+    "jest": "^24.3.1",
+    "nodemon": "*",
+    "rimraf": "^2.6.3"
+  },
+  "devDependencies": {
+    "lerna": "^3.13.2"
   },
   "jest": {
     "testPathIgnorePatterns": [
@@ -13,7 +46,6 @@
       "/react-client/node_modules/",
       "/react-client/scripts/",
       "/vue-client/node_modules/",
-      "/vue-client/",
       "/server/node_modules/"
     ],
     "coverageDirectory": "./coverage/",
@@ -21,12 +53,10 @@
   },
   "workspaces": {
     "packages": [
+      "packages/*",
       "packages/express-server/utils/*"
-    ]
+    ],
+    "nohoist": ["packages/vue-client"]
   },
-  "devDependencies": {
-    "@babel/core": "^7.4.4",
-    "@babel/preset-env": "^7.4.4",
-    "babel-jest": "^24.7.1"
-  }
+  "postcss": {}
 }

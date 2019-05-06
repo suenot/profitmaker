@@ -1,3 +1,4 @@
+var fs = require('fs')
 const uuidv1 = require('uuid/v1')
 // PASSPORT
 // const cookieSession = require('cookie-session')
@@ -7,18 +8,20 @@ const uuidv1 = require('uuid/v1')
 // app.use(express.static(publicRoot))
 
 const auth = function(app) {
+  // GET PRIVATE CONFIGS
   try {
-    global.USERS = require('../../../private/auth.json').users
+    global.USERS = JSON.parse(fs.readFileSync('../../../../private/auth.json', 'utf8')).users
   } catch(err) {
     global.USERS = []
   }
-
   var serverSession
   try {
-    serverSession = require('../../../private/auth.json').session
+    serverSession = JSON.parse(fs.readFileSync('../../../../private/auth.json', 'utf8')).session
   } catch(err) {
     serverSession = undefined
   }
+  // END GET PRIVATE CONFIGS
+
   if (serverSession === undefined) {
     serverSession = {
       "name": uuidv1(),
@@ -58,7 +61,7 @@ const auth = function(app) {
   app.use(passport.initialize())
   app.use(passport.session())
   // try {
-  //   global.USERS = require('../private/auth.json')
+  //   global.USERS = require('../../private/auth.json')
   // } catch(err) {
   //   global.USERS = []
   // }

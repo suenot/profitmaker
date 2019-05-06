@@ -1,6 +1,6 @@
 {
-  "name": "kupi-terminal-express",
-  "version": "0.5.0",
+  "name": "@kupi/express-server",
+  "version": "0.6.0",
   "private": true,
   "dependencies": {
     "assert": "^1.4.1",
@@ -30,8 +30,8 @@
     "@kupi/calculateCoin": "*"
   },
   "scripts": {
-    "start": "./node_modules/nodemon/bin/nodemon.js index.js",
-    "docker": "DOCKER=DOCKER ./node_modules/nodemon/bin/nodemon.js index.js",
+    "start": "../../node_modules/nodemon/bin/nodemon.js index.js",
+    "docker": "DOCKER=DOCKER ../../node_modules/nodemon/bin/nodemon.js index.js",
     "test": "jest --watch"
   },
   "devDependencies": {

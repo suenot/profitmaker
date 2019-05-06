@@ -1,6 +1,7 @@
 {
-  "name": "kupi-terminal-vue",
-  "version": "0.1.5",
+  "name": "@kupi/vue-client",
+  "productName": "Kupi terminal",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -66,7 +67,8 @@
     "vuera": "0.2.4",
     "vuetify": "^1.3.14",
     "web3": "^1.0.0-beta.52",
-    "web3-core-method": "^1.0.0-beta.52"
+    "web3-core-method": "^1.0.0-beta.52",
+    "@kupi/express-server": "*"
   },
   "devDependencies": {
     "@babel/plugin-syntax-dynamic-import": "^7.2.0",

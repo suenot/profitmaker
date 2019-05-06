@@ -1,4 +1,3 @@
-const privateKeys = require('../../private/keys.json').keys.binance
 const ccxt = require ('ccxt')
 // var catchHead = require('../../utils').catchHead
 

@@ -1,6 +1,7 @@
 'use strict'
 
-require('../../server/index.js')
+// require('../../../server/index.js')
+require('@kupi/express-server')
 
 import { app, protocol, BrowserWindow } from 'electron'
 import {

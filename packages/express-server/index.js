@@ -1,7 +1,15 @@
 const express = require('express')
 const app = express()
 const api = require('./api/api')
-const privateKeys = require('../private/keys.json')
+
+// GET PRIVATE CONFIGS
+var fs = require('fs')
+try {
+  var privateKeys = JSON.parse(fs.readFileSync('../../private/keys.json', 'utf8'))
+} catch(err) {
+  var privateKeys = []
+}
+// END GET PRIVATE CONFIGS
 
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
@@ -60,49 +68,22 @@ const main = async () => {
       await initCCXT(privateKeys)
     } catch(err) {
       console.log(err)
-      // console.log('No ccxt keys, no problems')
+      console.log('No ccxt keys, no problems')
     }
     try {
       await initEthplorer(privateKeys)
     } catch(err) {
       console.log('No ethplorer keys, no problems')
     }
-    // console.log(global.ACCOUNTS)
-    // console.log(global.CCXT)
 
-
-
-    try { await initBalance() } catch(err) { console.log(err) }
-    // получение публичных данных с сервера
-    try { await updateCoinmarketcap() } catch(err) { console.log(err) }
-    // try { updateCoinmarketcapCycle(60000) } catch(err) { console.log(err) }
-
-    // // получение приватных данных с бирж
-
-    // SAFE
-    // balance
-
-
-    try { updateBalance(20*60*1000) } catch(err) { console.log(err) }
-
-
-    // console.log(await getMyTrades('ID_Binance_2', 'ETH/BTC') )  // тестовое получение трэйдов
-
-    // KUPI_API | SAFE & PUBLIC
-    // console.log(await getPairs('binance'))
-    // console.log(await getTrades('binance', 'ETH_BTC'))
-    // console.log(await getStocks())
-    // console.log(await updateCoinmarketcap())
-    // console.log(await getOrderBook('binance', 'ETH_BTC'))
-    // console.log(await getOHLCV('binance', 'ETH_BTC', '3m'))
-
-
-    // NOT-SAFE
-    try { openOrders(90000) } catch(err) { console.log(err) }
-
-
-    // try { await fetchDeposit('binance', 'ETH') } catch(err) { console.log(err) }
-
+    if (global.MONGO) {
+      try { await initBalance() } catch(err) { console.log(err) }
+      // получение публичных данных с сервера
+      try { await updateCoinmarketcap() } catch(err) { console.log(err) }
+      // try { updateCoinmarketcapCycle(60000) } catch(err) { console.log(err) }
+      try { updateBalance(20*60*1000) } catch(err) { console.log(err) }
+      try { openOrders(90000) } catch(err) { console.log(err) }
+    }
 
     app.use('/user-api/', api)
     // app.use('/user-api/auth/', authApi)
@@ -128,7 +109,6 @@ if (process.env.QUEUE_LOG === 'TRUE') {
     console.log(global.sleepUntil)
   }, 1000)
 }
-
 
 var port = process.env.DOCKER === 'DOCKER' ? '0.0.0.0' : '127.0.0.1'
 app.listen(8040, port, () => {

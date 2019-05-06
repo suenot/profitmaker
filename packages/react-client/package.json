@@ -1,6 +1,6 @@
 {
-  "name": "kupi-terminal-react",
-  "version": "0.5.0",
+  "name": "@kupi/react-client",
+  "version": "0.6.0",
   "private": true,
   "dependencies": {
     "@babel/core": "7.1.0",

@@ -12,5 +12,10 @@ module.exports = {
         changeOrigin: true
       },
     }
+  },
+  pluginOptions: {
+    electronBuilder: {
+      nodeModulesPath: ['./node_modules', '../../node_modules/', '../express-server/node_modules/']
+    }
   }
 }
