@@ -4,21 +4,21 @@ services:
   kupi-mongo:
     image: mongo:3
     env_file:
-     - ./private/mongo.env
+      - ./private/mongo.env
     volumes:
       - ./private/mongo/db:/data/db
     ports:
       - 127.0.0.1:27018:27017
 
   kupi-server:
-    image: node:8-alpine
+    image: node:8
     volumes:
       - ./:/app
     links:
-        - kupi-mongo
+      - kupi-mongo
     depends_on:
-        - kupi-mongo
+      - kupi-mongo
     ports:
       - 127.0.0.1:8040:8040
-    working_dir: /app
-    command: sh -c 'yarn && yarn server:docker'
+    working_dir: /app/packages/express-server
+    command: sh -c 'yarn && yarn docker'
