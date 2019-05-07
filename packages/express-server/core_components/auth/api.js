@@ -20,7 +20,6 @@ router.post("/login", (req, res, next) => {
     }
     if (!user) {
       console.log("Cannot log in")
-      console.log(global.USERS)
       return res.status(400).send([user, "Cannot log in", info])
     }
     req.login(user, (err) => {
