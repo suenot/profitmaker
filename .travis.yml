@@ -14,9 +14,9 @@ env:
 addons:
   apt:
     sources:
-    - ubuntu-toolchain-r-test
+      - ubuntu-toolchain-r-test
     packages:
-    - g++-5
+      - g++-5
 install:
   - yarn global add codecov
   - yarn global add jest
