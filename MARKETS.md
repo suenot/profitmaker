@@ -1,5 +1,5 @@
 
-## Supported Cryptocurrency Exchange Markets
+# Supported Cryptocurrency Exchange Markets
 
 We using the ccxt library, that currently supports the following 133 cryptocurrency exchange markets and trading APIs.
 

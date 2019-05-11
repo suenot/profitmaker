@@ -6,4 +6,4 @@
 
 ## Reporting Vulnerabilities And Critical Issues
 
-If you found a security issue or a critical vulnerability and reporting it in public would impose risk – please feel free to send us a message to <a href="mailto:info@kupi.network">info@kupi.network</a>.
+If you found a security issue or a critical vulnerability and reporting it in public would impose risk – please feel free to send us a message to [info@kupi.network](mailto:info@kupi.network).

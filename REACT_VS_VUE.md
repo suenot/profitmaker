@@ -1,4 +1,4 @@
-## React client vs Vue client
+# React client vs Vue client
 
 | Feature | React | Vue |
 |--|--|--|

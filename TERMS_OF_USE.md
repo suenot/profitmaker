@@ -1,14 +1,17 @@
-## Terms of Use
+# Terms of Use
 
 Your affirmative act of using Kupi Network signifies that you agree to the following Terms of Use. If you do not agree, do not use Kupi Network.
 
 ## Changes to the Terms of Use
+
 We may change these Terms of Use at any time. If you continue to use Kupi Network after we post changes to these Terms of Use, you are signifying your acceptance of the new terms.
 
 ## Changes to Kupi Network
+
 We may discontinue or change any service or feature on Kupi Network at any time without notice.
 
 ## Ownership of information. License to use Kupi Network. Redistribution of data.
+
 Unless otherwise noted, all right, title and interest in and to Kupi Network, and all information made available through Kupi Network or its Services, in all languages, formats and media throughout the world, including all copyrights and trademarks therein, are the exclusive property of Kupi Network, its affiliates or its Data Providers.
 For additional information on commercial and partnership inquiries with Kupi Network please contact us.
 
@@ -25,8 +28,8 @@ Kupi Network cannot and does not represent or guarantee that any of the informat
 
 Decisions to buy, sell, hold or trade in cryptocurrencies or financial instruments involve risk and are best made based on the advice of qualified financial professionals. Any trading in cryptocurrencies or financial instruments involves a risk of substantial losses. The practice of “Day Trading” involves particularly high risks and can cause you to lose substantial sums of money. Before undertaking any trading program, you should consult a qualified financial professional. Please consider carefully whether such trading is suitable for you in light of your financial condition and ability to bear financial risks. Under no circumstances shall we be liable for any loss or damage you or anyone else incurs as a result of any trading or investment activity that you or anyone else engages in based on any information or material you receive through Kupi Network or our Services.
 
-
 ## Education Section Disclaimer
+
 All information and content on Kupi Network should be viewed as educational only.
 None of the content published on Kupi Network constitutes a recommendation that any particular cryptocurrency, transaction or investment strategy is suitable for investment for any specific person. None of the information providers or their affiliates will advise you personally concerning the nature, potential, value or suitability of any particular cryptocurrency, transaction, investment strategy or other matter.
 

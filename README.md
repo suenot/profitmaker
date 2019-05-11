@@ -6,14 +6,16 @@ Open source, customized, extendable trading terminal that supports 130+ crypto s
 
 [![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/demo.png?raw=true)](http://demo.kupi.network/)
 
-### [Demo](#demo) ·[How it works](#how-it-works) · [Features](#features) · [Technologies](#technologies) · [Warning](#warning) · [Quick start](#quick-start) · [Exchange markets](https://github.com/kupi-network/kupi-terminal/blob/master/MARKETS.md) · [React vs Vue](https://github.com/kupi-network/kupi-terminal/blob/master/REACT_VS_VUE.md) · [API](#api) · [Privacy policy](https://github.com/kupi-network/kupi-terminal/blob/master/PRIVACY_POLICY.md) · [Terms of use](https://github.com/kupi-network/kupi-terminal/blob/master/TERMS_OF_USE.md) · [Changelog](https://github.com/kupi-network/kupi-terminal/blob/master/CHANGELOG.md) · [Roadmap](https://github.com/kupi-network/kupi-terminal/blob/master/ROADMAP.md) · [Support us](#support-us) · [Team](#team) · [Contact us](#contact-us)
+## [Demo](#demo) ·[How it works](#how-it-works) · [Features](#features) · [Technologies](#technologies) · [Warning](#warning) · [Quick start](#quick-start) · [Exchange markets](https://github.com/kupi-network/kupi-terminal/blob/master/MARKETS.md) · [React vs Vue](https://github.com/kupi-network/kupi-terminal/blob/master/REACT_VS_VUE.md) · [API](#api) · [Privacy policy](https://github.com/kupi-network/kupi-terminal/blob/master/PRIVACY_POLICY.md) · [Terms of use](https://github.com/kupi-network/kupi-terminal/blob/master/TERMS_OF_USE.md) · [Changelog](https://github.com/kupi-network/kupi-terminal/blob/master/CHANGELOG.md) · [Roadmap](https://github.com/kupi-network/kupi-terminal/blob/master/ROADMAP.md) · [Support us](#support-us) · [Team](#team) · [Contact us](#contact-us)
 
 ## Demo
+
 React version: [https://kupi.network/](https://kupi.network/)
 
 Vue version: [https://vue.kupi.network/](https://vue.kupi.network/)
 
 ## How it works
+
 ![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/structure.png?raw=true)
 
 ## Sponsored Promotion
@@ -22,51 +24,60 @@ Want this place? Contact us: https://www.facebook.com/dexenot
 
 ![Placehodler](https://user-images.githubusercontent.com/1707/48204972-43569e00-e37c-11e8-9cf3-b86e3dc19ee9.png)
 
-## Features:
-  - Open source
-  - Your api keys stay on your machine, no need to send its anywhere
-  - Customized with dashboards and widgets
-  - Extendable with users modules
-  - Free realtime API (Timeseries will be in immediate future)
-  - Framework for creating trading bots
+## Features
+
+- Open source
+- Your api keys stay on your machine, no need to send its anywhere
+- Customized with dashboards and widgets
+- Extendable with users modules
+- Free realtime API (Timeseries will be in immediate future)
+- Framework for creating trading bots
 
 ## Technologies
-  - [React](https://github.com/facebook/react), [react-grid-layout](https://github.com/STRML/react-grid-layout), [material-ui](https://github.com/mui-org/material-ui)
-  - [Vue](https://github.com/vuejs/vue), [vue-grid-layout](https://github.com/jbaysolutions/vue-grid-layout), [element](https://github.com/ElemeFE/element), [movue](https://github.com/nighca/movue), [v-charts](https://github.com/ElemeFE/v-charts)
-  - [Mobx](https://github.com/mobxjs/mobx)
-  - [Express](https://github.com/expressjs/express)
-  - [Mongo](https://github.com/mongodb/mongo)
-  - [CCXT](https://github.com/ccxt/ccxt)
-  - [Flaticon](https://www.flaticon.com/)
-  - [Echarts](https://github.com/apache/incubator-echarts)
+
+- [React](https://github.com/facebook/react), [react-grid-layout](https://github.com/STRML/react-grid-layout), [material-ui](https://github.com/mui-org/material-ui)
+- [Vue](https://github.com/vuejs/vue), [vue-grid-layout](https://github.com/jbaysolutions/vue-grid-layout), [element](https://github.com/ElemeFE/element), [movue](https://github.com/nighca/movue), [v-charts](https://github.com/ElemeFE/v-charts)
+- [Mobx](https://github.com/mobxjs/mobx)
+- [Express](https://github.com/expressjs/express)
+- [Mongo](https://github.com/mongodb/mongo)
+- [CCXT](https://github.com/ccxt/ccxt)
+- [Flaticon](https://www.flaticon.com/)
+- [Echarts](https://github.com/apache/incubator-echarts)
 
 ## WARNING
+
 THE SOFTWARE UNDER HEAVY DEVELOPMENT. PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 
 ## Quick start
+
 [Install with docker](https://github.com/kupi-network/kupi-terminal/blob/master/INSTALL_WITH_DOCKER.md)
 
 [Install manually](https://github.com/kupi-network/kupi-terminal/blob/master/INSTALL_MANUALLY.md)
 
 If you had any problems with installing we can help in [voice/text Discrod chat](https://discord.gg/2PtuMAg)
 
-## API:
-#### Server api:
+## API
+
+### Server api
+
 Server: [https://kupi.network/api](https://kupi.network/api) (secure) or [http://kupi.network/api](http://kupi.network/api) (faster)
 
 Swagger: [try api online](https://app.swaggerhub.com/apis/soloviofff/kupi.network/1.0.0#/)
-```
+
+```bash
 /stocks
 /binance/pairs
 /binance/orders/ETH_BTC
 /binance/trades/ETH_BTC
-/binance/candles/ETH_BTC/1m // timeframes: ['1m', '3m', '5m', '15m', '30m', '1H', '2H', '4H', '6H', '12H', 'D', 'W', 'M']
+/binance/candles/ETH_BTC/1m # timeframes: ['1m', '3m', '5m', '15m', '30m', '1H', '2H', '4H', '6H', '12H', 'D', 'W', 'M']
 /coinmarketcap
 ```
 
 #### terminal server api:
+
 ```http://localhost:8051/```
-```
+
+```bash
 /balance
 /openOrders/:stock/:pair
 /myTrades/:stock/:pair
@@ -82,12 +93,10 @@ Thank you!
 
 ## Team
 
-- [Eugen Soloviov](https://github.com/suenot) [(facebook)](https://www.facebook.com/dexenot)
-- [Sergey Soloviov](https://github.com/soloviofff)
-- [Igor Korotin](https://github.com/markolofsen)
-
-
+- Eugen Soloviov [github](https://github.com/suenot) [facebook](https://www.facebook.com/dexenot)
+- Sergey Soloviov [github](https://github.com/soloviofff)
+- Igor Korotin [github](https://github.com/markolofsen)
 
 ## Contact Us
 
-For business inquiries: https://www.facebook.com/dexenot
+For business inquiries contact with [Eugen Soloviov](https://www.facebook.com/dexenot)
