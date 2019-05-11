@@ -6,7 +6,7 @@ Open source, customized, extendable trading terminal that supports 130+ crypto s
 
 [![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/demo.png?raw=true)](http://demo.kupi.network/)
 
-### [Demo](#demo) ·[How it works](#how-it-works) · [Features](#features) · [Technologies](#technologies) · [Warning](#warning) · [Quick start](#quick-start) · [Exchange markets](https://github.com/kupi-network/kupi-terminal/blob/master/MARKETS.md) · [React vs Vue](https://github.com/kupi-network/kupi-terminal/blob/master/REACT_VS_VUE.md) · [API](#api) · [Roadmap](https://github.com/kupi-network/kupi-terminal/blob/master/ROADMAP.md) · [Crypto](#crypto) · [Team](#team) · [Contact us](#contact-us)
+### [Demo](#demo) ·[How it works](#how-it-works) · [Features](#features) · [Technologies](#technologies) · [Warning](#warning) · [Quick start](#quick-start) · [Exchange markets](https://github.com/kupi-network/kupi-terminal/blob/master/MARKETS.md) · [React vs Vue](https://github.com/kupi-network/kupi-terminal/blob/master/REACT_VS_VUE.md) · [API](#api) · [Privacy policy](https://github.com/kupi-network/kupi-terminal/blob/master/PRIVACY_POLICY.md) · [Terms of use](https://github.com/kupi-network/kupi-terminal/blob/master/TERMS_OF_USE.md) · [Changelog](https://github.com/kupi-network/kupi-terminal/blob/master/CHANGELOG.md) · [Roadmap](https://github.com/kupi-network/kupi-terminal/blob/master/ROADMAP.md) · [Support us](#support-us) · [Team](#team) · [Contact us](#contact-us)
 
 ## Demo
 React version: [https://kupi.network/](https://kupi.network/)
@@ -74,7 +74,7 @@ Swagger: [try api online](https://app.swaggerhub.com/apis/soloviofff/kupi.networ
 /createOrder
 ```
 
-### Crypto
+### Support us
 
 ETH [0x159d7BD659dd362423E1487c5952ab0f6C79Bec3](https://etherscan.io/address/0x159d7BD659dd362423E1487c5952ab0f6C79Bec3)
 
@@ -84,6 +84,9 @@ Thank you!
 
 - [Eugen Soloviov](https://github.com/suenot) [(facebook)](https://www.facebook.com/dexenot)
 - [Sergey Soloviov](https://github.com/soloviofff)
+- [Igor Korotin](https://github.com/markolofsen)
+
+
 
 ## Contact Us
 
