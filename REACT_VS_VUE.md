@@ -1,4 +1,4 @@
-# React client vs Vue client
+## React client vs Vue client
 
 | Feature | React | Vue |
 |--|--|--|
@@ -7,6 +7,8 @@
 | Create order | + | + |
 | Trades | + | + |
 | My trades | + | + |
+| Notes widget | + | - |
+| Custom iframe widget | + | - |
 | Candles (OHLCV) | react-stockcharts | react-stockcharts, echarts |
 | Balance now | by stock, by all stocks, table, pie | total, table, pie |
 | Balance history | by stock, by all stocks, table, pie | total, table, pie |
