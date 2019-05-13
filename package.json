@@ -54,6 +54,9 @@
   "workspaces": {
     "packages": [
       "packages/*",
+      "packages/core/*",
+      "packages/user/*",
+      "packages/utils/*",
       "packages/express-server/utils/*"
     ],
     "nohoist": ["packages/vue-client"]
