@@ -1,0 +1,3 @@
+<template>
+  <Accounting />
+</template>

@@ -10,12 +10,11 @@
           <th>side</th>
           <th>price</th>
           <th>amount</th>
-          <th>cost</th>
           <th>fee</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in dataComputed" :key="item.uuid">
+        <tr v-for="item in dataComputed" :key="item.uuid" :class="item.side" @click="addMyTradeToDeal(item)">
           <td>{{item['order']}}</td>
           <td>{{item['datetime']}}</td>
           <td>{{item['symbol']}}</td>
@@ -23,7 +22,6 @@
           <td>{{item['side']}}</td>
           <td>{{item['price']}}</td>
           <td>{{item['amount']}}</td>
-          <td>{{item['cost']}}</td>
           <td>{{item['fee']}}</td>
         </tr>
       </tbody>
@@ -32,6 +30,7 @@
 </template>
 
 <script>
+  import Store from '@/stores/Store'
   import axios from 'axios'
   import moment from 'moment'
   import _ from 'lodash'
@@ -107,6 +106,9 @@
           msg: "Can't get data",
         }
       })
+    },
+    addMyTradeToDeal(trade) {
+      Store.addMyTradeToDeal(trade)
     }
   },
   computed: {
@@ -131,3 +133,11 @@
   }
 }
 </script>
+
+<style lang="sass" scoped>
+.sell
+  background: #faeaf1
+.buy
+  background: #f1fae8
+</style>
+

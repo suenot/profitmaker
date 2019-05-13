@@ -1,6 +1,9 @@
 import Vue from 'vue'
 
 
+Vue.component('Accounting', require('@/core_components/Accounting/Accounting.vue').default)
+Vue.component('Deals', require('@/core_components/Accounting/Deals/Deals.vue').default)
+Vue.component('Deal', require('@/core_components/Accounting/Deal/Deal.vue').default)
 Vue.component('Candles', require('@/core_components/Candles/Candles.vue').default)
 Vue.component('Orders', require('@/core_components/Orders/Orders.vue').default)
 Vue.component('OrdersSide', require('@/core_components/Orders/OrdersSide.vue').default)
@@ -27,6 +30,7 @@ Vue.component('CandlesVchart', require('@/core_components/Candles/CandlesVchart/
 
 Vue.component('Trade', require('@/views/Trade/Trade.vue').default)
 Vue.component('Balance', require('@/views/Balance/Balance.vue').default)
+Vue.component('AccountingPage', require('@/views/Accounting/Accounting.vue').default)
 
 
 Vue.component('Market', require('@/utils_components/Market/Market.vue').default)

@@ -65,6 +65,15 @@ class Store {
   @action setSignalDetailsUrl(url) {
     this.signalDetailsUrl = url
   }
+
+  // Deals
+  @observable deals = []
+  @observable deal = []
+
+  @action addMyTradeToDeal(trade) {
+    console.log(trade)
+    this.deal.push(trade)
+  }
 }
 
 const store = window.Store = new Store()

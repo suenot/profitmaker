@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 // import Dashboard from './views/Dashboard/Dashboard.vue'
+import Accounting from './views/Accounting/Accounting.vue'
 import Trade from './views/Trade/Trade.vue'
 import Balance from './views/Balance/Balance.vue'
 import Signals from './views/Signals/Signals.vue'
@@ -47,6 +48,13 @@ export default new Router({
       path: '/signal/:id',
       name: 'Signal',
       component: Signal,
+      props: true,
+      meta: { reuse: false }
+    },
+    {
+      path: '/accounting',
+      name: 'Accounting',
+      component: Accounting,
       props: true,
       meta: { reuse: false }
     },
