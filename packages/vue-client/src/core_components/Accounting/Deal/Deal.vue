@@ -52,9 +52,9 @@
 </template>
 
 <script>
-  import Store from '@/stores/Store'
-  import { toJS } from 'mobx'
-  export default {
+import AccountingStore from '@/stores/AccountingStore'
+import { toJS } from 'mobx'
+export default {
   data() {
     return {
       name: '',
@@ -63,20 +63,16 @@
   },
   props: ['widget'],
   fromMobx: {
-    deal: {
-      get() {
-        return toJS(Store.deal)
-      }
-    }
-  },
+    deal: { get() { return toJS(AccountingStore.deal) } },
+  }
 }
 </script>
 
 <style lang="sass" scoped>
 .sell
-  background: #faeaf1
+  background: rgba(250, 234, 241, 0.4)
 .buy
-  background: #f1fae8
+  background: rgba(241, 250, 232, 0.4)
 textarea
   border: 1px solid #ddd
   outline: none

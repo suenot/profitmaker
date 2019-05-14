@@ -94,6 +94,8 @@ body
     color: #fff
 .cont-30
   padding: 30px
+.nowrap
+  white-space: nowrap
 .muted
   color: #969595
 .divider

@@ -20,6 +20,9 @@ Vue.use(VueVirtualScroller)
 import VueBus from 'vue-bus'
 Vue.use(VueBus)
 
+import vuejsStorage from 'vuejs-storage'
+Vue.use(vuejsStorage)
+
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 Vue.use(ElementUI)
@@ -41,9 +44,6 @@ Vue.use(VCharts)
 
 import vueShortkey from 'vue-shortkey'
 Vue.use(vueShortkey, { prevent: ['input', 'textarea'] })
-
-import vuejsStorage from 'vuejs-storage'
-Vue.use(vuejsStorage)
 
 
 Vue.config.productionTip = false

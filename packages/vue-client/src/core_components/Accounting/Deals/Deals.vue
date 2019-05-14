@@ -29,7 +29,7 @@
           <td>closed / open</td>
           <td>time open -- time closed (duration)</td>
           <td>...note</td>
-          <td>
+          <td class="nowrap">
             <el-button type="primary" icon="el-icon-edit" circle></el-button>
             <el-button type="danger" icon="el-icon-delete" circle></el-button>
           </td>

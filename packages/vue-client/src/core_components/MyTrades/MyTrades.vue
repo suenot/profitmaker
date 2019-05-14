@@ -14,15 +14,15 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in dataComputed" :key="item.uuid" :class="item.side" @click="addMyTradeToDeal(item)">
-          <td>{{item['order']}}</td>
-          <td>{{item['datetime']}}</td>
-          <td>{{item['symbol']}}</td>
-          <td>{{item['type']}}</td>
-          <td>{{item['side']}}</td>
-          <td>{{item['price']}}</td>
-          <td>{{item['amount']}}</td>
-          <td>{{item['fee']}}</td>
+        <tr v-for="item in dataComputed" :key="item.uuid" :class="`${item.side} ${item.selected ? 'selected' : ''}`" @click="addMyTradeToDeal(item)">
+          <td>{{item.order}}</td>
+          <td>{{item.datetime}}</td>
+          <td>{{item.symbol}}</td>
+          <td>{{item.type}}</td>
+          <td>{{item.side}}</td>
+          <td>{{item.price}}</td>
+          <td>{{item.amount}}</td>
+          <td>{{item.fee}}</td>
         </tr>
       </tbody>
     </table>
@@ -30,11 +30,13 @@
 </template>
 
 <script>
-  import Store from '@/stores/Store'
-  import axios from 'axios'
-  import moment from 'moment'
-  import _ from 'lodash'
-  export default {
+import { toJS } from 'mobx'
+import Store from '@/stores/Store'
+import AccountingStore from '@/stores/AccountingStore'
+import axios from 'axios'
+import moment from 'moment'
+import _ from 'lodash'
+export default {
   data() {
     return {
       interval: '',
@@ -47,16 +49,9 @@
   },
   props: ['widget'],
   fromMobx: {
-    pair: {
-      get() {
-        return Store.pair
-      }
-    },
-    accountId: {
-      get() {
-        return Store.accountId
-      }
-    },
+    pair: { get() { return Store.pair } },
+    accountId: { get() { return Store.accountId } },
+    deal: { get() { return toJS( AccountingStore.deal) } },
   },
   mounted() {
     this.start()
@@ -108,14 +103,15 @@
       })
     },
     addMyTradeToDeal(trade) {
-      Store.addMyTradeToDeal(trade)
+      AccountingStore.addMyTradeToDeal(trade)
     }
   },
   computed: {
     dataComputed: function() {
-      var data = _.cloneDeep(this.data)
-      return _.map(data, (item)=>{
+      // var data = _.cloneDeep(this.data)
+      return _.map(this.data, (item)=>{
         return {
+          id: item.id,
           uuid: item.uuid,
           order: item.order,
           datetime: moment(item).format('DD.MM.YY HH:mm:ss'),
@@ -125,10 +121,10 @@
           price: item.price.toFixed(8),
           amount: item.amount,
           cost: item.cost,
-          fee: item['fee']['cost'].toFixed(8) + ' ' + item['fee']['currency']
+          fee: item['fee']['cost'].toFixed(8) + ' ' + item['fee']['currency'],
+          selected: _.find(this.deal, ['id', item.id])
         }
       })
-
     }
   }
 }
@@ -136,8 +132,10 @@
 
 <style lang="sass" scoped>
 .sell
-  background: #faeaf1
+  background: rgba(250, 234, 241, 0.4)
 .buy
-  background: #f1fae8
+  background: rgba(241, 250, 232, 0.4)
+.selected
+  border-left: 5px solid rgb(64, 158, 255)
 </style>
 
