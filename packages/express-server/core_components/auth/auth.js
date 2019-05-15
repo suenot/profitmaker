@@ -9,14 +9,16 @@ const uuidv1 = require('uuid/v1')
 
 const auth = function(app) {
   // GET PRIVATE CONFIGS
+  var privateAuth = {users: [], session: undefined}
+
   try {
-    global.USERS = JSON.parse(fs.readFileSync('../../../../private/auth.json', 'utf8')).users
+    global.USERS = JSON.parse(fs.readFileSync('../../private/auth.json', 'utf8')).users
   } catch(err) {
     global.USERS = []
   }
   var serverSession
   try {
-    serverSession = JSON.parse(fs.readFileSync('../../../../private/auth.json', 'utf8')).session
+    serverSession = JSON.parse(fs.readFileSync('../../private/auth.json', 'utf8')).session
   } catch(err) {
     serverSession = undefined
   }

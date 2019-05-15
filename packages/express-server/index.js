@@ -9,6 +9,7 @@ try {
 } catch(err) {
   var privateKeys = []
 }
+
 // END GET PRIVATE CONFIGS
 
 const bodyParser = require('body-parser')
@@ -65,6 +66,7 @@ const main = async () => {
   try {
 
     try {
+      // console.log(privateKeys)
       await initCCXT(privateKeys)
     } catch(err) {
       console.log(err)
