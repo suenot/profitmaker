@@ -3,8 +3,8 @@
     <table class="table-header">
       <tr>
         <td><el-input placeholder="Name" v-model="name"></el-input></td>
-        <td>DNT, BTC, ETH, BNB</td>
         <td>BINANCE, LIQUI, TIDEX</td>
+        <td>DNT, BTC, ETH, BNB</td>
         <td>-500 USD (20 trades)</td>
         <td>+550 USD (5 trades)</td>
         <td>+50 USD</td>
@@ -25,7 +25,8 @@
         <tr>
           <th>id</th>
           <th>date</th>
-          <th>symbol</th>
+          <th>stock</th>
+          <th>pair</th>
           <th>type</th>
           <th>side</th>
           <th>price</th>
@@ -36,14 +37,15 @@
       </thead>
       <tbody>
         <tr v-for="item in deal" :key="item.uuid" :class="item.side" @click="addMyTradeToDeal(item)">
-          <td>{{item['order']}}</td>
-          <td>{{item['datetime']}}</td>
-          <td>{{item['symbol']}}</td>
-          <td>{{item['type']}}</td>
-          <td>{{item['side']}}</td>
-          <td>{{item['price']}}</td>
-          <td>{{item['amount']}}</td>
-          <td>{{item['fee']}}</td>
+          <td>{{item.order}}</td>
+          <td>{{item.datetime}}</td>
+          <td>{{item.stock}}</td>
+          <td>{{item.symbol}}</td>
+          <td>{{item.type}}</td>
+          <td>{{item.side}}</td>
+          <td>{{item.price}}</td>
+          <td>{{item.amount}}</td>
+          <td>{{item.fee}}</td>
           <td><el-button type="danger" icon="el-icon-delete" circle></el-button></td>
         </tr>
       </tbody>

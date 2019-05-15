@@ -96,6 +96,8 @@ body
   padding: 30px
 .nowrap
   white-space: nowrap
+.hide
+  display: none
 .muted
   color: #969595
 .divider

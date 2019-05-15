@@ -7,8 +7,8 @@
       <thead>
         <tr>
           <th>name</th>
-          <th>coins</th>
           <th>stocks</th>
+          <th>coins</th>
           <th>credited</th>
           <th>debited</th>
           <th>profit</th>
@@ -21,8 +21,8 @@
       <tbody>
         <tr>
           <td>DNT LIQUI-BINANCE</td>
-          <td>DNT, BTC, ETH, BNB</td>
           <td>BINANCE, LIQUI, TIDEX</td>
+          <td>DNT, BTC, ETH, BNB</td>
           <td>-500 USD (20 trades)</td>
           <td>+550 USD (5 trades)</td>
           <td>+50 USD</td>

@@ -5,7 +5,7 @@
         <tr>
           <th>id</th>
           <th>date</th>
-          <th>symbol</th>
+          <th>pair</th>
           <th>type</th>
           <th>side</th>
           <th>price</th>
