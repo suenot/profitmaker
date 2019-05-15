@@ -20,7 +20,6 @@
     "vue:serve": "lerna run serve --scope @kupi/vue-client",
     "vue:start": "lerna run start --scope @kupi/vue-client",
     "vue:build": "lerna run build --scope @kupi/vue-client",
-    "vue:eb": "lerna run electron:build",
     "vue:electron:build": "lerna run electron:build",
     "vue:electron:generate-icons": "lerna run electron:generate-icons",
     "vue:electron:serve": "lerna run electron:serve",

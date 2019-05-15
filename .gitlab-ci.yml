@@ -1,10 +1,10 @@
-vue test:
+test:
   image: node:8
   stage: test
   before_script:
     - yarn
   script:
-    - npm yarn vue:test
+    - npm yarn test
   only:
     - master
 
