@@ -3,8 +3,9 @@ test:
   stage: test
   before_script:
     - yarn
+    - yarn global add jest
   script:
-    - yarn test
+    - jest
   only:
     - master
 
