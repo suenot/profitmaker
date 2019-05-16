@@ -10,7 +10,7 @@ test:
     - master
 
 vue build:
-  image: electronuserland/builder:latest
+  image: electronuserland/builder:wine
   stage: build
   before_script:
     - yarn
