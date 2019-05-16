@@ -17,10 +17,13 @@ vue build:
   script:
     - yarn vue:build
     - yarn react:build
+    - yarn vue:electron:generate-icons
+    - yarn vue:electron:build
   artifacts:
     expire_in: 1 week
     paths:
       - packages/vue-client/dist
+      - packages/vue-client/dist_electron
       - packages/react-client/build
   only:
     - master
