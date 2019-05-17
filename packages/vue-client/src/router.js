@@ -1,7 +1,10 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 // import Dashboard from './views/Dashboard/Dashboard.vue'
-import Accounting from './views/Accounting/Accounting.vue'
+// import Accounting from './views/Accounting/Accounting.vue'
+import Deals from './core_components/Accounting/Deals/Deals.vue'
+import Deal from './core_components/Accounting/Deal/Deal.vue'
+import MyTrades from './views/MyTrades/MyTrades.vue'
 import Trade from './views/Trade/Trade.vue'
 import Balance from './views/Balance/Balance.vue'
 import Signals from './views/Signals/Signals.vue'
@@ -52,9 +55,23 @@ export default new Router({
       meta: { reuse: false }
     },
     {
-      path: '/accounting',
-      name: 'Accounting',
-      component: Accounting,
+      path: '/deals',
+      name: 'Deals',
+      component: Deals,
+      props: true,
+      meta: { reuse: false }
+    },
+    {
+      path: '/deal',
+      name: 'Deal',
+      component: Deal,
+      props: true,
+      meta: { reuse: false }
+    },
+    {
+      path: '/my_trades',
+      name: 'MyTrades',
+      component: MyTrades,
       props: true,
       meta: { reuse: false }
     },

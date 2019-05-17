@@ -1,14 +1,21 @@
 <template>
+<div>
+  <div class="title">
+    <h3 class="title-header">Deals</h3>
+    <span class="title-actions">
+      <router-link to="/deal">
+        <el-button type="success" icon="el-icon-plus" circle></el-button>
+      </router-link>
+    </span>
+  </div>
   <div class="kupi-table">
-    <table class="table-header">
-      <el-button type="success" icon="el-icon-plus" circle></el-button>
-    </table>
     <table>
       <thead>
         <tr>
           <th>name</th>
           <th>stocks</th>
           <th>coins</th>
+          <th>pairs</th>
           <th>credited</th>
           <th>debited</th>
           <th>profit</th>
@@ -19,10 +26,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
+        <!-- <tr>
           <td>DNT LIQUI-BINANCE</td>
           <td>BINANCE, LIQUI, TIDEX</td>
           <td>DNT, BTC, ETH, BNB</td>
+          <td>DNT_BTC, DNT_ETH, DNT_BNB</td>
           <td>-500 USD (20 trades)</td>
           <td>+550 USD (5 trades)</td>
           <td>+50 USD</td>
@@ -30,28 +38,38 @@
           <td>time open -- time closed (duration)</td>
           <td>...note</td>
           <td class="nowrap">
-            <el-button type="primary" icon="el-icon-edit" circle></el-button>
+            <router-link to="/deal">
+              <el-button type="primary" icon="el-icon-edit" circle></el-button>
+            </router-link>
+            <el-button type="danger" icon="el-icon-delete" circle></el-button>
+          </td>
+        </tr> -->
+        <tr v-for="deal in deals" :key="deal.name">
+          <td>{{deal.name}}</td>
+          <td>{{deal.stocks}}</td>
+          <td>{{deal.coins}}</td>
+          <td>{{deal.pairs}}</td>
+          <td>{{deal.credited}} USD ({{deal.credited_trades}})</td>
+          <td>{{deal.debited}} USD ({{deal.debited_trades}})</td>
+          <td>{{deal.profit}} USD ({{deal.trades}})</td>
+          <td>{{deal.status}}</td>
+          <td>{{deal.timestamp_open}} -- {{deal.timestamp_closed}}</td>
+          <td>{{deal.note}}</td>
+          <td class="nowrap">
+            <router-link to="/deal">
+              <el-button type="primary" icon="el-icon-edit" circle></el-button>
+            </router-link>
             <el-button type="danger" icon="el-icon-delete" circle></el-button>
           </td>
         </tr>
-        <!-- <tr v-for="deal in deals" :key="deal.id" @click="addMyTradeToDeal(item)">
-          <td>{{item['order']}}</td>
-          <td>{{item['datetime']}}</td>
-          <td>{{item['symbol']}}</td>
-          <td>{{item['type']}}</td>
-          <td>{{item['side']}}</td>
-          <td>{{item['price']}}</td>
-          <td>{{item['amount']}}</td>
-          <td>{{item['cost']}}</td>
-          <td>{{item['fee']}}</td>
-        </tr> -->
       </tbody>
     </table>
   </div>
+</div>
 </template>
 
 <script>
-  import Store from '@/stores/Store'
+  import AccountingStore from '@/stores/AccountingStore'
   import { toJS } from 'mobx'
   export default {
   data() {
@@ -60,9 +78,9 @@
   },
   props: ['widget'],
   fromMobx: {
-    deal: {
+    deals: {
       get() {
-        return toJS(Store.deals)
+        return toJS(AccountingStore.deals)
       }
     }
   },

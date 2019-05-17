@@ -1,4 +1,22 @@
 <template>
+<div>
+  <div class="title">
+    <span class="title-actions">
+      <router-link to="/deals">
+        <el-button type="default" icon="el-icon-back" circle></el-button>
+      </router-link>
+    </span>
+    <h3 class="title-header">Deal</h3>
+
+    <span class="title-actions">
+      <router-link to="/my_trades">
+        <el-button type="default" icon="el-icon-goods" circle></el-button>
+      </router-link>
+      <router-link to="/deal">
+        <el-button type="success" icon="el-icon-plus" circle></el-button>
+      </router-link>
+    </span>
+  </div>
   <div class="kupi-table">
     <table class="table-header">
       <tr>
@@ -51,6 +69,7 @@
       </tbody>
     </table>
   </div>
+</div>
 </template>
 
 <script>

@@ -1,14 +1,13 @@
 <template>
   <div class="accounting">
-    <div class="hide">
-      <h3>Deals</h3>
+    <div>
       <Deals />
     </div>
-    <div>
+    <div class="hide">
       <h3>Deal</h3>
       <Deal />
     </div>
-    <div>
+    <div class="hide">
       <h3>My trades</h3>
       <MyTrades :widget="widget" />
     </div>

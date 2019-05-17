@@ -248,4 +248,11 @@ body
 .aside
   .section+.section
     border-top: 1px solid rgba(0, 0, 0, 0.12)
+
+.title
+  display: flex
+  align-items: center
+  .title-header
+    text-align: center
+    flex: 1 0 auto
 </style>

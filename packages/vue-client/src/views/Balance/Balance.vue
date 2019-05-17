@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import Store from '../../stores/Store'
+import Store from '@/stores/Store'
 import { toJS } from 'mobx'
 export default {
   fromMobx: {
