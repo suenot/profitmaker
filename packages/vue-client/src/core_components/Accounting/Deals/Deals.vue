@@ -3,9 +3,7 @@
   <div class="title">
     <h3 class="title-header">Deals</h3>
     <span class="title-actions">
-      <router-link to="/deal">
-        <el-button type="success" icon="el-icon-plus" circle></el-button>
-      </router-link>
+      <el-button type="success" icon="el-icon-plus" circle @click="addDeal()"></el-button>
     </span>
   </div>
   <div class="kupi-table">
@@ -26,25 +24,7 @@
         </tr>
       </thead>
       <tbody>
-        <!-- <tr>
-          <td>DNT LIQUI-BINANCE</td>
-          <td>BINANCE, LIQUI, TIDEX</td>
-          <td>DNT, BTC, ETH, BNB</td>
-          <td>DNT_BTC, DNT_ETH, DNT_BNB</td>
-          <td>-500 USD (20 trades)</td>
-          <td>+550 USD (5 trades)</td>
-          <td>+50 USD</td>
-          <td>closed / open</td>
-          <td>time open -- time closed (duration)</td>
-          <td>...note</td>
-          <td class="nowrap">
-            <router-link to="/deal">
-              <el-button type="primary" icon="el-icon-edit" circle></el-button>
-            </router-link>
-            <el-button type="danger" icon="el-icon-delete" circle></el-button>
-          </td>
-        </tr> -->
-        <tr v-for="deal in deals" :key="deal.name">
+        <tr v-for="deal in deals" :key="deal.id">
           <td>{{deal.name}}</td>
           <td>{{deal.stocks}}</td>
           <td>{{deal.coins}}</td>
@@ -56,10 +36,10 @@
           <td>{{deal.timestamp_open}} -- {{deal.timestamp_closed}}</td>
           <td>{{deal.note}}</td>
           <td class="nowrap">
-            <router-link to="/deal">
+            <router-link :to="{ name: 'Deal', params: {id: deal.id } }">
               <el-button type="primary" icon="el-icon-edit" circle></el-button>
             </router-link>
-            <el-button type="danger" icon="el-icon-delete" circle></el-button>
+            <el-button type="danger" icon="el-icon-delete" circle @click="removeDeal(deal.id)"></el-button>
           </td>
         </tr>
       </tbody>
@@ -84,5 +64,14 @@
       }
     }
   },
+  methods: {
+    async addDeal() {
+      const id = await AccountingStore.addDeal()
+      this.$router.push({ name: 'Deal', params: {id: id } })
+    },
+    removeDeal(id) {
+      AccountingStore.removeDeal(id)
+    }
+  }
 }
 </script>

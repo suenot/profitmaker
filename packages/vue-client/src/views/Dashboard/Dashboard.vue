@@ -24,7 +24,6 @@
         @resized="resizedEvent">
         <div class="widget">
           <div class="widget-header">
-            <!-- <div class="title">Title</div> -->
             <div class="options" @click="removeWidget(widget.i)"><v-icon>more_horiz</v-icon></div>
           </div>
           <div class="widget-body">

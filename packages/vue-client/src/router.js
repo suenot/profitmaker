@@ -62,7 +62,7 @@ export default new Router({
       meta: { reuse: false }
     },
     {
-      path: '/deal',
+      path: '/deal/:id',
       name: 'Deal',
       component: Deal,
       props: true,
