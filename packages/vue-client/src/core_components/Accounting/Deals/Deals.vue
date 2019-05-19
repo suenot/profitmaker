@@ -67,7 +67,7 @@
   methods: {
     async addDeal() {
       const id = await AccountingStore.addDeal()
-      this.$router.push({ name: 'Deal', params: {id: id } })
+      // this.$router.push({ name: 'Deal', params: {id: id } })
     },
     removeDeal(id) {
       AccountingStore.removeDeal(id)

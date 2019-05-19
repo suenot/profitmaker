@@ -20,11 +20,12 @@ class Store {
       credited: 550,
       credited_trades: 2,
       profit: 50,
-      trades: 22,
+      total_trades: 22,
       status: 'closed',
       timestamp_open: 1558117760918,
       timestamp_closed: 1558117760918,
-      note: 'bla-bla'
+      note: 'bla-bla',
+      trades: []
     }
   ]
   @observable deal = []
@@ -42,11 +43,12 @@ class Store {
       credited: 0,
       credited_trades: 0,
       profit: 0,
-      trades: 0,
+      total_trades: 0,
       status: '',
       timestamp_open: 0,
       timestamp_closed: 0,
-      note: ''
+      note: '',
+      trades: []
     })
     return id
   }
