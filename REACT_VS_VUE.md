@@ -9,6 +9,7 @@
 | My trades | + | + |
 | Notes widget | + | - |
 | Custom iframe widget | + | - |
+| Widget catalog | + | - |
 | Candles (OHLCV) | react-stockcharts | react-stockcharts, echarts |
 | Balance now | by stock, by all stocks, table, pie | total, table, pie |
 | Balance history | by stock, by all stocks, table, pie | total, table, pie |
