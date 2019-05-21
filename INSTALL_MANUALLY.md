@@ -2,7 +2,7 @@
 
 - Install [nodejs](https://nodejs.org/en/)
 - Install [yarn](https://yarnpkg.com/en/docs/install)
-- Install mongo
+- Install [mongo](https://www.mongodb.com/) or use cloud solution
 
 ```bash
 docker volume create kupi-terminal-mongo-volume
