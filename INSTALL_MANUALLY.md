@@ -22,7 +22,7 @@ docker-compose -f docker-compose-mongo.yml up
 cp -R ./defaults/. ./
 ```
 
-- Fill stocks private keys in ```./private/keys.json``` ()
+- Fill stocks private keys in ```./private/keys.json``` [guide](https://github.com/kupi-network/kupi-terminal/blob/master/KEYS.md)
 
 - Set mongo password in ```./private/mongo.json``` and ```./private/mongo.env```
 
