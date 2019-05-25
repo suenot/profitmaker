@@ -1,7 +1,7 @@
 # Install with docker
 
 - Copy ignored by default files ```cp -R ./defaults/. ./```
-- Fill stocks private keys in ```./private/keys.json```
+- Fill stocks private keys in ```./private/keys.json``` [guide](https://github.com/kupi-network/kupi-terminal/blob/master/KEYS.md)
 - Set mongo password in ```./private/mongo.json``` and ```./private/mongo.env```
 - Set auth password in ```./private/auth.json```
 - Build and run containers
