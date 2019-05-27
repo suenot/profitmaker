@@ -56,8 +56,7 @@ implement storage in encrypted form.
 We recommend creating 3 separate keys on the exchange
 
 *   This will increase the number of available requests to the exchange
-*   And also reduces the number of requests over the network using
-unsafe and dangerous keys, because mainly secure keys will be used
+*   And also reduces the number of requests over the network using unsafe and dangerous keys, because mainly secure keys will be used
 
 We strongly recommend attaching keys to your ip.
 
