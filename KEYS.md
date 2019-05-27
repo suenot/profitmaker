@@ -12,11 +12,11 @@ Keys consist of a pair of keys and secret_key.
 
 Keys are stored in ```private/keys.json``` in clear text. Plans to implement storage in encrypted form.
 
-| type of key | operations |
-|-|-|
-| safe_apiKey | key for orders, trades, balances, my_orders, my_trades |
-| notSafe_apiKey | key for buy/sell |
-| danger_apiKey | key for withdraw (not realized yet) |
+| type of key    | operations                                             |
+| -------------- | ------------------------------------------------------ |
+| safe_apiKey    | key for orders, trades, balances, my_orders, my_trades |
+| notSafe_apiKey | key for buy/sell                                       |
+| danger_apiKey  | key for withdraw (not realized yet)                    |
 
 ## Keys config structure
 
