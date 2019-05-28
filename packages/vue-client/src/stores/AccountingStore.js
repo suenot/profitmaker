@@ -8,9 +8,9 @@ import uuidv1 from 'uuid/v1'
 // @version(1)
 class Store {
   // Deals
-  @observable deals = [
-    {
-      id: uuidv1(),
+  @observable deals = {
+    test_id: {
+      id: 'test_id',
       name: 'my best trade with DNT LIQUI-BINANCE',
       stocks: 'BINANCE, LIQUI, TIDEX',
       coins: 'DNT, BTC, ETH, BNB',
@@ -27,12 +27,19 @@ class Store {
       note: 'bla-bla',
       trades: []
     }
-  ]
-  @observable deal = []
+  }
+  @observable active_deal = 'test_id'
+  @computed get deal() {
+    return this.deals[this.active_deal]
+  }
+  @action setActiveDeal(id) {
+    this.active_deal = id
+  }
 
   @action async addDeal() {
     const id = uuidv1()
-    this.deals.push({
+
+    this.deals[id] = {
       id: id,
       name: '',
       stocks: '',
@@ -49,31 +56,29 @@ class Store {
       timestamp_closed: 0,
       note: '',
       trades: []
-    })
+    }
+
     return id
   }
 
   @action removeDeal(id) {
-    this.deals = _.filter(this.deals, (deal)=>{
-      if (deal.id !== id) return true
-      return false
-    })
+    delete this.deals[id]
   }
 
   @action addMyTradeToDeal(trade) {
-    for(let [i, _trade] of Object.entries(this.deal)) {
-      if (_trade.id === trade.id) {
-        this.deal.splice(i, 1)
-        return false
+    var deal = this.deals[this.active_deal]
+    // проходим по всем трейдам сделки и ищем трейд, по которому кликнули
+    if (!_.isEmpty(deal.trades)) {
+      for(let [i, _trade] of Object.entries(deal.trades)) {
+        if (_trade.id === trade.id) {
+          // если уже есть такой id, то тоглим его (удаляем)
+          deal.trades.splice(i, 1)
+          return false
+        }
       }
     }
-    console.log(trade)
-    this.deal.push(trade)
+    this.deal.trades.push(trade)
   }
-
-  // @computed get total() {
-  //   return this.price * this.amount;
-  // }
 }
 
 const store = window.AccountingStore = new Store()

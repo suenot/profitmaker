@@ -18,7 +18,7 @@
           <th>credited</th>
           <th>debited</th>
           <th>total</th>
-          <th>status</th>
+          <!-- <th>status</th> -->
           <th>time</th>
           <th>actions</th>
         </tr>
@@ -32,7 +32,7 @@
           <td>{{deal.credited}} USD ({{deal.credited_trades}})</td>
           <td>{{deal.debited}} USD ({{deal.debited_trades}})</td>
           <td>{{deal.total}} USD ({{deal.total_trades}})</td>
-          <td>{{deal.status}}</td>
+          <!-- <td>{{deal.status}}</td> -->
           <td>{{deal.timestamp_open}} -- {{deal.timestamp_closed}}</td>
           <td class="nowrap">
             <el-button :type="note_id === deal.id ? 'warning' : ''" icon="el-icon-info" circle @click="showNote(deal)"></el-button>

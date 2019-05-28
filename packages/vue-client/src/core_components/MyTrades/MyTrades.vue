@@ -122,7 +122,7 @@ export default {
           amount: item.amount,
           cost: item.cost,
           fee: item['fee']['cost'].toFixed(8) + ' ' + item['fee']['currency'],
-          selected: _.find(this.deal, ['id', item.id])
+          selected: _.find(this.deal.trades, ['id', item.id])
         }
       })
     }

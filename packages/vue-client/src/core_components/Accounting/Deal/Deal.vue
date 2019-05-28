@@ -28,7 +28,7 @@
         <td>-500 USD (20 trades)</td>
         <td>+550 USD (5 trades)</td>
         <td>+50 USD</td>
-        <td>closed / open</td>
+        <!-- <td>closed / open</td> -->
         <td>time open -- time closed (duration)</td>
       </tr>
     </table>
@@ -48,7 +48,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in deal" :key="item.uuid" :class="item.side" @click="addMyTradeToDeal(item)">
+        <tr v-for="item in deal.trades" :key="item.uuid" :class="item.side" @click="addMyTradeToDeal(item)">
           <td>{{item.order}}</td>
           <td>{{item.datetime}}</td>
           <td>{{item.stock}}</td>
@@ -79,6 +79,16 @@ export default {
   props: ['widget'],
   fromMobx: {
     deal: { get() { return toJS(AccountingStore.deal) } },
+    // deals: { get() { return toJS(AccountingStore.deals) } },
+    // active_deal: { get() { return toJS(AccountingStore.active_deal) } },
+  },
+  mounted() {
+    AccountingStore.setActiveDeal(this.$route.params.id)
+  },
+  computed: {
+    // deal: function() {
+    //   return this.deals[this.active_deal]
+    // }
   }
 }
 </script>
