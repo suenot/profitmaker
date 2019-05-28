@@ -96,6 +96,7 @@ Thank you!
 - Eugen Soloviov [github](https://github.com/suenot) [facebook](https://www.facebook.com/dexenot)
 - Sergey Soloviov [github](https://github.com/soloviofff)
 - Igor Korotin [github](https://github.com/markolofsen)
+- Vladimir Romanovich [github](https://github.com/ibnteo)
 - Alexander Plugari (adviser)
 
 ## Contact Us
