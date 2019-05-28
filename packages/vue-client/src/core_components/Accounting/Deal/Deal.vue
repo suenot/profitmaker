@@ -48,17 +48,17 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in deal.trades" :key="item.uuid" :class="item.side" @click="addMyTradeToDeal(item)">
-          <td>{{item.order}}</td>
-          <td>{{item.datetime}}</td>
-          <td>{{item.stock}}</td>
-          <td>{{item.symbol}}</td>
-          <td>{{item.type}}</td>
-          <td>{{item.side}}</td>
-          <td>{{item.price}}</td>
-          <td>{{item.amount}}</td>
-          <td>{{item.fee}}</td>
-          <td><el-button type="danger" icon="el-icon-delete" circle></el-button></td>
+        <tr v-for="trade in deal.trades" :key="trade.uuid" :class="trade.side">
+          <td>{{trade.order}}</td>
+          <td>{{trade.datetime}}</td>
+          <td>{{trade.stock}}</td>
+          <td>{{trade.symbol}}</td>
+          <td>{{trade.type}}</td>
+          <td>{{trade.side}}</td>
+          <td>{{trade.price}}</td>
+          <td>{{trade.amount}}</td>
+          <td>{{trade.fee}}</td>
+          <td><el-button type="danger" icon="el-icon-delete" circle @click="removeMyTradeFromDeal(trade)"></el-button></td>
         </tr>
       </tbody>
     </table>
@@ -84,6 +84,11 @@ export default {
   },
   mounted() {
     AccountingStore.setActiveDeal(this.$route.params.id)
+  },
+  methods: {
+    removeMyTradeFromDeal: function(my_trade) {
+      AccountingStore.removeMyTradeFromDeal(my_trade)
+    }
   },
   computed: {
     // deal: function() {

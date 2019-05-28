@@ -79,6 +79,18 @@ class Store {
     }
     this.deal.trades.push(trade)
   }
+  @action removeMyTradeFromDeal(trade) {
+    var deal = this.deals[this.active_deal]
+    for(let [i, _trade] of Object.entries(deal.trades)) {
+      if (_trade.id === trade.id) {
+        // если уже есть такой id, то тоглим его (удаляем)
+        deal.trades.splice(i, 1)
+        return false
+      }
+    }
+  }
+
+
 }
 
 const store = window.AccountingStore = new Store()
