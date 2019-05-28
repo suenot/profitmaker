@@ -6,6 +6,7 @@
       <el-button type="success" icon="el-icon-plus" circle @click="addDeal()"></el-button>
     </span>
   </div>
+  {{note}}
   <div class="kupi-table">
     <table>
       <thead>
@@ -16,10 +17,9 @@
           <th>pairs</th>
           <th>credited</th>
           <th>debited</th>
-          <th>profit</th>
+          <th>total</th>
           <th>status</th>
           <th>time</th>
-          <th>note</th>
           <th>actions</th>
         </tr>
       </thead>
@@ -31,11 +31,11 @@
           <td>{{deal.pairs}}</td>
           <td>{{deal.credited}} USD ({{deal.credited_trades}})</td>
           <td>{{deal.debited}} USD ({{deal.debited_trades}})</td>
-          <td>{{deal.profit}} USD ({{deal.trades}})</td>
+          <td>{{deal.total}} USD ({{deal.total_trades}})</td>
           <td>{{deal.status}}</td>
           <td>{{deal.timestamp_open}} -- {{deal.timestamp_closed}}</td>
-          <td>{{deal.note}}</td>
           <td class="nowrap">
+            <el-button :type="note_id === deal.id ? 'warning' : ''" icon="el-icon-info" circle @click="showNote(deal)"></el-button>
             <router-link :to="{ name: 'Deal', params: {id: deal.id } }">
               <el-button type="primary" icon="el-icon-edit" circle></el-button>
             </router-link>
@@ -54,6 +54,8 @@
   export default {
   data() {
     return {
+      note_id: '',
+      note: ''
     }
   },
   props: ['widget'],
@@ -71,6 +73,15 @@
     },
     removeDeal(id) {
       AccountingStore.removeDeal(id)
+    },
+    showNote(deal) {
+      if (this.note_id === deal.id) {
+        this.note = ''
+        this.note_id = ''
+      } else {
+        this.note = deal.note
+        this.note_id = deal.id
+      }
     }
   }
 }
