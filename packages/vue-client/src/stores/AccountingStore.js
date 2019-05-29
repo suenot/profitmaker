@@ -1,12 +1,31 @@
 import { observable, action, reaction, computed } from 'mobx'
-// import { version, AsyncTrunk } from 'mobx-sync'
+import { version, AsyncTrunk } from 'mobx-sync'
 import _ from 'lodash'
 import uuidv1 from 'uuid/v1'
 // import axios from 'axios'
+import Store from './Store'
 
+@version(1)
+class AccountingStore {
+  constructor() {
+    const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'accounting' })
+    trunk.init()
+    reaction(
+      () => this.active_deal_trades_length,
+      () => {
+        console.log("reaction")
+        this.calculateStocks()
+        this.calculatePairs()
+        this.calculateCoins()
+        this.calculateCredited()
+        this.calculateDebited()
+        this.calculateTotal()
+        this.calculateTimestamps()
+      }
+    )
+  }
+  @computed get stock() { return Store.stock }
 
-// @version(1)
-class Store {
   // Deals
   @observable deals = {
     test_id: {
@@ -29,6 +48,10 @@ class Store {
     }
   }
   @observable active_deal = 'test_id'
+  @computed get active_deal_trades_length() {
+    return this.deals[this.active_deal].trades.length
+  }
+
   @computed get deal() {
     return this.deals[this.active_deal]
   }
@@ -38,7 +61,6 @@ class Store {
 
   @action async addDeal() {
     const id = uuidv1()
-
     this.deals[id] = {
       id: id,
       name: '',
@@ -57,7 +79,6 @@ class Store {
       note: '',
       trades: []
     }
-
     return id
   }
 
@@ -77,6 +98,8 @@ class Store {
         }
       }
     }
+    var stock = {stock: this.stock}
+    trade = {...trade, ...stock}
     this.deal.trades.push(trade)
   }
   @action removeMyTradeFromDeal(trade) {
@@ -93,10 +116,71 @@ class Store {
     this.deals[this.active_deal][key] = value
   }
 
+  calculateStocks() {
+    var deal = this.deals[this.active_deal]
+    deal.stocks = _.uniq(
+      deal.trades.map((trade) => {
+        return trade.stock
+      })
+    )
+  }
+  calculatePairs() {
+    var deal = this.deals[this.active_deal]
+    deal.pairs = _.uniq(
+      deal.trades.map((trade) => {
+        return trade.symbol
+      })
+    )
+  }
+  calculateCoins() {
+    var pairs = this.deals[this.active_deal].pairs
+    var coins = pairs.map((pair)=>{
+      return pair.split('/')
+    })
+    coins = _.flatten(coins)
+    coins = _.uniq(coins)
+    this.deals[this.active_deal].coins = coins
+  }
+  calculateCredited() {
+    var deal = this.deals[this.active_deal]
+    var credit =
+      deal.trades.filter((trade) => {
+        return trade.side === 'buy'
+      }).map((trade)=>{
+        return trade.amount*trade.price+trade.fee.cost
+      })
+    deal.credited_trades = credit.length
+    deal.credited = _.sum(credit)
+  }
+  calculateDebited() {
+    var deal = this.deals[this.active_deal]
+    var debit =
+      deal.trades.filter((trade) => {
+        return trade.side === 'sell'
+      }).map((trade)=>{
+        return trade.amount*trade.price+trade.fee.cost
+      })
+    deal.debited_trades = debit.length
+    deal.debited = _.sum(debit)
+  }
+  calculateTotal() {
+    var deal = this.deals[this.active_deal]
+    var total =
+      deal.trades.map((trade)=>{
+        return (trade.side === 'buy' ? -1 : 1) * trade.amount*trade.price+trade.fee.cost
+      })
+    deal.total_trades = total.length
+    deal.total = _.sum(total)
+  }
+  calculateTimestamps() {
+    var deal = this.deals[this.active_deal]
+    deal.timestamp_open = _.minBy(deal.trades, 'timestamp').timestamp
+    deal.timestamp_closed = _.maxBy(deal.trades, 'timestamp').timestamp
+    deal.timestamp_duration = deal.timestamp_closed - deal.timestamp_open
+  }
 
 }
 
-const store = window.AccountingStore = new Store()
-
+const store = window.AccountingStore = new AccountingStore()
 
 export default store

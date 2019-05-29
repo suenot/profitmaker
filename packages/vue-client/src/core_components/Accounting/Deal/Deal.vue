@@ -25,13 +25,15 @@
         </td>
       </tr>
       <tr>
-        <td>BINANCE, LIQUI, TIDEX</td>
-        <td>DNT, BTC, ETH, BNB</td>
-        <td>-500 USD (20 trades)</td>
-        <td>+550 USD (5 trades)</td>
-        <td>+50 USD</td>
+        <td>{{deal.stocks | commas}}</td>
+        <td>{{deal.pairs | commas}}</td>
+        <td>{{deal.coins | commas}}</td>
+        <!-- <td>DNT, BTC, ETH, BNB</td> -->
+        <td>-{{deal.credited | toFixed(8)}} USD ({{deal.credited_trades}} trades)</td>
+        <td>+{{deal.debited | toFixed(8)}} USD ({{deal.debited_trades}} trades)</td>
+        <td>{{deal.total | toFixed(8)}} USD ({{deal.total_trades}} trades)</td>
         <!-- <td>closed / open</td> -->
-        <td>time open -- time closed (duration)</td>
+        <td>{{deal.timestamp_open | moment('dmyhms')}} — {{deal.timestamp_closed | moment('dmyhms')}} ({{deal.timestamp_duration | duration() }})</td>
       </tr>
     </table>
     <table>

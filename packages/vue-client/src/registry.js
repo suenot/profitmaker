@@ -45,3 +45,40 @@ Vue.component('Widget', require('@/utils_components/Widget/Widget.vue').default)
 Vue.component('Settings', require('@/utils_components/Settings/Settings.vue').default)
 
 
+import moment from 'moment'
+var momentDurationFormatSetup = require("moment-duration-format")
+momentDurationFormatSetup(moment)
+
+Vue.filter('commas', function (value) {
+  if (!value) return ''
+  if (Array.isArray(value)) {
+    return value.join(', ')
+  } else {
+    return value
+  }
+})
+
+Vue.filter('toFixed', function (value, n) {
+  if (!value) return ''
+  return value.toFixed(n)
+})
+
+Vue.filter('fromNow', function (value, n) {
+  if (!value) return ''
+  return moment(value).fromNow()
+})
+
+Vue.filter('duration', function (value) {
+  if (!value) return ''
+  return moment.duration(value).format('DD:hh:mm:ss')
+})
+
+Vue.filter('moment', function (value, type) {
+  if (!value) return ''
+  if (type === 'default') return moment(value).format()
+  if (type === 'dmyhms') return moment(value).format('DD:MM:YY hh:mm:ss')
+  if (type === 'hms') return moment(value).format('hh:mm:ss')
+
+})
+
+

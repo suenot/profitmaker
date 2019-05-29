@@ -18,7 +18,7 @@
         <li @click="showCreateOrder()"><img src="/img/widgets/auction.svg"></li>
       </el-tooltip>
       <el-tooltip content="Profile" placement="right">
-        <li v-if="avatar" @click="showProfile()" class="avatar"><img :src="avatar"></li>
+        <li v-if="kupiUser && kupiUser.picture.data.url" @click="showProfile()" class="avatar"><img :src="avatar"></li>
         <li v-else @click="showProfile()"><img src="/img/widgets/051-user.svg"></li>
       </el-tooltip>
       <el-tooltip content="User" placement="right">
@@ -36,9 +36,9 @@ export default {
     }
   ),
   fromMobx: {
-    avatar: {
+    kupiUser: {
       get() {
-        return AccountsStore.kupiUser.picture.data.url
+        return AccountsStore.kupiUser
       }
     },
   },

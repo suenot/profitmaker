@@ -26,14 +26,14 @@
       <tbody>
         <tr v-for="deal in deals" :key="deal.id">
           <td>{{deal.name}}</td>
-          <td>{{deal.stocks}}</td>
-          <td>{{deal.coins}}</td>
-          <td>{{deal.pairs}}</td>
-          <td>{{deal.credited}} USD ({{deal.credited_trades}})</td>
-          <td>{{deal.debited}} USD ({{deal.debited_trades}})</td>
-          <td>{{deal.total}} USD ({{deal.total_trades}})</td>
+          <td>{{deal.stocks | commas}}</td>
+          <td>{{deal.coins | commas}}</td>
+          <td>{{deal.pairs | commas}}</td>
+          <td>{{deal.credited | toFixed(8)}} USD ({{deal.credited_trades}})</td>
+          <td>{{deal.debited | toFixed(8)}} USD ({{deal.debited_trades}})</td>
+          <td>{{deal.total | toFixed(8)}} USD ({{deal.total_trades}})</td>
           <!-- <td>{{deal.status}}</td> -->
-          <td>{{deal.timestamp_open}} -- {{deal.timestamp_closed}}</td>
+          <td>{{deal.timestamp_open | moment('dmyhms')}} — {{deal.timestamp_closed | moment('dmyhms')}} ({{deal.timestamp_duration | duration() }})</td>
           <td class="nowrap">
             <el-button :type="note_id === deal.id ? 'warning' : ''" icon="el-icon-info" circle @click="showNote(deal)"></el-button>
             <router-link :to="{ name: 'Deal', params: {id: deal.id } }">

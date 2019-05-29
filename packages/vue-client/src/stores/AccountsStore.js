@@ -7,7 +7,6 @@ class AccountsStore {
   @observable user = {}
   @observable kupiUser = {}
   @observable accounts = {}
-  // @observable accountsTrigger = true
 
   @action fetchAccounts() {
     axios.get(`/user-api/auth/accounts`)

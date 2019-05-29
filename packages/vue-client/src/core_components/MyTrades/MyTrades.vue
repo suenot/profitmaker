@@ -1,6 +1,5 @@
 <template>
   <div class="kupi-table">
-    {{dealSelect}}
     <table>
       <thead>
         <tr>
@@ -15,8 +14,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in dataComputed" :key="item.uuid" :class="`${item.side} ${item.selected ? 'selected' : ''}`" @click="addMyTradeToDeal(item)">
-          <td>{{item.selected}}</td>
+        <tr v-for="(item, index) in dataComputed" :key="item.uuid" :class="`${item.side} ${item.selected ? 'selected' : ''}`" @click="addMyTradeToDeal(data[index])">
           <td>{{item.order}}</td>
           <td>{{item.datetime}}</td>
           <td>{{item.symbol}}</td>
@@ -111,8 +109,6 @@ export default {
   computed: {
     dataComputed: function() {
       return _.map(this.data, (item)=>{
-        console.log('this.widget.dealSelect')
-        console.log(this.widget.dealSelect)
         if (this.widget.dealSelect) {
           var selected = _.find(this.deal.trades, ['id', item.id]) ? true : false
         } else {
@@ -122,7 +118,7 @@ export default {
           id: item.id,
           uuid: item.uuid,
           order: item.order,
-          datetime: moment(item).format('DD.MM.YY HH:mm:ss'),
+          datetime: moment(item.datetime).format('DD.MM.YY HH:mm:ss'),
           symbol: item.symbol,
           type: item.type,
           side: item.side,
