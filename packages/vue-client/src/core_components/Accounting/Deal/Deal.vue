@@ -29,9 +29,9 @@
         <td>{{deal.pairs | commas}}</td>
         <td>{{deal.coins | commas}}</td>
         <!-- <td>DNT, BTC, ETH, BNB</td> -->
-        <td>-{{deal.credited | toFixed(8)}} USD ({{deal.credited_trades}} trades)</td>
-        <td>+{{deal.debited | toFixed(8)}} USD ({{deal.debited_trades}} trades)</td>
-        <td>{{deal.total | toFixed(8)}} USD ({{deal.total_trades}} trades)</td>
+        <td>-{{deal.credited | toFixed(8)}} ({{deal.credited_trades}} trades)</td>
+        <td>+{{deal.debited | toFixed(8)}} ({{deal.debited_trades}} trades)</td>
+        <td>{{deal.total | toFixed(8)}} ({{deal.total_trades}} trades)</td>
         <!-- <td>closed / open</td> -->
         <td>{{deal.timestamp_open | moment('dmyhms')}} — {{deal.timestamp_closed | moment('dmyhms')}} ({{deal.timestamp_duration | duration() }})</td>
       </tr>

@@ -29,9 +29,9 @@
           <td>{{deal.stocks | commas}}</td>
           <td>{{deal.coins | commas}}</td>
           <td>{{deal.pairs | commas}}</td>
-          <td>{{deal.credited | toFixed(8)}} USD ({{deal.credited_trades}})</td>
-          <td>{{deal.debited | toFixed(8)}} USD ({{deal.debited_trades}})</td>
-          <td>{{deal.total | toFixed(8)}} USD ({{deal.total_trades}})</td>
+          <td>{{deal.credited | toFixed(8)}} ({{deal.credited_trades}})</td>
+          <td>{{deal.debited | toFixed(8)}} ({{deal.debited_trades}})</td>
+          <td>{{deal.total | toFixed(8)}} ({{deal.total_trades}})</td>
           <!-- <td>{{deal.status}}</td> -->
           <td>{{deal.timestamp_open | moment('dmyhms')}} — {{deal.timestamp_closed | moment('dmyhms')}} ({{deal.timestamp_duration | duration() }})</td>
           <td class="nowrap">

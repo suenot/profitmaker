@@ -2,10 +2,13 @@
   <div class="menu">
     <ul>
       <el-tooltip content="Trade" placement="right">
-        <router-link tag="li" to="/trade"><img src="/img/widgets/002-business-and-finance.svg"></router-link>
+        <router-link tag="li" to="/trade"><img src="/img/widgets/trade.svg"></router-link>
       </el-tooltip>
       <el-tooltip content="Balance" placement="right">
-        <router-link tag="li" to="/balance"><img src="/img/widgets/040-business-and-finance-18.svg"></router-link>
+        <router-link tag="li" to="/balance"><img src="/img/widgets/balance.svg"></router-link>
+      </el-tooltip>
+      <el-tooltip content="Accounting" placement="right">
+        <router-link tag="li" to="/deals"><img src="/img/widgets/accounting.svg"></router-link>
       </el-tooltip>
       <!-- <el-tooltip content="Signals" placement="right">
         <router-link tag="li" to="/signals"><img src="/img/widgets/021-order.svg"></router-link>
