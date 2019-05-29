@@ -17,9 +17,11 @@
   <div class="kupi-table">
     <table class="table-header">
       <tr>
-        <td colspan="2"><el-input placeholder="Name" v-model="name"></el-input></td>
+        <td colspan="2">
+          <el-input placeholder="Name" :value="deal.name" @input="changeDealParam('name', $event)"></el-input>
+        </td>
         <td colspan="5">
-          <textarea placeholder="Note" v-model="note"></textarea><br/>
+          <el-input type="textarea" :rows=2 :value="deal.note" @input="changeDealParam('note', $event)"></el-input>
         </td>
       </tr>
       <tr>
@@ -88,6 +90,9 @@ export default {
   methods: {
     removeMyTradeFromDeal: function(my_trade) {
       AccountingStore.removeMyTradeFromDeal(my_trade)
+    },
+    changeDealParam: function(key, value) {
+      AccountingStore.changeDealParam(key, value)
     }
   },
   computed: {

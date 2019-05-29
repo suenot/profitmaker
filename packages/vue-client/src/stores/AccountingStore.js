@@ -89,6 +89,9 @@ class Store {
       }
     }
   }
+  @action changeDealParam(key, value) {
+    this.deals[this.active_deal][key] = value
+  }
 
 
 }
