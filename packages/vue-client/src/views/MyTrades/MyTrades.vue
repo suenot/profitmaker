@@ -1,5 +1,5 @@
 <template>
-  <Widget :widget="blocks.MyTrades" />
+  <Widget :widget="blocks.MyTradesForDeal"  />
 </template>
 
 <script>

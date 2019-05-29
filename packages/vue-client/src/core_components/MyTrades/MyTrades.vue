@@ -1,5 +1,6 @@
 <template>
   <div class="kupi-table">
+    {{dealSelect}}
     <table>
       <thead>
         <tr>
@@ -15,6 +16,7 @@
       </thead>
       <tbody>
         <tr v-for="item in dataComputed" :key="item.uuid" :class="`${item.side} ${item.selected ? 'selected' : ''}`" @click="addMyTradeToDeal(item)">
+          <td>{{item.selected}}</td>
           <td>{{item.order}}</td>
           <td>{{item.datetime}}</td>
           <td>{{item.symbol}}</td>
@@ -103,13 +105,19 @@ export default {
       })
     },
     addMyTradeToDeal(trade) {
-      AccountingStore.addMyTradeToDeal(trade)
+      if (this.widget.dealSelect) AccountingStore.addMyTradeToDeal(trade)
     }
   },
   computed: {
     dataComputed: function() {
-      // var data = _.cloneDeep(this.data)
       return _.map(this.data, (item)=>{
+        console.log('this.widget.dealSelect')
+        console.log(this.widget.dealSelect)
+        if (this.widget.dealSelect) {
+          var selected = _.find(this.deal.trades, ['id', item.id]) ? true : false
+        } else {
+          var selected = false
+        }
         return {
           id: item.id,
           uuid: item.uuid,
@@ -122,7 +130,7 @@ export default {
           amount: item.amount,
           cost: item.cost,
           fee: item['fee']['cost'].toFixed(8) + ' ' + item['fee']['currency'],
-          selected: _.find(this.deal.trades, ['id', item.id])
+          selected: selected
         }
       })
     }
