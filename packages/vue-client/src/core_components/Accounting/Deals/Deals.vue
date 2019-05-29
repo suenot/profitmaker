@@ -6,7 +6,7 @@
       <el-button type="success" icon="el-icon-plus" circle @click="addDeal()"></el-button>
     </span>
   </div>
-  {{note}}
+  <div v-if="note !== ''" class="note">{{note}}</div>
   <div class="kupi-table">
     <table>
       <thead>
@@ -86,3 +86,10 @@
   }
 }
 </script>
+
+<style lang="sass" scoped>
+.note
+  border: 1px solid #ddd
+  padding: 16px
+</style>
+
