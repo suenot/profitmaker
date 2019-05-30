@@ -125,7 +125,7 @@ export default {
           price: item.price.toFixed(8),
           amount: item.amount,
           cost: item.cost,
-          fee: item['fee']['cost'].toFixed(8) + ' ' + item['fee']['currency'],
+          fee: item.fee.cost.toFixed(8) + ' ' + item.fee.currency,
           selected: selected
         }
       })

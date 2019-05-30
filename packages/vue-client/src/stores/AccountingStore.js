@@ -13,7 +13,6 @@ class AccountingStore {
     reaction(
       () => this.active_deal_trades_length,
       () => {
-        console.log("reaction")
         this.calculateStocks()
         this.calculatePairs()
         this.calculateCoins()
@@ -28,24 +27,24 @@ class AccountingStore {
 
   // Deals
   @observable deals = {
-    test_id: {
-      id: 'test_id',
-      name: 'my best trade with DNT LIQUI-BINANCE',
-      stocks: 'BINANCE, LIQUI, TIDEX',
-      coins: 'DNT, BTC, ETH, BNB',
-      pairs: 'DNT_BTC, DNT_ETH, DNT_BNB',
-      debited: -500,
-      debited_trades: 20,
-      credited: 550,
-      credited_trades: 2,
-      total: 50,
-      total_trades: 22,
-      status: 'closed',
-      timestamp_open: 1558117760918,
-      timestamp_closed: 1558117760918,
-      note: 'bla-bla',
-      trades: []
-    }
+    // test_id: {
+    //   id: 'test_id',
+    //   name: 'my best trade with DNT LIQUI-BINANCE',
+    //   stocks: 'BINANCE, LIQUI, TIDEX',
+    //   coins: 'DNT, BTC, ETH, BNB',
+    //   pairs: 'DNT_BTC, DNT_ETH, DNT_BNB',
+    //   debited: -500,
+    //   debited_trades: 20,
+    //   credited: 550,
+    //   credited_trades: 2,
+    //   total: 50,
+    //   total_trades: 22,
+    //   status: 'closed',
+    //   timestamp_open: 1558117760918,
+    //   timestamp_closed: 1558117760918,
+    //   note: 'bla-bla',
+    //   trades: []
+    // }
   }
   @observable active_deal = 'test_id'
   @computed get active_deal_trades_length() {
@@ -100,6 +99,7 @@ class AccountingStore {
     }
     var stock = {stock: this.stock}
     trade = {...trade, ...stock}
+    trade.fee = trade.fee.cost
     this.deal.trades.push(trade)
   }
   @action removeMyTradeFromDeal(trade) {
@@ -147,7 +147,7 @@ class AccountingStore {
       deal.trades.filter((trade) => {
         return trade.side === 'buy'
       }).map((trade)=>{
-        return trade.amount*trade.price+trade.fee.cost
+        return trade.amount*trade.price+trade.fee
       })
     deal.credited_trades = credit.length
     deal.credited = _.sum(credit)
@@ -158,7 +158,7 @@ class AccountingStore {
       deal.trades.filter((trade) => {
         return trade.side === 'sell'
       }).map((trade)=>{
-        return trade.amount*trade.price+trade.fee.cost
+        return trade.amount*trade.price+trade.fee
       })
     deal.debited_trades = debit.length
     deal.debited = _.sum(debit)
@@ -167,7 +167,7 @@ class AccountingStore {
     var deal = this.deals[this.active_deal]
     var total =
       deal.trades.map((trade)=>{
-        return (trade.side === 'buy' ? -1 : 1) * trade.amount*trade.price+trade.fee.cost
+        return (trade.side === 'buy' ? -1 : 1) * trade.amount*trade.price+trade.fee
       })
     deal.total_trades = total.length
     deal.total = _.sum(total)

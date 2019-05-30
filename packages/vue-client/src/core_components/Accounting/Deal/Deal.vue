@@ -54,14 +54,14 @@
       <tbody>
         <tr v-for="trade in deal.trades" :key="trade.uuid" :class="trade.side">
           <td>{{trade.order}}</td>
-          <td>{{trade.datetime}}</td>
+          <td>{{trade.datetime | moment('dmyhms')}}</td>
           <td>{{trade.stock}}</td>
           <td>{{trade.symbol}}</td>
           <td>{{trade.type}}</td>
           <td>{{trade.side}}</td>
-          <td>{{trade.price}}</td>
+          <td>{{trade.price | toFixed(8)}}</td>
           <td>{{trade.amount}}</td>
-          <td>{{trade.fee}}</td>
+          <td>{{trade.fee | toFixed(8)}}</td>
           <td><el-button type="danger" icon="el-icon-delete" circle @click="removeMyTradeFromDeal(trade)"></el-button></td>
         </tr>
       </tbody>
