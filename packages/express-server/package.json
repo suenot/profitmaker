@@ -5,7 +5,7 @@
   "dependencies": {
     "assert": "^1.4.1",
     "async-each-series": "^1.1.0",
-    "axios": "^0.16.2",
+    "axios": "0.18.0",
     "bignumber.js": "^8.1.1",
     "body-parser": "^1.18.2",
     "bson": "^1.0.4",
