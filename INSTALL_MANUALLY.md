@@ -46,3 +46,5 @@ yar server:start
 yarn vue:start // run vue-client in dev mode
 yarn react:start // OR run react-client in dev mode
 ```
+
+- Open ```http://localhost:8080``` for vue-client or ```http://localhost:8041``` for react-client

@@ -9,3 +9,4 @@
   - ```docker-compose -f docker-compose-react.yml up``` # for express+mongo+react version (in development, not ready)
   - ```docker-compose -f docker-compose-vue.yml up``` # for express+mongo+vue version (vue frontend not ready)
   - ```docker-compose -f docker-compose-mongo.yml up``` # for mongo
+  - Open ```http://localhost:8080``` for vue-client or ```http://localhost:8041``` for react-client
