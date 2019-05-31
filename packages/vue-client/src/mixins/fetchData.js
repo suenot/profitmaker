@@ -1,8 +1,7 @@
-import Store from '@/stores/Store'
 import axios from 'axios'
 import _ from 'lodash'
 
-export const FetchData = {
+export const fetchData = {
   data () {
     return {
       interval: '',
@@ -29,7 +28,7 @@ export const FetchData = {
   methods: {
     start() {
       if (this.widget.demo) {
-        this.data = require('./data.js').default
+        this.data = this.demoData
         this.$parent.notification = {
           type: "warning",
           msg: "Demo mode: using test data",

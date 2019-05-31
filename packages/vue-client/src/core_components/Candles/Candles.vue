@@ -7,7 +7,7 @@
 
 
 <script>
-import {FetchData} from './FetchData'
+import {fetchData} from '@/mixins/fetchData'
 import Store from '@/stores/Store'
 import axios from 'axios'
 import _ from 'lodash'
@@ -15,10 +15,11 @@ export default {
   data () {
     return {
       height: 471,
+      demoData: require('./data.js').default,
     }
   },
   props: ['widget'],
-  mixins: [FetchData],
+  mixins: [fetchData],
   fromMobx: {
     stock: { get() { return Store.stock } },
     pair: { get() { return Store.pair } },
