@@ -10,7 +10,7 @@ export const fetchData = {
       interval: '',
       tube: '',
       hash: '',
-      data: undefined,
+      data: [],
       serverBackend: 'https://kupi.network',
       firstFetch: true,
     }
