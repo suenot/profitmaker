@@ -24,111 +24,21 @@
 </template>
 
 <script>
-import Store from '../../stores/Store'
-import axios from 'axios'
+import {fetchData} from '@/mixins/fetchData'
 import moment from 'moment'
 import _ from 'lodash'
+
 export default {
   data() {
     return {
-      interval: '',
-      tube: '',
-      hash: '',
-      data: [],
-      timer: 3000,
-      serverBackend: 'https://kupi.network',
+      demoData: require('./data.js').default,
+      template_kupi: '${serverBackend}/api/${stockLowerCase}/trades/${pair}',
+      template_ccxt: '/user-api/ccxt/${stockLowerCase}/trades/${pair}',
+      timer_kupi: 3000,
+      timer_ccxt: 10000,
     }
   },
-  props: ['widget'],
-  fromMobx: {
-    stock: {
-      get() {
-        return Store.stock
-      }
-    },
-    pair: {
-      get() {
-        return Store.pair
-      }
-    },
-  },
-  mounted() {
-    this.start()
-  },
-  beforeDestroy() {
-    this.finish()
-  },
-  watch: {
-    widget: function () {
-      this.finish()
-      this.start()
-    }
-  },
-  methods: {
-    start() {
-      if (this.widget.demo) {
-        this.data = require('./data.js').default
-        this.$parent.notification = {
-          type: "warning",
-          msg: "Demo mode: using test data",
-        }
-        return
-      } else this.$parent.notification = {}
-      this.fetch()
-      this.interval = setInterval(()=>{
-        this.fetch()
-      }, this.timer)
-    },
-    finish() {
-      if (this.interval) {
-        clearInterval(this.interval)
-        this.interval = null
-      }
-    },
-    async fetch() {
-      var stock = this.stock
-      var stockLowerCase = stock.toLowerCase()
-      var pair = this.pair
-      var data
-      if (this.tube === 'ccxt') {
-        data = await this.fetchTrades_ccxt(stockLowerCase, pair)
-      } else {
-        data = await this.fetchTrades_kupi(stockLowerCase, pair)
-      }
-      // if (this.hash === JSON.stringify(data)) return true
-      // this.hash = JSON.stringify(data)
-      this.data = data
-    },
-    async fetchTrades_kupi(stockLowerCase, pair) {
-      return axios.get(`${this.serverBackend}/api/${stockLowerCase}/trades/${pair}`)
-      .then((response) => {
-        this.$parent.notification = {}
-        return response.data
-      })
-      .catch(() => {
-        this.tube = 'ccxt'
-        this.$parent.notification = {
-          type: "alert",
-          msg: "Can't get data",
-        }
-        return []
-      })
-    },
-    async fetchTrades_ccxt(stockLowerCase, pair) {
-      return axios.get(`/user-api/ccxt/${stockLowerCase}/trades/${pair}`)
-      .then((response) => {
-        this.$parent.notification = {}
-        return response.data
-      })
-      .catch(() => {
-        this.$parent.notification = {
-          type: "alert",
-          msg: "Can't get data",
-        }
-        return []
-      })
-    }
-  },
+  mixins: [fetchData],
   computed: {
     dataComputed: function() {
       var data = _.cloneDeep(this.data).slice(0, 40)
@@ -140,9 +50,3 @@ export default {
   },
 }
 </script>
-
-<style lang="sass" scoped>
-// TODO: rm trash
-table
-  margin: -1px
-</style>

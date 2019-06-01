@@ -38,11 +38,10 @@ export default {
     }
   },
   mixins: [fetchData],
-  props: ['widget'],
-  fromMobx: {
-    stock: { get() { return Store.stock } },
-    pair: { get() { return Store.pair } },
-  },
+  // fromMobx: {
+  //   stock: { get() { return Store.stock } },
+  //   pair: { get() { return Store.pair } },
+  // },
   computed: {
     dataLength: function() {
       return this.data.length

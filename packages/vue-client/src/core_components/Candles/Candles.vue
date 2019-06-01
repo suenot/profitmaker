@@ -22,12 +22,11 @@ export default {
       timer_ccxt: 30000,
     }
   },
-  props: ['widget'],
   mixins: [fetchData],
-  fromMobx: {
-    stock: { get() { return Store.stock } },
-    pair: { get() { return Store.pair } },
-  },
+  // fromMobx: {
+  //   stock: { get() { return Store.stock } },
+  //   pair: { get() { return Store.pair } },
+  // },
   computed: {
     reactStockChartsComputed() {
       var data = _.cloneDeep(this.data)

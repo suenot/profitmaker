@@ -1,6 +1,7 @@
 import axios from 'axios'
 import _ from 'lodash'
 import template from 'es6-template-strings'
+import Store from '@/stores/Store'
 
 export const fetchData = {
   data () {
@@ -12,6 +13,11 @@ export const fetchData = {
       serverBackend: 'https://kupi.network',
       firstFetch: true,
     }
+  },
+  props: ['widget'],
+  fromMobx: {
+    stock: { get() { return Store.stock } },
+    pair: { get() { return Store.pair } },
   },
   mounted() {
     this.start()
