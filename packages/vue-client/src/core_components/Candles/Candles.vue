@@ -18,6 +18,8 @@ export default {
       demoData: require('./data.js').default,
       template_kupi: '${serverBackend}/api/${stockLowerCase}/candles/${pair}/${timeframe}',
       template_ccxt: '/user-api/ccxt/${stockLowerCase}/candles/${pair}/${timeframe}',
+      timer_kupi: 5000,
+      timer_ccxt: 30000,
     }
   },
   props: ['widget'],

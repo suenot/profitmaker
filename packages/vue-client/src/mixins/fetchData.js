@@ -9,7 +9,6 @@ export const fetchData = {
       tube: '',
       hash: '',
       data: [],
-      timer: 5000,
       serverBackend: 'https://kupi.network',
       firstFetch: true,
     }
@@ -39,7 +38,7 @@ export const fetchData = {
       this.fetch()
       this.interval = setInterval(()=>{
         this.fetch()
-      }, this.timer)
+      }, this.timer_kupi)
     },
     finish() {
       if (this.interval) {
@@ -91,19 +90,25 @@ export const fetchData = {
       var url_kupi = this.genUrl(this.template_kupi)
       var url_ccxt = this.genUrl(this.template_ccxt)
       var data
-      if (this.tube === 'ccxt') {
-        data = await this.fetch_ccxt(url_ccxt)
-      } else {
-        if (this.firstFetch) {
-          data = await Promise.race([
-            this.fetch_ccxt(url_ccxt),
-            this.fetch_kupi(url_kupi)
-          ])
-          this.firstFetch = false
-        } else {
-          data = await this.fetch_kupi(url_kupi)
-        }
-      }
+     
+      data = await this.fetch_kupi(url_kupi)
+
+
+      // if (this.tube === 'ccxt') {
+      //   data = await this.fetch_ccxt(url_ccxt)
+      // } else {
+      //   if (this.firstFetch) {
+      //     data = await Promise.race([
+      //       this.fetch_ccxt(url_ccxt),
+      //       this.fetch_kupi(url_kupi)
+      //     ])
+      //     this.firstFetch = false
+      //   } else {
+      //     data = await this.fetch_kupi(url_kupi)
+      //   }
+      // }
+
+
       // if (this.hash === JSON.stringify(data)) return true
       // this.hash = JSON.stringify(data)
       this.data = data
