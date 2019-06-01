@@ -52,8 +52,10 @@ router.get('/:stock/candles/:pair/:timeframe', function (req, res) {
 router.get('/:stock/trades/:pair', function (req, res) {
   try {
     var {stock, pair} = req.params
-    var ohlcv = getTrades(stock, pair)
-    res.json(ohlcv)
+    var data = getTrades(stock, pair)
+    // data.splice(0, 100)
+    // data = _.reverse(data)
+    res.json(data)
   } catch (err) {
     res.status(500).send({error: serializeError(err).message})
   }

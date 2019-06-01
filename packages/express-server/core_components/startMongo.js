@@ -5,7 +5,7 @@ var {sleep} = require('@kupi/sleep')
 // GET PRIVATE CONFIGS
 var fs = require('fs')
 try {
-  var mongoConf = JSON.parse(fs.readFileSync('../../../private/mongo.json', 'utf8')).mongo
+  var mongoConf = JSON.parse(fs.readFileSync('../../private/mongo.json', 'utf8')).mongo
 } catch(err) {
   var mongoConf = undefined
 }

@@ -33,6 +33,28 @@ router.get('/widgets/:framework', function (req, res) {
   }
 })
 
+router.get('/balance', async function (req, res) {
+  // console.log('/balance')
+  // console.log(req.query.stock)
+  try {
+    var {stock, type, accountId} = req.query
+    var key = accountId
+    if (stock === 'TOTAL') key = 'TOTAL'
+
+    if (type === 'now') {
+      var balance = global.BALANCE[key]
+      balance.data = _.toArray(balance.data)
+      balance.data = _.orderBy(balance.data, ['totalUSD'], ['desc'])
+      res.json(balance)
+    } else if (type === 'history') {
+      var result = await balanceHistory(stock)
+      res.json(result)
+    }
+  } catch (err) {
+    res.status(500).send({error: serializeError(err).message})
+  }
+})
+
 router.post('/balance', authMiddleware, async function (req, res) {
   try {
     var {stock, type, accountId} = req.body
@@ -79,6 +101,8 @@ router.get('/myTrades/:accountId/:pair', authMiddleware, async function (req, re
     var accountId = req.params.accountId
     var pair = req.params.pair.split('_').join('/')
     var result = await getMyTradesFromVariable(accountId, pair)
+    result = _.reverse(result)
+    result = result.slice(0, 100)
     res.json(result)
   } catch (err) {
     res.status(500).send({error: serializeError(err).message})
