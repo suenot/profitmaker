@@ -1,4 +1,4 @@
-var sleep = require('@kupi/sleep')
+var {sleep} = require('@kupi/sleep')
 
 const catchHead = async function(rateLimit, stock) {
   // console.log('CH Start')
