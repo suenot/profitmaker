@@ -16,6 +16,8 @@ export default {
     return {
       height: 471,
       demoData: require('./data.js').default,
+      template_kupi: '${serverBackend}/api/${stockLowerCase}/candles/${pair}/${timeframe}',
+      template_ccxt: '/user-api/ccxt/${stockLowerCase}/candles/${pair}/${timeframe}',
     }
   },
   props: ['widget'],

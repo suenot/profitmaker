@@ -1,5 +1,6 @@
 import axios from 'axios'
 import _ from 'lodash'
+import template from 'es6-template-strings'
 
 export const fetchData = {
   data () {
@@ -46,8 +47,19 @@ export const fetchData = {
         this.interval = null
       }
     },
-    async fetchOhlcv_kupi(stockLowerCase, pair, timeframe) {
-      return axios.get(`${this.serverBackend}/api/${stockLowerCase}/candles/${pair}/${timeframe}`)
+    genUrl(url) {
+      var stock = this.stock
+      // if (!stock) return
+      var stockLowerCase = stock.toLowerCase()
+      var pair = this.pair
+      var timeframe = this.widget.timeframe
+      return template(
+        url,
+        { serverBackend: this.serverBackend, stockLowerCase, pair, timeframe }
+      )
+    },
+    async fetch_kupi(url) {
+      return axios.get(url)
       .then((response) => {
         this.$parent.notification = {}
       return response.data
@@ -61,8 +73,8 @@ export const fetchData = {
         return []
       })
     },
-    async fetchOhlcv_ccxt(stockLowerCase, pair, timeframe) {
-      return axios.get(`/user-api/ccxt/${stockLowerCase}/candles/${pair}/${timeframe}`)
+    async fetch_ccxt(url) {
+      return axios.get(url)
       .then((response) => {
         this.$parent.notification = {}
         return response.data
@@ -76,23 +88,20 @@ export const fetchData = {
       })
     },
     async fetch() {
-      var stock = this.stock
-      if (!stock) return
-      var stockLowerCase = stock.toLowerCase()
-      var pair = this.pair
-      var timeframe = this.widget.timeframe
+      var url_kupi = this.genUrl(this.template_kupi)
+      var url_ccxt = this.genUrl(this.template_ccxt)
       var data
       if (this.tube === 'ccxt') {
-        data = await this.fetchOhlcv_ccxt(stockLowerCase, pair, timeframe)
+        data = await this.fetch_ccxt(url_ccxt)
       } else {
         if (this.firstFetch) {
           data = await Promise.race([
-            this.fetchOhlcv_ccxt(stockLowerCase, pair, timeframe),
-            this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe)
+            this.fetch_ccxt(url_ccxt),
+            this.fetch_kupi(url_kupi)
           ])
           this.firstFetch = false
         } else {
-          data = await this.fetchOhlcv_kupi(stockLowerCase, pair, timeframe)
+          data = await this.fetch_kupi(url_kupi)
         }
       }
       // if (this.hash === JSON.stringify(data)) return true
