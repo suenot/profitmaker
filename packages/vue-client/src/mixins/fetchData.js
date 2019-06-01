@@ -2,6 +2,7 @@ import axios from 'axios'
 import _ from 'lodash'
 import template from 'es6-template-strings'
 import Store from '@/stores/Store'
+// import { Notification } from 'element-ui'
 
 export const fetchData = {
   data () {
@@ -9,7 +10,7 @@ export const fetchData = {
       interval: '',
       tube: '',
       hash: '',
-      data: [],
+      data: undefined,
       serverBackend: 'https://kupi.network',
       firstFetch: true,
     }
@@ -18,6 +19,7 @@ export const fetchData = {
   fromMobx: {
     stock: { get() { return Store.stock } },
     pair: { get() { return Store.pair } },
+    accountId: { get() { return Store.accountId } },
   },
   mounted() {
     this.start()
@@ -44,7 +46,7 @@ export const fetchData = {
       this.fetch()
       this.interval = setInterval(()=>{
         this.fetch()
-      }, this.timer_kupi)
+      }, 10000)
     },
     finish() {
       if (this.interval) {
@@ -53,14 +55,17 @@ export const fetchData = {
       }
     },
     genUrl(url) {
-      var stock = this.stock
+      var serverBackend = this.serverBackend
+      var stock = this.widget.stock ? this.widget.stock : this.stock
       // if (!stock) return
       var stockLowerCase = stock.toLowerCase()
       var pair = this.pair
       var timeframe = this.widget.timeframe
+      var accountId = this.accountId
+      var type = this.widget.type
       return template(
         url,
-        { serverBackend: this.serverBackend, stockLowerCase, pair, timeframe }
+        { serverBackend, stock, stockLowerCase, pair, timeframe, accountId, type }
       )
     },
     async fetch_kupi(url) {
@@ -70,7 +75,7 @@ export const fetchData = {
       return response.data
       })
       .catch(() => {
-        this.tube = 'ccxt'
+        // this.tube = 'ccxt'
         this.$parent.notification = {
           type: "alert",
           msg: "Can't get data",
@@ -84,7 +89,7 @@ export const fetchData = {
         this.$parent.notification = {}
         return response.data
       })
-      .catch(() => {
+      .catch((err) => {
         this.$parent.notification = {
           type: "alert",
           msg: "Can't get data",
@@ -93,26 +98,31 @@ export const fetchData = {
       })
     },
     async fetch() {
-      var url_kupi = this.genUrl(this.template_kupi)
-      var url_ccxt = this.genUrl(this.template_ccxt)
       var data
-     
-      data = await this.fetch_kupi(url_kupi)
+      // TODO: пока заглушка, нужно брать настройки из стора
+      if (this.template_kupi === undefined) {
+        var url_ccxt = this.genUrl(this.template_ccxt)
+        data = await this.fetch_ccxt(url_ccxt)
+      } else {
+        var url_kupi = this.genUrl(this.template_kupi)
+        data = await this.fetch_kupi(url_kupi)
+      }
+      
 
 
-      // if (this.tube === 'ccxt') {
-      //   data = await this.fetch_ccxt(url_ccxt)
-      // } else {
-      //   if (this.firstFetch) {
-      //     data = await Promise.race([
-      //       this.fetch_ccxt(url_ccxt),
-      //       this.fetch_kupi(url_kupi)
-      //     ])
-      //     this.firstFetch = false
-      //   } else {
-      //     data = await this.fetch_kupi(url_kupi)
-      //   }
-      // }
+      if (this.tube === 'ccxt') {
+        data = await this.fetch_ccxt(url_ccxt)
+      } else {
+        if (this.firstFetch) {
+          data = await Promise.race([
+            this.fetch_ccxt(url_ccxt),
+            this.fetch_kupi(url_kupi)
+          ])
+          this.firstFetch = false
+        } else {
+          data = await this.fetch_kupi(url_kupi)
+        }
+      }
 
 
       // if (this.hash === JSON.stringify(data)) return true

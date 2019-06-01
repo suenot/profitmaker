@@ -47,79 +47,19 @@ import axios from 'axios'
 import moment from 'moment'
 import _ from 'lodash'
 import { Notification } from 'element-ui'
+import {fetchData} from '@/mixins/fetchData'
 export default {
   data() {
     return {
-      interval: '',
-      tube: '',
-      hash: '',
-      data: [],
-      timer: 5000,
-      serverBackend: 'https://kupi.network',
+      demoData: require('./data.js').default,
+      template_kupi: undefined,
+      template_ccxt: '/user-api/openOrders/${accountId}/${pair}',
+      timer_kupi: 3000,
+      timer_ccxt: 10000,
     }
   },
-  props: ['widget'],
-  fromMobx: {
-    pair: {
-      get() {
-        return Store.pair
-      }
-    },
-    accountId: {
-      get() {
-        return Store.accountId
-      }
-    },
-  },
-  mounted: function() {
-    this.start()
-  },
-  beforeDestroy() {
-    this.finish()
-  },
-  watch: {
-    widget: function () {
-      this.finish()
-      this.start()
-    }
-  },
+  mixins: [fetchData],
   methods: {
-    start() {
-      if (this.widget.demo) {
-        this.data = require('./data.js').default
-        this.$parent.notification = {
-          type: "warning",
-          msg: "Demo mode: using test data",
-        }
-        return
-      } else this.$parent.notification = {}
-      this.fetch()
-      this.interval = setInterval(()=>{
-        this.fetch()
-      }, this.timer)
-    },
-    finish() {
-      if (this.interval) {
-        clearInterval(this.interval)
-        this.interval = null
-      }
-    },
-    fetch() {
-      var accountId = this.accountId
-      var pair = this.pair
-      axios.get(`/user-api/openOrders/${accountId}/${pair}`)
-      .then((response) => {
-        this.data = response.data
-        this.$parent.notification = {}
-      })
-      .catch((error) => {
-        this.data = []
-        this.$parent.notification = {
-          type: "alert",
-          msg: "Can't get data",
-        }
-      })
-    },
     cancelOrder: function(order) {
       var post = {
         accountId: this.accountId,

@@ -30,104 +30,46 @@
 </template>
 
 <script>
+import {fetchData} from '@/mixins/fetchData'
 import { toJS } from 'mobx'
-import Store from '@/stores/Store'
 import AccountingStore from '@/stores/AccountingStore'
-import axios from 'axios'
 import moment from 'moment'
 import _ from 'lodash'
+
 export default {
   data() {
     return {
-      interval: '',
-      tube: '',
-      hash: '',
-      data: [],
-      timer: 5000,
-      serverBackend: 'https://kupi.network',
+      demoData: require('./data.js').default,
+      template_kupi: undefined,
+      template_ccxt: '/user-api/myTrades/${accountId}/${pair}',
+      timer_kupi: 3000,
+      timer_ccxt: 10000,
     }
   },
-  props: ['widget'],
+  mixins: [fetchData],
   fromMobx: {
-    pair: { get() { return Store.pair } },
-    accountId: { get() { return Store.accountId } },
-    deal: { get() { return toJS( AccountingStore.deal) } },
-  },
-  mounted() {
-    this.start()
-  },
-  beforeDestroy() {
-    this.finish()
-  },
-  watch: {
-    widget: function () {
-      this.finish()
-      this.start()
-    }
+    deal: { get() { return toJS(AccountingStore.deal)} },
   },
   methods: {
-    start() {
-      if (this.widget.demo) {
-        this.data = require('./data.js').default
-        this.$parent.notification = {
-          type: "warning",
-          msg: "Demo mode: using test data",
-        }
-        return
-      } else this.$parent.notification = {}
-      this.fetch()
-      this.interval = setInterval(()=>{
-        this.fetch()
-      }, this.timer)
-    },
-    finish() {
-      if (this.interval) {
-        clearInterval(this.interval)
-        this.interval = null
-      }
-    },
-    fetch() {
-      var accountId = this.accountId
-      var pair = this.pair
-      axios.get(`/user-api/myTrades/${accountId}/${pair}`)
-      .then((response) => {
-        this.data = response.data
-        this.$parent.notification = {}
-      })
-      .catch((error) => {
-        this.data = []
-        this.$parent.notification = {
-          type: "alert",
-          msg: "Can't get data",
-        }
-      })
-    },
     addMyTradeToDeal(trade) {
       if (this.widget.dealSelect) AccountingStore.addMyTradeToDeal(trade)
     }
   },
   computed: {
     dataComputed: function() {
+      console.log('COMPUTED')
+      console.log(this.data)
       return _.map(this.data, (item)=>{
         if (this.widget.dealSelect) {
           var selected = _.find(this.deal.trades, ['id', item.id]) ? true : false
         } else {
           var selected = false
         }
-        return {
-          id: item.id,
-          uuid: item.uuid,
-          order: item.order,
-          datetime: moment(item.datetime).format('DD.MM.YY HH:mm:ss'),
-          symbol: item.symbol,
-          type: item.type,
-          side: item.side,
-          price: item.price.toFixed(8),
-          amount: item.amount,
-          cost: item.cost,
-          fee: item.fee.cost.toFixed(8) + ' ' + item.fee.currency,
-          selected: selected
-        }
+        item.datetime = moment(item.datetime).format('DD.MM.YY HH:mm:ss')
+        item.price = item.price.toFixed(8)
+        item.fee = item.fee.cost.toFixed(8) + ' ' + item.fee.currency
+        console.log(item)
+        return item
       })
     }
   }
