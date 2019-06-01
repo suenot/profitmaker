@@ -50,7 +50,7 @@ export default {
       var component = 'ProfileAside'
       var title = 'Profile'
       var side = 'left'
-      var width = 340*2
+      var width = 361
       var data = {}
       AsidesStore.addAside(component, title, side, width, data)
     },
@@ -58,7 +58,7 @@ export default {
       var component = 'CreateOrderAside'
       var title = 'Create order'
       var side = 'left'
-      var width = 380
+      var width = 361
       var data = {}
       AsidesStore.addAside(component, title, side, width, data)
     }
