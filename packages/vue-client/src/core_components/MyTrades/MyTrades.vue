@@ -57,8 +57,6 @@ export default {
   },
   computed: {
     dataComputed: function() {
-      console.log('COMPUTED')
-      console.log(this.data)
       return _.map(this.data, (item)=>{
         if (this.widget.dealSelect) {
           var selected = _.find(this.deal.trades, ['id', item.id]) ? true : false
@@ -68,7 +66,6 @@ export default {
         item.datetime = moment(item.datetime).format('DD.MM.YY HH:mm:ss')
         item.price = item.price.toFixed(8)
         item.fee = item.fee.cost.toFixed(8) + ' ' + item.fee.currency
-        console.log(item)
         return item
       })
     }

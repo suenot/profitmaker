@@ -1,101 +1,24 @@
 <template>
-  <ve-line :data="dataComputed" :settings="settingsComputed" :key="'balanceTimeseries_'+componentKey"></ve-line>
+  <ve-line :data="dataComputed" :settings="settingsComputed" key="balanceTimeseries"></ve-line>
 </template>
 
 <script>
-import axios from 'axios'
-import moment from 'moment'
+import {fetchData} from '@/mixins/fetchData'
 import _ from 'lodash'
+
 export default {
   data() {
     return {
-      demo: false,
-      interval: '',
-      tube: '',
-      hash: '',
-      data: [],
-      timer: 10000,
-      componentKey: 0
+      demoData: require('./dataHistory.js').default,
+      template_kupi: undefined,
+      template_ccxt: '/user-api/balance/?type=${type}&stock=${stock}&accountId=${accountId}',
+      timer_kupi: 3000,
+      timer_ccxt: 30000,
     }
   },
-  props: ['widget'],
-  fromMobx: {
-    stock: {
-      get() {
-        return Store.stock
-      }
-    },
-    pair: {
-      get() {
-        return Store.pair
-      }
-    },
-    accountId: {
-      get() {
-        return Store.accountId
-      }
-    },
-  },
-  mounted() {
-    this.start()
-  },
-  beforeDestroy() {
-    this.finish()
-  },
-  watch: {
-    widget: function () {
-      this.finish()
-      this.start()
-    }
-  },
-  methods: {
-    start() {
-      if (this.widget.demo) {
-        this.data = require('./dataHistory.js').default
-        this.$parent.notification = {
-          type: "warning",
-          msg: "Demo mode: using test data",
-        }
-        return
-      } else this.$parent.notification = {}
-      this.fetch()
-      this.interval = setInterval(()=>{
-        this.fetch()
-      }, this.timer)
-    },
-    finish() {
-      if (this.interval) {
-        clearInterval(this.interval)
-        this.interval = null
-      }
-    },
-    fetch() {
-      var {stock, accountId} = this
-      var type = 'history'
-      stock = 'TOTAL'
-      const key = `${type}--${stock}--${accountId}`
-      axios.post(`/user-api/balance/`, {
-        type, key, stock, accountId
-      })
-      .then(response => {
-        this.data = response.data
-        this.$parent.notification = {}
-      })
-      .catch(error => {
-        this.data = {}
-        this.$parent.notification = {
-          type: "alert",
-          msg: "Can't get data",
-        }
-      })
-    },
-    // forceRerender() {
-    //   this.componentKey += 1
-    // },
-  },
+  mixins: [fetchData],
   computed: {
     settingsComputed() {
-      // this.forceRerender()
       return {
         stack: { 'group1': this.data.coins },
         area: true
@@ -122,7 +45,6 @@ export default {
         columns: columns,
         rows: rows
       }
-      // this.forceRerender()
       return chartData
     }
   }

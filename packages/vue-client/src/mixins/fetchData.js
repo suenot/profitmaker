@@ -56,8 +56,7 @@ export const fetchData = {
     },
     genUrl(url) {
       var serverBackend = this.serverBackend
-      var stock = this.widget.stock ? this.widget.stock : this.stock
-      // if (!stock) return
+      var stock = (this.widget.stock !== undefined) ? this.widget.stock : this.stock
       var stockLowerCase = stock.toLowerCase()
       var pair = this.pair
       var timeframe = this.widget.timeframe
@@ -110,19 +109,19 @@ export const fetchData = {
       
 
 
-      if (this.tube === 'ccxt') {
-        data = await this.fetch_ccxt(url_ccxt)
-      } else {
-        if (this.firstFetch) {
-          data = await Promise.race([
-            this.fetch_ccxt(url_ccxt),
-            this.fetch_kupi(url_kupi)
-          ])
-          this.firstFetch = false
-        } else {
-          data = await this.fetch_kupi(url_kupi)
-        }
-      }
+      // if (this.tube === 'ccxt') {
+      //   data = await this.fetch_ccxt(url_ccxt)
+      // } else {
+      //   if (this.firstFetch) {
+      //     data = await Promise.race([
+      //       this.fetch_ccxt(url_ccxt),
+      //       this.fetch_kupi(url_kupi)
+      //     ])
+      //     this.firstFetch = false
+      //   } else {
+      //     data = await this.fetch_kupi(url_kupi)
+      //   }
+      // }
 
 
       // if (this.hash === JSON.stringify(data)) return true
