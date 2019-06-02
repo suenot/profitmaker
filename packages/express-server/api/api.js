@@ -96,7 +96,7 @@ router.get('/openOrders/:account/:pair', authMiddleware, async function (req, re
   }
 })
 
-router.get('/myTrades/:accountId/:pair', async function (req, res) {
+router.get('/myTrades/:accountId/:pair', authMiddleware, async function (req, res) {
   try {
     var accountId = req.params.accountId
     var pair = req.params.pair.split('_').join('/')
