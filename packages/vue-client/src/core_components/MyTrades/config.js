@@ -11,7 +11,6 @@ export default {
   authorLink: "https://github.com/kupi-network/kupi-terminal",
   source: "",
   demo: true,
-  dealSelect: false,
   // stock: undefined,
   // pair: undefined,
   categories: ["Private api", "Trades"],

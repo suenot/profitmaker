@@ -6,7 +6,7 @@
       </span>
       <h3 class="title-header">My trades</h3>
     </div>
-    <Widget :widget="blocks.MyTradesForDeal"  />
+    <Widget :widget="blocks.MyTrades" />
   </div>
 </template>
 
@@ -20,7 +20,7 @@ export default {
         return toJS(Store.blocks)
       }
     },
-  },
+  }
 }
 </script>
 

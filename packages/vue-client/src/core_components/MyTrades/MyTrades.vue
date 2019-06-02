@@ -35,6 +35,7 @@ import { toJS } from 'mobx'
 import AccountingStore from '@/stores/AccountingStore'
 import moment from 'moment'
 import _ from 'lodash'
+import uuidv1 from 'uuid/v1'
 
 export default {
   data() {
@@ -52,21 +53,33 @@ export default {
   },
   methods: {
     addMyTradeToDeal(trade) {
-      if (this.widget.dealSelect) AccountingStore.addMyTradeToDeal(trade)
+      if (this.$route.name !== 'Trade') AccountingStore.addMyTradeToDeal(trade)
     }
   },
   computed: {
     dataComputed: function() {
-      return _.map(this.data, (item)=>{
-        if (this.widget.dealSelect) {
-          var selected = _.find(this.deal.trades, ['id', item.id]) ? true : false
+      var data = _.cloneDeep(this.data)
+      return _.map(data, (item)=>{
+        var selected
+        if (this.$route.name !== 'Trade') {
+          selected = _.find(this.deal.trades, ['id', item.id]) ? true : false
         } else {
-          var selected = false
+          selected = false
         }
-        item.datetime = moment(item.datetime).format('DD.MM.YY HH:mm:ss')
-        item.price = item.price.toFixed(8)
-        item.fee = item.fee.cost.toFixed(8) + ' ' + item.fee.currency
-        return item
+        return {
+          id: item.id,
+          uuid: item.uuid,
+          order: item.order,
+          datetime: moment(item.datetime).format('DD.MM.YY HH:mm:ss'),
+          symbol: item.symbol,
+          type: item.type,
+          side: item.side,
+          price: item.price.toFixed(8),
+          amount: item.amount,
+          cost: item.cost,
+          fee: item.fee.cost.toFixed(8) + ' ' + item.fee.currency,
+          selected: selected
+        }
       })
     }
   }
