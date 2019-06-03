@@ -9,6 +9,9 @@ import Trade from './views/Trade/Trade.vue'
 import Balance from './views/Balance/Balance.vue'
 import Signals from './views/Signals/Signals.vue'
 import Signal from './views/Signal/Signal.vue'
+
+import SentimentsList from './core_components/Sentiments/List/List.vue'
+import SentimentsCoin from './core_components/Sentiments/Coin/Coin.vue'
 // import Chart from './components/Chart.vue'
 
 Vue.use(Router)
@@ -72,6 +75,20 @@ export default new Router({
       path: '/my_trades',
       name: 'MyTrades',
       component: MyTrades,
+      props: true,
+      meta: { reuse: false }
+    },
+    {
+      path: '/sentiments',
+      name: 'SentimentsList',
+      component: SentimentsList,
+      props: true,
+      meta: { reuse: false }
+    },
+    {
+      path: '/sentiments/:id',
+      name: 'SentimentsCoin',
+      component: SentimentsCoin,
       props: true,
       meta: { reuse: false }
     },

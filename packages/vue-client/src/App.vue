@@ -244,10 +244,12 @@ body
       i
         padding: 9px 16px
         cursor: pointer
+
   // align-items: center
 .aside
   .section+.section
     border-top: 1px solid rgba(0, 0, 0, 0.12)
+
 
 .title
   display: flex

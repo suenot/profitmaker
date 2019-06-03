@@ -50,7 +50,7 @@ var momentDurationFormatSetup = require("moment-duration-format")
 momentDurationFormatSetup(moment)
 
 Vue.filter('commas', function (value) {
-  if (!value) return ''
+  if (value === undefined) return ''
   if (Array.isArray(value)) {
     return value.join(', ')
   } else {
@@ -59,12 +59,12 @@ Vue.filter('commas', function (value) {
 })
 
 Vue.filter('toFixed', function (value, n) {
-  if (!value) return ''
+  if (value === undefined) return ''
   return value.toFixed(n)
 })
 
 Vue.filter('fromNow', function (value, n) {
-  if (!value) return ''
+  if (value === undefined) return ''
   return moment(value).fromNow()
 })
 
@@ -74,7 +74,7 @@ Vue.filter('duration', function (value) {
 })
 
 Vue.filter('moment', function (value, type) {
-  if (!value) return ''
+  if (value === undefined) return ''
   if (type === 'default') return moment(value).format()
   if (type === 'dmyhms') return moment(value).format('DD:MM:YY hh:mm:ss')
   if (type === 'hms') return moment(value).format('hh:mm:ss')
