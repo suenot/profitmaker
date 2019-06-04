@@ -25,7 +25,7 @@
       </el-tooltip>
       <el-tooltip content="Profile" placement="right">
         <li v-if="kupiUser && kupiUser.picture && kupiUser.picture.data && kupiUser.picture.data.url" @click="showProfile()" class="avatar"><img :src="avatar"></li>
-        <li v-else @click="showProfile()"><img src="/img/widgets/051-user.svg"></li>
+        <li v-else @click="showProfile()"><img src="/img/widgets/user.svg"></li>
       </el-tooltip>
       <el-tooltip content="User" placement="right">
       </el-tooltip>
