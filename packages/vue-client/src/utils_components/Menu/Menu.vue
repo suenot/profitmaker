@@ -10,6 +10,9 @@
       <el-tooltip content="Accounting" placement="right">
         <router-link tag="li" to="/deals"><img src="/img/widgets/accounting.svg"></router-link>
       </el-tooltip>
+      <el-tooltip content="Sentiments" placement="right">
+        <router-link tag="li" to="/sentiments/btc"><img src="/img/widgets/sentiments.svg"></router-link>
+      </el-tooltip>
       <!-- <el-tooltip content="Signals" placement="right">
         <router-link tag="li" to="/signals"><img src="/img/widgets/021-order.svg"></router-link>
       </el-tooltip> -->
