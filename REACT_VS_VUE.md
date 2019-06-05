@@ -17,3 +17,4 @@
 | Selector stock/pair | Change in widgets by color group | Change in all widgets |
 | Electron app | - | Alpha version |
 | Accounting | - | Alpha version |
+| Sentiments | - | Alpha version |
