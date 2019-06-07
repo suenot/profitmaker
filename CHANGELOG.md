@@ -1,5 +1,9 @@
 # Changelogs
 
+## vue [0.3.0](https://github.com/kupi-network/kupi-terminal/commit/6369561c9c4dd86d2409e16bb18f2bd3987aeac2) (29 May 2019)
+
+- Accounting alpha (data only in localstorage)
+
 ## [0.6.0](https://github.com/kupi-network/kupi-terminal/commit/8672eb94d883efed5aa689cca8bac4ba9d7c3797) (7 May 2019)
 
 - Change structure to monorepo
