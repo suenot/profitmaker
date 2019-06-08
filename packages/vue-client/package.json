@@ -1,7 +1,7 @@
 {
   "name": "@kupi/vue-client",
   "productName": "Kupi terminal",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
