@@ -70,7 +70,8 @@
     "react-stockcharts": "0.7.8",
     "react-tooltip": "3.9.0",
     "resolve": "1.8.1",
-    "sass-loader": "7.1.0",
+    "sass": "^1.21.0",
+    "sass-loader": "^7.1.0",
     "style-loader": "0.23.0",
     "terser-webpack-plugin": "1.1.0",
     "url-loader": "1.1.1",
@@ -81,6 +82,9 @@
     "workbox-webpack-plugin": "3.6.3"
   },
   "devDependencies": {},
+  "resolutions": {
+    "node-sass": "npm:sass"
+  },
   "scripts": {
     "start": "HOST=127.0.0.1 PORT=8041 node scripts/start.js",
     "docker": "DOCKER=DOCKER HOST=0.0.0.0 PORT=8041 node scripts/start.js",
