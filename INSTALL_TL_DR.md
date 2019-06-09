@@ -1,4 +1,4 @@
-# Install with docker
+# Install TL;DR
 
 - Install [docker](https://www.docker.com/)
 - Install [nodejs](https://nodejs.org/en/)
@@ -11,21 +11,7 @@
   ```
   yarn
   ```
-- Build and run containers
-  - for server+mongo version (react or vue need run separately)
-  ```
-  docker-compose up
-  ```
-  - for express+mongo+react version (in development, not ready)
-  ```
-  docker-compose -f docker-compose-react.yml up
-  ```
-  - for express+mongo+vue version (vue frontend not ready)
+- Build and run containers (mongo+express_server+vue_client)
   ```
   docker-compose -f docker-compose-vue.yml up
   ```
-  - for mongo
-  ```
-  docker-compose -f docker-compose-mongo.yml up
-  ```
-- Open ```http://localhost:8080``` for vue-client or ```http://localhost:8041``` for react-client

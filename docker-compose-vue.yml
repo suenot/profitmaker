@@ -18,8 +18,8 @@ services:
       - 127.0.0.1:8080:8080
     volumes:
       - ./:/app
-    working_dir: /app/packages/vue-client
-    command: sh -c 'yarn && yarn start'
+    working_dir: /app
+    command: sh -c 'yarn vue:docker'
 
   kupi-server:
     image: node:8
@@ -31,5 +31,5 @@ services:
       - kupi-mongo
     ports:
       - 127.0.0.1:8040:8040
-    working_dir: /app/packages/express-server
-    command: sh -c 'yarn && yarn docker'
+    working_dir: /app
+    command: sh -c 'yarn server:docker'

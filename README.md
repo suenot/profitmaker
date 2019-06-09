@@ -50,7 +50,15 @@ THE SOFTWARE UNDER HEAVY DEVELOPMENT. PROVIDED "AS IS", WITHOUT WARRANTY OF ANY 
 
 ## Quick start
 
+<<<<<<< HEAD
 [Install manually](https://github.com/kupi-network/kupi-terminal/blob/master/INSTALL_MANUALLY.md)
+=======
+### [TL;DR](https://github.com/kupi-network/kupi-terminal/blob/master/INSTALL_TL_DR.md)
+
+### [Install with docker](https://github.com/kupi-network/kupi-terminal/blob/master/INSTALL_WITH_DOCKER.md)
+
+### [Install manually](https://github.com/kupi-network/kupi-terminal/blob/master/INSTALL_MANUALLY.md)
+>>>>>>> docker-compose
 
 If you had any problems with installing we can help in [voice/text Discrod chat](https://discord.gg/2PtuMAg)
 

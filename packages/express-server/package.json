@@ -39,10 +39,5 @@
     "nodemon": "^1.18.7",
     "sinon": "^7.3.2",
     "lerna": "3.13.2"
-  },
-  "workspaces": {
-    "packages": [
-      "utils/*"
-    ]
   }
 }
