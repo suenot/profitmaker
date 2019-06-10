@@ -21,35 +21,35 @@ Vue version: [https://vue.kupi.network/](https://vue.kupi.network/)
 
 ## Sponsored Promotion
 
-Want this place? Contact us: https://www.facebook.com/dexenot
+Want this place? Contact with [Eugen Soloviov](https://www.facebook.com/dexenot) 
 
 ![Placehodler](https://user-images.githubusercontent.com/1707/48204972-43569e00-e37c-11e8-9cf3-b86e3dc19ee9.png)
 
 ## Features
 
-- Open source
-- Your api keys stay on your machine, no need to send its anywhere
-- Customized with dashboards and widgets
-- Extendable with users modules
-- Free realtime API (Timeseries will be in immediate future)
-- Framework for creating trading bots
+-   Open source
+-   Your api keys stay on your machine, no need to send its anywhere
+-   Customized with dashboards and widgets
+-   Extendable with users modules
+-   Free realtime API (Timeseries will be in immediate future)
+-   Framework for creating trading bots
 
 ## Technologies
 
-- [React](https://github.com/facebook/react),
-[react-grid-layout](https://github.com/STRML/react-grid-layout),
-[material-ui](https://github.com/mui-org/material-ui)
-- [Vue](https://github.com/vuejs/vue),
-[vue-grid-layout](https://github.com/jbaysolutions/vue-grid-layout),
-[element](https://github.com/ElemeFE/element),
-[movue](https://github.com/nighca/movue),
-[v-charts](https://github.com/ElemeFE/v-charts)
-- [Mobx](https://github.com/mobxjs/mobx)
-- [Express](https://github.com/expressjs/express)
-- [Mongo](https://github.com/mongodb/mongo)
-- [CCXT](https://github.com/ccxt/ccxt)
-- [Flaticon](https://www.flaticon.com/)
-- [Echarts](https://github.com/apache/incubator-echarts)
+-   [React](https://github.com/facebook/react),
+-   [react-grid-layout](https://github.com/STRML/react-grid-layout),
+-   [material-ui](https://github.com/mui-org/material-ui)
+-   [Vue](https://github.com/vuejs/vue),
+-   [vue-grid-layout](https://github.com/jbaysolutions/vue-grid-layout),
+-   [element](https://github.com/ElemeFE/element),
+-   [movue](https://github.com/nighca/movue),
+-   v-charts](https://github.com/ElemeFE/v-charts)
+-   [Mobx](https://github.com/mobxjs/mobx)
+-   [Express](https://github.com/expressjs/express)
+-   [Mongo](https://github.com/mongodb/mongo)
+-   [CCXT](https://github.com/ccxt/ccxt)
+-   [Flaticon](https://www.flaticon.com/)
+-   [Echarts](https://github.com/apache/incubator-echarts)
 
 ## WARNING
 
@@ -106,11 +106,11 @@ Thank you!
 
 ## Team
 
-- Eugen Soloviov [github](https://github.com/suenot) [facebook](https://www.facebook.com/dexenot)
-- Sergey Soloviov [github](https://github.com/soloviofff)
-- Igor Korotin [github](https://github.com/markolofsen)
-- Vladimir Romanovich [github](https://github.com/ibnteo)
-- Alexander Plugari (adviser)
+-   Eugen Soloviov [github](https://github.com/suenot) [facebook](https://www.facebook.com/dexenot)
+-   Sergey Soloviov [github](https://github.com/soloviofff)
+-   Igor Korotin [github](https://github.com/markolofsen)
+-   Vladimir Romanovich [github](https://github.com/ibnteo)
+-   Alexander Plugari (adviser)
 
 ## Contact Us
 
