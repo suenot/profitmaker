@@ -3,6 +3,9 @@
   "version": "0.6.0",
   "private": true,
   "dependencies": {
+    "@kupi/calculateCoin": "*",
+    "@kupi/catchHead": "*",
+    "@kupi/sleep": "*",
     "assert": "^1.4.1",
     "async-each-series": "^1.1.0",
     "axios": "0.19.0",
@@ -12,6 +15,7 @@
     "ccxt": "1.18.385",
     "cookie-session": "^2.0.0-beta.3",
     "cors": "^2.8.4",
+    "crypto-js": "^3.1.9-1",
     "ethereumjs-abi": "^0.6.6",
     "ethereumjs-util": "^6.1.0",
     "express": "^4.15.4",
@@ -24,10 +28,7 @@
     "passport-local": "^1.0.0",
     "serialize-error": "^2.1.0",
     "signale": "^1.3.0",
-    "web3": "^1.0.0-beta.47",
-    "@kupi/sleep": "*",
-    "@kupi/catchHead": "*",
-    "@kupi/calculateCoin": "*"
+    "web3": "^1.0.0-beta.47"
   },
   "scripts": {
     "start": "../../node_modules/nodemon/bin/nodemon.js index.js",
@@ -36,8 +37,8 @@
   },
   "devDependencies": {
     "jest": "^23.6.0",
+    "lerna": "3.13.2",
     "nodemon": "^1.18.7",
-    "sinon": "^7.3.2",
-    "lerna": "3.13.2"
+    "sinon": "^7.3.2"
   }
 }
