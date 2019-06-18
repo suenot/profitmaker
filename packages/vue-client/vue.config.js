@@ -9,7 +9,7 @@ module.exports = {
         changeOrigin: true
       },
       '^/api': {
-        target: 'http://localhost:8051/',
+        target: 'http://kupi.network/api/',
         ws: true,
         changeOrigin: true
       },
