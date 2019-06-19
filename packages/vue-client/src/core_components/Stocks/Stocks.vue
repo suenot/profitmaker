@@ -133,17 +133,19 @@ export default {
           rateLimit: stock.rateLimit || 3000
         })
         for (let account of Object.values(AccountsStore.accounts)) {
-          if (account.stock.toUpperCase() === stock.name) {
-            data.push({
-              id: `${stock.name}--${account.id}`,
-              name: stock.name,
-              accountId: account.id,
-              accountName: account.name,
-              kupi: stock.kupi || false,
-              ccxt: stock.ccxt || false,
-              rateLimit: stock.rateLimit || 3000
-            })
-          }
+          try {
+            if (account.stock.toUpperCase() === stock.name) {
+              data.push({
+                id: `${stock.name}--${account.id}`,
+                name: stock.name,
+                accountId: account.id,
+                accountName: account.name,
+                kupi: stock.kupi || false,
+                ccxt: stock.ccxt || false,
+                rateLimit: stock.rateLimit || 3000
+              })
+            }
+          } catch(err) {}
         }
       }
       return data
