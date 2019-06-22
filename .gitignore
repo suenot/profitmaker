@@ -9,10 +9,10 @@
 /server/private/
 
 # user files
-server/user_components/
-client/src/user_components/
-vue-client/src/user_components/
-react-client/src/user_components/
+packages/user/
+packages/express-server/user_components/
+packages/react-client/src/user_components/
+packages/vue-client/src/user_components/
 
 # dependencies
 node_modules/
