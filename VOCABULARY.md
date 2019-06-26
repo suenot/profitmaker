@@ -43,7 +43,7 @@ order is an exposed / realized / partially_realized position on the stock
 
 **kupi_api** – api kupi_server
 
-### Client
+### CCXT
 
 **ccxt** – aggregator library, to work with a large number of exchanges in the same style
 
