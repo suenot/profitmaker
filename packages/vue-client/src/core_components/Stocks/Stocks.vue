@@ -5,8 +5,12 @@
       <tbody>
         <tr v-for="stock in stocksComputed" :key="stock.id" @click="setStock(stock)">
           <td class="stock-cell">
-            <span>{{stock.name}}</span>
-            <span class="muted">{{stock.accountName}}</span>
+            <span class="left">{{stock.name}}</span>
+            <div class="right">
+              <span class="muted" v-if="stock.accountName">{{stock.accountName}}</span>
+              <span :class="stock.pipe === 'ccxt' ? 'active' : ''">ccxt</span>
+              <span :class="stock.pipe === 'kupi' ? 'active' : ''">kupi</span>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -15,8 +19,8 @@
 </template>
 
 <script>
-import Store from '../../stores/Store'
-import AccountsStore from '../../stores/AccountsStore'
+import Store from '@/stores/Store'
+import AccountsStore from '@/stores/AccountsStore'
 import _ from 'lodash'
 import axios from 'axios'
 export default {
@@ -130,7 +134,8 @@ export default {
           name: stock.name,
           kupi: stock.kupi || false,
           ccxt: stock.ccxt || false,
-          rateLimit: stock.rateLimit || 3000
+          rateLimit: stock.rateLimit || 3000,
+          pipe: 'kupi'
         })
         for (let account of Object.values(AccountsStore.accounts)) {
           try {
@@ -142,7 +147,8 @@ export default {
                 accountName: account.name,
                 kupi: stock.kupi || false,
                 ccxt: stock.ccxt || false,
-                rateLimit: stock.rateLimit || 3000
+                rateLimit: stock.rateLimit || 3000,
+                pipe: 'kupi'
               })
             }
           } catch(err) {}
@@ -158,5 +164,15 @@ export default {
 .stock-cell
   display: flex
   justify-content: space-between
+  padding: 0
+  .left
+    padding: 5px
+  .right
+    display: flex
+    span
+      padding: 5px
+      border-left: 1px solid #ddd
+      &.active
+        background: #eee
 </style>
 
