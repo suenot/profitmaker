@@ -8,7 +8,8 @@ const getStocks = function() {
       id: stock,
       name: stock.toUpperCase(),
       status: 'active',
-      rateLimit: global.CCXT[`${stock}--public`].rateLimit
+      rateLimit: global.CCXT[`${stock}--public`].rateLimit,
+      channels: ['ccxt']
     }
   })
   return stocks

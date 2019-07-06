@@ -8,8 +8,7 @@
             <span class="left">{{stock.name}}</span>
             <div class="right">
               <span class="muted" v-if="stock.accountName">{{stock.accountName}}</span>
-              <span :class="stock.pipe === 'ccxt' ? 'active' : ''">ccxt</span>
-              <span :class="stock.pipe === 'kupi' ? 'active' : ''">kupi</span>
+              <span class="muted" v-if="stock.channels && stock.channels.length > 0">{{stock.channels[0]}}</span>
             </div>
           </td>
         </tr>
@@ -32,7 +31,7 @@ export default {
       timer: 1000,
       serverBackend: 'https://kupi.network',
       filter: '',
-      interval: '',
+      interval: ''
     }
   },
   props: ['widget'],
@@ -129,26 +128,24 @@ export default {
         return stock.name.toLowerCase().indexOf( this.filter.toLowerCase() ) !== -1
       })
       for (let stock of stocks) {
+        // TODO: вставлять как есть, а не заново собирать объект
         data.push({
           id: stock.name,
           name: stock.name,
-          kupi: stock.kupi || false,
-          ccxt: stock.ccxt || false,
           rateLimit: stock.rateLimit || 3000,
-          pipe: 'kupi'
+          channels: stock.channels,
         })
         for (let account of Object.values(AccountsStore.accounts)) {
           try {
             if (account.stock.toUpperCase() === stock.name) {
+              // TODO: вставлять как есть, а не заново собирать объект
               data.push({
                 id: `${stock.name}--${account.id}`,
                 name: stock.name,
                 accountId: account.id,
                 accountName: account.name,
-                kupi: stock.kupi || false,
-                ccxt: stock.ccxt || false,
                 rateLimit: stock.rateLimit || 3000,
-                pipe: 'kupi'
+                channels: ['ccxt'], // TODO: убрать костыль
               })
             }
           } catch(err) {}
@@ -174,5 +171,11 @@ export default {
       border-left: 1px solid #ddd
       &.active
         background: #eee
+    select
+      padding: 5px
+      border-left: 1px solid #ddd
+      border-radius: 0
+      border-bottom: 0px solid #ddd
+      border-top: 0px solid #ddd
 </style>
 
