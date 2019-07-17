@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
   res.json('ccxt api')
 })
 
-router.get(`/:stocks/`, function (req, res) {
+router.get(`/stocks/`, function (req, res) {
   try {
     res.json(getStocks())
   } catch(err) {

@@ -5,8 +5,11 @@
       <tbody>
         <tr v-for="stock in stocksComputed" :key="stock.id" @click="setStock(stock)">
           <td class="stock-cell">
-            <span>{{stock.name}}</span>
-            <span class="muted">{{stock.accountName}}</span>
+            <span class="left">{{stock.name}}</span>
+            <div class="right">
+              <span class="muted" v-if="stock.accountName">{{stock.accountName}}</span>
+              <span class="muted" v-if="stock.channels && stock.channels.length > 0">{{stock.channels[0]}}</span>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -15,8 +18,8 @@
 </template>
 
 <script>
-import Store from '../../stores/Store'
-import AccountsStore from '../../stores/AccountsStore'
+import Store from '@/stores/Store'
+import AccountsStore from '@/stores/AccountsStore'
 import _ from 'lodash'
 import axios from 'axios'
 export default {
@@ -28,7 +31,7 @@ export default {
       timer: 1000,
       serverBackend: 'https://kupi.network',
       filter: '',
-      interval: '',
+      interval: ''
     }
   },
   props: ['widget'],
@@ -125,24 +128,24 @@ export default {
         return stock.name.toLowerCase().indexOf( this.filter.toLowerCase() ) !== -1
       })
       for (let stock of stocks) {
+        // TODO: вставлять как есть, а не заново собирать объект
         data.push({
           id: stock.name,
           name: stock.name,
-          kupi: stock.kupi || false,
-          ccxt: stock.ccxt || false,
-          rateLimit: stock.rateLimit || 3000
+          rateLimit: stock.rateLimit || 3000,
+          channels: stock.channels,
         })
         for (let account of Object.values(AccountsStore.accounts)) {
           try {
             if (account.stock.toUpperCase() === stock.name) {
+              // TODO: вставлять как есть, а не заново собирать объект
               data.push({
                 id: `${stock.name}--${account.id}`,
                 name: stock.name,
                 accountId: account.id,
                 accountName: account.name,
-                kupi: stock.kupi || false,
-                ccxt: stock.ccxt || false,
-                rateLimit: stock.rateLimit || 3000
+                rateLimit: stock.rateLimit || 3000,
+                channels: ['ccxt'], // TODO: убрать костыль
               })
             }
           } catch(err) {}
@@ -158,5 +161,21 @@ export default {
 .stock-cell
   display: flex
   justify-content: space-between
+  padding: 0
+  .left
+    padding: 5px
+  .right
+    display: flex
+    span
+      padding: 5px
+      border-left: 1px solid #ddd
+      &.active
+        background: #eee
+    select
+      padding: 5px
+      border-left: 1px solid #ddd
+      border-radius: 0
+      border-bottom: 0px solid #ddd
+      border-top: 0px solid #ddd
 </style>
 
