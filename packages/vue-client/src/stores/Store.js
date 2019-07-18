@@ -12,6 +12,7 @@ class Store {
     trunk.init().then(() => {
       if ( _.isEmpty(this.blocks) ) {
         this.blocks = {
+          Selector: require('@/core_components/Selector/config.js').default[0],
           Orders: require('@/core_components/Orders/config.js').default,
           Trades: require('@/core_components/Trades/config.js').default,
           Candles: require('@/core_components/Candles/config.js').default,

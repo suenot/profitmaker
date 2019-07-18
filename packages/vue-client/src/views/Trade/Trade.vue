@@ -1,12 +1,12 @@
 <template>
   <div>
     <div class="main-container">
-      <div class="left-column">
-        <div class="orders-wrapper section">
+      <div class="left-column section">
+        <div class="orders-wrapper">
           <Widget :widget="blocks.Orders" />
         </div>
       </div>
-      <div class="middle-column">
+      <div class="middle-column section">
         <div class="candles-wrapper">
           <Widget :widget="blocks.Candles"/>
         </div>
@@ -19,8 +19,11 @@
           </div>
         </div>
       </div>
-      <div class="right-column">
-        <div class="trades-wrapper section">
+      <div class="right-column section">
+        <div class="selector-wrapper">
+          <Widget :widget="blocks.Selector" />
+        </div>
+        <div class="trades-wrapper">
           <Widget :widget="blocks.Trades" />
         </div>
       </div>
@@ -98,8 +101,8 @@ export default {
 
 .section
   border: 1px solid #d9d9d9
-  margin: -1px
-  background: white
-  overflow-y: auto
-  overflow-x: hidden
+  // margin: -1px
+  // background: white
+  // overflow-y: auto
+  // overflow-x: hidden
 </style>
