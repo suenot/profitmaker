@@ -63,9 +63,9 @@ export default {
   flex-direction: column
   heigth: 100vh
 .right-column
-  flex: 0 0 280px
-  max-width: 280px
-  min-width: 280px
+  flex: 0 0 360px
+  max-width: 360px
+  min-width: 360px
 
 .orders-wrapper
   height: calc(100vh + 2px)
