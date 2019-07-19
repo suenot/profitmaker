@@ -52,6 +52,7 @@ momentDurationFormatSetup(moment)
 Vue.filter('commas', function (value) {
   if (value === undefined) return ''
   if (Array.isArray(value)) {
+    if (value.length === 0) return ''
     return value.join(', ')
   } else {
     return value
@@ -60,6 +61,7 @@ Vue.filter('commas', function (value) {
 
 Vue.filter('toFixed', function (value, n) {
   if (value === undefined) return ''
+  if (typeof(value) === 'string') return value
   return value.toFixed(n)
 })
 

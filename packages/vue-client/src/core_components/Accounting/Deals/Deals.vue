@@ -25,7 +25,7 @@
       </thead>
       <tbody>
         <tr v-for="deal in deals" :key="deal.id">
-          <td>{{deal.name}}</td>
+          <td>{{deal.name || ''}}</td>
           <td>{{deal.stocks | commas}}</td>
           <td>{{deal.coins | commas}}</td>
           <td>{{deal.pairs | commas}}</td>

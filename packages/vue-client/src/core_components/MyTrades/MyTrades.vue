@@ -20,9 +20,9 @@
           <td>{{item.symbol}}</td>
           <td>{{item.type}}</td>
           <td>{{item.side}}</td>
-          <td>{{item.price}}</td>
-          <td>{{item.amount}}</td>
-          <td>{{item.fee}}</td>
+          <td>{{item.price | toFixed(8)}}</td>
+          <td>{{item.amount | toFixed(8)}}</td>
+          <td>{{item.fee | toFixed(8)}}</td>
         </tr>
       </tbody>
     </table>

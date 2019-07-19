@@ -48,7 +48,11 @@ class AccountingStore {
   }
   @observable active_deal = 'test_id'
   @computed get active_deal_trades_length() {
-    return this.deals[this.active_deal].trades.length
+    try {
+      return this.deals[this.active_deal].trades.length
+    } catch(err) {
+      return 0
+    }
   }
 
   @computed get deal() {

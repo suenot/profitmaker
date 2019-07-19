@@ -25,10 +25,10 @@
           <td>{{order.data.side || ""}}</td>
           <td>{{order.data.symbol || ""}}</td>
           <td>{{order.data.datetime || ""}}</td>
-          <td>{{order.data.price || ""}}</td>
-          <td>{{order.data.amount || ""}}</td>
-          <td>{{order.data.filled || ""}}</td>
-          <td>{{order.data.remaining || ""}}</td>
+          <td>{{order.data.price | toFixed(8)}}</td>
+          <td>{{order.data.amount | toFixed(8)}}</td>
+          <td>{{order.data.filled | toFixed(8)}}</td>
+          <td>{{order.data.remaining | toFixed(8)}}</td>
           <td>
             {{order.data.lastTradeTimestamp}}
           </td>
