@@ -5,7 +5,7 @@ import _ from 'lodash'
 // import axios from 'axios'
 
 
-@version(4)
+@version(5)
 class Store {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'store' })
@@ -13,11 +13,11 @@ class Store {
       if ( _.isEmpty(this.blocks) ) {
         this.blocks = {
           Selector: require('@/core_components/Selector/config.js').default[0],
-          Orders: require('@/core_components/Orders/config.js').default,
-          Trades: require('@/core_components/Trades/config.js').default,
-          Candles: require('@/core_components/Candles/config.js').default,
-          MyTrades: require('@/core_components/MyTrades/config.js').default,
-          OpenOrders: require('@/core_components/OpenOrders/config.js').default,
+          Orders: require('@/core_components/Orders/config.js').default[0],
+          Trades: require('@/core_components/Trades/config.js').default[0],
+          Candles: require('@/core_components/Candles/config.js').default[0],
+          MyTrades: require('@/core_components/MyTrades/config.js').default[0],
+          OpenOrders: require('@/core_components/OpenOrders/config.js').default[0],
           BalanceTable: require('@/core_components/Balance/config.js').default[0],
           BalancePie: require('@/core_components/Balance/config.js').default[1],
           BalanceHistory: require('@/core_components/Balance/config.js').default[2],

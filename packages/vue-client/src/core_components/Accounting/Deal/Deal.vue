@@ -18,10 +18,10 @@
     <table class="table-header">
       <tr>
         <td colspan="2">
-          <el-input placeholder="Name" :value="deal.name" @input="changeDealParam('name', $event)"></el-input>
+          <el-input placeholder="Name" :value="deal.name || ''" @input="changeDealParam('name', $event)"></el-input>
         </td>
         <td colspan="5">
-          <el-input type="textarea" :rows=2 :value="deal.note" @input="changeDealParam('note', $event)"></el-input>
+          <el-input type="textarea" :rows=2 :value="deal.note || ''" @input="changeDealParam('note', $event)"></el-input>
         </td>
       </tr>
       <tr>
@@ -76,8 +76,6 @@ import { toJS } from 'mobx'
 export default {
   data() {
     return {
-      name: '',
-      note: ''
     }
   },
   props: ['widget'],

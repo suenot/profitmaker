@@ -14,7 +14,7 @@
           <td :style="trade.side === 'buy'?{color: '#ea0371'}:{color: '#83b327'}">
             <span>{{trade.price | toFixed(8)}}</span>
           </td>
-          <td>{{trade.amount}}</td>
+          <td>{{trade.amount | toFixed(8)}}</td>
           <td>{{trade.datetime}}</td>
         </tr>
       </tbody>
