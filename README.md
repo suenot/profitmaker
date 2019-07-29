@@ -43,7 +43,7 @@ Want this place? Contact with [Eugen Soloviov](https://www.facebook.com/dexenot)
 -   [vue-grid-layout](https://github.com/jbaysolutions/vue-grid-layout),
 -   [element](https://github.com/ElemeFE/element),
 -   [movue](https://github.com/nighca/movue),
--   v-charts](https://github.com/ElemeFE/v-charts)
+-   [v-charts](https://github.com/ElemeFE/v-charts)
 -   [Mobx](https://github.com/mobxjs/mobx)
 -   [Express](https://github.com/expressjs/express)
 -   [Mongo](https://github.com/mongodb/mongo)
