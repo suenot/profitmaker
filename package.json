@@ -28,7 +28,9 @@
     "vue:postinstall": "yarn workspace @kupi/vue-client postinstall",
     "vue:postuninstall": "yarn workspace @kupi/vue-client postuninstall",
     "vue:test:unit": "yarn workspace @kupi/vue-client test:unit",
-    "vue:test": "yarn workspace @kupi/vue-client test"
+    "vue:test": "yarn workspace @kupi/vue-client test",
+    "mongo:start": "docker-compose -f docker-compose-mongo.yml up",
+    "mongo:stop": "docker-compose -f docker-compose-mongo.yml down"
   },
   "dependencies": {
     "codecov": "^3.2.0",
