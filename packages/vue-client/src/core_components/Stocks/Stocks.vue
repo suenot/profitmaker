@@ -145,7 +145,7 @@ export default {
                 accountId: account.id,
                 accountName: account.name,
                 rateLimit: stock.rateLimit || 3000,
-                channels: ['ccxt'], // TODO: убрать костыль
+                channels: ['kupi'], // TODO: убрать костыль
               })
             }
           } catch(err) {}

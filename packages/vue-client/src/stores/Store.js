@@ -38,6 +38,7 @@ class Store {
   @observable color = '#fff' // TODO
 
   @observable stock = 'BINANCE'
+  @observable channels = ['kupi']
   @observable pair = 'ETH_BTC'
   @observable accountId = undefined
   @observable accountName = undefined
@@ -47,6 +48,7 @@ class Store {
 
   @action setStock(stock) {
     this.stock = stock.name
+    this.channels = stock.channels
     this.accountId = stock.accountId
     this.accountName = stock.accountName
   }

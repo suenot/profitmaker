@@ -2,7 +2,7 @@ import axios from 'axios'
 import _ from 'lodash'
 import template from 'es6-template-strings'
 import Store from '@/stores/Store'
-// import { Notification } from 'element-ui'
+import { toJS } from 'mobx'
 
 export const fetchData = {
   data () {
@@ -18,6 +18,7 @@ export const fetchData = {
   props: ['widget'],
   fromMobx: {
     stock: { get() { return Store.stock } },
+    channels: { get() { return toJS(Store.channels) } },
     pair: { get() { return Store.pair } },
     accountId: { get() { return Store.accountId } },
   },
@@ -67,22 +68,7 @@ export const fetchData = {
         { serverBackend, stock, stockLowerCase, pair, timeframe, accountId, type }
       )
     },
-    async fetch_kupi(url) {
-      return axios.get(url)
-      .then((response) => {
-        this.$parent.notification = {}
-      return response.data
-      })
-      .catch(() => {
-        // this.tube = 'ccxt'
-        this.$parent.notification = {
-          type: "alert",
-          msg: "Can't get data",
-        }
-        return []
-      })
-    },
-    async fetch_ccxt(url) {
+    async _fetch(url) {
       return axios.get(url)
       .then((response) => {
         this.$parent.notification = {}
@@ -98,34 +84,12 @@ export const fetchData = {
     },
     async fetch() {
       var data
-      // TODO: пока заглушка, нужно брать настройки из стора
-      if (this.template_kupi === undefined) {
-        var url_ccxt = this.genUrl(this.template_ccxt)
-        data = await this.fetch_ccxt(url_ccxt)
+      if (this.template_kupi === undefined || this.channels[0] === 'ccxt') {
+        var url = this.genUrl(this.template_ccxt)
       } else {
-        var url_kupi = this.genUrl(this.template_kupi)
-        data = await this.fetch_kupi(url_kupi)
+        var url = this.genUrl(this.template_kupi)
       }
-      
-
-
-      // if (this.tube === 'ccxt') {
-      //   data = await this.fetch_ccxt(url_ccxt)
-      // } else {
-      //   if (this.firstFetch) {
-      //     data = await Promise.race([
-      //       this.fetch_ccxt(url_ccxt),
-      //       this.fetch_kupi(url_kupi)
-      //     ])
-      //     this.firstFetch = false
-      //   } else {
-      //     data = await this.fetch_kupi(url_kupi)
-      //   }
-      // }
-
-
-      // if (this.hash === JSON.stringify(data)) return true
-      // this.hash = JSON.stringify(data)
+      data = await this._fetch(url)
       this.data = data
     }
   },
