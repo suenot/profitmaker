@@ -15,8 +15,10 @@ export default [
     timeframe: "1m",
     library: "react-stockcharts",
     libraries: ["react-stockcharts", "v-charts"],
-    // stock: undefined,
-    // pair: undefined,
+    stock: undefined,
+    pair: undefined,
+    channel: "default",
+    channels: ["default", "kupi", "ccxt"],
     categories: ["Trades", "Candles"],
   }
 ]

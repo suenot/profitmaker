@@ -1,21 +1,21 @@
 export default [
   {
-    name: "Trades",
-    component: "Trades",
+    name: "Stocks",
+    component: "Stocks",
     settings: "",
     settingsWidth: 300,
-    img: "core_components/Trades/Trades.png",
-    title: "Trades",
+    img: "core_components/Stocks/Stocks.png",
+    title: "Stocks",
     customTitle: "",
-    description: "People trades",
+    description: "",
     author: "#core",
     authorLink: "https://github.com/kupi-network/kupi-terminal",
     source: "",
-    demo: false,
     stock: undefined,
     pair: undefined,
     channel: "default",
     channels: ["default", "kupi", "ccxt"],
-    categories: ["Trades"],
+    demo: false,
+    categories: ["Stocks"],
   }
 ]

@@ -14,8 +14,8 @@ export default [
     demo: true,
     type: "now",
     stock: "TOTAL",
-    // stock: undefined,
-    // pair: undefined,
+    channel: "default",
+    channels: ["default", "ccxt"],
     categories: ["Private api", "Balance"],
   },
   {
@@ -33,8 +33,8 @@ export default [
     demo: true,
     type: "now",
     stock: "TOTAL",
-    // stock: undefined,
-    // pair: undefined,
+    channel: "default",
+    channels: ["default", "ccxt"],
     categories: ["Private api", "Balance"],
   },
   {
@@ -52,8 +52,8 @@ export default [
     demo: true,
     type: "history",
     stock: "TOTAL",
-    // stock: undefined,
-    // pair: undefined,
+    channel: "default",
+    channels: ["default", "ccxt"],
     categories: ["Private api", "Balance"],
   }
 ]

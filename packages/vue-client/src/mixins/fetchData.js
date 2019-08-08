@@ -72,9 +72,11 @@ export const fetchData = {
       return axios.get(url)
       .then((response) => {
         this.$parent.notification = {}
+        // console.log(response.data)
         return response.data
       })
       .catch((err) => {
+        // console.warn(err)
         this.$parent.notification = {
           type: "alert",
           msg: "Can't get data",
@@ -83,14 +85,21 @@ export const fetchData = {
       })
     },
     async fetch() {
-      var data
-      if (this.template_kupi === undefined || this.channels[0] === 'ccxt') {
-        var url = this.genUrl(this.template_ccxt)
-      } else {
-        var url = this.genUrl(this.template_kupi)
-      }
-      data = await this._fetch(url)
-      this.data = data
+      try {
+        var data
+        var url
+        if (this.widget.channel === undefined || this.widget.channel === 'default') {
+          if (this.template_kupi === undefined || this.channels[0] === 'ccxt') {
+            url = this.genUrl(this.template_ccxt)
+          } else {
+            url = this.genUrl(this.template_kupi)
+          }
+        } else {
+          url = this.genUrl(this[`template_${this.widget.channel}`])
+        }
+        data = await this._fetch(url)
+        this.data = data
+      } catch(err) {console.log(err)}
     }
   },
 }

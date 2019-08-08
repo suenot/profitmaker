@@ -1,21 +1,21 @@
 export default [
   {
-    name: "OpenOrders",
-    component: "OpenOrders",
+    name: "Create order",
+    component: "Create order",
     settings: "",
     settingsWidth: 300,
-    img: "core_components/OpenOrders/OpenOrders.png",
-    title: "Open orders",
+    img: "core_components/CreateOrder/CreateOrder.png",
+    title: "Create order",
     customTitle: "",
-    description: "My open orders",
+    description: "",
     author: "#core",
     authorLink: "https://github.com/kupi-network/kupi-terminal",
     source: "",
-    demo: true,
+    demo: false,
     stock: undefined,
     pair: undefined,
     channel: "default",
     channels: ["default", "ccxt"],
-    categories: ["Private api", "Orders"],
+    categories: ["Trades", "Candles"],
   }
 ]

@@ -12,8 +12,10 @@ export default [
     authorLink: "https://github.com/kupi-network/kupi-terminal",
     source: "",
     demo: true,
-    // stock: undefined,
-    // pair: undefined,
+    stock: undefined,
+    pair: undefined,
+    channel: "default",
+    channels: ["default", "ccxt"],
     categories: ["Private api", "Trades"],
   }
 ]

@@ -43,6 +43,18 @@
       </el-select>
     </div>
 
+    <div class="p-16" v-if="block.channel !== undefined">
+      <div class="sub-title">Channel</div>
+      <el-select :value="block.channel" placeholder="Library" @change="setData($event, 'channel')">
+        <el-option
+          v-for="channel in block.channels"
+          :key="channel"
+          :label="channel"
+          :value="channel">
+        </el-option>
+      </el-select>
+    </div>
+
   </div>
 </template>
 

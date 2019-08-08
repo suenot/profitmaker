@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 // import Dashboard from './views/Dashboard/Dashboard.vue'
 // import Accounting from './views/Accounting/Accounting.vue'
+import Widget from './utils_components/Widget/Widget.vue'
 import Deals from './core_components/Accounting/Deals/Deals.vue'
 import Deal from './core_components/Accounting/Deal/Deal.vue'
 import MyTrades from './core_components/Accounting/MyTrades/MyTrades.vue'
@@ -89,6 +90,13 @@ export default new Router({
       path: '/sentiments/:id',
       name: 'SentimentsCoin',
       component: SentimentsCoin,
+      props: true,
+      meta: { reuse: false }
+    },
+    {
+      path: '/widget/:id',
+      name: 'Widget',
+      component: Widget,
       props: true,
       meta: { reuse: false }
     },
