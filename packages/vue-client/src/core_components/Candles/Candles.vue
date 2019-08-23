@@ -1,5 +1,5 @@
 <template>
-  <div v-loading="data.length < 0" class="candles">
+  <div v-loading="data.length < 0 && height > 0" class="candles" ref="box">
     <CandlesVchart v-if="widget.library === 'v-charts'" :data="data" :widget="widget" :height="height" />
     <ReactStockcharts v-if="widget.library === 'react-stockcharts' && reactStockChartsRender" type="hybrid" :data="reactStockChartsComputed" :_data="widget" :height="height" />
   </div>
@@ -14,7 +14,7 @@ import _ from 'lodash'
 export default {
   data () {
     return {
-      height: 471,
+      height: 0,
       demoData: require('./data.js').default,
       template_kupi: '${serverBackend}/api/${stockLowerCase}/candles/${pair}/${timeframe}',
       template_ccxt: '/user-api/ccxt/${stockLowerCase}/candles/${pair}/${timeframe}',
@@ -23,10 +23,10 @@ export default {
     }
   },
   mixins: [fetchData],
-  // fromMobx: {
-  //   stock: { get() { return Store.stock } },
-  //   pair: { get() { return Store.pair } },
-  // },
+  mounted() {
+      var height = this.$refs.box.parentElement.parentElement.parentElement.clientHeight
+      this.height = height - 34
+  },
   computed: {
     reactStockChartsComputed() {
       var data = _.cloneDeep(this.data)

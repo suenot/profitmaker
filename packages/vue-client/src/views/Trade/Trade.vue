@@ -10,12 +10,12 @@
         <div class="candles-wrapper">
           <Widget :widget="blocks.Candles"/>
         </div>
-        <div class="info-wrapper">
-          <div class="my-trades-wrapper">
-            <Widget :widget="blocks.MyTrades" />
+        <div class="create-order-wrapper">
+          <div class="buy-wrapper">
+            <CreateOrder type="buy" />
           </div>
-          <div class="open-orders-wrapper">
-            <Widget :widget="blocks.OpenOrders" />
+          <div class="sell-wrapper">
+            <CreateOrder type="sell" />
           </div>
         </div>
       </div>
@@ -25,6 +25,16 @@
         </div>
         <div class="trades-wrapper">
           <Widget :widget="blocks.Trades" />
+        </div>
+      </div>
+    </div>
+    <div class="bottom-container">
+      <div class="info-wrapper">
+        <div class="open-orders-wrapper">
+          <Widget :widget="blocks.OpenOrders" />
+        </div>
+        <div class="my-trades-wrapper">
+          <Widget :widget="blocks.MyTrades" />
         </div>
       </div>
     </div>
@@ -70,23 +80,24 @@ export default {
   max-width: 360px
   min-width: 360px
 
+.create-order-wrapper
+  display: flex
+
 .orders-wrapper
   height: calc(100vh + 2px)
 .candles-wrapper
-  flex: 0 0 505px
-  height: 505px
-  min-height: 505px
-  // border-bottom: 1px solid #d9d9d9
+  flex: 1 0 auto
+
+.bottom-container
+  height: 800px
+
 .info-wrapper
-  flex: 0 0 calc(100vh - 505px)
   display: flex
   flex-direction: column
-
-.trades-wrapper
-  height: calc(100vh + 2px)
+  height: 100%
 
 .open-orders-wrapper, .my-trades-wrapper
-  flex: 0 1 50%
+  flex: 0 0 50%
   display: flex
   flex-direction: column
   .widget
@@ -97,12 +108,7 @@ export default {
     .widget-body
       height: auto
       flex: 0 1 auto
-      height: calc( (100vh - 505px - 66px) / 2)
 
 .section
   border: 1px solid #d9d9d9
-  // margin: -1px
-  // background: white
-  // overflow-y: auto
-  // overflow-x: hidden
 </style>

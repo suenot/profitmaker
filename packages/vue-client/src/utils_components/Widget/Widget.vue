@@ -9,7 +9,6 @@
       </div>
     </div>
     <div class="widget-body">
-      <!-- {{widget}} -->
       <component :is="widget.component" :widget="widget" />
     </div>
     <div class="widget-footer" v-if="notification">

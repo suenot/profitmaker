@@ -15,7 +15,7 @@
       <template slot="append">{{coinTo}}</template>
     </el-input>
 
-    <el-button v-if="type === 'buy'" type="primary" plain class="block" @click="createOrder()">Buy</el-button>
+    <el-button v-if="type === 'buy'" type="success" plain class="block" @click="createOrder()">Buy</el-button>
     <el-button v-if="type === 'sell'" type="danger" plain class="block" @click="createOrder()">Sell</el-button>
   </div>
 </template>

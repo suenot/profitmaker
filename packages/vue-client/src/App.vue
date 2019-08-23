@@ -257,10 +257,4 @@ body
   .title-header
     text-align: center
     flex: 1 0 auto
-
-// TODO: refactoring to css grid layout
-.open-orders-wrapper, .my-trades-wrapper
-  .widget-body
-    max-height: calc((100vh - 505px) / 2 - 33px) !important
-    min-height: calc((100vh - 505px) / 2 - 30px) !important
 </style>
