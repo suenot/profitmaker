@@ -6,6 +6,7 @@ var {fetchOpenOrder} = require('./openOrders')
 const createOrder = async function(data) {
   var accountId = data.accountId
   var ccxtId = getCCXTId(accountId, 'notSafe')
+  // TODO разобраться с символами
   var ccxtSymbol = data.pair.split('_').join('/')
   var side =  data.type.toLowerCase()
   var amount = data.amount
