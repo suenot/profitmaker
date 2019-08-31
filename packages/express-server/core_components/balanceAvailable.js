@@ -2,6 +2,7 @@ const _ = require('lodash')
 
 const balanceAvailable = function(stock, pair, accountId) {
   try {
+    // TODO deal with symbols
     var [coinFrom, coinTo] = pair.split('_')
     return {
       buy: global.BALANCE[accountId]['data'][coinTo].free,
