@@ -75,7 +75,7 @@ Server: [https://kupi.network/api](https://kupi.network/api) (secure) or
 [http://kupi.network/api](http://kupi.network/api) (faster)
 
 Swagger: [try api
-online](https://app.swaggerhub.com/apis/soloviofff/kupi.network/1.0.0#/)
+online](https://app.swaggerhub.com/apis-docs/soloviofff/kupi.network/1.0.0)
 
 ```bash
 /stocks
