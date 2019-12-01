@@ -65,7 +65,7 @@ OF ANY KIND.
 ### [Install manually](https://github.com/kupi-network/kupi-terminal/blob/master/INSTALL_MANUALLY.md)
 
 If you had any problems with installing we can help in [voice/text
-Discrod chat](https://discord.gg/2PtuMAg)
+Discord chat](https://discord.gg/2PtuMAg)
 
 ## API
 
