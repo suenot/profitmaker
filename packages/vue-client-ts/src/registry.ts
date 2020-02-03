@@ -29,7 +29,7 @@ import momentDurationFormatSetup from 'moment-duration-format'
 // Vue.component('CandlesVchart', require('@/core_components/Candles/CandlesVchart/CandlesVchart.vue').default)
 // Vue.component('ReactStockcharts', require('@/react_components/ReactStockcharts/index.js').default)
 //
-// Vue.component('Trade', require('@/views/Trade/Trade.vue').default)
+Vue.component('Trade', require('@/views/Trade/Trade.vue').default)
 // Vue.component('Balance', require('@/views/Balance/Balance.vue').default)
 // Vue.component('AccountingPage', require('@/views/Accounting/Accounting.vue').default)
 //
