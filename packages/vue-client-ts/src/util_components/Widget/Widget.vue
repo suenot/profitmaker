@@ -21,7 +21,7 @@
 
 <script lang="ts">
 import { Component, PropSync, Vue } from 'vue-property-decorator'
-import { Notification } from 'types/entity'
+import { Notification } from '@/types'
 
 @Component({
   name: 'Widget'
