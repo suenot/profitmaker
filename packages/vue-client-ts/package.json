@@ -42,5 +42,8 @@
     "typescript": "~3.5.3",
     "vue-cli-plugin-electron-builder": "^1.4.4",
     "vue-template-compiler": "^2.6.10"
-  }
+  },
+  "files": [
+    "types/*.d.ts"
+  ]
 }
