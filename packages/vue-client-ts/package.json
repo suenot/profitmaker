@@ -35,6 +35,7 @@
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
     "moment": "^2.24.0",
+    "moment-duration-format": "^2.3.2",
     "sass": "^1.23.7",
     "sass-loader": "^8.0.0",
     "typescript": "~3.5.3",
