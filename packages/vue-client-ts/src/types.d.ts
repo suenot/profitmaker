@@ -1,5 +1,5 @@
 
 export interface Notification {
   msg: string;
-  type: string;
+  type: 'alert' | 'warning' | 'info';
 }
