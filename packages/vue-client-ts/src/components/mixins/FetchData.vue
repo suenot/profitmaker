@@ -28,7 +28,6 @@ export default class FetchData extends Vue {
 
   $parent!: any
 
-  @Prop()
   demoData: any;
 
   interval: number | null = null;
