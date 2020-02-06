@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Trade from '@/views/Trade/Trade.vue'
+import Trade from '@/views/trade/Trade.vue'
 
 Vue.use(VueRouter)
 

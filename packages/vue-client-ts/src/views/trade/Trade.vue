@@ -3,7 +3,7 @@
     <div class="main-container">
       <div class="left-column section">
         <div class="orders-wrapper">
-<!--          <Widget :widget="blocks.Orders" />-->
+          <Widget :widget="blocks.Orders" />
         </div>
       </div>
       <div class="middle-column section">
@@ -58,11 +58,14 @@
 
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
+import { State } from 'vuex-class'
 
 @Component({
   name: 'Vue'
 })
 export default class Trade extends Vue {
+  @State
+  blocks: any;
   // fromMobx: {
   //   blocks: {
   //     get() {
