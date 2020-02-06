@@ -22,16 +22,11 @@
 </template>
 
 <script lang="ts">
-/* eslint-disable */
-
 import FetchData from '@/components/mixins/FetchData.vue'
 
-// import Store from '../../stores/Store'
-// import axios from 'axios'
-// import uuidv1 from 'uuid/v1'
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { Component, Prop, Watch } from 'vue-property-decorator'
 import { Orders, WidgetConfig } from '@/types'
-import { mixins } from 'vue-class-component';
+import { mixins } from 'vue-class-component'
 
 const data: Orders = require('./data.json')
 
@@ -42,17 +37,11 @@ const data: Orders = require('./data.json')
 export default class OrdersComponent extends mixins(FetchData) {
   center: boolean = false;
   demoData: Orders = data;
-  timer_kupi: number = 3000;
-  timer_ccxt: number = 10000;
-  // fromMobx: object = {
-  //   stock: { get() { return Store.stock } },
-  //   pair: { get() { return Store.pair } },
-  // }
 
   @Prop()
   widget!: WidgetConfig
 
-  data!: Orders[]
+  data: Orders[] = []
 
   get dataLength () {
     return this.data.length
