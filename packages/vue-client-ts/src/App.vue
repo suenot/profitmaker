@@ -10,7 +10,7 @@
         </span>
       </div>
     </div>
-    <Aside v-for="aside in asidesComputed" :key="aside.id" :aside="aside"/>
+<!--    <Aside v-for="aside in asidesComputed" :key="aside.id" :aside="aside"/>-->
   </div>
 </template>
 
