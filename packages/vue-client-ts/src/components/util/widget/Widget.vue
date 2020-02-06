@@ -20,8 +20,8 @@
 </template>
 
 <script lang="ts">
-import { Component, PropSync, Vue } from 'vue-property-decorator'
-import { Notification } from '@/types'
+import { Component, Vue, Prop } from 'vue-property-decorator'
+import { Notification, WidgetConfig } from '@/types'
 
 @Component({
   name: 'Widget'
@@ -29,8 +29,8 @@ import { Notification } from '@/types'
 export default class Widget extends Vue {
   notification: Notification | null = null;
 
-  @PropSync('widget')
-  widget: any;
+  @Prop()
+  widget!: WidgetConfig;
 
   showSettings () {
     const component = 'Settings'
