@@ -3,21 +3,12 @@ import state from './state'
 import { Action, Module, VuexModule } from 'vuex-module-decorators'
 
 @Module({
-  namespaced: true,
-  name: 'Coin'
+  namespaced: true
 })
-class CoinsModule extends VuexModule {
+export default class CoinsModule extends VuexModule {
   coins = {}
 
   hash = ''
-
-  constructor () {
-    super({})
-    this.fetchCoins()
-    setInterval(() => {
-      this.fetchCoins()
-    }, 60000)
-  }
 
   get serverBackend () {
     return state.serverBackend
@@ -37,5 +28,3 @@ class CoinsModule extends VuexModule {
       })
   }
 }
-
-export default new CoinsModule()
