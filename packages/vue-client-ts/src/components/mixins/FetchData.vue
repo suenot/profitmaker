@@ -5,7 +5,7 @@
 <script lang="ts">
 import axios from 'axios'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
-import { WidgetConfig } from '@/types'
+import { Orders, WidgetConfig } from '@/types'
 import { State } from 'vuex-class'
 
 const template = require('es6-template-strings')
@@ -34,7 +34,7 @@ export default class FetchData extends Vue {
 
   tube: string = '';
   hash: string = '';
-  data: [] = [];
+  data: Orders[] = [];
   serverBackend: string = 'https://kupi.network';
   firstFetch: boolean = true
 
@@ -100,7 +100,6 @@ export default class FetchData extends Vue {
     return axios.get(url)
       .then((response) => {
         this.$parent.notification = {}
-        // console.log(response.data)
         return response.data
       })
       .catch((err) => {
@@ -119,7 +118,6 @@ export default class FetchData extends Vue {
         ? this.genUrl(this.templateCcxt)
         : this.genUrl(this.templateKupi)
       this.data = await this._fetch(url)
-      console.log('fetched data', this.data)
     } catch (err) { console.log(err) }
   }
 }
