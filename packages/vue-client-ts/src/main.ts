@@ -8,6 +8,9 @@ import store from './store'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
+const { VuePlugin } = require('vuera')
+Vue.use(VuePlugin)
+
 Vue.use(ElementUI)
 
 Vue.config.productionTip = false
