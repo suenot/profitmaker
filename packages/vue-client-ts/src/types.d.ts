@@ -1,3 +1,4 @@
+export type Sort = 'asc' | 'desc'
 
 export type WidgetName = 'Orders'
 
@@ -15,12 +16,34 @@ export type Pair = string
 
 export type Block = {[widgetName in WidgetName]: WidgetConfig}
 
+export type BidsAsksBoth = 'both' | 'asks' | 'bids';
+
+export type BidsAsks = 'bids' | 'asks';
+
 export interface Notification {
   msg: string;
   type: 'alert' | 'warning' | 'info';
 }
 
-export interface Order {
+// order book.
+export type VisualMode = 'walls' | 'none' | 'crocodile'
+
+export type VisualModeMax = 'total sum' | 'fixed'
+
+export interface OrderBookItem {
+  id: string;
+  price: number;
+  amount: number;
+  total: number;
+  sum: number;
+  totalPercent: number;
+  sumPercent: number;
+  totalPercentInverse: number;
+  sumPercentInverse: number;
+  percentInverseToFixed: number;
+}
+
+export interface Orders {
   stock: string;
   coinFrom: string;
   coinTo: string;
@@ -28,8 +51,8 @@ export interface Order {
   id: string;
   bestpriceBid: number;
   bestpriceAsk: number;
-  bids: number[][];
-  asks: number[][];
+  bids: [[number, number]];
+  asks: [[number, number]];
   timestamp: number;
   datetime: Date;
 }
@@ -51,9 +74,9 @@ export interface WidgetConfig {
   channel: Channel,
   channels: Channel[],
   demo: boolean,
-  type: 'both',
-  visualMode: 'crocodile',
-  visualModeMax: 'total sum',
+  type: BidsAsksBoth,
+  visualMode: VisualMode,
+  visualModeMax: VisualModeMax,
   visualModeCrocodileMax: number,
   visualModeWallsMax: number,
   categories: Category[];

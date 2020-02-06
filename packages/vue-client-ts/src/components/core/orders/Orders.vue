@@ -30,18 +30,18 @@ import FetchData from '@/components/mixins/FetchData.vue'
 // import axios from 'axios'
 // import uuidv1 from 'uuid/v1'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
-import { Order, WidgetConfig } from '@/types'
+import { Orders, WidgetConfig } from '@/types'
 import { mixins } from 'vue-class-component';
 
-const data: Order = require('./data.json')
+const data: Orders = require('./data.json')
 
 @Component({
   name: 'Orders',
   mixins: [FetchData]
 })
-export default class Orders extends mixins(FetchData) {
+export default class OrdersComponent extends mixins(FetchData) {
   center: boolean = false;
-  demoData: Order = data;
+  demoData: Orders = data;
   timer_kupi: number = 3000;
   timer_ccxt: number = 10000;
   // fromMobx: object = {
@@ -52,7 +52,7 @@ export default class Orders extends mixins(FetchData) {
   @Prop()
   widget!: WidgetConfig
 
-  data!: Order[]
+  data!: Orders[]
 
   get dataLength () {
     return this.data.length
