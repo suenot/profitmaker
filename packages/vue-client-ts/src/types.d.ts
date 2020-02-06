@@ -1,6 +1,6 @@
 export type Sort = 'asc' | 'desc'
 
-export type WidgetName = 'Orders'
+export type WidgetName = 'Orders' | 'Candles'
 
 export type PathString = string
 
@@ -10,7 +10,7 @@ export type TagId = string
 
 export type Channel = 'default' | 'kupi' | 'ccxt'
 
-export type Category = 'Orders'
+export type Category = 'Orders' | 'Trades'
 
 export type Pair = string
 
@@ -69,6 +69,8 @@ export interface WidgetConfig {
   author: TagId,
   authorLink: URLPath,
   source: string,
+  library?: 'react-stockcharts',
+  libraries?: ['react-stockcharts', 'v-charts'],
   stock: undefined,
   pair: undefined,
   channel: Channel,
@@ -79,6 +81,6 @@ export interface WidgetConfig {
   visualModeMax: VisualModeMax,
   visualModeCrocodileMax: number,
   visualModeWallsMax: number,
-  categories: Category[];
-  timeframe?: any;
+  categories: Category[],
+  timeframe?: '1m',
 }
