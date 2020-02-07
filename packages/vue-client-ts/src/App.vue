@@ -26,10 +26,6 @@ export default class App extends Vue {
   flag: boolean = true;
   left: number = 0;
   right: number = 0;
-  storage: object = {
-    keys: ['privacy_policy'],
-    namespace: 'app'
-  };
 
   @State('asidesTrigger', { namespace: 'Aside' })
   asidesTrigger!: boolean
@@ -41,9 +37,7 @@ export default class App extends Vue {
   fetchUserData!: Function
 
   created () {
-    this.$nextTick(() => {
-      this.rerender()
-    })
+    this.$nextTick(this.rerender)
     this.fetchUserData()
   }
 
@@ -55,12 +49,11 @@ export default class App extends Vue {
   }
 
   get asidesComputed () {
-    const asides = _.cloneDeep(this.asides)
     let left = 0
     let right = 0
     let paddingLeft = 0
     let paddingRight = 0
-    const newAsides = _.map(asides, (aside: Aside) => {
+    const newAsides = _.map(_.cloneDeep(this.asides), (aside: Aside) => {
       if (aside.side === 'left') {
         left += aside.width
         if (aside.permanent) paddingLeft += aside.width

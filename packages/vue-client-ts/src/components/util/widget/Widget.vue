@@ -22,6 +22,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import { Notification, WidgetConfig } from '@/types'
+import { Action } from 'vuex-class'
 
 @Component({
   name: 'Widget'
@@ -32,13 +33,16 @@ export default class Widget extends Vue {
   @Prop()
   widget!: WidgetConfig;
 
+  @Action('addAside', { namespace: 'Aside' })
+  addAside!: Function
+
   showSettings () {
     const component = 'Settings'
     const title = `${this.widget.title} settings`
     const side = 'right'
     const width = 380
     const data = this.widget
-    // AsidesStore.addAside(component, title, side, width, data)
+    this.addAside(component, title, side, width, data)
   }
 }
 </script>

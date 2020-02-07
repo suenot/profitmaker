@@ -32,7 +32,8 @@ export default class AsidesModule extends VuexModule {
   ]
 
   @Action
-  addAside (component: ComponentName, title: string, side: Side, width: number, widget: WidgetConfig, dashboardId: string, widgetId: string) {
+  addAside (component: ComponentName = 'Empty', title: string = '', side: Side = 'left', width: number = 320,
+    widget: WidgetConfig, dashboardId: string, widgetId: string) {
     for (let aside of this.asides) {
       if (!aside.permanent && JSON.stringify(aside.widget) === JSON.stringify(widget) && aside.side === side &&
           aside.width === width && aside.component === component) {
@@ -43,12 +44,12 @@ export default class AsidesModule extends VuexModule {
     // add new aside
     this.asides.push({
       id: uuidv1(),
-      side: side || 'left',
-      width: width || 320,
-      component: component || 'Empty',
-      title: title || '',
+      side,
+      width,
+      component,
+      title,
       permanent: false,
-      widget: widget
+      widget
     })
     this.asidesTrigger = !this.asidesTrigger
   }
@@ -61,9 +62,7 @@ export default class AsidesModule extends VuexModule {
 
   @Action
   removeAsides () {
-    this.asides = _.filter(this.asides, (aside) => {
-      return aside.permanent === true
-    })
+    this.asides = _.filter(this.asides, (aside) => aside.permanent)
     this.asidesTrigger = !this.asidesTrigger
   }
 }

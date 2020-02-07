@@ -112,7 +112,7 @@ export interface Aside {
   width: number,
   component: ComponentName,
   title?: string,
-  permanent?: boolean,
+  permanent: boolean,
   widget?: WidgetConfig,
   right?: number, // position
   left?: number, // position

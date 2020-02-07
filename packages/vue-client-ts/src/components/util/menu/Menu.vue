@@ -13,9 +13,9 @@
       <el-tooltip content="Sentiments" placement="right">
         <router-link tag="li" to="/sentiments/btc"><img src="/img/widgets/sentiments.svg" alt /></router-link>
       </el-tooltip>
-       <el-tooltip content="Signals" placement="right">
+       <!--<el-tooltip content="Signals" placement="right">
         <router-link tag="li" to="/signals"><img src="/img/widgets/021-order.svg"></router-link>
-      </el-tooltip>
+      </el-tooltip>-->
     </ul>
     <div class="spacer"></div>
     <ul class="ul-bottom">
@@ -24,7 +24,7 @@
         <li @click="showCreateOrder()"><img src="/img/widgets/auction.svg" alt /></li>
       </el-tooltip>
       <el-tooltip content="Profile" placement="right">
-        <li v-if="kupiUser && kupiUser.picture && kupiUser.picture.data && kupiUser.picture.data.url" @click="showProfile()" class="avatar"><img :src="avatar"></li>
+        <li v-if="kupiUser && kupiUser.picture.data.url" @click="showProfile()" class="avatar"><img :src="avatar"></li>
         <li v-else @click="showProfile()"><img src="/img/widgets/user.svg" alt /></li>
       </el-tooltip>
       <el-tooltip content="User" placement="right">
@@ -42,13 +42,11 @@ import { Component, Vue } from 'vue-property-decorator'
   name: 'Menu'
 })
 export default class Menu extends Vue {
-  user: boolean = false
-
   @Action
   addAside!: Function
 
   get kupiUser (): KupiUser {
-    // return this.$store.account.kupiUser
+    // TODO this.$store.account.kupiUser
     return {
       picture: {
         data: {
@@ -101,7 +99,7 @@ export default class Menu extends Vue {
         display: block
         content: ''
         position: absolute
-        right: 0
+        right: 0px
         border-right: 1px solid #049bfd
         height: 100%
       img
