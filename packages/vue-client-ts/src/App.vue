@@ -1,8 +1,6 @@
 <template>
   <div>
-    <div class="main"
-         :style="`margin: 0 ${right}px 0 ${left}px`"
-    >
+    <div class="main" :style="`margin: 0 ${right}px 0 ${left}px`">
       <router-view :key="$route.path" />
       <div class="notificationCookies" v-if="privacyPolicy">
         <span>Pressing this button you agree with our <a href="#">Privacy Policy</a>
@@ -10,16 +8,15 @@
         </span>
       </div>
     </div>
-<!--    <Aside v-for="aside in asidesComputed" :key="aside.id" :aside="aside"/>-->
+    <Aside v-for="aside in asidesComputed" :key="aside.id" :aside="aside"/>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-// import { observer } from 'mobx-vue'
-// import AccountsStore from './stores/AccountsStore'
-// import AsidesStore from './stores/AsidesStore'
-// import Store from './stores/Store'
+import { Action, State } from 'vuex-class'
+import { Aside } from '@/types'
+import _ from 'lodash'
 
 @Component({
   name: 'App'
@@ -33,19 +30,23 @@ export default class App extends Vue {
     keys: ['privacy_policy'],
     namespace: 'app'
   };
-  // fromMobx: {
-  //   asidesTrigger: {
-  //     get () {
-  //       return AsidesStore.asidesTrigger
-  //     }
-  //   }
-  // },
+
+  @State('asidesTrigger', { namespace: 'Aside' })
+  asidesTrigger!: boolean
+
+  @State('asides', { namespace: 'Aside' })
+  asides!: Aside[]
+
+  @Action('fetchUserData', { namespace: 'Aside' })
+  fetchUserData!: Function
+
   created () {
     this.$nextTick(() => {
       this.rerender()
     })
-    // AccountsStore.fetchUserData()
+    this.fetchUserData()
   }
+
   rerender () {
     window.dispatchEvent(new Event('resize'))
   }
@@ -54,29 +55,25 @@ export default class App extends Vue {
   }
 
   get asidesComputed () {
-    // var trigger = this.asidesTrigger
-    const asides: any = []
-    // var asides = _.cloneDeep(AsidesStore.asides)
-    // var left = 0
-    // var right = 0
-    // var paddingLeft = 0
-    // var paddingRight = 0
-    // asides = _.map(asides, (aside) => {
-    //   if (aside.side === 'left') {
-    //     aside.left = left
-    //     left += aside.width
-    //     if (aside.permanent) paddingLeft += aside.width
-    //   } else {
-    //     aside.right = right
-    //     right += aside.width
-    //     if (aside.permanent) paddingRight += aside.width
-    //   }
-    //   return aside
-    // })
-    // this.left = paddingLeft
-    // this.right = paddingRight
-    // this.rerender()
-    return asides
+    const asides = _.cloneDeep(this.asides)
+    let left = 0
+    let right = 0
+    let paddingLeft = 0
+    let paddingRight = 0
+    const newAsides = _.map(asides, (aside: Aside) => {
+      if (aside.side === 'left') {
+        left += aside.width
+        if (aside.permanent) paddingLeft += aside.width
+      } else {
+        right += aside.width
+        if (aside.permanent) paddingRight += aside.width
+      }
+      return aside
+    })
+    this.left = paddingLeft
+    this.right = paddingRight
+    this.rerender()
+    return newAsides
   }
 }
 </script>

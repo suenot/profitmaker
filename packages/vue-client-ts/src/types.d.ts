@@ -101,3 +101,25 @@ export interface WidgetConfig {
   visualModeWallsMax?: number,
   timeframe?: '1m' | '3m' | '5m' | '15m' | '30m' | '1H' | '2H' | '4H' | '6H' | '12H' | 'D' | 'W' | 'M',
 }
+
+export type Side = 'left' | 'right'
+
+export type ComponentName = 'Menu' | 'Empty' | 'Pairs' | 'Stocks'
+
+export interface Aside {
+  id: string,
+  side: Side,
+  width: number,
+  component: ComponentName,
+  title?: string,
+  permanent?: boolean,
+  widget?: WidgetConfig,
+  right?: number, // position
+  left?: number, // position
+}
+
+export interface KupiUser {
+  picture: {
+    data: { url: string }
+  }
+}
