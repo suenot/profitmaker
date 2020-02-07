@@ -1,5 +1,7 @@
 export type Sort = 'asc' | 'desc'
 
+export type WidgetConfigName = 'Orders' | 'Candles'
+
 export type WidgetName = 'Orders' | 'Candles' | 'Create order' | 'Selector'
 
 export type PathString = string
@@ -14,7 +16,7 @@ export type Category = 'Orders' | 'Trades' | 'Candles' | 'Utils'
 
 export type Pair = string
 
-export type Block = {[widgetName in WidgetName]: WidgetConfig}
+export type Block = {[widgetName in WidgetConfigName]: WidgetConfig}
 
 export type BidsAsksBoth = 'both' | 'asks' | 'bids';
 
