@@ -13,7 +13,7 @@ import {
   CandlestickSeries,
   LineSeries,
 } from "react-stockcharts/lib/series"
-import { XAxis, YAxis } from "react-stockcharts/lib/axes"
+import { YAxis } from "react-stockcharts/lib/axes"
 import {
   CrossHairCursor,
   EdgeIndicator,
@@ -30,9 +30,6 @@ import {
 import { ema, heikinAshi, sma } from "react-stockcharts/lib/indicator"
 import { fitDimensions } from "react-stockcharts/lib/helper"
 import { last } from "react-stockcharts/lib/utils"
-
-
-import _ from 'lodash'
 
 class HeikinAshi extends React.Component {
   render() {
