@@ -1,6 +1,6 @@
 export type Sort = 'asc' | 'desc'
 
-export type WidgetName = 'Orders' | 'Candles'
+export type WidgetName = 'Orders' | 'Candles' | 'Create order' | 'Selector'
 
 export type PathString = string
 
@@ -10,7 +10,7 @@ export type TagId = string
 
 export type Channel = 'default' | 'kupi' | 'ccxt'
 
-export type Category = 'Orders' | 'Trades'
+export type Category = 'Orders' | 'Trades' | 'Candles' | 'Utils'
 
 export type Pair = string
 
@@ -90,12 +90,12 @@ export interface WidgetConfig {
   pair: undefined,
   channel: Channel,
   channels: Channel[],
-  demo: boolean,
-  type: BidsAsksBoth,
-  visualMode: VisualMode,
-  visualModeMax: VisualModeMax,
-  visualModeCrocodileMax: number,
-  visualModeWallsMax: number,
   categories: Category[],
-  timeframe?: '1m',
+  demo: boolean,
+  type?: BidsAsksBoth,
+  visualMode?: VisualMode,
+  visualModeMax?: VisualModeMax,
+  visualModeCrocodileMax?: number,
+  visualModeWallsMax?: number,
+  timeframe?: '1m' | '3m' | '5m' | '15m' | '30m' | '1H' | '2H' | '4H' | '6H' | '12H' | 'D' | 'W' | 'M',
 }

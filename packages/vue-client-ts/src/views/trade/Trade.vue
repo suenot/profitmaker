@@ -12,10 +12,10 @@
         </div>
         <div class="create-order-wrapper">
           <div class="buy-wrapper">
-<!--            <CreateOrder type="buy" />-->
+            <CreateOrder type="buy" />
           </div>
           <div class="sell-wrapper">
-<!--            <CreateOrder type="sell" />-->
+            <CreateOrder type="sell" />
           </div>
         </div>
       </div>
