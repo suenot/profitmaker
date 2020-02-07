@@ -5,7 +5,7 @@ import momentDurationFormatSetup from 'moment-duration-format'
 // Vue.component('Accounting', require('@/core_components/Accounting/Accounting.vue').default)
 // Vue.component('Deals', require('@/core_components/Accounting/Deals/Deals.vue').default)
 // Vue.component('Deal', require('@/core_components/Accounting/Deal/Deal.vue').default)
-// Vue.component('Candles', require('@/core_components/Candles/Candles.vue').default)
+Vue.component('Candles', require('@/components/core/candles/Candles.vue').default)
 Vue.component('Orders', require('@/components/core/orders/Orders.vue').default)
 Vue.component('OrdersSide', require('@/components/core/orders/OrdersSide.vue').default)
 // Vue.component('CreateOrder', require('@/core_components/CreateOrder/CreateOrder.vue').default)
@@ -25,9 +25,8 @@ Vue.component('OrdersSide', require('@/components/core/orders/OrdersSide.vue').d
 // Vue.component('SignalDetails', require('@/core_components/Signals/Details/Details.vue').default)
 // Vue.component('SignalAccounts', require('@/core_components/Signals/Accounts/Accounts.vue').default)
 //
-// Vue.component('ReactStockcharts', require('@/core_components/Candles/ReactStockcharts/ReactStockcharts.js').default)
-// Vue.component('CandlesVchart', require('@/core_components/Candles/CandlesVchart/CandlesVchart.vue').default)
-// Vue.component('ReactStockcharts', require('@/react_components/ReactStockcharts/index.js').default)
+Vue.component('ReactStockcharts', require('@/components/core/candles/reactStockcharts/ReactStockcharts.js').default)
+Vue.component('CandlesVchart', require('@/components/core/candles/candlesVchart/CandlesVchart.vue').default)
 //
 Vue.component('Trade', require('@/views/trade/Trade.vue').default)
 // Vue.component('Balance', require('@/views/Balance/Balance.vue').default)

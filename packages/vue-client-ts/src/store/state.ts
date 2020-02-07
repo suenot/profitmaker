@@ -8,9 +8,9 @@ import { Block } from '@/types'
 class BaseState {
   blocks: Block = {
     // Selector: require('@/core_components/Selector/config.js').default[0],
-    Orders: require('@/components/core/orders/config.ts').default[0]
+    Orders: require('@/components/core/orders/config.ts').default[0],
     // Trades: require('@/core_components/Trades/config.js').default[0],
-    // Candles: require('@/core_components/Candles/config.js').default[0],
+    Candles: require('@/components/core/candles/config.ts').default[0]
     // MyTrades: require('@/core_components/MyTrades/config.js').default[0],
     // OpenOrders: require('@/core_components/OpenOrders/config.js').default[0],
     // BalanceTable: require('@/core_components/Balance/config.js').default[0],

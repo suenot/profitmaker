@@ -43,6 +43,21 @@ export interface OrderBookItem {
   percentInverseToFixed: number;
 }
 
+export type ApiData = Orders | Candle[]
+
+export interface Candle {
+  date: Date,
+  open: number,
+  high: number,
+  low: number,
+  close: number,
+  volume: number,
+  absoluteChange: string,
+  dividend: string,
+  percentChange: string,
+  split: string
+}
+
 export interface Orders {
   stock: string;
   coinFrom: string;

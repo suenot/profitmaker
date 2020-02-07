@@ -38,17 +38,20 @@ export default class OrdersComponent extends mixins(FetchData) {
   center: boolean = false;
   demoData: Orders = data;
 
+  // eslint-disable-next-line
+  templateKupi: string = '${serverBackend}/api/${stockLowerCase}/orders/${pair}';
+
+  // eslint-disable-next-line
+  templateCcxt: string = '/user-api/ccxt/${stockLowerCase}/orders/${pair}';
+
   @Prop()
   widget!: WidgetConfig
 
-  data: Orders[] = []
+  data!: Orders
 
-  get dataLength () {
-    return this.data.length
-  }
-
-  @Watch('dataLength')
-  watchDataLength (val: string) {
+  @Watch('data')
+  watchData (data: Orders) {
+    console.log('watched data')
     setTimeout(() => {
       if (this.widget.type === 'both' && !this.center) {
         this.toCenter()

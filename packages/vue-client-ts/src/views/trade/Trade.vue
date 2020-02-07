@@ -8,7 +8,7 @@
       </div>
       <div class="middle-column section">
         <div class="candles-wrapper">
-<!--          <Widget :widget="blocks.Candles"/>-->
+          <Widget :widget="blocks.Candles"/>
         </div>
         <div class="create-order-wrapper">
           <div class="buy-wrapper">
