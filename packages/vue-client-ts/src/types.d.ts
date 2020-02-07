@@ -1,8 +1,10 @@
 export type Sort = 'asc' | 'desc'
 
-export type WidgetConfigName = 'Orders' | 'Candles'
+export type Stock = 'BINANCE'
 
-export type WidgetName = 'Orders' | 'Candles' | 'Create order' | 'Selector'
+export type WidgetConfigName = 'Orders' | 'Candles' | 'Trades'
+
+export type WidgetName = 'Orders' | 'Candles' | 'Create order' | 'Selector' | 'Trades'
 
 export type PathString = string
 
@@ -78,8 +80,10 @@ export interface WidgetConfig {
   name: string;
   component: WidgetName,
   settings: string,
-  settingsWidth: number,
+  settingsWidth: number | string,
   img: PathString,
+  header?: 'Trades',
+  customHeader?: '',
   title: string,
   customTitle: string,
   description: string,
@@ -100,6 +104,12 @@ export interface WidgetConfig {
   visualModeCrocodileMax?: number,
   visualModeWallsMax?: number,
   timeframe?: '1m' | '3m' | '5m' | '15m' | '30m' | '1H' | '2H' | '4H' | '6H' | '12H' | 'D' | 'W' | 'M',
+  data?: {
+    stock: Stock,
+    pair: Pair,
+    group: string,
+    groupColor: string
+  },
 }
 
 export type Side = 'left' | 'right'

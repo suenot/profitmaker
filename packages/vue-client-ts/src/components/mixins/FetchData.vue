@@ -14,13 +14,10 @@ const template = require('es6-template-strings')
   name: 'FetchData'
 })
 export default class FetchData extends Vue {
-  @State
-  stock: any
-
-  @State
+  @State('channels')
   channels: any
 
-  @State
+  @State('pair')
   pair: any
 
   @State
@@ -98,8 +95,8 @@ export default class FetchData extends Vue {
   }
 
   genUrl (url: string) {
+    const stock = this.$store.state.stock
     const serverBackend = this.serverBackend
-    const stock = (this.widget.stock !== undefined) ? this.widget.stock : this.stock
     const stockLowerCase = stock.toLowerCase()
     const pair = this.pair
     const timeframe = this.widget.timeframe

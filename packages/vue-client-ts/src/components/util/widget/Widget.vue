@@ -1,8 +1,8 @@
 <template>
-  <div class="widget">
+  <div class="widget" v-if="widget">
     <div class="block-header">
       <div class="block-title">
-        {{widget.title}}
+        {{widget ? widget.title : ''}}
       </div>
       <div class="block-actions">
         <i class="el-icon-more pointer" @click="showSettings()"></i>
@@ -37,12 +37,14 @@ export default class Widget extends Vue {
   addAside!: Function
 
   showSettings () {
-    const component = 'Settings'
-    const title = `${this.widget.title} settings`
-    const side = 'right'
-    const width = 380
-    const data = this.widget
-    this.addAside(component, title, side, width, data)
+    if (this.widget) {
+      const component = 'Settings'
+      const title = `${this.widget.title} settings`
+      const side = 'right'
+      const width = 380
+      const data = this.widget
+      this.addAside(component, title, side, width, data)
+    }
   }
 }
 </script>

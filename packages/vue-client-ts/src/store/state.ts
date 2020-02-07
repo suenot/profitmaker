@@ -1,7 +1,7 @@
 // import { observable, action, reaction, computed } from 'mobx'
 // import { version, AsyncTrunk } from 'mobx-sync'
 import _ from 'lodash'
-import { Block } from '@/types'
+import { Block, Channel } from '@/types'
 // import uuidv1 from 'uuid/v1'
 // import axios from 'axios'
 
@@ -9,7 +9,7 @@ class BaseState {
   blocks: Block = {
     // Selector: require('@/core_components/Selector/config.js').default[0],
     Orders: require('@/components/core/orders/config.ts').default[0],
-    // Trades: require('@/core_components/Trades/config.js').default[0],
+    Trades: require('@/components/core/trades/config.ts').default[0],
     Candles: require('@/components/core/candles/config.ts').default[0]
     // MyTrades: require('@/core_components/MyTrades/config.js').default[0],
     // OpenOrders: require('@/core_components/OpenOrders/config.js').default[0],
@@ -30,12 +30,12 @@ class BaseState {
   background = '#000' // TODO
   color = '#fff' // TODO
   //
-  stock = 'BINANCE'
-  channels = ['kupi']
-  pair = 'ETH_BTC'
+  readonly stock: string = 'BINANCE'
+  channels: Channel[] = ['kupi']
+  pair: string = 'ETH_BTC'
   accountId = undefined
   accountName = undefined
-  serverBackend: string = 'https://kupi.network/api' // TODO
+  serverBackend: string = 'https://kupi.network/api'
   signalHistoryUrl = 'https://kupi.network/api/signals-history'
   signalDetailsUrl = 'https://kupi.network/api/signals-details'
   //

@@ -33,7 +33,7 @@ export default class App extends Vue {
   @State('asides', { namespace: 'Aside' })
   asides!: Aside[]
 
-  @Action('fetchUserData', { namespace: 'Aside' })
+  @Action('fetchUserData', { namespace: 'Accounts' })
   fetchUserData!: Function
 
   created () {

@@ -24,7 +24,7 @@
 <!--          <Widget :widget="blocks.Selector" />-->
         </div>
         <div class="trades-wrapper">
-<!--          <Widget :widget="blocks.Trades" />-->
+          <Widget :widget="blocks.Trades" />
         </div>
       </div>
     </div>

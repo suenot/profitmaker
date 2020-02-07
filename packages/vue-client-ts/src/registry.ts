@@ -11,7 +11,7 @@ Vue.component('OrdersSide', require('@/components/core/orders/OrdersSide.vue').d
 Vue.component('CreateOrder', require('@/components/core/createOrder/CreateOrder.vue').default)
 // Vue.component('CreateOrderAside', require('@/components/core/createOrder/CreateOrderAside.vue').default)
 // Vue.component('OpenOrders', require('@/core_components/OpenOrders/OpenOrders.vue').default)
-// Vue.component('Trades', require('@/core_components/Trades/Trades.vue').default)
+Vue.component('Trades', require('@/components/core/trades/Trades.vue').default)
 // Vue.component('MyTrades', require('@/core_components/MyTrades/MyTrades.vue').default)
 // Vue.component('BalanceTable', require('@/core_components/Balance/BalanceTable.vue').default)
 // Vue.component('BalancePie', require('@/core_components/Balance/BalancePie.vue').default)
