@@ -21,7 +21,7 @@
       </div>
       <div class="right-column section">
         <div class="selector-wrapper">
-<!--          <Widget :widget="blocks.Selector" />-->
+          <Widget :widget="blocks.Selector" />
         </div>
         <div class="trades-wrapper">
           <Widget :widget="blocks.Trades" />

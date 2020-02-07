@@ -2,7 +2,7 @@ export type Sort = 'asc' | 'desc'
 
 export type Stock = 'BINANCE'
 
-export type WidgetConfigName = 'Orders' | 'Candles' | 'Trades'
+export type WidgetConfigName = 'Orders' | 'Candles' | 'Trades' | 'Selector'
 
 export type WidgetName = 'Orders' | 'Candles' | 'Create order' | 'Selector' | 'Trades'
 

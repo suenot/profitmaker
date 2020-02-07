@@ -42,7 +42,7 @@ import { Component, Vue } from 'vue-property-decorator'
   name: 'Menu'
 })
 export default class Menu extends Vue {
-  @Action
+  @Action('addAside', { namespace: 'Aside' })
   addAside!: Function
 
   get kupiUser (): KupiUser {

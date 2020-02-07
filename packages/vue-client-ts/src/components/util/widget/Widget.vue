@@ -1,8 +1,8 @@
 <template>
-  <div class="widget" v-if="widget">
+  <div class="widget">
     <div class="block-header">
       <div class="block-title">
-        {{widget ? widget.title : ''}}
+        {{widget.title}}
       </div>
       <div class="block-actions">
         <i class="el-icon-more pointer" @click="showSettings()"></i>

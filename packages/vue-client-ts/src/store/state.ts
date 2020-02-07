@@ -7,7 +7,7 @@ import { Block, Channel } from '@/types'
 
 class BaseState {
   blocks: Block = {
-    // Selector: require('@/core_components/Selector/config.js').default[0],
+    Selector: require('@/components/core/selector/config.ts').default[0],
     Orders: require('@/components/core/orders/config.ts').default[0],
     Trades: require('@/components/core/trades/config.ts').default[0],
     Candles: require('@/components/core/candles/config.ts').default[0]
