@@ -20,9 +20,11 @@
 <script lang="ts">
 import _ from 'lodash'
 import axios from 'axios'
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
-import { WidgetConfig, Account, Stock } from '@/types'
-import { Action, State } from 'vuex-class'
+import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
+import {Account, WidgetConfig} from '@/types'
+import {namespace, State} from 'vuex-class'
+
+const AppModule = namespace('app')
 
 @Component({
   name: 'Stocks'
@@ -49,7 +51,7 @@ export default class Stocks extends Vue {
     this.finish()
   }
 
-  @Action('setStock', { namespace: 'app' })
+  @AppModule.Action('setStock')
   setStock!: Function
 
   @Watch('widget')
@@ -86,10 +88,6 @@ export default class Stocks extends Vue {
         }
         return []
       })
-  }
-
-  created () {
-    console.log(this)
   }
 
   async fetch () {

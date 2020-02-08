@@ -1,66 +1,68 @@
 import uuidv1 from 'uuid/v1'
-import {Module, Mutation, VuexModule} from 'vuex-module-decorators'
-import {Aside, ComponentName, Side, WidgetConfig} from '@/types'
+import {AsideState, ComponentName, RootState, Side, WidgetConfig} from '@/types'
 import _ from 'lodash'
+import {Module} from 'vuex'
 
-@Module({namespaced: true, name: 'aside'})
-export default class AsideModule extends VuexModule {
-  asidesTrigger: boolean = false
-  asides: Aside[] = [
-    {
-      id: '1',
-      side: 'left',
-      width: 60,
-      component: 'Menu',
-      title: '',
-      permanent: true
-    },
-    // {
-    //   id: '2',
-    //   side: 'right',
-    //   width: 320,
-    //   component: 'Stocks'
-    // },
-    // {
-    //   id: '3',
-    //   side: 'left',
-    //   width: 320,
-    //   component: 'Pairs'
-    // }
-  ]
-
-  @Mutation
-  addAside (component: ComponentName = 'Empty', title: string = '', side: Side = 'left', width: number = 320,
-    widget: WidgetConfig, dashboardId: string, widgetId: string) {
-    for (let aside of this.asides) {
-      if (!aside.permanent && JSON.stringify(aside.widget) === JSON.stringify(widget) && aside.side === side &&
+export default {
+  namespaced: true,
+  state: {
+    asidesTrigger: false,
+    asides: [
+      {
+        id: '1',
+        side: 'left',
+        width: 60,
+        component: 'Menu',
+        title: '',
+        permanent: true
+      },
+      // {
+      //   id: '2',
+      //   side: 'right',
+      //   width: 320,
+      //   component: 'Stocks'
+      // },
+      // {
+      //   id: '3',
+      //   side: 'left',
+      //   width: 320,
+      //   component: 'Pairs'
+      // }
+    ]
+  },
+  mutations: {
+    addAside (state, {component, title = '', side = 'left', width = 320, widget, dashboardId, widgetId}: {
+      component: ComponentName, title: string, side: Side, width: number, widget: WidgetConfig, dashboardId: string, widgetId: string
+    }) {
+      console.log(arguments[1])
+      for (let aside of state.asides) {
+        const id = aside.id
+        if (!aside.permanent && JSON.stringify(aside.widget) === JSON.stringify(widget) && aside.side === side &&
           aside.width === width && aside.component === component) {
-        this.removeAside(aside.id)
-        return
+          state.asides = _.filter(state.asides, aside => aside.id !== id)
+          state.asidesTrigger = !state.asidesTrigger
+          return
+        }
       }
+      // add new aside
+      state.asides = [...state.asides, {
+        id: uuidv1(),
+        side,
+        width,
+        component,
+        title,
+        permanent: false,
+        widget
+      }]
+      state.asidesTrigger = !state.asidesTrigger
+    },
+    removeAside (state, id: string) {
+      state.asides = _.filter(state.asides, aside => aside.id !== id)
+      state.asidesTrigger = !state.asidesTrigger
+    },
+    removeAsides (state) {
+      state.asides = _.filter(state.asides, (aside) => aside.permanent)
+      state.asidesTrigger = !state.asidesTrigger
     }
-    // add new aside
-    this.asides.push({
-      id: uuidv1(),
-      side,
-      width,
-      component,
-      title,
-      permanent: false,
-      widget
-    })
-    this.asidesTrigger = !this.asidesTrigger
-  }
-
-  @Mutation
-  removeAside (id: string) {
-    this.asides = _.filter(this.asides, aside => aside.id !== id)
-    this.asidesTrigger = !this.asidesTrigger
-  }
-
-  @Mutation
-  removeAsides () {
-    this.asides = _.filter(this.asides, (aside) => aside.permanent)
-    this.asidesTrigger = !this.asidesTrigger
-  }
-}
+  },
+} as Module<AsideState, RootState>

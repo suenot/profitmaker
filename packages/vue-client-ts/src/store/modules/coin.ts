@@ -1,36 +1,35 @@
 import axios from 'axios'
-import {Action, Module, Mutation, VuexModule} from 'vuex-module-decorators'
+import {CoinState, RootState} from '@/types'
+import {Module} from 'vuex'
 
-@Module({namespaced: true, name: 'coin'})
-export default class CoinModule extends VuexModule {
-  context!: any
-  state!: any
-
-  coins: object = {}
-
-  hash = ''
-
-  @Mutation
-  setCoins (obj: object) {
-    this.coins = obj
+export default {
+  namespaced: true,
+  state: {
+    context: '',
+    state: '',
+    coins: {},
+    hash: '',
+  },
+  mutations: {
+    setCoins (state, obj: object) {
+      state.coins = obj
+    },
+    setHash (state, hash: string) {
+      state.hash = hash
+    }
+  },
+  actions: {
+    fetchCoins ({state, commit, rootState}) {
+      axios.get(`${rootState.app.serverBackend}/coinmarketcap`)
+        .then((response) => {
+          if (state.hash === JSON.stringify(response.data)) return true
+          commit('setHash', JSON.stringify(response.data))
+          commit('setCoins', response.data)
+        })
+        .catch(err => {
+          console.error(err)
+          commit('setCoins', {})
+        })
+    }
   }
-
-  @Mutation
-  setHash (hash: string) {
-    this.hash = hash
-  }
-
-  @Action
-  async fetchCoins () {
-    axios.get(`${this.state.serverBackend}/coinmarketcap`)
-      .then((response) => {
-        if (this.hash === JSON.stringify(response.data)) return true
-        this.context.commit('setHash', JSON.stringify(response.data))
-        this.context.commit('setCoins', response.data)
-      })
-      .catch(err => {
-        console.error(err)
-        this.context.commit('setCoins', {})
-      })
-  }
-}
+} as Module<CoinState, RootState>

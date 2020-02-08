@@ -40,7 +40,7 @@ export default class Selector extends Vue {
     const side = 'left'
     const width = 380
     const widget = { demo: false }
-    this.addAside(component, title, side, width, widget)
+    this.addAside({component, title, side, width, widget})
   }
 
   showPairs () {
@@ -49,7 +49,7 @@ export default class Selector extends Vue {
     const side = 'left'
     const width = 380
     const widget = { demo: false }
-    this.addAside(component, title, side, width, widget)
+    this.addAside({component, title, side, width, widget})
   }
 }
 </script>

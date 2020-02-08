@@ -7,7 +7,7 @@ import CoinModule from '@/store/modules/coin'
 
 Vue.use(Vuex)
 
-export default new Vuex.Store({
+const store = new Vuex.Store({
   modules: {
     account: AccountModule,
     app: AppModule,
@@ -16,3 +16,5 @@ export default new Vuex.Store({
   },
   strict: true
 })
+
+export default store

@@ -139,3 +139,45 @@ export interface Account {
   name: string,
   stock: Stock,
 }
+
+export interface AppState {
+  blocks: Block,
+  blocksTrigger: boolean,
+  background: string,
+  color: string,
+  stock: Stock
+  channels: Channel[]
+  pair: string,
+  accountId: string | null,
+  accountName: string | null,
+  serverBackend: string,
+  signalHistoryUrl: string,
+  signalDetailsUrl: string,
+  deals: [],
+  deal: [],
+}
+
+export interface AccountState {
+  user: any
+  kupiUser: KupiUser
+  accounts: Account[]
+}
+
+export interface AsideState {
+  asidesTrigger: boolean
+  asides: Aside[]
+}
+
+export interface CoinState {
+  context: any
+  state: any
+  coins: object
+  hash: string
+}
+
+export interface RootState {
+  app: AppState,
+  account: AccountState,
+  aside: AsideState,
+  coin: CoinState,
+}

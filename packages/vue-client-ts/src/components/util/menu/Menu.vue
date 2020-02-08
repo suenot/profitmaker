@@ -42,7 +42,7 @@ import { Mutation } from 'vuex-class'
   name: 'Menu'
 })
 export default class Menu extends Vue {
-  @Mutation('addAside', { namespace: 'Aside' })
+  @Mutation('addAside', { namespace: 'aside' })
   addAside!: Function
 
   get kupiUser (): KupiUser {
