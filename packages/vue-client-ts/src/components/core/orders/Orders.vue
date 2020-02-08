@@ -51,7 +51,6 @@ export default class OrdersComponent extends mixins(FetchData) {
 
   @Watch('data')
   watchData (data: Orders) {
-    console.log('watched data')
     setTimeout(() => {
       if (this.widget.type === 'both' && !this.center) {
         this.toCenter()

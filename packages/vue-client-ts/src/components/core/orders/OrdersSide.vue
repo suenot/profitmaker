@@ -46,7 +46,7 @@ export default class OrderSide extends Vue {
 
   orderBookItems: OrderBookItem[] = []
 
-  @State('coins', { namespace: 'Coin' })
+  @State('coins', { namespace: 'coin' })
   coins!: string[]
 
   @Prop()

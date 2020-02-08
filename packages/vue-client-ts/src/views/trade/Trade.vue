@@ -64,7 +64,7 @@ import { State } from 'vuex-class'
   name: 'Vue'
 })
 export default class Trade extends Vue {
-  @State
+  @State('blocks', { namespace: 'app' })
   blocks: any;
   // fromMobx: {
   //   blocks: {

@@ -1,20 +1,18 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import state from '@/store/state'
-import Coin from '@/store/coins-module'
-import Aside from '@/store/asides-module'
-import Accounts from '@/store/accounts-module'
+import AccountModule from '@/store/modules/account'
+import AppModule from '@/store/modules/app'
+import AsideModule from '@/store/modules/aside'
+import CoinModule from '@/store/modules/coin'
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
-  state,
-  mutations: {
-  },
-  actions: {
-  },
   modules: {
-    Coin, Aside, Accounts
+    account: AccountModule,
+    app: AppModule,
+    aside: AsideModule,
+    coin: CoinModule
   },
-  strict: process.env.NODE_ENV !== 'production'
+  strict: true
 })

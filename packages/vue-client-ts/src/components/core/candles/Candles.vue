@@ -17,7 +17,7 @@ const data: number[][] = require('./data.json')
 
 @Component({
   name: 'Candles',
-  mixins: [FetchData]
+  mixins: [FetchData],
 })
 export default class Candles extends mixins(FetchData) {
   height: number = 0;

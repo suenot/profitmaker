@@ -4,7 +4,7 @@ export type Stock = 'BINANCE'
 
 export type WidgetConfigName = 'Orders' | 'Candles' | 'Trades' | 'Selector'
 
-export type WidgetName = 'Orders' | 'Candles' | 'Create order' | 'Selector' | 'Trades'
+export type WidgetName = 'Orders' | 'Candles' | 'Create order' | 'Selector' | 'Trades' | 'Stocks'
 
 export type PathString = string
 
@@ -14,7 +14,7 @@ export type TagId = string
 
 export type Channel = 'default' | 'kupi' | 'ccxt'
 
-export type Category = 'Orders' | 'Trades' | 'Candles' | 'Utils'
+export type Category = 'Orders' | 'Trades' | 'Candles' | 'Utils' | 'Stocks'
 
 export type Pair = string
 
@@ -90,7 +90,7 @@ export interface WidgetConfig {
   author: TagId,
   authorLink: URLPath,
   source: string,
-  library?: 'react-stockcharts',
+  library?: 'react-stockcharts' | 'v-charts',
   libraries?: ['react-stockcharts', 'v-charts'],
   stock: undefined,
   pair: undefined,
@@ -132,4 +132,10 @@ export interface KupiUser {
   picture: {
     data: { url: string }
   }
+}
+
+export interface Account {
+  id: string,
+  name: string,
+  stock: Stock,
 }

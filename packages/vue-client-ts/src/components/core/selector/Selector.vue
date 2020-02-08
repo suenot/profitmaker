@@ -16,22 +16,22 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import { State, Action } from 'vuex-class'
+import {State, Action, Mutation} from 'vuex-class'
 
 @Component({
   name: 'Selector'
 })
 export default class Selector extends Vue {
-  @State
+  @State('stock', {namespace: 'app'})
   stock!: any
 
-  @State
+  @State('pair', {namespace: 'app'})
   pair!: string
 
-  @State
+  @State('accountName', {namespace: 'app'})
   accountName!: string
 
-  @Action('addAside', { namespace: 'Aside' })
+  @Mutation('addAside', { namespace: 'aside' })
   addAside!: Function
 
   showStocks () {

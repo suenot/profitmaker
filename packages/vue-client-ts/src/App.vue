@@ -27,18 +27,18 @@ export default class App extends Vue {
   left: number = 0;
   right: number = 0;
 
-  @State('asidesTrigger', { namespace: 'Aside' })
+  @State('asidesTrigger', { namespace: 'aside' })
   asidesTrigger!: boolean
 
-  @State('asides', { namespace: 'Aside' })
+  @State('asides', { namespace: 'aside' })
   asides!: Aside[]
 
-  @Action('fetchUserData', { namespace: 'Accounts' })
+  @Action('fetchUserData', { namespace: 'account' })
   fetchUserData!: Function
 
   created () {
     this.$nextTick(this.rerender)
-    this.fetchUserData()
+    // this.fetchUserData()
   }
 
   rerender () {

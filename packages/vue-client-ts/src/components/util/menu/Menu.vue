@@ -35,14 +35,14 @@
 
 <script lang="ts">
 import { KupiUser } from '@/types'
-import { Action } from 'vuex-class'
 import { Component, Vue } from 'vue-property-decorator'
+import { Mutation } from 'vuex-class'
 
 @Component({
   name: 'Menu'
 })
 export default class Menu extends Vue {
-  @Action('addAside', { namespace: 'Aside' })
+  @Mutation('addAside', { namespace: 'Aside' })
   addAside!: Function
 
   get kupiUser (): KupiUser {

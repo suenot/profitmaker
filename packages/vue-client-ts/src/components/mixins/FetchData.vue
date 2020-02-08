@@ -14,10 +14,10 @@ const template = require('es6-template-strings')
   name: 'FetchData'
 })
 export default class FetchData extends Vue {
-  @State('channels')
+  @State('channels', {namespace: 'app'})
   channels: any
 
-  @State('pair')
+  @State('pair', {namespace: 'app'})
   pair: any
 
   @State
@@ -47,7 +47,6 @@ export default class FetchData extends Vue {
   widget!: WidgetConfig
 
   created () {
-    console.log(`${this.widget.title} mixin in created.`)
     this.start()
   }
 
@@ -95,7 +94,7 @@ export default class FetchData extends Vue {
   }
 
   genUrl (url: string) {
-    const stock = this.$store.state.stock
+    const stock = this.$store.state.app.stock
     const serverBackend = this.serverBackend
     const stockLowerCase = stock.toLowerCase()
     const pair = this.pair
@@ -111,7 +110,6 @@ export default class FetchData extends Vue {
   }
 
   async fetch () {
-    console.log(`fetch ${this.url}`)
     this.data = await axios.get(this.url)
       .then((response) => {
         this.$parent.notification = {}

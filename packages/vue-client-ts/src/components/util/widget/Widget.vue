@@ -22,7 +22,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import { Notification, WidgetConfig } from '@/types'
-import { Action } from 'vuex-class'
+import {Mutation} from 'vuex-class'
 
 @Component({
   name: 'Widget'
@@ -33,7 +33,7 @@ export default class Widget extends Vue {
   @Prop()
   widget!: WidgetConfig;
 
-  @Action('addAside', { namespace: 'Aside' })
+  @Mutation('addAside', { namespace: 'Aside' })
   addAside!: Function
 
   showSettings () {

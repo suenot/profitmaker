@@ -37,10 +37,10 @@ import { State } from 'vuex-class'
   }
 })
 export default class Trades extends Vue {
-  @State
+  @State('stock', {namespace: 'app'})
   stock!: string
 
-  @State
+  @State('pair', {namespace: 'app'})
   pair!: string
 
   interval: number | null = null

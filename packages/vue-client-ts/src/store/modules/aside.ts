@@ -1,12 +1,10 @@
 import uuidv1 from 'uuid/v1'
-import { Action, Module, VuexModule } from 'vuex-module-decorators'
-import { Aside, ComponentName, Side, WidgetConfig } from '@/types'
+import {Module, Mutation, VuexModule} from 'vuex-module-decorators'
+import {Aside, ComponentName, Side, WidgetConfig} from '@/types'
 import _ from 'lodash'
 
-@Module({
-  namespaced: true
-})
-export default class AsidesModule extends VuexModule {
+@Module({namespaced: true, name: 'aside'})
+export default class AsideModule extends VuexModule {
   asidesTrigger: boolean = false
   asides: Aside[] = [
     {
@@ -31,7 +29,7 @@ export default class AsidesModule extends VuexModule {
     // }
   ]
 
-  @Action
+  @Mutation
   addAside (component: ComponentName = 'Empty', title: string = '', side: Side = 'left', width: number = 320,
     widget: WidgetConfig, dashboardId: string, widgetId: string) {
     for (let aside of this.asides) {
@@ -54,13 +52,13 @@ export default class AsidesModule extends VuexModule {
     this.asidesTrigger = !this.asidesTrigger
   }
 
-  @Action
+  @Mutation
   removeAside (id: string) {
     this.asides = _.filter(this.asides, aside => aside.id !== id)
     this.asidesTrigger = !this.asidesTrigger
   }
 
-  @Action
+  @Mutation
   removeAsides () {
     this.asides = _.filter(this.asides, (aside) => aside.permanent)
     this.asidesTrigger = !this.asidesTrigger

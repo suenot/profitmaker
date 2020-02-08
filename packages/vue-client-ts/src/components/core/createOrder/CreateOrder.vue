@@ -39,13 +39,13 @@ export default class CreateOrder extends Vue {
 
   error: string = ''
 
-  @State
+  @State('stock', {namespace: 'app'})
   stock!: string
 
-  @State
+  @State('pair', {namespace: 'app'})
   pair!: string
 
-  @State
+  @State('accountId', {namespace: 'app'})
   accountId!: string
 
   get coinFrom () {

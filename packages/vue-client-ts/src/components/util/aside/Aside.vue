@@ -13,9 +13,9 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator'
-import { Action } from 'vuex-class'
-import { Aside as AsideType } from '@/types'
+import {Component, Prop, Vue} from 'vue-property-decorator'
+import {Mutation} from 'vuex-class'
+import {Aside as AsideType} from '@/types'
 
 @Component({
   name: 'Aside'
@@ -24,7 +24,7 @@ export default class Aside extends Vue {
   @Prop()
   aside!: AsideType;
 
-  @Action('removeAside', { namespace: 'Aside' })
+  @Mutation('removeAside', { namespace: 'Aside' })
   removeAsideAction!: Function
 
   removeAside () {
