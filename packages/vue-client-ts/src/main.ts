@@ -13,6 +13,9 @@ Vue.use(VuePlugin)
 
 Vue.use(ElementUI)
 
+const VCharts = require('v-charts')
+Vue.use(VCharts)
+
 Vue.config.productionTip = false
 
 new Vue({
