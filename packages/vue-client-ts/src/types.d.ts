@@ -4,7 +4,7 @@ export type Stock = 'BINANCE'
 
 export type WidgetConfigName = 'Orders' | 'Candles' | 'Trades' | 'Selector'
 
-export type WidgetName = 'Orders' | 'Candles' | 'Create order' | 'Selector' | 'Trades' | 'Stocks'
+export type WidgetName = 'Orders' | 'Candles' | 'Create order' | 'Selector' | 'Trades' | 'Stocks' | 'OpenOrders'
 
 export type PathString = string
 

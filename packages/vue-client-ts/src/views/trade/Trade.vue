@@ -32,7 +32,7 @@
       <div class="left-column section">
         <div class="info-wrapper">
           <div class="open-orders-wrapper">
-<!--            <Widget :widget="blocks.OpenOrders" />-->
+            <Widget :widget="blocks.OpenOrders" />
           </div>
           <div class="my-trades-wrapper">
 <!--            <Widget :widget="blocks.MyTrades" />-->
@@ -66,13 +66,6 @@ import { State } from 'vuex-class'
 export default class Trade extends Vue {
   @State('blocks', { namespace: 'app' })
   blocks: any;
-  // fromMobx: {
-  //   blocks: {
-  //     get() {
-  //       return toJS(Store.blocks)
-  //     }
-  //   },
-  // },
 }
 </script>
 

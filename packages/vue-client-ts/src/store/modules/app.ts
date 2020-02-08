@@ -10,7 +10,7 @@ export default {
       Trades: require('@/components/core/trades/config.ts').default[0],
       Candles: require('@/components/core/candles/config.ts').default[0],
       // MyTrades: require('@/core_components/MyTrades/config.js').default[0],
-      // OpenOrders: require('@/core_components/OpenOrders/config.js').default[0],
+      OpenOrders: require('@/components/core/openOrders/config.ts').default[0],
       // BalanceTable: require('@/core_components/Balance/config.js').default[0],
       // BalanceTableStock: require('@/core_components/Balance/config.js').default[1],
       // BalancePie: require('@/core_components/Balance/config.js').default[2],

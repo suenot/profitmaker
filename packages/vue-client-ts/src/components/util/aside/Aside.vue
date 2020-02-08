@@ -24,7 +24,7 @@ export default class Aside extends Vue {
   @Prop()
   aside!: AsideType;
 
-  @Mutation('removeAside', { namespace: 'Aside' })
+  @Mutation('removeAside', { namespace: 'aside' })
   removeAsideAction!: Function
 
   removeAside () {
