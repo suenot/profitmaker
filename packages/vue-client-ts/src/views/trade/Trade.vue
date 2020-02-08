@@ -35,7 +35,7 @@
             <Widget :widget="blocks.OpenOrders" />
           </div>
           <div class="my-trades-wrapper">
-<!--            <Widget :widget="blocks.MyTrades" />-->
+            <Widget :widget="blocks.MyTrades" />
           </div>
         </div>
       </div>

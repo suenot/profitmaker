@@ -59,7 +59,7 @@ const data = require('./data.json')
 })
 export default class OpenOrders extends mixins(FetchData) {
   demoData: any = data
-  templateKupi: undefined | string = undefined
+  templateKupi: string = ''
   // eslint-disable-next-line
   templateCcxt: string = '/user-api/openOrders/${accountId}/${pair}'
   timerKupi: number = 3000

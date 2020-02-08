@@ -1,10 +1,11 @@
+/* eslint-disable */
 export type Sort = 'asc' | 'desc'
 
 export type Stock = 'BINANCE'
 
 export type WidgetConfigName = 'Orders' | 'Candles' | 'Trades' | 'Selector'
 
-export type WidgetName = 'Orders' | 'Candles' | 'Create order' | 'Selector' | 'Trades' | 'Stocks' | 'OpenOrders'
+export type WidgetName = 'Orders' | 'Candles' | 'Create order' | 'Selector' | 'Trades' | 'Stocks' | 'OpenOrders' | 'MyTrades'
 
 export type PathString = string
 
@@ -14,7 +15,7 @@ export type TagId = string
 
 export type Channel = 'default' | 'kupi' | 'ccxt'
 
-export type Category = 'Orders' | 'Trades' | 'Candles' | 'Utils' | 'Stocks'
+export type Category = 'Orders' | 'Trades' | 'Candles' | 'Utils' | 'Stocks' | 'Private api'
 
 export type Pair = string
 
@@ -47,7 +48,36 @@ export interface OrderBookItem {
   percentInverseToFixed: number;
 }
 
-export type ApiData = Orders | Candle[]
+export type ApiData = Orders | Candle[] | Trade[]
+
+export interface Trade {
+  id: string,
+  order: string,
+  timestamp: number,
+  datetime: string, // "2018-11-13T09:46:24.000Z"
+  symbol: string,
+  type: string,
+  side: string,
+  price: number,
+  amount: number,
+  fee: {
+    type: string,
+    currency: string,
+    rate: number,
+    cost: number
+  },
+  info: {
+    trade_id: number,
+    pair: string,
+    type: string,
+    amount: number,
+    rate: number,
+    order_id: number,
+    is_your_order: boolean,
+    timestamp: number
+  },
+  uuid: string
+}
 
 export interface Candle {
   date: Date,
@@ -175,9 +205,19 @@ export interface CoinState {
   hash: string
 }
 
+export interface AccountingState {
+  deals: any,
+  state: any,
+  activeDeal: string,
+  stock: any,
+  trade: any,
+  deal: any,
+}
+
 export interface RootState {
   app: AppState,
   account: AccountState,
   aside: AsideState,
   coin: CoinState,
+  accounting: AccountingState
 }
