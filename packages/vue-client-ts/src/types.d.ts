@@ -21,9 +21,11 @@ export type Pair = string
 
 export type Block = {[widgetName in WidgetConfigName]: WidgetConfig}
 
-export type BidsAsksBoth = 'both' | 'asks' | 'bids';
+export type BidsAsksBoth = 'both' | 'asks' | 'bids'
 
-export type BidsAsks = 'bids' | 'asks';
+export type BidsAsks = 'bids' | 'asks'
+
+export type Timeframe = '1m' | '3m' | '5m' | '15m' | '30m' | '1H' | '2H' | '4H' | '6H' | '12H' | 'D' | 'W' | 'M'
 
 export interface Notification {
   msg: string;
@@ -133,7 +135,7 @@ export interface WidgetConfig {
   visualModeMax?: VisualModeMax,
   visualModeCrocodileMax?: number,
   visualModeWallsMax?: number,
-  timeframe?: '1m' | '3m' | '5m' | '15m' | '30m' | '1H' | '2H' | '4H' | '6H' | '12H' | 'D' | 'W' | 'M',
+  timeframe?: Timeframe
   data?: {
     stock: Stock,
     pair: Pair,
@@ -185,6 +187,8 @@ export interface AppState {
   signalDetailsUrl: string,
   deals: [],
   deal: [],
+  timeframe: Timeframe,
+  candles: Candle[],
 }
 
 export interface AccountState {

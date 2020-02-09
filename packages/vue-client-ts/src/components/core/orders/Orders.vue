@@ -39,7 +39,7 @@ export default class OrdersComponent extends mixins(FetchData) {
   demoData: Orders = data;
 
   // eslint-disable-next-line
-  templateKupi: string = '${serverBackend}/api/${stockLowerCase}/orders/${pair}';
+  templateKupi: string = '${serverBackend}/${stockLowerCase}/orders/${pair}';
 
   // eslint-disable-next-line
   templateCcxt: string = '/user-api/ccxt/${stockLowerCase}/orders/${pair}';
@@ -66,6 +66,7 @@ export default class OrdersComponent extends mixins(FetchData) {
     }
     this.center = true
   }
+
   // TODO: WS
   // const io = require('socket.io-client')
   // mounted() {

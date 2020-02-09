@@ -47,7 +47,7 @@ export default class Trades extends Vue {
   tube: string = ''
   hash: string = ''
   data: any[] = []
-  timer: number = 1000
+  timer: number = 10000
   serverBackend: string = 'https://kupi.network'
 
   momentCompute (date: Date) {

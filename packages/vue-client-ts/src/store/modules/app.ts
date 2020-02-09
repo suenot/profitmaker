@@ -1,5 +1,6 @@
 import {AppState, Channel, RootState, Stock} from '@/types'
 import {Module} from 'vuex'
+import axios from 'axios'
 
 export default {
   namespaced: true,
@@ -30,7 +31,9 @@ export default {
     signalHistoryUrl: 'https://kupi.network/api/signals-history',
     signalDetailsUrl: 'https://kupi.network/api/signals-details',
     deals: [],
-    deal: []
+    deal: [],
+    timeframe: '5m',
+    candles: [],
   },
   actions: {
     setStock ({commit}, stock: { name: Stock, channels: Channel[], accountId: string, accountName: string }) {
@@ -41,30 +44,59 @@ export default {
         accountName: stock.accountName,
       })
     },
-    setPair ({commit}: any, pair: string) {
+    setPair ({commit}, pair: string) {
       commit('update', {
         pair
       })
     },
-    setAccountId ({commit}: any, accountId: string) {
+    setAccountId ({commit}, accountId: string) {
       commit('update', {
         accountId
       })
     },
-    setSignalHistoryUrl ({commit}: any, url: string) {
+    setSignalHistoryUrl ({commit}, url: string) {
       commit('update', {
         signalHistoryUrl: url
       })
     },
-    setSignalDetailsUrl ({commit}: any, url: string) {
+    setSignalDetailsUrl ({commit}, url: string) {
       commit('update', {
         signalDetailsUrl: url
       })
     },
-    addMyTradeToDeal ({state, commit}: any, trade: any) {
+    addMyTradeToDeal ({state, commit}, trade: any) {
       commit('update', {
         deal: [state.deal, trade]
       })
+    },
+    async fetchCandles ({state, commit}) {
+      const {stock, serverBackend, pair, timeframe} = state
+      const stockLowerCase = stock.toLowerCase()
+      // eslint-disable-next-line
+      const url = `${serverBackend}/${stockLowerCase}/candles/${pair}/${timeframe}`
+      // '/user-api/ccxt/${stockLowerCase}/candles/${pair}/${timeframe}'
+      const data = await axios.get(url)
+        .then((response) => response.data)
+      const candles = data.map((data: number[]) => {
+        const [date, open, high, low, close, volume] = data
+        return {
+          date: new Date(date),
+          open,
+          high,
+          low,
+          close,
+          volume,
+          absoluteChange: '',
+          dividend: '',
+          percentChange: '',
+          split: ''
+        }
+      })
+      console.log(candles)
+      commit('update', {
+        candles
+      })
+      return data
     },
     // setBlockData (name: string, param: any, value: any) {
     //   this.blocks[name][param] = value

@@ -15,12 +15,12 @@ const template = require('es6-template-strings')
 })
 export default class FetchData extends Vue {
   @State('channels', {namespace: 'app'})
-  channels: any
+  channels!: string[]
 
   @State('pair', {namespace: 'app'})
-  pair: any
+  pair!: string
 
-  @State
+  @State('accountId', {namespace: 'app'})
   accountId: any
 
   $parent!: any
@@ -29,15 +29,9 @@ export default class FetchData extends Vue {
 
   interval: number | null = null;
 
-  tube: string = '';
-
   hash: string = '';
 
   data: ApiData | null = null;
-
-  serverBackend: string = 'https://kupi.network';
-
-  firstFetch: boolean = true
 
   templateKupi!: string
 
@@ -94,8 +88,7 @@ export default class FetchData extends Vue {
   }
 
   genUrl (url: string) {
-    const stock = this.$store.state.app.stock
-    const serverBackend = this.serverBackend
+    const {stock, serverBackend} = this.$store.state.app
     const stockLowerCase = stock.toLowerCase()
     const pair = this.pair
     const timeframe = this.widget.timeframe
