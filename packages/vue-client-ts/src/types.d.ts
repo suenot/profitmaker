@@ -188,7 +188,7 @@ export interface AppState {
   deals: [],
   deal: [],
   timeframe: Timeframe,
-  candles: Candle[],
+  candles: number[][],
 }
 
 export interface AccountState {

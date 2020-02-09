@@ -1,4 +1,4 @@
-import {AppState, Channel, RootState, Stock} from '@/types'
+import {AppState, Candle, Channel, RootState, Stock} from '@/types'
 import {Module} from 'vuex'
 import axios from 'axios'
 
@@ -69,34 +69,33 @@ export default {
         deal: [state.deal, trade]
       })
     },
-    async fetchCandles ({state, commit}) {
+    fetchCandles ({state, commit}) {
       const {stock, serverBackend, pair, timeframe} = state
       const stockLowerCase = stock.toLowerCase()
       // eslint-disable-next-line
       const url = `${serverBackend}/${stockLowerCase}/candles/${pair}/${timeframe}`
       // '/user-api/ccxt/${stockLowerCase}/candles/${pair}/${timeframe}'
-      const data = await axios.get(url)
+      return axios.get(url)
         .then((response) => response.data)
-      const candles = data.map((data: number[]) => {
-        const [date, open, high, low, close, volume] = data
-        return {
-          date: new Date(date),
-          open,
-          high,
-          low,
-          close,
-          volume,
-          absoluteChange: '',
-          dividend: '',
-          percentChange: '',
-          split: ''
-        }
-      })
-      console.log(candles)
-      commit('update', {
-        candles
-      })
-      return data
+        .then(data => {
+          const candles = data.map((data: number[]) => {
+            const [date, open, high, low, close, volume] = data
+            return {
+              date: new Date(date),
+              open,
+              high,
+              low,
+              close,
+              volume,
+              absoluteChange: '',
+              dividend: '',
+              percentChange: '',
+              split: ''
+            }
+          })
+          commit('updateCandles', candles)
+          return candles
+        })
     },
     // setBlockData (name: string, param: any, value: any) {
     //   this.blocks[name][param] = value
@@ -104,8 +103,11 @@ export default {
     // }
   },
   mutations: {
-    update (state: any, payload: any) {
+    update (state, payload: any) {
       Object.assign(state, payload)
     },
+    updateCandles (state, payload: Candle[]) {
+      state.candles = payload
+    }
   }
 } as Module<AppState, RootState>

@@ -33,7 +33,7 @@ export default class Widget extends Vue {
   @Prop()
   widget!: WidgetConfig;
 
-  @Mutation('addAside', { namespace: 'Aside' })
+  @Mutation('addAside', { namespace: 'aside' })
   addAside!: Function
 
   showSettings () {
