@@ -545,7 +545,7 @@ export default {
       table = this.to_sorts(table)
 
       // Limit
-      table = table.slice((this.page-1)*this.limit, this.page*this.limit)
+      table = table.slice((this.page-1)*parseInt(this.limit), this.page*parseInt(this.limit))
 
       // Преобразование данных и сбор уникальных классов
       table = this.to_modify(table)
