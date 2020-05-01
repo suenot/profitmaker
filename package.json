@@ -61,7 +61,9 @@
       "packages/utils/*",
       "packages/express-server/utils/*"
     ],
-    "nohoist": ["packages/vue-client"]
+    "nohoist": [
+      "packages/vue-client"
+    ]
   },
   "postcss": {}
 }
