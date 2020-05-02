@@ -4,9 +4,9 @@
   "version": "0.3.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "start": "vue-cli-service serve",
-    "docker": "DOCKER=DOCKER vue-cli-service serve --host 0.0.0.0 --port 8080",
+    "serve": "vue-cli-service serve --port 8042",
+    "start": "vue-cli-service serve --port 8042",
+    "docker": "DOCKER=DOCKER vue-cli-service serve --host 0.0.0.0 --port 8042",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "test": "vue-cli-service test:unit"
@@ -35,7 +35,7 @@
     "mobx-sync": "^1.1.1",
     "mobx-vue": "^2.0.8",
     "moment": "^2.18.1",
-    "moment-duration-format": "^2.2.2",
+    "moment-duration-format": "2.2.2",
     "moment-timezone": "^0.5.23",
     "mongodb": "^2.2.31",
     "movue": "0.3.0",

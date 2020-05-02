@@ -46,8 +46,8 @@ Vue.component('Settings', require('@/utils_components/Settings/Settings.vue').de
 
 
 import moment from 'moment'
-var momentDurationFormatSetup = require("moment-duration-format")
-momentDurationFormatSetup(moment)
+// var momentDurationFormatSetup = require("moment-duration-format")
+// momentDurationFormatSetup(moment)
 
 Vue.filter('commas', function (value) {
   if (value === undefined) return ''

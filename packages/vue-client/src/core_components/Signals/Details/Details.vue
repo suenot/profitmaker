@@ -70,8 +70,8 @@
 <script>
 import axios from 'axios'
 import moment from 'moment'
-var momentDurationFormatSetup = require("moment-duration-format")
-momentDurationFormatSetup(moment)
+// var momentDurationFormatSetup = require("moment-duration-format")
+// momentDurationFormatSetup(moment)
 
 import _ from 'lodash'
 export default {

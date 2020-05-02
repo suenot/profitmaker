@@ -7,7 +7,7 @@
 <script>
 import axios from 'axios'
 import VeLine from 'v-charts/lib/line.common'
-import moment from 'moment-timezone'
+// // import moment from 'moment-timezone'
 
 import Store from '@/stores/Store'
 export default {
@@ -40,7 +40,7 @@ export default {
     .then((response) => {
       var data = response.data
       data.forEach(function(item){
-        item.timestamp = moment(item.timestamp).format()
+        // item.timestamp = moment(item.timestamp).format()
       })
       this.chartData.rows = data
     })

@@ -240,8 +240,8 @@ import _ from 'lodash'
 import draggable from 'vuedraggable'
 import Store from '@/stores/Store'
 import moment from 'moment'
-var momentDurationFormatSetup = require("moment-duration-format")
-momentDurationFormatSetup(moment)
+// var momentDurationFormatSetup = require("moment-duration-format")
+// momentDurationFormatSetup(moment)
 const operators = {
   '!=': function(a, b) { return a !== b },
   '==': function(a, b) { return a === b },

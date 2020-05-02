@@ -39,7 +39,7 @@ services:
     links:
       - kupi-server
     ports:
-      - 127.0.0.1:8080:8080
+      - 127.0.0.1:8042:8042
     volumes:
       - ./:/app
     working_dir: /app
