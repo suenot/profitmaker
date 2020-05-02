@@ -1,9 +1,12 @@
 {
-  "npmClient": "yarn",
+  "npmClient": "npm",
   "packages": [
     "packages/*",
+    "packages/core/*",
+    "packages/user/*",
+    "packages/utils/*",
     "packages/express-server/utils/*"
   ],
   "version": "independent",
-  "useWorkspaces": true
+  "useWorkspaces": false
 }

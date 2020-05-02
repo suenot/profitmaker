@@ -52,7 +52,6 @@
     "mobx-react": "5.4.2",
     "mobx-sync": "1.0.0",
     "moment": "2.22.2",
-    "node-sass": "4.10.0",
     "optimize-css-assets-webpack-plugin": "5.0.1",
     "pnp-webpack-plugin": "1.1.0",
     "postcss-flexbugs-fixes": "4.1.0",
