@@ -47,3 +47,5 @@ __pycache__
 temp/
 tmp/
 npm-debug.log*
+.idea
+*.iml
