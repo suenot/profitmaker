@@ -115,3 +115,4 @@ Thank you!
 ## Contact Us
 
 For business inquiries contact with [Eugen Soloviov](https://www.facebook.com/dexenot)
+[![Run on Repl.it](https://repl.it/badge/github/suenot/kupi-terminal)](https://repl.it/github/suenot/kupi-terminal)
