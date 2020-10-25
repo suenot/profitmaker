@@ -106,7 +106,7 @@ Thank you!
 
 ## Team
 
--   Eugen Soloviov [github](https://github.com/suenot) [facebook](https://www.facebook.com/dexenot)
+-   Eugen Soloviov [github](https://github.com/suenot) [facebook](https://www.facebook.com/soloviov.evgeniy)
 -   Sergey Soloviov [github](https://github.com/soloviofff)
 -   Igor Korotin [github](https://github.com/markolofsen)
 -   Vladimir Romanovich [github](https://github.com/ibnteo)
@@ -114,4 +114,4 @@ Thank you!
 
 ## Contact Us
 
-For business inquiries contact with [Eugen Soloviov](https://www.facebook.com/dexenot)
+For business inquiries contact with [Eugen Soloviov](https://www.facebook.com/soloviov.evgeniy)
