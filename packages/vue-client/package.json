@@ -14,7 +14,7 @@
   "main": "background.js",
   "dependencies": {
     "@kupi/express-server": "*",
-    "axios": "0.19.0",
+    "axios": ">=0.21.1",
     "body-parser": "^1.18.2",
     "bson": "^1.0.4",
     "ccxt": "1.18.385",
