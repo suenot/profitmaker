@@ -1,9 +1,9 @@
 # Kupi-terminal – crypto currency trading terminal
 
-[![License](https://img.shields.io/badge/licence-GPL--2.0-blue.svg)](https://raw.githubusercontent.com/kupi-network/kupi-terminal/master/LICENSE) [![Discord](https://img.shields.io/discord/430374279343898624.svg?color=4D64BA&label=chat%20on%20discord)](https://discord.gg/2PtuMAg) ![Version](https://img.shields.io/badge/express_server-0.6.0-blue.svg) ![Version](https://img.shields.io/badge/react_client-0.6.0-blue.svg) ![Version](https://img.shields.io/badge/vue_client-0.3.0-blue.svg) [![codecov](https://codecov.io/gh/kupi-network/kupi-terminal/branch/master/graph/badge.svg)](https://codecov.io/gh/kupi-network/kupi-terminal) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a0b7b6b595fd4b3db3818fed7665b1bf)](https://www.codacy.com/app/suenot/kupi-terminal?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=kupi-network/kupi-terminal&amp;utm_campaign=Badge_Grade) [![Build Status](https://travis-ci.org/kupi-network/kupi-terminal.svg?branch=master)](https://travis-ci.org/kupi-network/kupi-terminal)
+[![License](https://img.shields.io/badge/licence-GPL--2.0-blue.svg)](https://raw.githubusercontent.com/kupi-network/kupi-terminal/master/LICENSE) [![Discord](https://img.shields.io/discord/430374279343898624.svg?color=4D64BA&label=chat%20on%20discord)](https://discord.gg/2PtuMAg) ![Version](https://img.shields.io/badge/express_server-0.6.0-blue.svg) ![Version](https://img.shields.io/badge/react_client-0.6.0-blue.svg) ![Version](https://img.shields.io/badge/vue_client-0.3.0-blue.svg) [![codecov](https://codecov.io/gh/kupi-network/kupi-terminal/branch/master/graph/badge.svg)](https://codecov.io/gh/kupi-network/kupi-terminal) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a0b7b6b595fd4b3db3818fed7665b1bf)](https://www.codacy.com/app/suenot/kupi-terminal?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=kupi-network/kupi-terminal&amp;utm_campaign=Badge_Grade) [![Build Status](https://travis-ci.org/kupi-network/kupi-terminal.svg?branch=master)](https://travis-ci.org/kupi-network/kupi-terminal) [![Open in CodeSandbox](https://img.shields.io/badge/Open%20in-CodeSandbox-blue?style=flat-square&logo=codesandbox)](https://githubbox.com/suenot/kupi-terminal) [![Run on Repl.it](https://repl.it/badge/github/suenot/kupi-terminal)](https://repl.it/github/suenot/kupi-terminal)
 
 Open source, customized, extendable trading terminal that supports 130+
-crypto stocks.
+crypto exchanges.
 
 [![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/demo.png?raw=true)](http://demo.kupi.network/)
 
@@ -106,7 +106,7 @@ Thank you!
 
 ## Team
 
--   Eugen Soloviov [github](https://github.com/suenot) [facebook](https://www.facebook.com/dexenot)
+-   Eugen Soloviov [github](https://github.com/suenot) [facebook](https://www.facebook.com/soloviov.evgeniy)
 -   Sergey Soloviov [github](https://github.com/soloviofff)
 -   Igor Korotin [github](https://github.com/markolofsen)
 -   Vladimir Romanovich [github](https://github.com/ibnteo)
@@ -114,5 +114,4 @@ Thank you!
 
 ## Contact Us
 
-For business inquiries contact with [Eugen Soloviov](https://www.facebook.com/dexenot)
-[![Run on Repl.it](https://repl.it/badge/github/suenot/kupi-terminal)](https://repl.it/github/suenot/kupi-terminal)
+For business inquiries contact with [Eugen Soloviov](https://www.facebook.com/soloviov.evgeniy)

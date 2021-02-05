@@ -37,7 +37,7 @@ yarn
 -   Run terminal-server
 
 ```bash
-yar server:start
+yarn server:start
 ```
 
 -   Run terminal-frontend
