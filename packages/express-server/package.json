@@ -8,7 +8,7 @@
     "@kupi/sleep": "*",
     "assert": "^1.4.1",
     "async-each-series": "^1.1.0",
-    "axios": "0.19.0",
+    "axios": ">=0.21.1",
     "bignumber.js": "^8.1.1",
     "body-parser": "^1.18.2",
     "bson": "^1.0.4",
