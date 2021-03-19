@@ -21,7 +21,7 @@ Vue version: [https://vue.kupi.network/](https://vue.kupi.network/)
 
 ## Sponsored Promotion
 
-Want this place? Contact with [Eugen Soloviov](https://www.facebook.com/dexenot) 
+Want this place? Contact with [Eugen Soloviov](https://www.facebook.com/soloviov.evgeniy/) 
 
 ![Placehodler](https://user-images.githubusercontent.com/1707/48204972-43569e00-e37c-11e8-9cf3-b86e3dc19ee9.png)
 
