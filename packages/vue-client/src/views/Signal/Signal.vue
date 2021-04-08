@@ -110,7 +110,7 @@ export default {
 </script>
 
 <style lang="sass">
-.selector-list
+// .selector-list
 .kupi-tabs
   display: flex
   width: 100%

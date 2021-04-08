@@ -5,7 +5,7 @@ import _ from 'lodash'
 // import axios from 'axios'
 
 
-@version(7)
+@version(8)
 class Store {
   constructor() {
     const trunk = new AsyncTrunk(this, { storage: localStorage, storageKey: 'store' })
@@ -41,7 +41,7 @@ class Store {
   @observable color = '#fff' // TODO
 
   @observable stock = 'BINANCE'
-  @observable channels = ['kupi']
+  @observable channels = ['ccxt']
   @observable pair = 'ETH_BTC'
   @observable accountId = undefined
   @observable accountName = undefined
