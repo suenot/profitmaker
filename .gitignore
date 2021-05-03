@@ -6,6 +6,8 @@
 /react-client/public/_img/
 /vue-client/private/
 /vue-client/public/_img/
+/next-client/private/
+/next-client/public/_img
 /server/private/
 
 # user files
@@ -13,6 +15,7 @@ packages/user/
 packages/express-server/user_components/
 packages/react-client/src/user_components/
 packages/vue-client/src/user_components/
+packages/next-client/src/user_components/
 
 # dependencies
 node_modules/
