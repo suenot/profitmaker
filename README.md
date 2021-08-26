@@ -11,9 +11,9 @@ crypto exchanges.
 
 ## Demo
 
-React version: [https://kupi.network/](https://kupi.network/)
+React version: [https://react.profitmaker.app/](https://react.profitmaker.app/)
 
-Vue version: [https://vue.kupi.network/](https://vue.kupi.network/)
+Vue version: [https://vue.profitmaker.app/](https://vue.profitmaker.app/)
 
 ## How it works
 
