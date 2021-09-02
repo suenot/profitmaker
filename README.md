@@ -15,6 +15,17 @@ React version: [https://react.profitmaker.app/](https://react.profitmaker.app/)
 
 Vue version: [https://vue.profitmaker.app/](https://vue.profitmaker.app/)
 
+## Project repositories:
+
+- [React version](https://github.com/suenot/profitmaker-react)
+
+- [Vue version](https://github.com/suenot/profitmaker-vue)
+
+- [Express server](https://github.com/suenot/profitmaker-express)
+
+- [Kupi-network API](https://github.com/suenot/kupi-terminal-api) (deprecated)
+
+
 ## How it works
 
 ![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/structure.png?raw=true)
