@@ -30,11 +30,6 @@ Vue version: [https://vue.profitmaker.app/](https://vue.profitmaker.app/)
 
 ![Demo](https://github.com/kupi-network/kupi-terminal/blob/master/structure.png?raw=true)
 
-## Sponsored Promotion
-
-Want this place? Contact with [Eugen Soloviov](https://www.facebook.com/soloviov.evgeniy/) 
-
-![Placehodler](https://user-images.githubusercontent.com/1707/48204972-43569e00-e37c-11e8-9cf3-b86e3dc19ee9.png)
 
 ## Features
 
@@ -126,3 +121,9 @@ Thank you!
 ## Contact Us
 
 For business inquiries contact with [Eugen Soloviov](https://www.facebook.com/soloviov.evgeniy)
+
+## Sponsored Promotion
+
+Want this place? Contact with [Eugen Soloviov](https://www.facebook.com/soloviov.evgeniy/) 
+
+![Placehodler](https://user-images.githubusercontent.com/1707/48204972-43569e00-e37c-11e8-9cf3-b86e3dc19ee9.png)
