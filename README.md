@@ -34,7 +34,7 @@ Vue version: [https://vue.profitmaker.app/](https://vue.profitmaker.app/)
 ## Features
 
 -   Open source
--   Your api keys stay on your machine, no need to send its anywhere
+-   Your api keys stay on your machine, no need to send them anywhere
 -   Customized with dashboards and widgets
 -   Extendable with users modules
 -   Free realtime API (Timeseries will be in immediate future)
