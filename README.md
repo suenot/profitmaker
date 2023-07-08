@@ -104,12 +104,6 @@ online](https://app.swaggerhub.com/apis-docs/soloviofff/kupi.network/1.0.0)
 /createOrder
 ```
 
-### Support us
-
-ETH [0x159d7BD659dd362423E1487c5952ab0f6C79Bec3](https://etherscan.io/address/0x159d7BD659dd362423E1487c5952ab0f6C79Bec3)
-
-Thank you!
-
 ## Team
 
 -   Eugen Soloviov [github](https://github.com/suenot) [facebook](https://www.facebook.com/soloviov.evgeniy)
