@@ -14,6 +14,10 @@ packages/express-server/user_components/
 packages/react-client/src/user_components/
 packages/vue-client/src/user_components/
 
+# nextjs
+next-env.d.ts
+.next
+
 # dependencies
 node_modules/
 
