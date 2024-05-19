@@ -117,7 +117,6 @@ online](https://app.swaggerhub.com/apis-docs/soloviofff/kupi.network/1.0.0)
 -   Sergey Soloviov [github](https://github.com/soloviofff)
 -   Igor Korotin [github](https://github.com/markolofsen)
 -   Vladimir Romanovich [github](https://github.com/ibnteo)
--   Alexander Plugari (adviser)
 
 ## Contact Us
 
