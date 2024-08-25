@@ -6,7 +6,7 @@ Open source, customized, extendable trading terminal that supports 130+
 crypto exchanges.
 
 # Important announcement
-I started the new full rewrite of the project. It will be more stable, more secure and more flexible. You can check it [v2.0.0-dev](https://github.com/suenot/profitmaker/tree/v2.0.0-dev) github branch. I am going to finish stable version in July 2024. I will be happy to see you there. Welcome to discuss details in [discord](https://discord.com/invite/2PtuMAg). To support the project, you can donate to the following address:
+I started the new full rewrite of the project. It will be more stable, more secure and more flexible. You can check it [v2.0.0-dev](https://github.com/suenot/profitmaker/tree/v2.0.0-dev) github branch. I am going to finish stable version in 2024. I will be happy to see you there. Welcome to discuss details in [discord](https://discord.com/invite/2PtuMAg). To support the project, you can donate to the following address:
 - ETH erc20: [0x2827931ECF65398a78ed97EcC44B503ee554D0A7](https://etherscan.io/address/0x2827931ECF65398a78ed97EcC44B503ee554D0A7)
 
 # Description for v.1.0.0
