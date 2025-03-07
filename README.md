@@ -10,8 +10,8 @@ crypto exchanges.
 I started the new full rewrite of the project. It will be more stable, more secure and more flexible. You can check it [v2.0.0-dev](https://github.com/suenot/profitmaker/tree/v2.0.0-dev) github branch. I am going to finish stable version in 2024. I will be happy to see you there. Welcome to discuss details in [discord](https://discord.com/invite/2PtuMAg).
 
 I announced two version:
-- Open source crypto terminal, and server part for custom metrcs/analytics: [https://www.profitmaker.cc/](https://www.profitmaker.cc/)
-- Commercial project with crypto tokens as utility and buyback token: [https://www.marketmaker.cc/](https://www.profitmaker.cc/)
+- Open source crypto terminal, and server part for custom metrcs/analytics: [https://profitmaker.cc/](https://profitmaker.cc/)
+- Commercial project with crypto tokens as utility and buyback token: [https://marketmaker.cc/](https://marketmaker.cc/)
 
 # Description for v.1.0.0
 
