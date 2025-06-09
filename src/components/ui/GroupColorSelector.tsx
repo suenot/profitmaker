@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Plus, X } from 'lucide-react';
 import { useGroupStore } from '../../store/groupStore';
 import { GroupColors } from '../../types/groups';
+import PlusCircleIcon from './PlusCircleIcon';
 
 interface GroupColorSelectorProps {
   selectedGroupId?: string;
@@ -78,31 +79,34 @@ const GroupColorSelector: React.FC<GroupColorSelectorProps> = ({
     <>
       <div className={`relative ${className}`}>
         {/* Color selector button */}
-        <button
-          onClick={handleButtonClick}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className="w-3 h-3 rounded-full border border-terminal-border hover:border-terminal-accent transition-colors flex items-center justify-center relative"
-          style={{
-            backgroundColor: selectedGroup ? selectedGroup.color : 'transparent',
-            borderColor: selectedGroup ? selectedGroup.color : undefined,
-          }}
-          title={
-            isGroupSelected 
-              ? `Group: ${selectedGroup.name} (click to clear)`
-              : 'Select group color'
-          }
-        >
-          {/* Show Plus icon for empty/transparent groups */}
-          {(!selectedGroup || selectedGroup?.color === 'transparent') && (
-            <Plus size={6} className="text-terminal-muted" />
-          )}
-          
-          {/* Show X icon on hover for selected groups */}
-          {showClearIcon && (
-            <X size={6} className="text-white drop-shadow-sm" />
-          )}
-        </button>
+        {(!selectedGroup || selectedGroup?.color === 'transparent') ? (
+          /* Transparent group - show PlusCircleIcon */
+          <button
+            onClick={handleButtonClick}
+            className="flex items-center justify-center transition-opacity hover:opacity-80 text-terminal-muted hover:text-terminal-text"
+            title="Select group color"
+          >
+            <PlusCircleIcon />
+          </button>
+        ) : (
+          /* Colored group - show colored circle with X on hover */
+          <button
+            onClick={handleButtonClick}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className="w-3 h-3 rounded-full border transition-colors flex items-center justify-center relative"
+            style={{
+              backgroundColor: selectedGroup.color,
+              borderColor: selectedGroup.color,
+            }}
+            title={`Group: ${selectedGroup.name} (click to clear)`}
+          >
+            {/* Show X icon on hover for selected groups */}
+            {showClearIcon && (
+              <X size={6} className="text-white drop-shadow-sm" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Portal for color palette popover */}
@@ -136,7 +140,7 @@ const GroupColorSelector: React.FC<GroupColorSelectorProps> = ({
                     <div
                       className="w-3 h-3 rounded-full mr-3 flex-shrink-0 border"
                       style={{ 
-                        backgroundColor: group.color === 'transparent' ? 'transparent' : group.color,
+                        backgroundColor: group.color === 'transparent' ? 'hsl(var(--terminal-border))' : group.color,
                         borderColor: group.color === 'transparent' ? 'hsl(var(--terminal-border))' : group.color
                       }}
                     />
