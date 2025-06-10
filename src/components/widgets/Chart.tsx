@@ -3,8 +3,9 @@ import { RefreshCw } from 'lucide-react';
 import { NightVision } from 'night-vision';
 import { useTheme } from '../../hooks/useTheme';
 import { useDataProviderStore } from '../../store/dataProviderStore';
-import { Timeframe, MarketType, ChartUpdateEvent, Candle } from '../../types/dataProviders';
+import { Timeframe, MarketType, ChartUpdateEvent, Candle, DataProvider } from '../../types/dataProviders';
 import TimeframeSelect from '../ui/TimeframeSelect';
+import { loadHistoricalCandles, shouldLoadMoreData, createHistoricalDataLoader } from '../../utils/historicalDataLoader';
 
 // Theme-aware chart colors
 const getChartColors = (theme: 'dark' | 'light') => {
@@ -91,6 +92,176 @@ const Chart: React.FC<ChartProps> = ({
   // Chart state
   const [chartDimensions, setChartDimensions] = useState({ width: 600, height: 400 });
   const [showVolume, setShowVolume] = useState(true);
+  
+  // Historical data loader state
+  const [historicalLoader, setHistoricalLoader] = useState(() => 
+    createHistoricalDataLoader(exchange, symbol, timeframe, market)
+  );
+  const [oldestTimestamp, setOldestTimestamp] = useState<number | null>(null);
+  const oldestTimestampRef = useRef<number | null>(null); // Для актуального значения в callbacks
+  const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
+  const [loadingTimestamp, setLoadingTimestamp] = useState<number | null>(null); // Предотвращаем дублирование запросов
+
+  // Historical data loading function
+  const loadHistoricalData = useCallback(async (targetOldestTimestamp?: number) => {
+    // Используем переданный параметр или актуальное значение из ref
+    const effectiveOldestTimestamp = targetOldestTimestamp || oldestTimestampRef.current;
+    
+    console.log(`🚀 [Chart] loadHistoricalData called with params:`);
+    console.log(`   targetOldestTimestamp: ${targetOldestTimestamp ? new Date(targetOldestTimestamp).toISOString() : 'undefined'}`);
+    console.log(`   oldestTimestamp (state): ${oldestTimestamp ? new Date(oldestTimestamp).toISOString() : 'null'}`);
+    console.log(`   oldestTimestampRef: ${oldestTimestampRef.current ? new Date(oldestTimestampRef.current).toISOString() : 'null'}`);
+    console.log(`   effectiveOldestTimestamp: ${effectiveOldestTimestamp ? new Date(effectiveOldestTimestamp).toISOString() : 'null'}`);
+    console.log(`   isLoadingHistorical: ${isLoadingHistorical}`);
+    console.log(`   loadingTimestamp: ${loadingTimestamp ? new Date(loadingTimestamp).toISOString() : 'null'}`);
+    console.log(`   nightVision available: ${!!nightVisionRef.current}`);
+    
+    if (!effectiveOldestTimestamp || isLoadingHistorical || !nightVisionRef.current) {
+      console.log(`❌ [Chart] loadHistoricalData skipped: missing requirements`);
+      return;
+    }
+
+    // Защита от дублирования - проверяем не загружаем ли мы уже этот timestamp
+    if (loadingTimestamp === effectiveOldestTimestamp) {
+      console.log(`⏸️ [Chart] loadHistoricalData skipped: already loading this timestamp ${new Date(effectiveOldestTimestamp).toISOString()}`);
+      return;
+    }
+
+    setIsLoadingHistorical(true);
+    setLoadingTimestamp(effectiveOldestTimestamp);
+    console.log(`📜 [Chart] Loading historical data before ${new Date(effectiveOldestTimestamp).toISOString()}`);
+
+    try {
+      // Get active provider for the exchange  
+      console.log(`🔍 [Chart] Getting provider: activeProviderId=${activeProviderId}, providers:`, Object.keys(providers));
+      const activeProvider = providers[activeProviderId];
+      if (!activeProvider) {
+        throw new Error(`No active provider found for ID: ${activeProviderId}`);
+      }
+      console.log(`✅ [Chart] Found provider:`, activeProvider.name);
+      
+      console.log(`🔄 [Chart] Calling loadHistoricalCandles...`);
+      const historicalCandles = await loadHistoricalCandles(
+        exchange,
+        symbol,
+        timeframe,
+        market,
+        effectiveOldestTimestamp,
+        activeProvider
+      );
+      console.log(`📊 [Chart] loadHistoricalCandles returned ${historicalCandles?.length || 0} candles`);
+
+      if (historicalCandles.length > 0 && nightVisionRef.current) {
+        // Convert to NightVision format
+        const historicalOhlcvData = historicalCandles.map(candle => [
+          candle.timestamp,
+          candle.open,
+          candle.high,
+          candle.low,
+          candle.close,
+          candle.volume
+        ]);
+
+        // Get current chart data - проверяем и hub.mainOv.data и panes структуру
+        let updated = false;
+        
+        // Сначала пробуем обновить hub.mainOv.data (используется WebSocket)
+        if (nightVisionRef.current.hub && nightVisionRef.current.hub.mainOv && nightVisionRef.current.hub.mainOv.data) {
+          console.log(`📊 [Chart] Updating hub.mainOv.data (WebSocket структура)`);
+          const currentOhlcvData = nightVisionRef.current.hub.mainOv.data;
+          console.log(`📊 [Chart] Current data length: ${currentOhlcvData.length}, adding ${historicalOhlcvData.length} historical candles`);
+          
+          // Проверяем есть ли пересечения по времени, чтобы избежать дублирования
+          const existingTimestamps = new Set(currentOhlcvData.map((candle: any[]) => candle[0]));
+          const uniqueHistoricalData = historicalOhlcvData.filter(candle => !existingTimestamps.has(candle[0]));
+          
+          if (uniqueHistoricalData.length > 0) {
+            // ИСПРАВЛЕНО: добавляем исторические данные в НАЧАЛО массива, не удаляя существующие
+            nightVisionRef.current.hub.mainOv.data.splice(0, 0, ...uniqueHistoricalData);
+            console.log(`📊 [Chart] Added ${uniqueHistoricalData.length} unique historical candles (filtered ${historicalOhlcvData.length - uniqueHistoricalData.length} duplicates)`);
+            console.log(`📊 [Chart] Updated hub.mainOv.data length: ${nightVisionRef.current.hub.mainOv.data.length}`);
+            updated = true;
+          } else {
+            console.log(`📊 [Chart] No new unique historical data to add`);
+          }
+        }
+        
+        // Также обновляем panes структуру (REST)
+        const currentData = nightVisionRef.current.data;
+        if (currentData && currentData.panes && currentData.panes[0] && currentData.panes[0].overlays[0]) {
+          console.log(`📊 [Chart] Updating panes structure (REST структура)`);
+          const currentOhlcvData = currentData.panes[0].overlays[0].data || [];
+          console.log(`📊 [Chart] Panes current data length: ${currentOhlcvData.length}, adding ${historicalOhlcvData.length} historical candles`);
+          
+          // Проверяем есть ли пересечения по времени для panes структуры
+          const existingTimestamps = new Set(currentOhlcvData.map((candle: any[]) => candle[0]));
+          const uniqueHistoricalData = historicalOhlcvData.filter(candle => !existingTimestamps.has(candle[0]));
+          
+          if (uniqueHistoricalData.length > 0) {
+            // ИСПРАВЛЕНО: добавляем исторические данные в НАЧАЛО массива
+            const newOhlcvData = [...uniqueHistoricalData, ...currentOhlcvData];
+            currentData.panes[0].overlays[0].data = newOhlcvData;
+
+            // Update volume data if exists
+            if (currentData.panes[1] && currentData.panes[1].overlays[0]) {
+              const historicalVolumeData = historicalCandles
+                .filter(candle => !existingTimestamps.has(candle.timestamp))
+                .map(candle => [candle.timestamp, candle.volume]);
+              const currentVolumeData = currentData.panes[1].overlays[0].data || [];
+              const newVolumeData = [...historicalVolumeData, ...currentVolumeData];
+              currentData.panes[1].overlays[0].data = newVolumeData;
+            }
+
+            // Update chart
+            nightVisionRef.current.data = currentData;
+            console.log(`📊 [Chart] Updated panes data length: ${newOhlcvData.length}`);
+            updated = true;
+          } else {
+            console.log(`📊 [Chart] No new unique panes data to add`);
+          }
+        }
+
+        if (updated) {
+          nightVisionRef.current.update("data");
+
+          // Update oldest timestamp в обоих местах - state и ref
+          // ВАЖНО: Берем самый старый timestamp из загруженных данных
+          const sortedHistoricalCandles = historicalCandles.sort((a, b) => a.timestamp - b.timestamp);
+          const newOldestTimestamp = sortedHistoricalCandles[0].timestamp;
+          
+          console.log(`🔄 [Chart] Updating oldest timestamp:`);
+          console.log(`   Previous: ${oldestTimestampRef.current ? new Date(oldestTimestampRef.current).toISOString() : 'null'}`);
+          console.log(`   New: ${new Date(newOldestTimestamp).toISOString()}`);
+          console.log(`   Historical candles range: ${new Date(sortedHistoricalCandles[0].timestamp).toISOString()} - ${new Date(sortedHistoricalCandles[sortedHistoricalCandles.length - 1].timestamp).toISOString()}`);
+          
+          // КРИТИЧНО: Сначала обновляем ref, затем state
+          oldestTimestampRef.current = newOldestTimestamp;
+          setOldestTimestamp(newOldestTimestamp);
+          
+          console.log(`✅ [Chart] Successfully loaded ${historicalCandles.length} historical candles`);
+          console.log(`🔄 [Chart] Updated oldestTimestamp to: ${new Date(newOldestTimestamp).toISOString()}`);
+          
+          // ВАЖНО: Принудительно обновляем NightVision с новыми данными
+          setTimeout(() => {
+            if (nightVisionRef.current) {
+              nightVisionRef.current.update("data");
+              console.log(`🔄 [Chart] Force updated NightVision chart with new historical data`);
+            }
+          }, 100);
+        } else {
+          console.error(`❌ [Chart] Could not find chart data structure to update`);
+        }
+      } else {
+        console.log(`📜 [Chart] No more historical data available`);
+      }
+    } catch (error) {
+      console.error(`❌ [Chart] Failed to load historical data:`, error);
+    } finally {
+      setIsLoadingHistorical(false);
+      setLoadingTimestamp(null);
+      console.log(`🏁 [Chart] loadHistoricalData finished, isLoadingHistorical=${false}, loadingTimestamp=${null}`);
+    }
+  }, [exchange, symbol, timeframe, market, isLoadingHistorical, loadingTimestamp, providers, activeProviderId]); // Убрали oldestTimestamp из deps, используем ref
 
   const activeSubscriptions = getActiveSubscriptionsList();
   
@@ -182,6 +353,67 @@ const Chart: React.FC<ChartProps> = ({
       });
 
       console.log(`📊 Empty NightVision chart initialized for ${exchange}:${symbol}:${timeframe}`);
+      
+      // Add infinite scroll event listener for range updates
+      if (nightVisionRef.current.events) {
+        nightVisionRef.current.events.on("app:$range-update", (range: [number, number]) => {
+          console.log(`📊 [Chart] Range updated: [${new Date(range[0]).toISOString()}, ${new Date(range[1]).toISOString()}]`);
+          
+          // Детальное логирование состояния
+          console.log(`🔍 [Chart] Infinite scroll state check:`);
+          console.log(`   oldestTimestamp (state): ${oldestTimestamp ? new Date(oldestTimestamp).toISOString() : 'null'}`);
+          console.log(`   oldestTimestampRef: ${oldestTimestampRef.current ? new Date(oldestTimestampRef.current).toISOString() : 'null'}`);
+          console.log(`   isLoadingHistorical: ${isLoadingHistorical}`);
+          console.log(`   loadingTimestamp: ${loadingTimestamp ? new Date(loadingTimestamp).toISOString() : 'null'}`);
+          
+          // ПРИОРИТЕТ: Используем самое актуальное значение
+          let effectiveOldestTimestamp = oldestTimestampRef.current || oldestTimestamp;
+          
+          // Если нет сохраненного timestamp, извлекаем из данных графика
+          if (!effectiveOldestTimestamp) {
+            let chartData = null;
+            
+            // Сначала пробуем hub.mainOv.data (используется WebSocket)
+            if (nightVisionRef.current?.hub?.mainOv?.data && nightVisionRef.current.hub.mainOv.data.length > 0) {
+              chartData = nightVisionRef.current.hub.mainOv.data;
+              effectiveOldestTimestamp = chartData[0][0]; // Первый timestamp
+              console.log(`🔧 [Chart] Extracted oldest from hub.mainOv.data: ${new Date(effectiveOldestTimestamp).toISOString()}`);
+            }
+            // Fallback на panes структуру (REST)
+            else if (nightVisionRef.current?.data?.panes?.[0]?.overlays?.[0]?.data && 
+                     nightVisionRef.current.data.panes[0].overlays[0].data.length > 0) {
+              chartData = nightVisionRef.current.data.panes[0].overlays[0].data;
+              effectiveOldestTimestamp = chartData[0][0]; // Первый timestamp
+              console.log(`🔧 [Chart] Extracted oldest from panes: ${new Date(effectiveOldestTimestamp).toISOString()}`);
+            }
+            
+            // Обновляем ref если извлекли новое значение
+            if (effectiveOldestTimestamp) {
+              oldestTimestampRef.current = effectiveOldestTimestamp;
+              console.log(`🔧 [Chart] Updated oldestTimestampRef to: ${new Date(effectiveOldestTimestamp).toISOString()}`);
+            }
+          }
+          
+          console.log(`🔍 [Chart] Effective oldest timestamp: ${effectiveOldestTimestamp ? new Date(effectiveOldestTimestamp).toISOString() : 'null'}`);
+          
+          if (effectiveOldestTimestamp && !isLoadingHistorical) {
+            const shouldLoad = shouldLoadMoreData(range, effectiveOldestTimestamp);
+            console.log(`🔍 [Chart] Should load more data: ${shouldLoad}`);
+            
+            if (shouldLoad) {
+              console.log(`📜 [Chart] Triggering historical data load for timestamp: ${new Date(effectiveOldestTimestamp).toISOString()}`);
+              loadHistoricalData(effectiveOldestTimestamp);
+            }
+          } else {
+            const reason = !effectiveOldestTimestamp ? 'no oldest timestamp' : 
+                          isLoadingHistorical ? 'already loading' : 'unknown';
+            console.log(`⏸️ [Chart] Skipping infinite scroll: ${reason}`);
+          }
+        });
+        console.log(`📊 [Chart] Range update listener added for infinite scroll`);
+      } else {
+        console.warn(`⚠️ [Chart] NightVision events API not available`);
+      }
       
       // Debug: log available methods and properties
       console.log(`🔍 [Chart] NightVision instance methods:`, Object.getOwnPropertyNames(nightVisionRef.current).filter(prop => typeof nightVisionRef.current[prop] === 'function'));
@@ -279,6 +511,12 @@ const Chart: React.FC<ChartProps> = ({
           // Обновляем chart напрямую
           nightVisionRef.current.data = { panes };
           nightVisionRef.current.update("data");
+          
+          // Initialize oldest timestamp for infinite scroll
+          const oldestTs = candles[0].timestamp;
+          setOldestTimestamp(oldestTs);
+          oldestTimestampRef.current = oldestTs; // Также инициализируем ref
+          console.log(`🕰️ [Chart] Oldest timestamp initialized: ${new Date(oldestTs).toISOString()} (${oldestTs})`);
           
           setChartDataLoaded(true);
           console.log(`✅ [Chart] Initial data loaded: ${candles.length} candles`);
