@@ -8,6 +8,21 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      // Proxy для BingX API
+      '/api/bingx': {
+        target: 'https://open-api.bingx.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api\/bingx\/openApi/, '').replace(/^\/api\/bingx/, ''),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; CCXT-Proxy/1.0)',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
+        }
+      }
+    }
   },
   plugins: [
     react(),

@@ -152,7 +152,7 @@ class CCXTAccountManager {
       console.log(`🔍 [CCXTAccountManager] Bybit mapping: ${marketType} -> ${defaultType}`);
     }
 
-    const instanceConfig = {
+    const instanceConfig: any = {
       sandbox: config.sandbox,
       apiKey: config.apiKey,
       secret: config.secret,
@@ -161,13 +161,44 @@ class CCXTAccountManager {
       defaultType: defaultType,
     };
     
+    // Добавляем CORS proxy для бирж, которые его требуют
+    if (config.exchange === 'bingx') {
+      // Для BingX используем локальный CORS proxy
+      instanceConfig.urls = {
+        api: {
+          public: 'http://localhost:3001/bingx',
+          private: 'http://localhost:3001/bingx'
+        }
+      };
+      console.log(`🔄 [CCXTAccountManager] Using local CORS proxy for BingX: http://localhost:3001/bingx`);
+    } else if (config.exchange === 'bybit') {
+      // Для Bybit тоже можно использовать прокси если будут проблемы
+      instanceConfig.urls = {
+        api: {
+          public: 'http://localhost:3001/bybit',
+          private: 'http://localhost:3001/bybit'
+        }
+      };
+      console.log(`🔄 [CCXTAccountManager] Using local CORS proxy for Bybit: http://localhost:3001/bybit`);
+    } else if (['bitget', 'mexc', 'kucoin', 'huobi', 'gateio'].includes(config.exchange)) {
+      // Для других бирж с CORS проблемами
+      instanceConfig.urls = {
+        api: {
+          public: `http://localhost:3001/exchange/${config.exchange}`,
+          private: `http://localhost:3001/exchange/${config.exchange}`
+        }
+      };
+      console.log(`🔄 [CCXTAccountManager] Using local CORS proxy for ${config.exchange}: http://localhost:3001/exchange/${config.exchange}`);
+    }
+    
     console.log(`🔍 [CCXTAccountManager] Creating ${config.exchange} regular instance:`, {
       accountId: config.accountId,
       sandbox: instanceConfig.sandbox,
       apiKey: instanceConfig.apiKey ? 'SET' : 'NOT_SET',
       secret: instanceConfig.secret ? 'SET' : 'NOT_SET',
       defaultType: instanceConfig.defaultType,
-      marketType
+      marketType,
+              proxyUrls: instanceConfig.urls ? JSON.stringify(instanceConfig.urls.api) : 'NONE'
     });
     
     const exchangeInstance = new ExchangeClass(instanceConfig);
