@@ -55,7 +55,7 @@
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
-    "express": "^5.1.0",
+    "express": "^5.2.0",
     "immer": "^10.1.1",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
