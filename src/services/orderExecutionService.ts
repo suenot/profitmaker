@@ -16,8 +16,6 @@ export async function executeOrder(
   advancedOptions?: AdvancedOrderOptions
 ): Promise<PlaceOrderResponse> {
   try {
-    console.log(`🚀 [OrderExecution] Executing order:`, orderRequest);
-
     // Get user account credentials (decrypted)
     const userStore = useUserStore.getState();
     const user = userStore.users.find(u =>
@@ -62,14 +60,6 @@ export async function executeOrder(
         sandbox: false,
       }
     );
-
-    console.log(`🔍 [OrderExecution] CCXT instance capabilities:`, {
-      createOrder: tradingInstance.has?.createOrder,
-      createMarketOrder: tradingInstance.has?.createMarketOrder,
-      createLimitOrder: tradingInstance.has?.createLimitOrder,
-      createStopOrder: tradingInstance.has?.createStopOrder,
-      defaultType: tradingInstance.options?.defaultType,
-    });
 
     // Prepare order parameters
     const { symbol, side, type, amount, price, stopPrice } = orderRequest;
@@ -130,13 +120,6 @@ export async function executeOrder(
     }
 
     // Execute the order
-    console.log(`📤 [OrderExecution] Placing ${ccxtOrderType} ${side} order:`, {
-      symbol,
-      amount,
-      price,
-      params: orderParams,
-    });
-
     let ccxtOrder: any;
     
     try {
@@ -169,11 +152,10 @@ export async function executeOrder(
       throw new Error(errorMessage);
     }
 
-    console.log(`✅ [OrderExecution] Order placed successfully:`, ccxtOrder);
-
     // Handle advanced options (stop loss / take profit)
     const additionalOrders: any[] = [];
-    
+    const orderWarnings: string[] = [];
+
     if (advancedOptions?.stopLoss?.enabled && advancedOptions.stopLoss.price) {
       try {
         const stopLossOrder = await tradingInstance.createOrder(
@@ -188,12 +170,13 @@ export async function executeOrder(
           }
         );
         additionalOrders.push(stopLossOrder);
-        console.log(`✅ [OrderExecution] Stop loss order placed:`, stopLossOrder);
       } catch (stopLossError) {
-        console.warn(`⚠️ [OrderExecution] Failed to place stop loss:`, stopLossError);
+        const errorMsg = stopLossError instanceof Error ? stopLossError.message : 'Unknown error';
+        console.warn(`[OrderExecution] Failed to place stop loss:`, stopLossError);
+        orderWarnings.push(`Stop loss order failed: ${errorMsg}`);
       }
     }
-    
+
     if (advancedOptions?.takeProfit?.enabled && advancedOptions.takeProfit.price) {
       try {
         const takeProfitOrder = await tradingInstance.createOrder(
@@ -207,9 +190,10 @@ export async function executeOrder(
           }
         );
         additionalOrders.push(takeProfitOrder);
-        console.log(`✅ [OrderExecution] Take profit order placed:`, takeProfitOrder);
       } catch (takeProfitError) {
-        console.warn(`⚠️ [OrderExecution] Failed to place take profit:`, takeProfitError);
+        const errorMsg = takeProfitError instanceof Error ? takeProfitError.message : 'Unknown error';
+        console.warn(`[OrderExecution] Failed to place take profit:`, takeProfitError);
+        orderWarnings.push(`Take profit order failed: ${errorMsg}`);
       }
     }
 
@@ -233,6 +217,7 @@ export async function executeOrder(
           takeProfit: additionalOrders.find(o => o.type === 'limit')?.info,
         },
       },
+      warnings: orderWarnings.length > 0 ? orderWarnings : undefined,
     };
 
     return response;
@@ -304,7 +289,6 @@ export async function cancelOrder(
   market: string = 'spot'
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log(`🗑️ [OrderExecution] Cancelling order ${orderId} on ${exchange}`);
 
     // Get user account credentials (decrypted)
     const userStore = useUserStore.getState();
@@ -350,8 +334,7 @@ export async function cancelOrder(
       }
     );
 
-    const result = await tradingInstance.cancelOrder(orderId, symbol);
-    console.log(`✅ [OrderExecution] Order cancelled successfully:`, result);
+    await tradingInstance.cancelOrder(orderId, symbol);
 
     return { success: true };
 

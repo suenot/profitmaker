@@ -166,15 +166,7 @@ export const useDashboardStore = create<DashboardStore>()(
         set((state) => {
           const dashboard = state.dashboards.find(d => d.id === dashboardId);
           if (dashboard) {
-            console.log('DashboardStore: Setting active dashboard', {
-              from: state.activeDashboardId,
-              to: dashboardId,
-              title: dashboard.title,
-              widgetsCount: dashboard.widgets.length
-            });
             state.activeDashboardId = dashboardId;
-          } else {
-            console.warn('DashboardStore: Dashboard not found', dashboardId);
           }
         });
       },
@@ -251,11 +243,6 @@ export const useDashboardStore = create<DashboardStore>()(
             dashboard.widgets.splice(index, 1);
             dashboard.updatedAt = getCurrentTimestamp();
             
-            // Cleanup chart widget subscription
-            if (widgetToRemove?.type === 'chart') {
-              // Chart component cleanup will handle unsubscribe via useEffect cleanup
-              console.log(`🗑️ Dashboard: Removed chart widget ${widgetId}, cleanup handled by component`);
-            }
           }
         });
       },
@@ -408,11 +395,6 @@ export const useDashboardStore = create<DashboardStore>()(
         set((state) => {
           if (state.dashboards.length === 0) {
             const defaultDashboard = createDefaultDashboard();
-            console.log('DashboardStore: Creating default dashboard', {
-              id: defaultDashboard.id,
-              title: defaultDashboard.title,
-              widgetsCount: defaultDashboard.widgets.length
-            });
             state.dashboards.push(defaultDashboard);
             state.activeDashboardId = defaultDashboard.id;
           }

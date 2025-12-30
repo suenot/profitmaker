@@ -46,6 +46,7 @@ export interface PlaceOrderResponse {
   success: boolean;
   orderId?: string;
   error?: string;
+  warnings?: string[]; // Warnings for partial failures (e.g., stop loss/take profit failed)
   order?: {
     id: string;
     clientOrderId?: string;

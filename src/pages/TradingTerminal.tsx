@@ -17,9 +17,6 @@ import { DataProviderSetupWidget } from '@/components/widgets/DataProviderSetupW
 import { DataProviderDebugWidget } from '@/components/widgets/DataProviderDebugWidget';
 import NotificationTestWidget from '@/components/NotificationTestWidget';
 import DealsWidget from '@/components/widgets/DealsWidget';
-import { DebugUserData } from '@/components/DebugUserData';
-import { DebugCCXTCache } from '@/components/DebugCCXTCache';
-import { DebugBingXWidget } from '@/components/DebugBingXWidget';
 import { ExchangesWidget } from '@/components/ExchangesWidget';
 import { MarketsWidget } from '@/components/MarketsWidget';
 import { PairsWidget } from '@/components/PairsWidget';
@@ -43,9 +40,6 @@ const widgetComponents: Record<string, React.FC<any>> = {
   dataProviderSetup: DataProviderSetupWidget,
   dataProviderDebug: DataProviderDebugWidget,
   notificationTest: NotificationTestWidget,
-  debugUserData: DebugUserData,
-  debugCCXTCache: DebugCCXTCache,
-  debugBingX: DebugBingXWidget,
   exchanges: ExchangesWidget,
   markets: MarketsWidget,
   pairs: PairsWidget,
@@ -106,16 +100,6 @@ const TradingTerminal: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Debug logging for dashboard changes
-  React.useEffect(() => {
-    console.log('TradingTerminal: Dashboard changed', {
-      activeDashboardId,
-      activeDashboard: activeDashboard?.title,
-      widgetsCount: widgets.length,
-      widgets: widgets.map(w => ({ id: w.id, title: w.title, position: w.position }))
-    });
-  }, [activeDashboardId, activeDashboard, widgets]);
-  
   return (
     <div 
       className="min-h-screen bg-terminal-bg text-terminal-text flex flex-col"

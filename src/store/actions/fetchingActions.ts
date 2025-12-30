@@ -54,8 +54,6 @@ export const createFetchingActions: StateCreator<
       return;
     }
 
-    console.log(`🚀 Starting data fetching for ${subscriptionKey} using ${subscription.method} method`);
-
     set(state => {
       state.activeSubscriptions[subscriptionKey].isActive = true;
     });
@@ -80,18 +78,14 @@ export const createFetchingActions: StateCreator<
       return;
     }
 
-    console.log(`🛑 Stopping data fetching for ${subscriptionKey}`);
-
     // Stop WebSocket connection
     if (subscription.wsConnection) {
       subscription.wsConnection.close();
-      console.log(`🔌 WebSocket connection closed for ${subscriptionKey}`);
     }
 
     // Stop REST cycle
     if (subscription.intervalId) {
       clearInterval(subscription.intervalId);
-      console.log(`⏰ REST interval cleared for ${subscriptionKey}`);
     }
 
     set(state => {
@@ -134,11 +128,7 @@ export const createFetchingActions: StateCreator<
       const subscriptionKey = get().getSubscriptionKey(exchange, symbol, dataType, timeframe, market);
 
       // CCXT Pro supports WebSocket by default for all major exchanges
-      console.log(`📡 Starting CCXT Pro WebSocket stream: ${exchange} ${symbol} ${dataType}`);
-      
-      // Check available methods in CCXT Pro
-      console.log(`🔍 CCXT Pro ${exchange} available methods:`, Object.keys(exchangeInstance.has || {}));
-      
+
       // Check WebSocket methods support in CCXT Pro
       let watchMethod: string;
       let hasSupport: boolean;
@@ -157,13 +147,7 @@ export const createFetchingActions: StateCreator<
           const methodSelection = get().selectOptimalOrderBookMethod(exchange, exchangeInstance);
           watchMethod = methodSelection.selectedMethod;
           hasSupport = methodSelection.selectedMethod !== 'fetchOrderBook'; // all except REST have WebSocket support
-          
-          console.log(`🎯 Optimal method selected for ${exchange} orderbook:`, {
-            method: methodSelection.selectedMethod,
-            reason: methodSelection.reason,
-            isOptimal: methodSelection.isOptimal
-          });
-          
+
           // Save selected method in subscription for UI display
           set(state => {
             if (state.activeSubscriptions[subscriptionKey]) {
@@ -178,8 +162,6 @@ export const createFetchingActions: StateCreator<
         default:
           throw new Error(`Unsupported data type: ${dataType}`);
       }
-
-      console.log(`🔍 CCXT Pro ${exchange} ${watchMethod} support:`, hasSupport);
 
       if (!hasSupport) {
         console.warn(`⚠️ CCXT Pro ${exchange} does not support ${watchMethod}, falling back to REST`);
@@ -198,7 +180,6 @@ export const createFetchingActions: StateCreator<
       // First load historical data via REST for candles
       if (dataType === 'candles') {
         try {
-          console.log(`📊 Loading historical candles for ${exchange} ${symbol} ${timeframe} before WebSocket`);
           const ccxt = getCCXT();
           if (ccxt) {
             const restInstance = createExchangeInstance(exchange, provider, ccxt);
@@ -216,7 +197,6 @@ export const createFetchingActions: StateCreator<
                 volume: c[5]
               }));
               get().updateCandles(exchange, symbol, formattedCandles, timeframe, market);
-              console.log(`✅ Loaded ${formattedCandles.length} historical candles`);
             }
           }
         } catch (error) {
@@ -226,13 +206,10 @@ export const createFetchingActions: StateCreator<
 
       // Start CCXT Pro WebSocket stream with infinite loop
       const startWebSocketStream = async () => {
-        console.log(`🚀 Starting CCXT Pro WebSocket loop for ${exchange} ${symbol} ${dataType}`);
-        
         while (true) {
           try {
             const subscription = get().activeSubscriptions[subscriptionKey];
             if (!subscription?.isActive) {
-              console.log(`🛑 WebSocket loop stopped for ${subscriptionKey} - subscription inactive`);
               break;
             }
 
@@ -256,9 +233,7 @@ export const createFetchingActions: StateCreator<
                 // The exchange itself determines if it returns aggregated or not
                 const wsSubscription = get().activeSubscriptions[subscriptionKey];
                 const isAggregated = wsSubscription?.config?.isAggregated ?? true;
-                
-                console.log(`📊 [WebSocket] Watching trades for ${exchange} ${symbol} (aggregated preference: ${isAggregated})`);
-                
+
                 const trades = await exchangeInstance.watchTrades(symbol);
                 if (trades && trades.length > 0) {
                   get().updateTrades(exchange, symbol, trades, market);
@@ -275,34 +250,15 @@ export const createFetchingActions: StateCreator<
                     // For multiple pairs (returns object with pairs)
                     const multiOrderbook = await exchangeInstance.watchOrderBookForSymbols([symbol]);
                     orderbook = multiOrderbook[symbol];
-                    console.log(`📋 [OrderBook] (watchOrderBookForSymbols) received for ${exchange} ${symbol}`);
-                    console.log(`🔍 [OrderBook] DEBUG multiOrderbook keys:`, Object.keys(multiOrderbook || {}));
-                    console.log(`🔍 [OrderBook] DEBUG orderbook for ${symbol}:`, orderbook ? 'exists' : 'null/undefined');
                     break;
                   case 'watchOrderBook':
                   default:
                     // Standard full orderbook
                     orderbook = await exchangeInstance.watchOrderBook(symbol);
-                    console.log(`📋 [OrderBook] (watchOrderBook) received for ${exchange} ${symbol}`);
-                    console.log(`🔍 [OrderBook] DEBUG orderbook:`, orderbook ? 'exists' : 'null/undefined');
                     break;
                 }
-                
-                console.log(`🔍 [OrderBook] DEBUG Final orderbook check:`, {
-                  hasOrderbook: !!orderbook,
-                  hasBids: orderbook?.bids?.length || 0,
-                  hasAsks: orderbook?.asks?.length || 0,
-                  timestamp: orderbook?.timestamp
-                });
-                
+
                 if (orderbook) {
-                  console.log(`📊 [OrderBook] Data sample:`, {
-                    method: selectedMethod,
-                    bids: orderbook.bids?.slice(0, 3),
-                    asks: orderbook.asks?.slice(0, 3),
-                    timestamp: orderbook.timestamp
-                  });
-                  console.log(`🚀 [OrderBook] DEBUG Calling updateOrderBook for ${exchange}:${market}:${symbol}`);
                   get().updateOrderBook(exchange, symbol, orderbook, market);
                 } else {
                   console.warn(`⚠️ [OrderBook] DEBUG OrderBook is null/undefined, not calling updateOrderBook`);
@@ -317,9 +273,7 @@ export const createFetchingActions: StateCreator<
                   exchangeInstance.options = exchangeInstance.options || {};
                   exchangeInstance.options['defaultType'] = 'spot';
                 }
-                
-                console.log(`💰 [Balance WS] Watching ${market} balance for ${exchange} with defaultType: ${exchangeInstance.options?.defaultType}`);
-                
+
                 const balanceData = await exchangeInstance.watchBalance();
                 if (balanceData) {
                   // Transform CCXT balance format to our format
@@ -340,21 +294,15 @@ export const createFetchingActions: StateCreator<
                     balances,
                     info: balanceData.info
                   };
-                  
-                  console.log(`💰 [Balance WS] Received balance update for ${exchange} (${market}):`, {
-                    currencies: balances.length,
-                    totalBalance: balances.reduce((sum, b) => sum + b.total, 0)
-                  });
-                  
+
                   get().updateBalance(exchange, exchangeBalances, market);
                 }
                 break;
             }
           } catch (error) {
             console.error(`❌ CCXT Pro WebSocket error for ${subscriptionKey}:`, error);
-            
+
             // On WebSocket error - switch to REST with fallback flag
-            console.log(`🔄 Switching to REST fallback due to WebSocket error`);
             set(state => {
               if (state.activeSubscriptions[subscriptionKey]) {
                 state.activeSubscriptions[subscriptionKey].method = 'rest';
@@ -407,8 +355,6 @@ export const createFetchingActions: StateCreator<
       const subscriptionKey = get().getSubscriptionKey(exchange, symbol, dataType, timeframe, market);
       const interval = get().dataFetchSettings.restIntervals[dataType];
 
-      console.log(`🔄 Starting REST polling: ${exchange} ${symbol} ${dataType} every ${interval}ms`);
-
       const fetchData = async () => {
         try {
           const subscription = get().activeSubscriptions[subscriptionKey];
@@ -443,12 +389,10 @@ export const createFetchingActions: StateCreator<
               logExchangeLimits(exchange, tradeLimit, 'trades');
               
               // Set fetchTradesMethod based on aggregated parameter
-              const fetchTradesMethod = isAggregated 
+              const fetchTradesMethod = isAggregated
                 ? (exchange === 'binance' ? 'publicGetAggTrades' : undefined) // для binance используем agg, для остальных default
                 : 'publicGetTrades'; // для non-aggregated используем publicGetTrades
-              
-              console.log(`📊 [REST] Using method: ${fetchTradesMethod || 'default'} for ${exchange} trades (aggregated: ${isAggregated})`);
-              
+
               const trades = await exchangeInstance.fetchTrades(symbol, undefined, tradeLimit, 
                 fetchTradesMethod ? { fetchTradesMethod } : {}
               );
@@ -459,11 +403,6 @@ export const createFetchingActions: StateCreator<
             case 'orderbook':
               const orderbook = await exchangeInstance.fetchOrderBook(symbol);
               if (orderbook) {
-                console.log(`📋 [OrderBook] Received via REST for ${exchange} ${symbol}:`, {
-                  bids: orderbook.bids?.slice(0, 3),
-                  asks: orderbook.asks?.slice(0, 3),
-                  timestamp: orderbook.timestamp
-                });
                 get().updateOrderBook(exchange, symbol, orderbook, market);
               }
               break;
@@ -483,9 +422,7 @@ export const createFetchingActions: StateCreator<
                 exchangeInstance.options = exchangeInstance.options || {};
                 exchangeInstance.options['defaultType'] = 'spot';
               }
-              
-              console.log(`💰 [Balance] Fetching ${walletType} wallet balance for ${exchange} with defaultType: ${exchangeInstance.options?.defaultType}`);
-              
+
               // Use fetchBalance() with type parameter for specific wallet types
               let balanceParams: any = {};
               
@@ -517,8 +454,7 @@ export const createFetchingActions: StateCreator<
                     // Bybit specific: use direct API call
                     try {
                       const allBalanceResponse = await exchangeInstance.privateGetV5AssetBalanceAllBalance();
-                      console.log(`💰 [Balance] Got Bybit funding balance:`, allBalanceResponse);
-                      
+
                       balanceData = { info: allBalanceResponse };
                       
                       if (allBalanceResponse?.result?.list) {
@@ -574,12 +510,7 @@ export const createFetchingActions: StateCreator<
                   balances,
                   info: balanceData.info
                 };
-                
-                console.log(`💰 [Balance] Received ${walletType} wallet via REST for ${exchange}:`, {
-                  currencies: balances.length,
-                  totalBalance: balances.reduce((sum, b) => sum + b.total, 0)
-                });
-                
+
                 get().updateBalance(exchange, exchangeBalances, walletType);
               }
               break;
@@ -624,11 +555,9 @@ export const createFetchingActions: StateCreator<
       console.error(`❌ [Balance] Account with ID ${accountId} not found`);
       return;
     }
-    
+
     const exchange = account.exchange;
-    
-    console.log(`🔄 [Balance] Fetching balance for account ${accountId} (${exchange}:${walletType})`);
-    
+
     try {
       const provider = get().getProviderForExchange(exchange);
       
@@ -661,9 +590,7 @@ export const createFetchingActions: StateCreator<
         exchangeInstance.options = exchangeInstance.options || {};
         exchangeInstance.options['defaultType'] = 'spot';
       }
-      
-      console.log(`💰 [Balance] Fetching ${walletType} balance for account ${accountId} (${exchange}) with defaultType: ${exchangeInstance.options?.defaultType}`);
-      
+
       // Use fetchBalance() for all types (CCXT recommended approach)
       let balanceData = await exchangeInstance.fetchBalance();
       
@@ -675,9 +602,6 @@ export const createFetchingActions: StateCreator<
             const fundingBalance = await exchangeInstance.fetchBalance({ type: 'funding' });
             if (fundingBalance) {
               balanceData = fundingBalance;
-              console.log(`💰 [Balance] Got Bybit funding balance for account ${accountId}:`, {
-                currencies: Object.keys(fundingBalance).filter(k => k !== 'info' && k !== 'datetime' && k !== 'timestamp').length
-              });
             }
           } catch (bybitError) {
             console.warn(`⚠️ [Balance] Bybit funding balance failed for account ${accountId}, trying fetchFundingBalance:`, bybitError.message);
@@ -729,9 +653,7 @@ export const createFetchingActions: StateCreator<
         balances,
         info: balanceData.info
       };
-      
-      console.log(`✅ [Balance] Fetched balance for account ${accountId} (${exchange}:${walletType}) (currencies: ${balances.length})`);
-      
+
       // Update store
       get().updateBalance(accountId, exchangeBalances, walletType);
       

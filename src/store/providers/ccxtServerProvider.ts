@@ -47,7 +47,6 @@ export class CCXTServerProviderImpl {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    console.log(`🌐 [CCXTServer] Making request to ${url}`);
 
     try {
       const controller = new AbortController();
@@ -86,7 +85,6 @@ export class CCXTServerProviderImpl {
    * Выполняет HTTP запрос через прокси сервера для обхода CORS
    */
   async makeProxyRequest(url: string, method: string = 'GET', headers: Record<string, string> = {}, body?: any): Promise<any> {
-    console.log(`🌐 [CCXTServer] Proxying ${method} ${url}`);
 
     try {
       const response = await this.makeRequest('/api/proxy/request', {
@@ -112,7 +110,6 @@ export class CCXTServerProviderImpl {
       return this.socket;
     }
 
-    console.log(`🔌 [CCXTServer] Connecting to WebSocket: ${this.baseUrl}`);
 
     this.socket = io(this.baseUrl, {
       transports: ['websocket'],
@@ -126,7 +123,6 @@ export class CCXTServerProviderImpl {
       }
 
       this.socket.on('connect', () => {
-        console.log(`✅ [CCXTServer] WebSocket connected`);
 
         // Authenticate
         if (this.token) {
@@ -135,7 +131,6 @@ export class CCXTServerProviderImpl {
       });
 
       this.socket.on('authenticated', () => {
-        console.log(`🔐 [CCXTServer] WebSocket authenticated`);
         resolve(this.socket!);
       });
 
@@ -150,7 +145,6 @@ export class CCXTServerProviderImpl {
       });
 
       this.socket.on('disconnect', () => {
-        console.log(`🔌 [CCXTServer] WebSocket disconnected`);
       });
 
       // Set connection timeout
@@ -251,7 +245,6 @@ export class CCXTServerProviderImpl {
     // Remove from subscriptions
     this.subscriptions.delete(subscriptionKey);
 
-    console.log(`📡 [CCXTServer] Unsubscribed from ${subscriptionKey}`);
   }
 
   /**
@@ -266,7 +259,6 @@ export class CCXTServerProviderImpl {
 
       this.socket.disconnect();
       this.socket = undefined;
-      console.log(`🔌 [CCXTServer] WebSocket disconnected`);
     }
   }
 
@@ -324,9 +316,7 @@ export class CCXTServerProviderImpl {
 
     // Создаем instance на сервере
     await this.makeRequest('/api/exchange/instance', config);
-    
-    console.log(`✅ [CCXTServer] Trading instance created for ${exchangeId}`);
-    
+
     // Возвращаем proxy объект для взаимодействия с сервером
     return this.createExchangeProxy(config);
   }
@@ -350,9 +340,7 @@ export class CCXTServerProviderImpl {
 
     // Создаем instance на сервере
     await this.makeRequest('/api/exchange/instance', config);
-    
-    console.log(`✅ [CCXTServer] Metadata instance created for ${exchangeId}`);
-    
+
     // Возвращаем proxy объект для взаимодействия с сервером
     return this.createExchangeProxy(config);
   }
@@ -376,9 +364,7 @@ export class CCXTServerProviderImpl {
 
     // Создаем instance на сервере
     await this.makeRequest('/api/exchange/instance', config);
-    
-    console.log(`✅ [CCXTServer] WebSocket instance created for ${exchangeId}`);
-    
+
     // Возвращаем proxy объект для взаимодействия с сервером
     return this.createExchangeProxy(config);
   }
