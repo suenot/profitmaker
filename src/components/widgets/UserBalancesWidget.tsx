@@ -441,17 +441,90 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
     }
   }, []);
 
-  // Get wallet addresses for additional info
-  const getWalletAddresses = useCallback(async (exchange: string) => {
+  // Get wallet deposit addresses for a specific account and currency
+  const getWalletAddresses = useCallback(async (accountId: string, currencies?: string[]): Promise<Record<string, { address: string; tag?: string; network?: string }> | null> => {
     try {
-      // This would call fetchDepositAddresses() if available
-      console.log(`🏦 [UserBalances] Fetching wallet addresses for ${exchange}...`);
-      // TODO: Implement wallet address fetching
-      // const addresses = await exchangeInstance.fetchDepositAddresses();
-    } catch (error) {
-      console.warn(`⚠️ [UserBalances] Could not fetch wallet addresses for ${exchange}:`, error);
+      // Find the account
+      const account = activeUser?.accounts.find(acc => acc.id === accountId);
+      if (!account || !account.key || !account.privateKey) {
+        console.warn(`⚠️ [UserBalances] Account ${accountId} not found or missing API keys`);
+        return null;
+      }
+
+      console.log(`🏦 [UserBalances] Fetching wallet addresses for account ${accountId} (${account.exchange})...`);
+
+      // Use ccxtAccountManager for authenticated access
+      const { ccxtAccountManager } = await import('../../store/utils/ccxtAccountManager');
+
+      const config = {
+        accountId: account.id,
+        exchange: account.exchange,
+        apiKey: account.key,
+        secret: account.privateKey,
+        password: account.password || undefined,
+        sandbox: account.sandbox || false,
+        marketType: 'spot' as const
+      };
+
+      const exchangeInstance = await ccxtAccountManager.getRegularInstance(config);
+
+      // Check if exchange supports deposit address fetching
+      if (!exchangeInstance.has?.fetchDepositAddress && !exchangeInstance.has?.fetchDepositAddresses) {
+        console.warn(`⚠️ [UserBalances] Exchange ${account.exchange} does not support deposit address fetching`);
+        return null;
+      }
+
+      const addresses: Record<string, { address: string; tag?: string; network?: string }> = {};
+
+      // If specific currencies provided, fetch for those
+      const currenciesToFetch = currencies || [];
+
+      if (currenciesToFetch.length > 0) {
+        // Fetch addresses for specific currencies
+        for (const currency of currenciesToFetch) {
+          try {
+            if (exchangeInstance.has?.fetchDepositAddress) {
+              const addressData = await exchangeInstance.fetchDepositAddress(currency);
+              if (addressData?.address) {
+                addresses[currency] = {
+                  address: addressData.address,
+                  tag: addressData.tag || addressData.memo,
+                  network: addressData.network
+                };
+                console.log(`✅ [UserBalances] Got deposit address for ${currency}: ${addressData.address.substring(0, 10)}...`);
+              }
+            }
+          } catch (error: any) {
+            console.warn(`⚠️ [UserBalances] Could not fetch deposit address for ${currency}:`, error.message);
+          }
+        }
+      } else if (exchangeInstance.has?.fetchDepositAddresses) {
+        // Try to fetch all deposit addresses at once
+        try {
+          const allAddresses = await exchangeInstance.fetchDepositAddresses();
+          if (allAddresses) {
+            Object.entries(allAddresses).forEach(([currency, data]: [string, any]) => {
+              if (data?.address) {
+                addresses[currency] = {
+                  address: data.address,
+                  tag: data.tag || data.memo,
+                  network: data.network
+                };
+              }
+            });
+            console.log(`✅ [UserBalances] Got ${Object.keys(addresses).length} deposit addresses for account ${accountId}`);
+          }
+        } catch (error: any) {
+          console.warn(`⚠️ [UserBalances] Could not fetch all deposit addresses:`, error.message);
+        }
+      }
+
+      return Object.keys(addresses).length > 0 ? addresses : null;
+    } catch (error: any) {
+      console.warn(`⚠️ [UserBalances] Could not fetch wallet addresses for account ${accountId}:`, error.message);
+      return null;
     }
-  }, []);
+  }, [activeUser?.accounts]);
 
   // Subscribe to balances for all user accounts
   const subscribeToAllAccounts = useCallback(async () => {
