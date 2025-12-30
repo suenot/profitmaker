@@ -12,6 +12,7 @@ import { useUserStore } from '../userStore';
 import { createCCXTBrowserProvider } from '../providers/ccxtBrowserProvider';
 import { createCCXTServerProvider } from '../providers/ccxtServerProvider';
 import { getCCXT } from '../utils/ccxtUtils';
+import type { CCXTServerProvider } from '../../types/dataProviders';
 
 export interface ProviderActions {
   addProvider: (provider: DataProvider) => void;
@@ -270,27 +271,28 @@ export const createProviderActions: StateCreator<
            const ccxtProvider = createCCXTBrowserProvider(provider);
            return await ccxtProvider.getSymbolsForExchange(exchange, limit, marketType);
          }
-         case 'ccxt-server':
-           // CCXT Server provider will implement its own logic
+         case 'ccxt-server': {
+           // CCXT Server provider - delegate to server implementation
            console.log(`📊 Getting symbols for ${exchange} from CCXT Server provider ${provider.id}`);
-           // For now, return basic fallback until implementation
-           return ['BTC/USDT', 'ETH/USDT', 'BNB/USDT'];
-           
-         
-           
+           const ccxtServerProvider = createCCXTServerProvider(provider as CCXTServerProvider);
+           return await ccxtServerProvider.getSymbolsForExchange(exchange, limit, marketType);
+         }
+
          case 'marketmaker.cc':
-           // MarketMaker.cc provider will implement its own logic
-           console.log(`📊 Getting symbols for ${exchange} from MarketMaker.cc provider ${provider.id}`);
-           return ['BTC/USDT', 'ETH/USDT'];
-           
-                   case 'custom-server-with-adapter':
-            // Custom Server with Adapter provider will implement its own logic
-            console.log(`📊 Getting symbols for ${exchange} from Custom Server with Adapter provider ${provider.id}`);
-            return ['BTC/USDT', 'ETH/USDT'];
-           
+           // MarketMaker.cc provider - symbols should be fetched from their API
+           // Returns empty array until specific API integration is implemented
+           console.log(`📊 Getting symbols for ${exchange} from MarketMaker.cc provider ${provider.id} - API integration pending`);
+           return [];
+
+         case 'custom-server-with-adapter':
+           // Custom Server with Adapter - should implement via adapter's JSON schema
+           // Returns empty array as this requires custom implementation per adapter
+           console.log(`📊 Getting symbols for ${exchange} from Custom Server with Adapter provider ${provider.id} - requires custom implementation`);
+           return [];
+
          case 'custom':
-           // Custom providers will implement their own logic
-           console.log(`📊 Getting symbols for ${exchange} from custom provider ${provider.id}`);
+           // Custom providers must implement their own logic
+           console.log(`📊 Getting symbols for ${exchange} from custom provider ${provider.id} - requires custom implementation`);
            return [];
            
          default:
@@ -317,28 +319,29 @@ export const createProviderActions: StateCreator<
            const ccxtProvider = createCCXTBrowserProvider(provider);
            return await ccxtProvider.getMarketsForExchange(exchange);
          }
-         case 'ccxt-server':
-           // CCXT Server provider will implement its own logic
+         case 'ccxt-server': {
+           // CCXT Server provider - delegate to server implementation
            console.log(`📈 Getting markets for ${exchange} from CCXT Server provider ${provider.id}`);
-           // For now, return basic fallback until implementation
-           return ['spot', 'futures', 'margin'];
-           
-         
-           
+           const ccxtServerProvider = createCCXTServerProvider(provider as CCXTServerProvider);
+           return await ccxtServerProvider.getMarketsForExchange(exchange);
+         }
+
          case 'marketmaker.cc':
-           // MarketMaker.cc provider will implement its own logic
-           console.log(`📈 Getting markets for ${exchange} from MarketMaker.cc provider ${provider.id}`);
-           return ['spot', 'futures'];
-           
-                   case 'custom-server-with-adapter':
-            // Custom Server with Adapter provider will implement its own logic
-            console.log(`📈 Getting markets for ${exchange} from Custom Server with Adapter provider ${provider.id}`);
-            return ['spot'];
-           
+           // MarketMaker.cc provider - markets should be fetched from their API
+           // Returns empty array until specific API integration is implemented
+           console.log(`📈 Getting markets for ${exchange} from MarketMaker.cc provider ${provider.id} - API integration pending`);
+           return [];
+
+         case 'custom-server-with-adapter':
+           // Custom Server with Adapter - should implement via adapter's JSON schema
+           // Returns empty array as this requires custom implementation per adapter
+           console.log(`📈 Getting markets for ${exchange} from Custom Server with Adapter provider ${provider.id} - requires custom implementation`);
+           return [];
+
          case 'custom':
-           // Custom providers will implement their own logic
-           console.log(`📈 Getting markets for ${exchange} from custom provider ${provider.id}`);
-           return ['spot'];
+           // Custom providers must implement their own logic
+           console.log(`📈 Getting markets for ${exchange} from custom provider ${provider.id} - requires custom implementation`);
+           return [];
            
          default:
            console.error(`❌ Unknown provider type: ${(provider as any).type}`);

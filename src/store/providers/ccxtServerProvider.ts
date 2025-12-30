@@ -560,11 +560,73 @@ export class CCXTServerProviderImpl {
           'Content-Type': 'application/json',
         },
       });
-      
+
       return response.ok;
     } catch (error) {
       console.error(`❌ [CCXTServer] Health check failed:`, error);
       return false;
+    }
+  }
+
+  /**
+   * Получает все доступные символы для биржи с фильтрацией по типу рынка
+   */
+  async getSymbolsForExchange(exchange: string, limit?: number, marketType?: string): Promise<string[]> {
+    try {
+      console.log(`📊 [CCXTServer] Getting symbols for ${exchange}${marketType ? ` (${marketType})` : ''}`);
+
+      const config = this.createInstanceConfig(
+        'metadata',
+        'public',
+        exchange,
+        marketType || 'spot',
+        'regular',
+        { sandbox: this.provider.config.sandbox || false }
+      );
+
+      const response = await this.makeRequest<{ symbols: string[] }>('/api/exchange/symbols', {
+        config,
+        limit,
+        marketType
+      });
+
+      const symbols = response?.symbols || [];
+      console.log(`📊 [CCXTServer] Retrieved ${symbols.length} symbols for ${exchange}${marketType ? ` (${marketType} market)` : ''}`);
+
+      return limit && limit > 0 ? symbols.slice(0, limit) : symbols;
+    } catch (error) {
+      console.error(`❌ [CCXTServer] Error getting symbols for exchange: ${exchange}`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Определяет доступные рынки для биржи
+   */
+  async getMarketsForExchange(exchange: string): Promise<string[]> {
+    try {
+      console.log(`📈 [CCXTServer] Getting markets for ${exchange}`);
+
+      const config = this.createInstanceConfig(
+        'metadata',
+        'public',
+        exchange,
+        'spot',
+        'regular',
+        { sandbox: this.provider.config.sandbox || false }
+      );
+
+      const response = await this.makeRequest<{ markets: string[] }>('/api/exchange/markets', {
+        config
+      });
+
+      const markets = response?.markets || [];
+      console.log(`📈 [CCXTServer] Retrieved ${markets.length} markets for ${exchange}:`, markets);
+
+      return markets;
+    } catch (error) {
+      console.error(`❌ [CCXTServer] Error getting markets for exchange: ${exchange}`, error);
+      return [];
     }
   }
 }
