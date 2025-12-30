@@ -2,6 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import electron from "vite-plugin-electron";
+import electronRenderer from "vite-plugin-electron-renderer";
+
+// Check if we're building for Electron
+const isElectron = process.env.ELECTRON === 'true';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -15,8 +20,45 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === 'development' && componentTagger(),
+    // Electron plugins only when building for Electron
+    isElectron && electron([
+      {
+        // Main process entry point
+        entry: 'electron/main.ts',
+        onstart(options) {
+          options.startup();
+        },
+        vite: {
+          build: {
+            outDir: 'dist-electron',
+            sourcemap: mode === 'development',
+            minify: mode === 'production',
+            rollupOptions: {
+              external: ['electron']
+            }
+          }
+        }
+      },
+      {
+        // Preload script entry point
+        entry: 'electron/preload.ts',
+        onstart(options) {
+          options.reload();
+        },
+        vite: {
+          build: {
+            outDir: 'dist-electron',
+            sourcemap: mode === 'development',
+            minify: mode === 'production',
+            rollupOptions: {
+              external: ['electron']
+            }
+          }
+        }
+      }
+    ]),
+    isElectron && electronRenderer(),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -28,11 +70,13 @@ export default defineConfig(({ mode }) => ({
     'process.env': {},
   },
   build: {
+    // For Electron, output to dist folder
+    outDir: isElectron ? 'dist' : 'dist',
     rollupOptions: {
-      external: [
-        // Node.js modules that don't exist in browser
+      external: isElectron ? [] : [
+        // Node.js modules that don't exist in browser (only exclude for web build)
         'http-proxy-agent',
-        'https-proxy-agent', 
+        'https-proxy-agent',
         'socks-proxy-agent',
         'ws',
         'crypto',

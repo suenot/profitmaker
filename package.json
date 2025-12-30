@@ -1,8 +1,14 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "profitmaker",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.7.0",
   "type": "module",
+  "main": "dist-electron/main.js",
+  "author": {
+    "name": "ProfitMaker Team",
+    "email": "info@profitmaker.app"
+  },
+  "description": "Professional crypto trading terminal with support for 100+ exchanges",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,7 +18,13 @@
     "server": "tsx --tsconfig tsconfig.server.json express.ts",
     "server:dev": "tsx watch --tsconfig tsconfig.server.json express.ts",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:8080 && ELECTRON=true vite build --mode development && electron .\"",
+    "electron:build": "ELECTRON=true vite build && electron-builder",
+    "electron:build:win": "ELECTRON=true vite build && electron-builder --win",
+    "electron:build:mac": "ELECTRON=true vite build && electron-builder --mac",
+    "electron:build:linux": "ELECTRON=true vite build && electron-builder --linux",
+    "electron:preview": "ELECTRON=true vite build && electron ."
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -90,6 +102,9 @@
     "@vitejs/plugin-react-swc": "^3.5.0",
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.2.1",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
@@ -103,6 +118,9 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1",
-    "vitest": "^3.2.4"
+    "vite-plugin-electron": "^0.29.0",
+    "vite-plugin-electron-renderer": "^0.14.6",
+    "vitest": "^3.2.4",
+    "wait-on": "^9.0.3"
   }
 }

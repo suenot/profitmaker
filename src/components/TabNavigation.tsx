@@ -1,20 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Bell, Sun, Moon, User, X } from 'lucide-react';
+import { Plus, Bell, Sun, Moon, User, X, Server } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useUserStore } from '@/store/userStore';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useNotificationStore } from '@/store/notificationStore';
+import { useBackendSettingsStore } from '@/store/backendSettingsStore';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Badge } from './ui/badge';
 import UserDrawer from './UserDrawer';
 import NotificationHistory from './NotificationHistory';
 import { AnimatedLogo } from './AnimatedLogo';
+import { BackendSettingsDialog } from './BackendSettingsDialog';
 
 const TabNavigation: React.FC = () => {
   const [isUserDrawerOpen, setIsUserDrawerOpen] = useState(false);
   const [isNotificationHistoryOpen, setIsNotificationHistoryOpen] = useState(false);
+  const [isBackendSettingsOpen, setIsBackendSettingsOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [isThemeSheetOpen, setIsThemeSheetOpen] = useState(false);
+
+  // Backend settings store
+  const serverStatus = useBackendSettingsStore(s => s.serverStatus);
 
   
   // State for renaming dashboards
@@ -204,17 +210,24 @@ const TabNavigation: React.FC = () => {
             </button>
           </div>
         </div>
-        {/* Block with three icons */}
+        {/* Block with icons */}
         <div className="flex items-center space-x-3 h-full">
-          <button 
+          <button
+            className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors relative"
+            onClick={() => setIsBackendSettingsOpen(true)}
+            title="Backend Settings"
+          >
+            <Server size={18} className={serverStatus.running ? "text-green-500" : "text-terminal-muted"} />
+          </button>
+          <button
             className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors relative"
             onClick={handleNotificationClick}
             title="Notifications"
           >
             <Bell size={18} className="text-terminal-muted" />
             {unreadCount > 0 && (
-              <Badge 
-                variant="destructive" 
+              <Badge
+                variant="destructive"
                 className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center rounded-full"
               >
                 {unreadCount > 99 ? '99+' : unreadCount}
@@ -248,12 +261,16 @@ const TabNavigation: React.FC = () => {
         </div>
       </div>
       <UserDrawer open={isUserDrawerOpen} onOpenChange={setIsUserDrawerOpen} />
-      <NotificationHistory 
-        open={isNotificationHistoryOpen} 
+      <NotificationHistory
+        open={isNotificationHistoryOpen}
         onOpenChange={(open) => {
           setIsNotificationHistoryOpen(open);
           setHistoryOpen(open);
-        }} 
+        }}
+      />
+      <BackendSettingsDialog
+        open={isBackendSettingsOpen}
+        onOpenChange={setIsBackendSettingsOpen}
       />
     </div>
   );

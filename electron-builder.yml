@@ -1,0 +1,101 @@
+appId: app.profitmaker.desktop
+productName: ProfitMaker
+copyright: Copyright © 2024 ProfitMaker Team
+
+directories:
+  buildResources: build
+  output: release
+
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - server/**/*
+  - package.json
+
+extraResources:
+  - from: express.ts
+    to: server/express.ts
+
+asar: true
+asarUnpack:
+  - "**/*.node"
+  - "**/node_modules/ccxt/**"
+
+mac:
+  category: public.app-category.finance
+  icon: build/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+        - ia32
+    - target: portable
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+linux:
+  icon: build/icons
+  category: Finance
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+    - target: rpm
+      arch:
+        - x64
+
+appImage:
+  artifactName: ${productName}-${version}-${arch}.AppImage
+
+deb:
+  depends:
+    - gconf2
+    - gconf-service
+    - libnotify4
+    - libappindicator1
+    - libxtst6
+    - libnss3
+
+publish:
+  provider: github
+  owner: suenot
+  repo: profitmaker
+  releaseType: release
