@@ -1,6 +1,6 @@
 import type { StateCreator } from 'zustand';
 import type { DataProviderStore } from '../types';
-import type { DataProvider, DataType, CCXTBrowserProvider, CCXTServerProvider, Timeframe, MarketType, WalletType } from '../../types/dataProviders';
+import type { DataProvider, DataType, CCXTBrowserProvider, CCXTServerProvider, Timeframe, MarketType, WalletType, CCXTExchangeInstance } from '../../types/dataProviders';
 import { getCCXT, getCCXTPro } from '../utils/ccxtUtils';
 import { useUserStore } from '../userStore';
 import { getAccountForExchange, convertAccountForProvider, createExchangeInstance } from '../utils/providerUtils';
@@ -117,7 +117,7 @@ export const createFetchingActions: StateCreator<
 
     try {
       // Use appropriate provider for proper instance management
-      let exchangeInstance: any;
+      let exchangeInstance: CCXTExchangeInstance;
       if (provider.type === 'ccxt-browser') {
         const { createCCXTBrowserProvider } = await import('../providers/ccxtBrowserProvider');
         const ccxtProvider = createCCXTBrowserProvider(provider);
@@ -390,7 +390,7 @@ export const createFetchingActions: StateCreator<
 
     try {
       // Use appropriate provider for proper instance management
-      let exchangeInstance: any;
+      let exchangeInstance: CCXTExchangeInstance;
       if (provider.type === 'ccxt-browser') {
         const { createCCXTBrowserProvider } = await import('../providers/ccxtBrowserProvider');
         const ccxtProvider = createCCXTBrowserProvider(provider);

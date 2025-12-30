@@ -1,20 +1,20 @@
-import type { DataProvider, ExchangeAccountForProvider, ProviderExchangeMapping } from '../../types/dataProviders';
+import type { DataProvider, ExchangeAccountForProvider, ProviderExchangeMapping, CCXTBrowserConfig, CCXTServerConfig, CCXTExchangeInstance, CCXTExchangeConfig } from '../../types/dataProviders';
 import type { User, ExchangeAccount } from '../userStore';
 import { useUserStore } from '../userStore';
 
 /**
  * Создает CCXT exchange instance с пользовательскими ключами
  */
-export const createExchangeInstance = (exchange: string, provider: DataProvider, ccxtLib: any): any => {
+export const createExchangeInstance = (exchange: string, provider: DataProvider, ccxtLib: Record<string, new (config?: CCXTExchangeConfig) => CCXTExchangeInstance>): CCXTExchangeInstance => {
   if (!ccxtLib) {
     throw new Error('CCXT library not available');
   }
-  
+
   const ExchangeClass = ccxtLib[exchange];
   if (!ExchangeClass) {
     throw new Error(`Exchange ${exchange} not found in CCXT`);
   }
-  
+
   // Get user credentials for this exchange
   let activeUser: User | undefined;
   try {
@@ -24,16 +24,16 @@ export const createExchangeInstance = (exchange: string, provider: DataProvider,
     console.warn('Failed to get user store:', error);
     activeUser = undefined;
   }
-  
-  let config: any = {};
-  
+
+  let config: CCXTExchangeConfig = {};
+
   if (provider.type === 'ccxt-browser') {
-    const browserConfig = provider.config as any;
+    const browserConfig = provider.config as CCXTBrowserConfig;
     config = {
       sandbox: browserConfig.sandbox || false,
       options: browserConfig.options || {}
     };
-    
+
     // Add user credentials if available
     if (activeUser) {
       const account = getAccountForExchange(activeUser, exchange);
@@ -46,16 +46,16 @@ export const createExchangeInstance = (exchange: string, provider: DataProvider,
       }
     }
   } else if (provider.type === 'ccxt-server') {
-    const serverConfig = provider.config as any;
+    const serverConfig = provider.config as CCXTServerConfig;
     config = {
       serverUrl: serverConfig.serverUrl,
       timeout: serverConfig.timeout || 30000,
       sandbox: serverConfig.sandbox || false
     };
-    
+
     // For server providers, credentials are managed on server side
   }
-  
+
   return new ExchangeClass(config);
 };
 
@@ -196,7 +196,7 @@ export const validateProviderConfig = (provider: DataProvider): { isValid: boole
   
   // Валидация для CCXT Server
   if (provider.type === 'ccxt-server') {
-    const config = provider.config as any;
+    const config = provider.config as CCXTServerConfig;
     if (!config.serverUrl) {
       errors.push('Server URL is required for CCXT Server provider');
     }

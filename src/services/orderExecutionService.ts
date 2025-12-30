@@ -1,9 +1,9 @@
-import type { 
-  PlaceOrderRequest, 
-  PlaceOrderResponse, 
-  AdvancedOrderOptions 
+import type {
+  PlaceOrderRequest,
+  PlaceOrderResponse,
+  AdvancedOrderOptions
 } from '../types/orders';
-import type { CCXTBrowserProvider } from '../types/dataProviders';
+import type { CCXTBrowserProvider, CCXTOrderParams, CCXTOrder } from '../types/dataProviders';
 import { createCCXTBrowserProvider } from '../store/providers/ccxtBrowserProvider';
 import { useDataProviderStore } from '../store/dataProviderStore';
 import { useUserStore } from '../store/userStore';
@@ -75,7 +75,7 @@ export async function executeOrder(
     const { symbol, side, type, amount, price, stopPrice } = orderRequest;
     
     let ccxtOrderType: string;
-    let orderParams: any = {};
+    let orderParams: CCXTOrderParams = {};
 
     // Map our order types to CCXT order types
     switch (type) {
@@ -137,8 +137,8 @@ export async function executeOrder(
       params: orderParams,
     });
 
-    let ccxtOrder: any;
-    
+    let ccxtOrder: CCXTOrder;
+
     try {
       ccxtOrder = await tradingInstance.createOrder(
         symbol,

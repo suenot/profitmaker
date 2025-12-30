@@ -335,4 +335,237 @@ export interface ChartUpdateEvent {
   timestamp: number;
 }
 
-export type ChartUpdateListener = (event: ChartUpdateEvent) => void; 
+export type ChartUpdateListener = (event: ChartUpdateEvent) => void;
+
+// CCXT-specific types for exchange instances
+
+/**
+ * CCXT exchange method capabilities
+ */
+export interface CCXTExchangeHas {
+  watchOHLCV?: boolean;
+  watchTrades?: boolean;
+  watchOrderBook?: boolean;
+  watchOrderBookForSymbols?: boolean;
+  watchBalance?: boolean;
+  fetchOHLCV?: boolean;
+  fetchTrades?: boolean;
+  fetchOrderBook?: boolean;
+  fetchBalance?: boolean;
+  fetchFundingBalance?: boolean;
+  createOrder?: boolean;
+  createMarketOrder?: boolean;
+  createLimitOrder?: boolean;
+  createStopOrder?: boolean;
+  cancelOrder?: boolean;
+  [key: string]: boolean | undefined;
+}
+
+/**
+ * CCXT exchange options
+ */
+export interface CCXTExchangeOptions {
+  defaultType?: 'spot' | 'future' | 'margin' | 'swap' | 'option' | string;
+  [key: string]: unknown;
+}
+
+/**
+ * CCXT market info
+ */
+export interface CCXTMarketInfo {
+  limits?: {
+    cost?: { min?: number; max?: number };
+    amount?: { min?: number; max?: number };
+    price?: { min?: number; max?: number };
+  };
+  precision?: {
+    amount?: number;
+    price?: number;
+  };
+  active?: boolean;
+  maker?: number;
+  taker?: number;
+  [key: string]: unknown;
+}
+
+/**
+ * CCXT exchange instance interface
+ * Represents a CCXT exchange instance with common methods and properties
+ */
+export interface CCXTExchangeInstance {
+  // Properties
+  has?: CCXTExchangeHas;
+  options?: CCXTExchangeOptions;
+  markets?: Record<string, CCXTMarketInfo>;
+  name?: string;
+  apiKey?: string;
+  secret?: string;
+  defaultType?: string;
+
+  // WebSocket methods (CCXT Pro)
+  watchOHLCV?: (symbol: string, timeframe?: string) => Promise<CCXTOHLCVData[]>;
+  watchTrades?: (symbol: string) => Promise<CCXTTrade[]>;
+  watchOrderBook?: (symbol: string) => Promise<CCXTOrderBook>;
+  watchOrderBookForSymbols?: (symbols: string[]) => Promise<Record<string, CCXTOrderBook>>;
+  watchBalance?: () => Promise<CCXTBalance>;
+
+  // REST methods
+  fetchOHLCV?: (symbol: string, timeframe?: string, since?: number, limit?: number) => Promise<CCXTOHLCVData[]>;
+  fetchTrades?: (symbol: string, since?: number, limit?: number, params?: Record<string, unknown>) => Promise<CCXTTrade[]>;
+  fetchOrderBook?: (symbol: string, limit?: number) => Promise<CCXTOrderBook>;
+  fetchBalance?: (params?: Record<string, unknown>) => Promise<CCXTBalance>;
+  fetchFundingBalance?: () => Promise<CCXTBalance>;
+
+  // Order methods
+  createOrder?: (
+    symbol: string,
+    type: string,
+    side: string,
+    amount: number,
+    price?: number,
+    params?: CCXTOrderParams
+  ) => Promise<CCXTOrder>;
+  cancelOrder?: (orderId: string, symbol: string) => Promise<CCXTOrder>;
+
+  // Markets
+  loadMarkets?: () => Promise<Record<string, CCXTMarketInfo>>;
+
+  // Bybit-specific methods
+  privateGetV5AssetBalanceAllBalance?: () => Promise<CCXTBybitBalanceResponse>;
+
+  // Allow additional properties
+  [key: string]: unknown;
+}
+
+/**
+ * CCXT OHLCV data (array format: [timestamp, open, high, low, close, volume])
+ */
+export type CCXTOHLCVData = [number, number, number, number, number, number];
+
+/**
+ * CCXT Trade
+ */
+export interface CCXTTrade {
+  id: string;
+  timestamp: number;
+  datetime?: string;
+  symbol: string;
+  side: 'buy' | 'sell';
+  price: number;
+  amount: number;
+  cost?: number;
+  info?: unknown;
+}
+
+/**
+ * CCXT OrderBook
+ */
+export interface CCXTOrderBook {
+  bids: [number, number][]; // [price, amount][]
+  asks: [number, number][]; // [price, amount][]
+  timestamp?: number;
+  datetime?: string;
+  nonce?: number;
+}
+
+/**
+ * CCXT Balance currency data
+ */
+export interface CCXTBalanceCurrency {
+  free: number;
+  used: number;
+  total: number;
+}
+
+/**
+ * CCXT Balance response
+ */
+export interface CCXTBalance {
+  info?: unknown;
+  timestamp?: number;
+  datetime?: string;
+  [currency: string]: CCXTBalanceCurrency | unknown;
+}
+
+/**
+ * CCXT Bybit balance response
+ */
+export interface CCXTBybitBalanceResponse {
+  result?: {
+    list?: Array<{
+      accountType: string;
+      coin?: Array<{
+        coin: string;
+        walletBalance?: string;
+      }>;
+    }>;
+  };
+}
+
+/**
+ * CCXT Order parameters
+ */
+export interface CCXTOrderParams {
+  stopPrice?: number;
+  timeInForce?: string;
+  reduceOnly?: boolean;
+  postOnly?: boolean;
+  clientOrderId?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * CCXT Order response
+ */
+export interface CCXTOrder {
+  id: string;
+  clientOrderId?: string;
+  symbol: string;
+  side: string;
+  type: string;
+  amount: number;
+  price?: number;
+  status: string;
+  timestamp?: number;
+  datetime?: string;
+  filled?: number;
+  remaining?: number;
+  cost?: number;
+  fee?: {
+    cost: number;
+    currency: string;
+  };
+  info?: unknown;
+}
+
+/**
+ * CCXT Exchange class constructor type
+ */
+export interface CCXTExchangeClass {
+  new (config?: CCXTExchangeConfig): CCXTExchangeInstance;
+}
+
+/**
+ * CCXT Exchange configuration
+ */
+export interface CCXTExchangeConfig {
+  apiKey?: string;
+  secret?: string;
+  password?: string;
+  uid?: string;
+  sandbox?: boolean;
+  enableRateLimit?: boolean;
+  defaultType?: string;
+  options?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+/**
+ * CCXT Library type (window.ccxt)
+ */
+export interface CCXTLibrary {
+  exchanges?: string[] | Record<string, unknown>;
+  version?: string;
+  Exchange?: CCXTExchangeClass;
+  [exchangeId: string]: CCXTExchangeClass | string[] | Record<string, unknown> | string | undefined;
+} 

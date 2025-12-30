@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
+import type { CCXTLibrary, CCXTExchangeClass, CCXTExchangeInstance } from '../types/dataProviders';
 
 // CCXT loaded via CDN script tag - available as window.ccxt
 declare global {
   interface Window {
-    ccxt: any;
+    ccxt: CCXTLibrary | undefined;
   }
 }
 
@@ -11,7 +12,7 @@ declare global {
 export interface ExchangeInfo {
   id: string;
   name: string;
-  has: any;
+  has: Record<string, boolean | undefined>;
 }
 
 // Safe fallback exchanges list
@@ -73,13 +74,13 @@ const loadCCXTExchanges = (): Promise<ExchangeInfo[]> => {
       
       for (const exchangeId of exchangeIds) {
         try {
-          const ExchangeClass = window.ccxt[exchangeId] as any;
+          const ExchangeClass = window.ccxt?.[exchangeId] as CCXTExchangeClass | undefined;
           if (ExchangeClass && typeof ExchangeClass === 'function') {
-            const exchange = new ExchangeClass();
+            const exchange: CCXTExchangeInstance = new ExchangeClass();
             exchanges.push({
               id: exchangeId,
               name: exchange.name || exchangeId,
-              has: exchange.has
+              has: (exchange.has as Record<string, boolean | undefined>) || {}
             });
           }
         } catch (error) {
