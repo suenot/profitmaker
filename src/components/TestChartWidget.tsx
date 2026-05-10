@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDataProviderStore } from '../store/dataProviderStore';
+import { ccxtInstanceManager } from '../store/utils/ccxtInstanceManager';
 
 export const TestChartWidget: React.FC = () => {
   const { 
@@ -33,17 +34,33 @@ export const TestChartWidget: React.FC = () => {
     addResult(`Provider for Binance: ${binanceProvider ? binanceProvider.name : 'None'}`);
   };
 
-  const testCCXT = () => {
+  const testCCXT = async () => {
     addResult('=== Testing CCXT ===');
     try {
       const ccxt = (window as any).ccxt;
       if (ccxt) {
         addResult(`CCXT loaded: version ${ccxt.version || 'unknown'}`);
         addResult(`Available exchanges: ${Object.keys(ccxt).filter(k => typeof ccxt[k] === 'function').slice(0, 5).join(', ')}...`);
-        
-        // Test Binance instance creation
-        const binance = new ccxt.binance();
-        addResult(`Binance instance created: ${binance.id}`);
+
+        // Test Binance instance creation using ccxtInstanceManager
+        try {
+          const binance = await ccxtInstanceManager.getExchangeInstanceForMarket(
+            'binance',
+            'test-account',
+            {
+              apiKey: 'test',
+              secret: 'test',
+              sandbox: true
+            },
+            'spot'
+          );
+          addResult(`✅ Binance instance created via ccxtInstanceManager: ${binance.id}`);
+        } catch (managerError) {
+          addResult(`❌ ccxtInstanceManager error: ${managerError}`);
+          // Fallback to direct instantiation for comparison
+          const binance = new ccxt.binance();
+          addResult(`⚠️ Fallback - Binance instance created directly: ${binance.id}`);
+        }
       } else {
         addResult('❌ CCXT not loaded');
       }
@@ -98,7 +115,7 @@ export const TestChartWidget: React.FC = () => {
   const runAllTests = async () => {
     setTestResults([]);
     testProviders();
-    testCCXT();
+    await testCCXT();
     await testInitializeChartData();
     await testSubscription();
     addResult('=== All Tests Completed ===');
@@ -129,8 +146,8 @@ export const TestChartWidget: React.FC = () => {
           Test Providers
         </button>
         
-        <button 
-          onClick={testCCXT}
+        <button
+          onClick={() => testCCXT()}
           className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
         >
           Test CCXT
