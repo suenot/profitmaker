@@ -337,14 +337,19 @@ module bundle is imported. Reach it with `getTerminal()`:
 | `api.baseUrl` | `string` | the resolved terminal-server base. |
 | `notify.success/error/info(message)` | `(string) => void` | host toast + notification history. |
 
-The SDK also **re-exports the hooks** so a module can import them directly
-(they delegate to `getTerminal().hooks.*` and typecheck against the SDK):
+**Recommended:** import the hooks directly from the SDK (a bare import) rather
+than reaching through `getTerminal().hooks.*`. The SDK re-exports them with full
+types, and the vite preset aliases the SDK to the runtime shim, so the same
+import both typechecks and resolves to the host implementation at runtime:
 
 ```tsx
 import { useWidgetGroup, useMarketData, useModuleSocket } from '@profitmaker/module-sdk';
 ```
 
-They are real React hooks — call them unconditionally at the top of a component.
+`getTerminal().hooks.*` remains available and is equivalent — use it when you
+already hold the `terminal` reference. Either way these are real React hooks —
+call them unconditionally at the top of a component. The per-hook examples below
+use the bare-import style.
 
 #### `useWidgetGroup(groupId)`
 
