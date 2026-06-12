@@ -12,7 +12,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=profitmaker
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # postgres:18 images expect the mount at /var/lib/postgresql (data goes in a subdir)
+      - pgdata:/var/lib/postgresql
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U profitmaker"]
