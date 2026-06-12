@@ -6,7 +6,11 @@ Widgets are the building blocks of the trading terminal. Each dashboard contains
 
 ## Widget Types
 
-All widget types are defined in `src/types/dashboard.ts` as a Zod enum:
+Widgets are resolved at runtime through the **WidgetRegistry**
+(`src/modules/registry.ts`), keyed by a `type` string. Built-ins are registered
+in `src/modules/builtinWidgets.tsx`; modules register theirs at load time. The
+`type` is a free-form string (`WidgetSchema.type` = `z.string().min(1)`); the
+former enum is kept as `BUILTIN_WIDGET_TYPES` for reference. Built-in types:
 
 | Type | Component | Description |
 |------|-----------|-------------|
@@ -74,22 +78,15 @@ Groups are identified by a color indicator on each widget's title bar.
 
 ## How to Create a New Widget
 
-### 1. Add the widget type
+> For community or full-stack widgets, build a **module** instead of editing the
+> core — see [Modules](modules.md). The steps below are for built-in widgets that
+> ship with the terminal.
 
-In `src/types/dashboard.ts`, add your type to the `WidgetSchema` type enum:
-
-```typescript
-type: z.enum([
-  'chart', 'portfolio', /* ... existing types ... */,
-  'myNewWidget'  // <-- add here
-]),
-```
-
-### 2. Create the component
+### 1. Create the component
 
 Create `src/components/widgets/MyNewWidget.tsx`:
 
-```typescript
+```tsx
 import React from 'react';
 
 const MyNewWidget: React.FC = () => {
@@ -104,32 +101,38 @@ const MyNewWidget: React.FC = () => {
 export default MyNewWidget;
 ```
 
-### 3. Export from the widget index
+### 2. Register it in the WidgetRegistry
 
-In `src/components/widgets/index.ts`:
+In `src/modules/builtinWidgets.tsx`, import your component and add a
+`WidgetDefinition` to `BUILTIN_DEFINITIONS`:
 
-```typescript
-export { default as MyNewWidget } from './MyNewWidget';
-```
-
-### 4. Register in TradingTerminal
-
-In `src/pages/TradingTerminal.tsx`, add to the `widgetComponents` map:
-
-```typescript
+```tsx
 import MyNewWidget from '@/components/widgets/MyNewWidget';
 
-const widgetComponents: Record<string, React.FC<any>> = {
-  // ... existing entries
-  myNewWidget: MyNewWidget,
-};
+// inside BUILTIN_DEFINITIONS:
+{
+  type: 'myNewWidget',
+  title: 'My Widget',
+  icon: 'PieChart',                 // a lucide name in resolveIcon's map
+  category: 'public',               // 'public' | 'private' | 'diagnostics' | 'system'
+  defaultSize: { width: 500, height: 400 },
+  Component: adaptComponent(MyNewWidget), // adapter maps WidgetProps -> {widgetId, selectedGroupId}
+  // Settings: adaptSettings(MyNewWidgetSettings),  // optional gear panel
+},
 ```
 
-### 5. Add to widget menu (optional)
+That's the only wiring needed. `category` decides the add-widget menu section
+(`public` → Public Data, `private` → Private Data, `diagnostics` → Diagnostics
+submenu, `module` widgets → Modules; `system` widgets are registered but not in
+the menu). `TradingTerminal`, `WidgetMenu`, `WidgetSettingsManager` and
+`WidgetSimple` all read the registry — there is no separate component map, enum,
+or menu list to update.
 
-Add an entry in the widget menu/right-click context menu so users can add your widget to their dashboard.
+If your widget needs a new icon, add it to the curated map in
+`src/modules/resolveIcon.tsx` (don't import lucide's full `icons` barrel — it
+bloats the bundle).
 
-### 6. Use market data (optional)
+### 3. Use market data (optional)
 
 If your widget needs market data, use the data provider store:
 

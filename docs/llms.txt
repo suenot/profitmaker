@@ -1,0 +1,136 @@
+# Profitmaker Modules — LLM index
+
+One-page reference for building a Profitmaker terminal **module** (an npm package
+that adds widgets and/or backend services to a running terminal). Full docs:
+`docs/modules.md`. Starting point: copy `templates/module-template/`.
+
+A module is an npm package with the `profitmaker-module` keyword and a
+`profitmaker` key in `package.json` (the manifest). It may ship a `frontend`
+(widget bundle), a `backend` (Elysia plugin + services), or both. Host API
+version: `TERMINAL_API_VERSION` = `1.0.0`; declare compatibility via
+`profitmaker.minTerminalApi`.
+
+## Manifest (package.json `profitmaker` key)
+
+```jsonc
+{
+  "manifestVersion": 1,
+  "id": "example",                       // ^[a-z][a-z0-9-]*$ ; used in URLs + widget types
+  "displayName": "Example Module",
+  "minTerminalApi": ">=1.0.0",
+  "permissions": ["market-data", "storage", "jobs"], // declarative only, not enforced
+  "frontend": {
+    "entry": "dist/frontend/index.js",   // served at /modules/<id>/bundle.js
+    "style": "dist/frontend/style.css",  // optional, /modules/<id>/style.css
+    "widgets": [{ "type": "example.hello", "title": "Example Hello", "category": "modules" }]
+  },
+  "backend": { "entry": "dist/backend/index.js", "routes": ["/hello"] }
+}
+```
+
+Permissions: `market-data | private-data | orders | network | storage | jobs`.
+At least one of `frontend` / `backend` is required. See
+`docs/modules.md#manifest-reference`.
+
+## Frontend (`@profitmaker/module-sdk`)
+
+Default-export a module built with `defineModule`. Widget types are
+`<moduleId>.<widgetName>`; they appear under the **Modules** menu section.
+
+```tsx
+import { defineModule, useWidgetGroup, useMarketData, useModuleSocket, getTerminal } from '@profitmaker/module-sdk';
+import type { WidgetDefinition, WidgetProps, WidgetSettingsProps } from '@profitmaker/module-sdk';
+
+function HelloWidget({ widgetId, groupId, config, updateConfig }: WidgetProps) {
+  const group = useWidgetGroup(groupId);                       // { exchange?, symbol?, market?, account?, isComplete }
+  const { ticker } = useMarketData({                           // candles|trades|orderbook|ticker, reactive
+    exchange: group.exchange ?? '', symbol: group.symbol ?? '',
+    dataType: 'ticker', market: group.market, subscriberId: widgetId,
+  });
+  const socket = useModuleSocket('example');                   // Socket.IO to /m/example
+  if (!group.isComplete) return <div className="text-terminal-muted">Pick an exchange & symbol.</div>;
+  return <div className="text-terminal-text">{(config.label as string) ?? group.symbol}: {ticker?.last ?? '—'}</div>;
+}
+
+const hello: WidgetDefinition = {
+  type: 'example.hello', title: 'Example Hello', icon: 'LineChart',
+  category: 'modules', defaultSize: { width: 360, height: 220 }, // pixels
+  Component: HelloWidget,
+};
+
+export default defineModule({ id: 'example', widgets: [hello] });
+```
+
+Key interfaces:
+
+```ts
+interface WidgetProps { widgetId: string; groupId?: string; config: Record<string, unknown>; updateConfig: (patch: Record<string, unknown>) => void; }
+interface WidgetSettingsProps { widgetId: string; groupId?: string; }
+interface WidgetDefinition { type: string; title: string; icon?: string; category?: string; defaultSize: { width: number; height: number }; showGroupSelector?: boolean; needsTransparentGroup?: boolean; Component: ComponentType<WidgetProps>; Settings?: ComponentType<WidgetSettingsProps>; HeaderActions?: ComponentType<{ widgetId: string }>; }
+```
+
+Terminal API (`window.__PROFITMAKER__` / `getTerminal()`):
+`widgets.{register,registerMany,unregister}`, `stores.{useDataProviderStore,
+useGroupStore, useDashboardStore, useSettingsDrawerStore}`, `hooks.{useWidgetGroup,
+useMarketData, useModuleSocket}`, `api.fetch(path, init?)` (authed; pass the FULL
+`/api/modules/<id>/...` path), `api.baseUrl`, `notify.{success,error,info}`.
+
+Persist config from a `Settings` panel (it has no `updateConfig`):
+`getTerminal().stores.useDashboardStore.getState().updateWidgetConfig(widgetId, patch)`.
+
+Theming — use the host palette classes: `bg-terminal-bg`, `bg-terminal-widget`,
+`bg-terminal-accent`, `text-terminal-text`, `text-terminal-muted`,
+`border-terminal-border`. See `docs/modules.md#frontend-modules` and
+`docs/theming.md`.
+
+**Single React instance:** the vite preset aliases `react`/`react-dom`/`zustand`/
+the SDK to host runtime shims — write normal imports; nothing is bundled. See
+`docs/modules.md#the-single-react-instance-rule`.
+
+## Backend (`@profitmaker/module-sdk`)
+
+Default-export a `BackendModule`. **Routes are relative to root** — the host
+mounts the plugin under `/api/modules/<id>` and strips that prefix.
+
+```ts
+import { Elysia } from 'elysia';
+import type { BackendModule } from '@profitmaker/module-sdk';
+
+const mod: BackendModule = {
+  async start(ctx) {
+    let n = (await ctx.storage.get<number>('count')) ?? 0;
+    ctx.jobs.every(10_000, async () => { n++; await ctx.storage.set('count', n); ctx.io.emit('heartbeat', n); });
+    const routes = new Elysia().get('/hello', () => ({ ok: true, id: ctx.id })); // -> /api/modules/<id>/hello
+    return { routes };
+  },
+  async stop() {},
+};
+export default mod;
+```
+
+`BackendModuleContext`: `id`, `version`, `log.{info,warn,error}`, `routesPrefix`,
+`io` (Socket.IO namespace `/m/<id>`), `ccxt.getInstance({ exchangeId, marketType?,
+sandbox?, apiKey?, secret?, password? })`, `storage.{get,set,delete,all}`
+(per-module JSON, survives disable), `jobs.{every,once}` (auto-cleared on stop),
+`env.dataDir`. See `docs/modules.md#backendmodulecontext`.
+
+## Build, dev-load, publish, install
+
+```bash
+bun install && bun run build          # -> dist/frontend/index.js (+ style.css), dist/backend/index.js
+# dev-load (no publish), from packages/server:
+DATABASE_URL=postgres://USER@localhost:5432/profitmaker API_TOKEN=test-token \
+  PROFITMAKER_DEV_MODULES=/abs/path/to/module bun src/index.ts
+npm publish                            # keep the profitmaker-module keyword
+```
+
+Management API (all `/api/modules/*` require Bearer auth; `/modules/*` assets are
+public): `GET /api/modules`, `GET /api/modules/search?q=`,
+`POST /api/modules/install {name,version?}`, `POST /api/modules/:id/enable|disable|upgrade`,
+`DELETE /api/modules/:id`, `ALL /api/modules/:id/*` (dispatch),
+`GET /modules/:id/bundle.js|style.css`.
+
+Runtime model: `install`/`enable`/`disable` apply with no restart;
+`upgrade`/`uninstall` set `pendingRestart` (Bun can't evict a loaded ES module).
+See `docs/modules.md#runtime-model`. Full agent loop:
+`templates/module-template/AGENTS.md`.

@@ -343,9 +343,10 @@ export function registerBuiltinWidgets(): void {
 
   // 'orderbook' was historically also referenced as 'orderBook' (camelCase) in
   // the settings switch. Register an alias so either spelling resolves and shows
-  // the order-book settings panel.
+  // the order-book settings panel. The alias uses category 'system' so it does
+  // NOT appear as a second entry in the add-widget menu (only 'orderbook' does).
   const orderbook = BUILTIN_DEFINITIONS.find((d) => d.type === 'orderbook');
   if (orderbook) {
-    useWidgetRegistry.getState().register({ ...orderbook, type: 'orderBook' });
+    useWidgetRegistry.getState().register({ ...orderbook, type: 'orderBook', category: 'system' });
   }
 }

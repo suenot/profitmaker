@@ -5,6 +5,7 @@ import { resolveServerBase, moduleFetch } from './api';
 import { initRuntime } from './runtime';
 import { satisfies } from './semver';
 import { useModuleLoadStore } from './loaderState';
+import { useWidgetRegistry } from './registry';
 import { useNotificationStore } from '@/store/notificationStore';
 
 /** A module bundle's default export is a FrontendModule (from defineModule). */
@@ -13,6 +14,13 @@ interface ModuleBundle {
 }
 
 const injectedStyles = new Set<string>();
+
+/**
+ * Cache of imported module bundles keyed by `<id>@<version>`. An already-imported
+ * ES module cannot be re-imported and re-evaluated, so we keep the FrontendModule
+ * to re-run register() on re-enable within the same session.
+ */
+const importedBundles = new Map<string, FrontendModule>();
 
 /** Inject a module stylesheet once per module id. */
 function injectStyle(base: string, id: string, version: string): void {
@@ -45,13 +53,20 @@ async function loadModule(base: string, module: InstalledModule): Promise<void> 
     injectStyle(base, id, version);
   }
 
-  const url = `${base}/modules/${id}/bundle.js?v=${encodeURIComponent(version)}`;
-  const bundle = (await import(/* @vite-ignore */ url)) as ModuleBundle;
-  const def = bundle.default;
-  if (!def || typeof def.register !== 'function') {
-    throw new Error('bundle has no default export with a register() function');
+  const cacheKey = `${id}@${version}`;
+  let def = importedBundles.get(cacheKey);
+  if (!def) {
+    const url = `${base}/modules/${id}/bundle.js?v=${encodeURIComponent(version)}`;
+    const bundle = (await import(/* @vite-ignore */ url)) as ModuleBundle;
+    def = bundle.default;
+    if (!def || typeof def.register !== 'function') {
+      throw new Error('bundle has no default export with a register() function');
+    }
+    importedBundles.set(cacheKey, def);
   }
 
+  // Re-registering is safe: the registry replaces (with a warn) on duplicate
+  // type, so re-enabling a module re-registers its widgets from the cached def.
   await def.register(window.__PROFITMAKER__!);
 }
 
@@ -117,4 +132,23 @@ export async function loadModules(): Promise<void> {
   } finally {
     loadingPromise = null;
   }
+}
+
+/**
+ * Unregister a module's widget types from the registry (e.g. on disable or
+ * uninstall) so any open dashboard widgets of those types fall back to the
+ * UnknownWidgetPlaceholder. Widget types are taken from the module manifest's
+ * declared frontend widgets.
+ *
+ * NOTE: the already-imported ES bundle cannot be evicted (Bun/JS limitation),
+ * so re-enabling within the same session re-registers via the registry's
+ * idempotent register; a hard removal of the module code needs a reload.
+ */
+export function unloadModule(module: InstalledModule): void {
+  const types = module.manifest.frontend?.widgets?.map((w) => w.type) ?? [];
+  const unregister = useWidgetRegistry.getState().unregister;
+  for (const type of types) {
+    unregister(type);
+  }
+  useModuleLoadStore.getState().clearError(module.id);
 }

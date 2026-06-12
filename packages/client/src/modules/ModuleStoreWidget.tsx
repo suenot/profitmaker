@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { moduleFetch } from './api';
-import { loadModules } from './loader';
+import { loadModules, unloadModule } from './loader';
 import { useModuleLoadStore } from './loaderState';
 import { useNotificationStore } from '@/store/notificationStore';
 
@@ -78,11 +78,15 @@ function InstalledTab() {
       const action = m.enabled ? 'disable' : 'enable';
       const res = await moduleFetch(`/api/modules/${m.id}/${action}`, { method: 'POST' });
       if (!res.ok) throw new Error(`${action} -> ${res.status}`);
-      await refresh();
-      if (!m.enabled) {
-        // Newly enabled — load its frontend bundle.
+      if (m.enabled) {
+        // Just disabled — unregister its widget types so open widgets fall back
+        // to the UnknownWidgetPlaceholder.
+        unloadModule(m);
+      } else {
+        // Just enabled — (re)load and register its frontend bundle.
         await loadModules();
       }
+      await refresh();
     } catch (err) {
       notify.showError(`Failed to ${m.enabled ? 'disable' : 'enable'} "${m.id}"`, err instanceof Error ? err.message : String(err));
     } finally {
@@ -96,6 +100,8 @@ function InstalledTab() {
       const res = await moduleFetch(`/api/modules/${m.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(`uninstall -> ${res.status}`);
       const data = (await res.json()) as { pendingRestart?: boolean };
+      // Unregister its widget types so open widgets fall back to the placeholder.
+      unloadModule(m);
       notify.showSuccess(`Uninstalled "${m.id}"`, data.pendingRestart ? 'Restart the server to fully remove it.' : undefined);
       await refresh();
     } catch (err) {

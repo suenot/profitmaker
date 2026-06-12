@@ -266,31 +266,238 @@ publishing standalone, pin a real version (e.g. `^1.0.0`).
 
 ---
 
-<!-- ===================================================================== -->
-<!-- TODO(#4): FRONTEND SECTIONS — fill once the client module runtime      -->
-<!-- (task #3) is merged. The runtime/loader behaviour below is stubbed.    -->
-<!-- ===================================================================== -->
-
 ## Frontend modules
 
-> **TODO(#4):** Document the frontend module contract once the client runtime
-> lands. Outline of what goes here:
+A frontend module is an ESM bundle whose **default export is a `FrontendModule`**.
+Build it with `defineModule` from `@profitmaker/module-sdk`:
 
-- **Entry shape.** `export default defineModule({ id, widgets, setup?, dispose? })`
-  from `@profitmaker/module-sdk`. <!-- TODO(#4): confirm against the shipped loader -->
-- **The Terminal API** (`window.__PROFITMAKER__` / `getTerminal()`): `widgets`,
-  `stores`, `hooks` (`useWidgetGroup`, `useMarketData`, `useModuleSocket`),
-  `api.fetch`, `notify`. <!-- TODO(#4): member-by-member table like BackendModuleContext above -->
-- **Writing a widget** (`WidgetDefinition`): `type`, `title`, `icon`, `category`,
-  `defaultSize`, `Component`, `Settings?`, `HeaderActions?`.
-  <!-- TODO(#4): full example with useWidgetGroup + useMarketData + Settings/updateConfig -->
-- **The single-React-instance rule** and how the vite preset enforces it.
-  <!-- TODO(#4): cross-link to the build section above -->
-- **Loading lifecycle**: how the host fetches `/modules/<id>/bundle.js`, injects
-  the stylesheet, calls `register(terminal)`, and unregisters on disable.
-  <!-- TODO(#4): describe the actual loader behaviour from task #3 -->
+```tsx
+import { defineModule } from '@profitmaker/module-sdk';
+import type { WidgetDefinition } from '@profitmaker/module-sdk';
+
+const helloWidget: WidgetDefinition = { /* see below */ };
+
+export default defineModule({
+  id: 'example',                 // must match the manifest id
+  widgets: [helloWidget],        // registered via terminal.widgets.registerMany
+  setup: (terminal) => {},       // optional: extra registration / side effects
+  dispose: () => {},             // optional: cleanup
+});
+```
+
+When the host loads your bundle it calls `module.register(terminal)`, which
+registers your `widgets[]` and runs `setup`. Your widget `type` strings are
+namespaced `<moduleId>.<widgetName>` (e.g. `example.hello`); they appear in the
+add-widget menu under the **Modules** section and render wherever a dashboard
+references them.
+
+### `WidgetDefinition`
+
+The shape every widget (built-in or module) is described by
+(`@profitmaker/module-sdk`):
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `type` | `string` | yes | `<moduleId>.<widgetName>`, globally unique. |
+| `title` | `string` | yes | Default widget title (header + menu). |
+| `icon` | `string` | no | lucide-react icon name (e.g. `'LineChart'`); the host resolves it and falls back to a puzzle icon for unknown names. |
+| `category` | `string` | no | Menu section. Module widgets use `'modules'` (the only category surfaced for modules). |
+| `defaultSize` | `{ width: number; height: number }` | yes | **Pixels.** A new widget is created at this size. |
+| `showGroupSelector` | `boolean` | no | Show the group-selector circle in the header (default `true`). |
+| `needsTransparentGroup` | `boolean` | no | Auto-assign the transparent group on creation (default `false`). |
+| `Component` | `ComponentType<WidgetProps>` | yes | The widget body. |
+| `Settings` | `ComponentType<WidgetSettingsProps>` | no | Rendered in the settings drawer; presence adds the gear button. |
+| `HeaderActions` | `ComponentType<{ widgetId }>` | no | Extra buttons in the widget header. |
+
+`WidgetProps` (passed to `Component`): `{ widgetId, groupId?, config, updateConfig }`.
+`config` is the per-widget persisted object; `updateConfig(patch)` merges a patch
+into it. `WidgetSettingsProps` (passed to `Settings`): `{ widgetId, groupId? }`.
+
+### The Terminal API
+
+The host installs `window.__PROFITMAKER__` (typed `TerminalAPI`) **before** any
+module bundle is imported. Reach it with `getTerminal()`:
+
+| Member | Type | Example |
+|--------|------|---------|
+| `apiVersion` | `string` | `getTerminal().apiVersion // '1.0.0'` |
+| `React`, `ReactDOM`, `ReactDOMClient`, `jsxRuntime`, `jsxDevRuntime`, `zustand` | host singletons | You normally never touch these directly — the vite preset aliases `react`/`zustand` to them so your imports resolve to the host's instances. |
+| `widgets.register(def)` | `(WidgetDefinition) => void` | `getTerminal().widgets.register(myWidget)` |
+| `widgets.registerMany(defs)` | `(WidgetDefinition[]) => void` | done for you by `defineModule({ widgets })` |
+| `widgets.unregister(type)` | `(string) => void` | `getTerminal().widgets.unregister('example.hello')` |
+| `stores.useDataProviderStore` / `useGroupStore` / `useDashboardStore` / `useSettingsDrawerStore` | host Zustand stores | `getTerminal().stores.useDashboardStore.getState().updateWidgetConfig(id, { label })` |
+| `hooks.useWidgetGroup(groupId?)` | `=> WidgetGroupContext` | resolves a group to `{ exchange?, symbol?, market?, account?, isComplete }` (`isComplete` ⇔ exchange **and** symbol set). |
+| `hooks.useMarketData(opts)` | `=> { candles?, trades?, orderbook?, ticker? }` | ref-counted subscribe for the component's lifetime; reactive. |
+| `hooks.useModuleSocket(moduleId)` | `=> ModuleSocket \| null` | Socket.IO to your backend namespace `/m/<id>`. |
+| `api.fetch(path, init?)` | `=> Promise<Response>` | authenticated fetch; pass the **full** path. |
+| `api.baseUrl` | `string` | the resolved terminal-server base. |
+| `notify.success/error/info(message)` | `(string) => void` | host toast + notification history. |
+
+The SDK also **re-exports the hooks** so a module can import them directly
+(they delegate to `getTerminal().hooks.*` and typecheck against the SDK):
+
+```tsx
+import { useWidgetGroup, useMarketData, useModuleSocket } from '@profitmaker/module-sdk';
+```
+
+They are real React hooks — call them unconditionally at the top of a component.
+
+#### `useWidgetGroup(groupId)`
+
+```tsx
+const group = useWidgetGroup(groupId);
+// group: { exchange?, symbol?, market?, account?, isComplete }
+if (!group.isComplete) return <div>Pick an exchange & symbol.</div>;
+```
+
+#### `useMarketData(opts)`
+
+```tsx
+const { ticker } = useMarketData({
+  exchange: group.exchange!, symbol: group.symbol!,
+  dataType: 'ticker', market: group.market, subscriberId: widgetId,
+});
+// dataType: 'candles' | 'trades' | 'orderbook' | 'ticker'
+// returns the matching field (candles/trades/orderbook/ticker), reactively.
+```
+
+#### `useModuleSocket(moduleId)`
+
+```tsx
+const socket = useModuleSocket('example');
+React.useEffect(() => {
+  if (!socket) return;
+  const onBeat = (n: number) => setHeartbeat(n);
+  socket.on('heartbeat', onBeat);
+  return () => socket.off('heartbeat', onBeat);
+}, [socket]);
+```
+
+#### `api.fetch(path, init?)` — calling your backend
+
+Backend routes are root-relative in your plugin, but you call the **full**
+mounted path from the frontend; the host attaches the Bearer token:
+
+```tsx
+const res = await getTerminal().api.fetch('/api/modules/example/hello');
+const data = await res.json();
+```
+
+#### `notify`
+
+```tsx
+getTerminal().notify.success('Saved');
+getTerminal().notify.error('Something went wrong');
+```
+
+### Reading & writing widget config
+
+The widget `Component` receives `config` and `updateConfig`:
+
+```tsx
+function MyWidget({ config, updateConfig }: WidgetProps) {
+  const label = (config.label as string) ?? 'Default';
+  return <button onClick={() => updateConfig({ label: 'clicked' })}>{label}</button>;
+}
+```
+
+A `Settings` panel receives only `{ widgetId, groupId? }` (no `updateConfig`).
+Persist config through the dashboard store's convenience method, which locates
+the widget across dashboards:
+
+```tsx
+const store = getTerminal().stores.useDashboardStore as any;
+store.getState().updateWidgetConfig(widgetId, { label: 'new label' });
+// reactive read:
+const label = store((s: any) =>
+  s.dashboards.flatMap((d: any) => d.widgets).find((w: any) => w.id === widgetId)?.config?.label ?? '');
+```
+
+The `templates/module-template` widget shows both patterns end to end.
+
+### Theming: the `terminal-*` class vocabulary
+
+Module widgets render inside the host, which uses Tailwind with a `terminal-*`
+palette mapped to CSS variables (so widgets follow the active theme). Prefer
+these classes over hard-coded colors:
+
+| Class | Role |
+|-------|------|
+| `bg-terminal-bg` | app background |
+| `bg-terminal-widget` | widget surface (often used with an opacity, e.g. `bg-terminal-widget/40`) |
+| `bg-terminal-accent` | hover / accent fills (e.g. `hover:bg-terminal-accent/60`) |
+| `text-terminal-text` | primary text |
+| `text-terminal-muted` | secondary / muted text |
+| `border-terminal-border` | borders & dividers |
+
+Example:
+
+```tsx
+<div className="p-3 bg-terminal-widget/40 border border-terminal-border rounded-md text-terminal-text">
+  <span className="text-terminal-muted">Label</span>
+</div>
+```
+
+You may also ship your own stylesheet (`frontend.style`) — the host injects it
+at `/modules/<id>/style.css` when your bundle loads. Scope your selectors (e.g.
+prefix with your module id) to avoid clashing with the host or other modules.
+See `docs/theming.md` for the full palette and theme variables.
+
+### The single-React-instance rule
+
+A module must use the **host's** React, not its own — two React copies break
+hooks. The SDK vite preset (`@profitmaker/module-sdk/vite`) enforces this by
+aliasing `react`, `react-dom`, `react/jsx-runtime`, `zustand` and
+`@profitmaker/module-sdk` to runtime shims that re-export
+`window.__PROFITMAKER__.*`. So you write ordinary imports (`import React from 'react'`)
+and the built bundle pulls the host singletons at runtime — and stays tiny
+(a few KB), because React/zustand are never bundled. See **Build & publish**
+above.
+
+### Loading lifecycle
+
+What the host does, in order:
+
+1. **Boot**: `initRuntime()` installs `window.__PROFITMAKER__`, then (after mount)
+   `loadModules()` runs.
+2. **Fetch**: `GET /api/modules`; for each **enabled** module with a `frontend`,
+   check `minTerminalApi` against `TERMINAL_API_VERSION` (incompatible → recorded
+   as an error, skipped).
+3. **Style**: if `frontend.style` is set, inject
+   `<link href="/modules/<id>/style.css?v=<version>">`.
+4. **Import**: `import('/modules/<id>/bundle.js?v=<version>')` and call
+   `bundle.default.register(window.__PROFITMAKER__)`.
+5. **Register**: your widgets enter the registry; they immediately appear in the
+   add-widget menu under **Modules** and render in any dashboard that references
+   their `type`.
+6. **Isolation**: each module loads in its own try/catch. A module that throws is
+   recorded (shown in the Module Store) and notified, but never breaks the
+   terminal or other modules.
+7. **Disable / uninstall**: the host unregisters the module's widget types, so any
+   open widgets of those types fall back to a placeholder
+   ("Widget '<type>' is not installed or its module is disabled" + a remove
+   button). Re-enabling re-registers from the cached bundle (an already-imported
+   ESM bundle can't be re-evaluated in-session).
+
+A dashboard persisted with a widget whose module is absent/disabled renders the
+same placeholder instead of crashing — the dashboard schema accepts any widget
+`type` string.
 
 ## Module Store (UI)
 
-> **TODO(#4):** Document the in-terminal Module Store widget (search, install,
-> enable/disable, pendingRestart indicator) once task #3 ships it.
+The terminal ships a **Module Store** widget (`type: 'system.moduleStore'`) for
+managing modules without leaving the UI. It has two tabs:
+
+- **Browse** — searches npm (`GET /api/modules/search?q=`) for
+  `keywords:profitmaker-module`; each result shows name / version / description
+  and an **Install** button (`POST /api/modules/install`), after which the new
+  module's frontend is loaded immediately (no page reload).
+- **Installed** — lists installed modules (`GET /api/modules`) with an
+  enable/disable switch (`POST .../enable|disable`), version, **dev** and
+  **restart-pending** badges, an uninstall button (`DELETE /api/modules/:id`),
+  and any load error (both backend `error` and client-side frontend load
+  failures).
+
+Disabling/uninstalling here unregisters the module's widget types client-side,
+so open widgets switch to the placeholder. Operations that need a server restart
+(`upgrade`, `uninstall`) surface a restart-pending badge.

@@ -1,6 +1,12 @@
 import React from 'react';
 import './style.css';
-import { defineModule, getTerminal } from '@profitmaker/module-sdk';
+import {
+  defineModule,
+  getTerminal,
+  useWidgetGroup,
+  useMarketData,
+  useModuleSocket,
+} from '@profitmaker/module-sdk';
 import type {
   WidgetProps,
   WidgetSettingsProps,
@@ -15,17 +21,17 @@ import type {
  * pull the host's singletons off window.__PROFITMAKER__, so there is exactly
  * one React instance and the host hooks just work.
  *
- * The host data-access hooks live on `getTerminal().hooks`. They are real React
- * hooks, so call them unconditionally at the top of the component.
+ * The SDK re-exports the host data-access hooks (`useWidgetGroup`,
+ * `useMarketData`, `useModuleSocket`) — import them directly. They are real
+ * React hooks, so call them unconditionally at the top of the component.
  */
 
 /** Render the group's ticker plus the backend heartbeat counter. */
 function ExampleWidget({ widgetId, groupId, config, updateConfig }: WidgetProps) {
-  const terminal = getTerminal();
-  const group = terminal.hooks.useWidgetGroup(groupId);
+  const group = useWidgetGroup(groupId);
 
   // Subscribe to the group's ticker for the lifetime of this component.
-  const { ticker } = terminal.hooks.useMarketData({
+  const { ticker } = useMarketData({
     exchange: group.exchange ?? '',
     symbol: group.symbol ?? '',
     dataType: 'ticker',
@@ -34,7 +40,7 @@ function ExampleWidget({ widgetId, groupId, config, updateConfig }: WidgetProps)
   });
 
   // Live heartbeat pushed by the backend over the module's socket namespace.
-  const socket = terminal.hooks.useModuleSocket('example');
+  const socket = useModuleSocket('example');
   const [heartbeat, setHeartbeat] = React.useState<number | null>(null);
   React.useEffect(() => {
     if (!socket) return;
@@ -71,24 +77,39 @@ function ExampleWidget({ widgetId, groupId, config, updateConfig }: WidgetProps)
   );
 }
 
-/** Settings panel: edit the widget label, persisted via updateConfig. */
+/**
+ * Settings panel: edit the widget label, persisted to the widget's `config`.
+ *
+ * Settings panels receive only the widget id, so we use the host dashboard
+ * store's `updateWidgetConfig(widgetId, patch)` convenience (it locates the
+ * widget across dashboards) — the same `config` the widget reads via its
+ * `config` prop. Selecting from the store keeps the input in sync.
+ */
 function ExampleSettings({ widgetId }: WidgetSettingsProps) {
   const terminal = getTerminal();
-  // Settings panels receive only the widget id; read/write config through the
-  // host store. For the template we keep a local input and persist on change.
-  const store = terminal.stores.useDashboardStore as unknown as () => {
-    updateWidgetConfig?: (id: string, patch: Record<string, unknown>) => void;
+  const useDashboardStore = terminal.stores.useDashboardStore as unknown as {
+    (selector: (s: DashboardStoreShape) => unknown): unknown;
+    getState: () => DashboardStoreShape;
   };
-  const dashboard = typeof store === 'function' ? store() : undefined;
+
+  // Reactive read of the current label from the widget's config.
+  const label = useDashboardStore((s) => {
+    for (const d of s.dashboards) {
+      const w = d.widgets.find((x) => x.id === widgetId);
+      if (w) return (w.config?.label as string) ?? '';
+    }
+    return '';
+  }) as string;
 
   return (
     <div style={{ padding: 12 }}>
       <label style={{ display: 'block', marginBottom: 4 }}>Label</label>
       <input
         type="text"
+        value={label}
         placeholder="Example"
         onChange={(e) =>
-          dashboard?.updateWidgetConfig?.(widgetId, { label: e.target.value })
+          useDashboardStore.getState().updateWidgetConfig(widgetId, { label: e.target.value })
         }
         style={{ width: '100%' }}
       />
@@ -96,12 +117,18 @@ function ExampleSettings({ widgetId }: WidgetSettingsProps) {
   );
 }
 
+/** Minimal structural view of the host dashboard store used by the settings panel. */
+interface DashboardStoreShape {
+  dashboards: Array<{ widgets: Array<{ id: string; config?: Record<string, unknown> }> }>;
+  updateWidgetConfig: (widgetId: string, patch: Record<string, unknown>) => void;
+}
+
 const helloWidget: WidgetDefinition = {
   type: 'example.hello',
   title: 'Example Hello',
-  icon: 'puzzle',
+  icon: 'Puzzle',
   category: 'modules',
-  defaultSize: { width: 4, height: 3 },
+  defaultSize: { width: 360, height: 220 },
   Component: ExampleWidget,
   Settings: ExampleSettings,
 };

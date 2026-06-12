@@ -70,33 +70,54 @@ Multiple modules: colon-separate the paths
 
 ### Verify the backend (works today)
 
+These run verbatim against this template (id `example`); set `MODULE_ID` to your
+own id when you change it.
+
 ```bash
 TOKEN=test-token
 B=localhost:3001
+MODULE_ID=example
 
 # 1. module is listed
-curl -s -H "Authorization: Bearer $TOKEN" $B/api/modules | grep '"id":"<id>"'
+curl -s -H "Authorization: Bearer $TOKEN" $B/api/modules | grep "\"id\":\"$MODULE_ID\""
 
 # 2. a backend route answers (route is root-relative in code: .get('/hello'))
-curl -s -H "Authorization: Bearer $TOKEN" $B/api/modules/<id>/hello
+curl -s -H "Authorization: Bearer $TOKEN" $B/api/modules/$MODULE_ID/hello
 
-# 3. the frontend bundle is served (public, no auth)
-curl -s -i $B/modules/<id>/bundle.js | head -3   # 200 + application/javascript
+# 3. the persisted state route answers
+curl -s -H "Authorization: Bearer $TOKEN" $B/api/modules/$MODULE_ID/state
 
-# 4. toggle lifecycle
-curl -s -X POST -H "Authorization: Bearer $TOKEN" $B/api/modules/<id>/disable
-curl -s -H "Authorization: Bearer $TOKEN" $B/api/modules/<id>/hello   # -> 404
-curl -s -X POST -H "Authorization: Bearer $TOKEN" $B/api/modules/<id>/enable
+# 4. the frontend bundle + stylesheet are served (public, no auth)
+curl -s -o /dev/null -w '%{http_code} %{content_type}\n' $B/modules/$MODULE_ID/bundle.js
+curl -s -o /dev/null -w '%{http_code} %{content_type}\n' $B/modules/$MODULE_ID/style.css
+
+# 5. toggle lifecycle (disable -> route 404 -> enable)
+curl -s -X POST -H "Authorization: Bearer $TOKEN" $B/api/modules/$MODULE_ID/disable
+curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $TOKEN" $B/api/modules/$MODULE_ID/hello   # -> 404
+curl -s -X POST -H "Authorization: Bearer $TOKEN" $B/api/modules/$MODULE_ID/enable
 ```
 
-### Verify the frontend (TODO — until task #3 lands)
+### Verify the frontend (in the browser)
 
-<!-- TODO(#3): once the client module runtime + loader ship, document:
-     - open the terminal UI, confirm the widget appears in the add-widget menu
-       under the "modules" category,
-     - add it to a dashboard, assign a group, confirm ticker + heartbeat render,
-     - confirm the settings panel persists `config.label`,
-     - confirm hot-reload after `bun run build` (no-cache dev bundle). -->
+With the server running (dev-loaded as above) and the terminal client open
+(`bun dev` from `packages/client`). Make sure the client talks to this server:
+configure a `ccxt-server` data provider pointing at the server URL + `API_TOKEN`,
+or serve client and server same-origin.
+
+1. **Widget in the menu.** Right-click the workspace → the add-widget menu shows
+   a **Modules** section containing **Example Hello**.
+2. **Renders live data.** Add it, assign a group with an exchange + symbol. The
+   widget shows `exchange · symbol`, the ticker `last` (via `useMarketData`), and
+   `backend heartbeat: <n>` ticking every 10s (the backend job pushing over the
+   module's Socket.IO namespace).
+3. **Settings persist.** Click the widget's gear → edit **Label** → the header
+   value (and `config.label`) update and survive a reload.
+4. **Disable → placeholder.** Add the **Module Store** widget
+   (`system.moduleStore`) → Installed tab → toggle **Example Module** off. The
+   open widget switches to "Widget 'example.hello' is not installed or its module
+   is disabled". Toggle back on → it renders again.
+5. **Hot-reload.** Edit `src/frontend/index.tsx`, `bun run build`, reload the
+   browser — the new bundle is served (dev modules are `Cache-Control: no-cache`).
 Frontend runtime verification depends on the client module loader (task #3) and
 is not yet documented here. Until then, verify the frontend only by build +
 typecheck + that `bundle.js` is served.

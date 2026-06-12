@@ -2,25 +2,29 @@
 
 ## Workspace Overview
 
-Profitmaker v3 is a Bun workspace monorepo with four packages:
+Profitmaker v3 is a Bun workspace monorepo:
 
 ```
 packages/
-├── types/    @profitmaker/types    Shared TypeScript types, Zod schemas
-├── core/     @profitmaker/core     CCXT providers, encryption, formatters, utils
-├── server/   @profitmaker/server   Express 5 + Socket.IO backend
-└── client/   @profitmaker/client   React 18 + Vite frontend
+├── types/    @profitmaker/types        Shared TypeScript types, Zod schemas
+├── core/     @profitmaker/core         CCXT providers, encryption, formatters, utils
+├── sdk/      @profitmaker/module-sdk    Module SDK: TerminalAPI types, manifest schema, vite preset, runtime shims
+├── server/   @profitmaker/server       Express 5 + Socket.IO backend (+ module manager)
+└── client/   @profitmaker/client       React 18 + Vite frontend (+ widget registry, module runtime)
 ```
 
 ### Dependency Graph
 
 ```
 @profitmaker/client
-  └── @profitmaker/core
+  ├── @profitmaker/core
+  │     └── @profitmaker/types
+  └── @profitmaker/module-sdk
         └── @profitmaker/types
 
 @profitmaker/server
   ├── @profitmaker/core
+  ├── @profitmaker/module-sdk
   └── @profitmaker/types
 ```
 
@@ -63,6 +67,23 @@ Key exports:
 - `DataProvider`, `ActiveSubscription`, `Candle`, `Trade`, `OrderBook`, `Ticker` -- market data types
 - `Group` -- widget grouping types
 - `Deal`, `DealTrade` -- deals/position tracking types
+
+### @profitmaker/module-sdk
+
+The contract shared by the host and third-party **modules** (see
+[Modules](modules.md)). No heavy runtime deps.
+
+Key exports:
+- `TerminalAPI`, `WidgetDefinition`, `WidgetProps`, `WidgetSettingsProps`,
+  `FrontendModule` -- the frontend module contract + `TERMINAL_API_VERSION`
+- `BackendModule`, `BackendModuleContext` -- the backend module contract
+- `ModuleManifestSchema`, `InstalledModule`, `MODULE_KEYWORD` -- manifest schema
+  + discovery key, used by both server (install) and client (load)
+- `defineModule`, `getTerminal`, and hook re-exports (`useWidgetGroup`,
+  `useMarketData`, `useModuleSocket`)
+- `@profitmaker/module-sdk/vite` -- the `profitmakerModule()` vite preset
+- `runtime/*` -- shims that alias a module's `react`/`react-dom`/`zustand`/SDK
+  imports to the host singletons on `window.__PROFITMAKER__`
 
 ### @profitmaker/core
 
@@ -157,9 +178,49 @@ Widgets are React components rendered inside a `WidgetSimple` container that pro
 - Group color indicator
 - Z-index management (bring to front on click)
 
-Widgets are registered in `TradingTerminal.tsx` via a type-to-component map and the `WidgetType` enum in `dashboard.ts`.
+Widgets are resolved through a dynamic **WidgetRegistry**
+(`packages/client/src/modules/registry.ts`), a Zustand store mapping a `type`
+string to a `WidgetDefinition`. Built-ins register at startup
+(`modules/builtinWidgets.tsx`); module widgets register at load time via the host
+`TerminalAPI`. `TradingTerminal`, `WidgetMenu`, `WidgetSettingsManager` and
+`WidgetSimple` all read the registry, so an unknown/disabled `type` renders an
+`UnknownWidgetPlaceholder` instead of crashing. The widget `type` is a free-form
+string (`WidgetSchema.type` = `z.string().min(1)`).
 
 See [Widgets](widgets.md) for the full list and how to create new ones.
+
+## Module System
+
+Profitmaker is extensible through **modules** — npm packages (keyword
+`profitmaker-module`) that add widgets (frontend) and/or services (backend) to a
+running terminal. The contract lives in `@profitmaker/module-sdk`.
+
+```
+                 @profitmaker/module-sdk  (shared contract)
+                 /                      \
+      host (server)                      host (client)
+  ModuleManager (packages/server)    module runtime (packages/client/src/modules)
+  - bun add/remove installs          - initRuntime(): window.__PROFITMAKER__
+  - validates manifest               - loadModules(): fetch list, import bundles,
+  - mounts routes /api/modules/<id>    inject styles, call register(terminal)
+  - serves bundle /modules/<id>      - WidgetRegistry + Module Store widget
+  - BackendModuleContext (log,       - UnknownWidgetPlaceholder for missing types
+    storage, jobs, io, ccxt)
+```
+
+- **Server** (`packages/server/src/modules`): `ModuleManager` installs/enables/
+  disables modules, validates manifests, mounts each backend plugin under
+  `/api/modules/<id>` (prefix stripped on dispatch), serves the frontend bundle at
+  `/modules/<id>/bundle.js`, and gives backends a `BackendModuleContext`.
+- **Client** (`packages/client/src/modules`): `initRuntime()` installs the host
+  `TerminalAPI` (`window.__PROFITMAKER__`) before any bundle import; `loadModules()`
+  fetches the installed list, checks `minTerminalApi`, injects styles, dynamically
+  imports each bundle and calls `register(terminal)`. The **single React instance**
+  is guaranteed by the SDK vite preset aliasing `react`/`zustand`/the SDK to host
+  runtime shims.
+
+See [Modules](modules.md) for the full contract, `docs/llms.txt` for a condensed
+index, and `templates/module-template/` for a working example.
 
 ## Persistence
 

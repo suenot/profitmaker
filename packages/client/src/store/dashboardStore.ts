@@ -101,6 +101,12 @@ interface DashboardStore extends DashboardStoreState {
   addWidget: (dashboardId: string, widget: CreateWidgetData) => string;
   removeWidget: (dashboardId: string, widgetId: string) => void;
   updateWidget: (dashboardId: string, widgetId: string, data: UpdateWidgetData) => void;
+  /**
+   * Merge a patch into a widget's `config`, locating the widget across all
+   * dashboards (no dashboardId needed). Convenience for module widgets/settings
+   * panels, which receive only the widget id.
+   */
+  updateWidgetConfig: (widgetId: string, patch: Record<string, unknown>) => void;
   moveWidget: (dashboardId: string, widgetId: string, x: number, y: number) => void;
   resizeWidget: (dashboardId: string, widgetId: string, width: number, height: number) => void;
   bringWidgetToFront: (dashboardId: string, widgetId: string) => void;
@@ -264,12 +270,25 @@ export const useDashboardStore = create<DashboardStore>()(
         set((state) => {
           const dashboard = state.dashboards.find(d => d.id === dashboardId);
           if (!dashboard) return;
-          
+
           const widget = dashboard.widgets.find(w => w.id === widgetId);
           if (!widget) return;
-          
+
           Object.assign(widget, data);
           dashboard.updatedAt = getCurrentTimestamp();
+        });
+      },
+
+      updateWidgetConfig: (widgetId, patch) => {
+        set((state) => {
+          for (const dashboard of state.dashboards) {
+            const widget = dashboard.widgets.find(w => w.id === widgetId);
+            if (widget) {
+              widget.config = { ...(widget.config ?? {}), ...patch };
+              dashboard.updatedAt = getCurrentTimestamp();
+              return;
+            }
+          }
         });
       },
 

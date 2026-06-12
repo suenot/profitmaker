@@ -257,6 +257,10 @@ const WidgetMenu: React.FC<WidgetMenuProps> = ({ position, onClose }) => {
   const publicDataWidgets = (listByCategory('public') as BuiltinWidgetDefinition[]).map(toMenuItem);
   const privateDataWidgets = (listByCategory('private') as BuiltinWidgetDefinition[]).map(toMenuItem);
   const diagnosticWidgets = (listByCategory('diagnostics') as BuiltinWidgetDefinition[]).map(toMenuItem);
+  // Widgets contributed by installed modules (category 'modules'). The section
+  // only appears when at least one module widget is registered, so a built-in
+  // only terminal keeps an identical menu.
+  const moduleWidgets = (listByCategory('modules') as BuiltinWidgetDefinition[]).map(toMenuItem);
 
   const renderWidgetButton = (widget: MenuWidgetItem) => (
     <button
@@ -311,6 +315,18 @@ const WidgetMenu: React.FC<WidgetMenuProps> = ({ position, onClose }) => {
               {privateDataWidgets.map(renderWidgetButton)}
             </div>
           </div>
+
+          {/* Modules Section — only shown when module widgets are registered */}
+          {moduleWidgets.length > 0 && (
+            <div className="mb-3">
+              <div className="px-3 py-1 text-xs font-medium text-terminal-muted/70 uppercase tracking-wide">
+                Modules
+              </div>
+              <div className="space-y-1">
+                {moduleWidgets.map(renderWidgetButton)}
+              </div>
+            </div>
+          )}
 
           {/* Diagnostics Section with submenu */}
           <div>
