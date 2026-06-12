@@ -15,6 +15,8 @@ import { providerRoutes } from './routes/providers';
 import { exchangeRoutes } from './routes/exchange';
 import { websocketRoutes } from './routes/websocket';
 import { proxyRoutes } from './routes/proxy';
+import { moduleRoutes, moduleAssetRoutes } from './routes/modules';
+import { moduleManager } from './modules/manager';
 import { cleanupCache } from './services/ccxtCache';
 import { validateSession, deleteExpiredSessions } from './services/auth';
 import { db } from './db';
@@ -85,7 +87,9 @@ const app = new Elysia()
   .use(providerRoutes)
   .use(exchangeRoutes)
   .use(websocketRoutes)
-  .use(proxyRoutes);
+  .use(proxyRoutes)
+  .use(moduleRoutes)
+  .use(moduleAssetRoutes);
 
 // Helper: serve static file
 function serveStatic(pathname: string): Response | null {
@@ -115,8 +119,9 @@ Bun.serve({
   async fetch(req) {
     const pathname = new URL(req.url).pathname;
 
-    // API routes go to Elysia
-    if (pathname.startsWith('/api/') || pathname === '/health') {
+    // API routes and module bundle/asset routes go to Elysia.
+    // /modules/ is outside /api/ and intentionally bypasses Bearer auth.
+    if (pathname.startsWith('/api/') || pathname === '/health' || pathname.startsWith('/modules/')) {
       return app.handle(req);
     }
 
@@ -132,6 +137,12 @@ Bun.serve({
 // Socket.IO attaches to the same Bun server via its underlying http handling
 const io = new SocketIOServer(PORT + 1, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
+});
+
+// Boot the module system once Socket.IO is available. A broken module records
+// its error and is skipped — it must never abort server boot.
+moduleManager.init(io).catch((err) => {
+  console.error('[modules] init failed:', err);
 });
 
 io.on('connection', (socket) => {

@@ -1,4 +1,7 @@
 {
+  "installCommand": "bun install",
+  "buildCommand": "bun run build",
+  "outputDirectory": "packages/client/dist",
   "rewrites": [
     {
       "source": "/(.*)",

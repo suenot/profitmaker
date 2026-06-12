@@ -1,0 +1,69 @@
+# Production deploy on Server 1 (89.179.247.80) behind Traefik.
+# Secrets live in .env on the server (POSTGRES_PASSWORD, API_TOKEN) — never committed.
+# Routing: https://profitmaker-api.marketmaker.cc → :3001 (REST + static client),
+#          same host /socket.io → :3002 (Socket.IO). Client provider config:
+#          serverUrl = socketUrl = https://profitmaker-api.marketmaker.cc
+
+services:
+  profitmaker-db:
+    image: postgres:18-alpine
+    environment:
+      - POSTGRES_USER=profitmaker
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=profitmaker
+    volumes:
+      # postgres:18 images expect the mount at /var/lib/postgresql (data goes in a subdir)
+      - pgdata:/var/lib/postgresql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U profitmaker"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgres://profitmaker:${POSTGRES_PASSWORD}@profitmaker-db:5432/profitmaker
+      - API_TOKEN=${API_TOKEN}
+      - PORT=3001
+      - NODE_ENV=production
+    volumes:
+      # installed modules survive container rebuilds
+      - modules-data:/app/packages/server/.modules
+    expose:
+      - "3001"
+      - "3002"
+    depends_on:
+      profitmaker-db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - default
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      # Socket.IO router must win over the API router for /socket.io
+      - "traefik.http.routers.profitmaker-ws.rule=Host(`profitmaker-api.marketmaker.cc`) && PathPrefix(`/socket.io`)"
+      - "traefik.http.routers.profitmaker-ws.entrypoints=websecure"
+      - "traefik.http.routers.profitmaker-ws.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.profitmaker-ws.priority=20"
+      - "traefik.http.routers.profitmaker-ws.service=profitmaker-ws"
+      - "traefik.http.services.profitmaker-ws.loadbalancer.server.port=3002"
+      - "traefik.http.routers.profitmaker-api.rule=Host(`profitmaker-api.marketmaker.cc`)"
+      - "traefik.http.routers.profitmaker-api.entrypoints=websecure"
+      - "traefik.http.routers.profitmaker-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.profitmaker-api.priority=10"
+      - "traefik.http.routers.profitmaker-api.service=profitmaker-api"
+      - "traefik.http.services.profitmaker-api.loadbalancer.server.port=3001"
+
+networks:
+  web:
+    external: true
+
+volumes:
+  pgdata:
+  modules-data:

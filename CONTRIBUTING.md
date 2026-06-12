@@ -48,10 +48,32 @@ See [CRUSH.md](./CRUSH.md) for detailed coding guidelines. Key points:
 
 ## Adding a Widget
 
-1. Create component in `packages/client/src/components/widgets/YourWidget.tsx`
-2. Register in `packages/client/src/pages/TradingTerminal.tsx` (widgetComponents map)
-3. Add widget type to `packages/types/src/dashboard.ts` (WidgetSchema type enum)
-4. Add to widget menu in `packages/client/src/components/WidgetMenu.tsx`
+Widgets are resolved through a dynamic **WidgetRegistry**
+(`packages/client/src/modules/registry.ts`) keyed by a `type` string. You have
+two paths:
+
+### Built-in widget (ships with the terminal)
+
+1. Create the component in `packages/client/src/components/widgets/YourWidget.tsx`.
+2. Register it in `packages/client/src/modules/builtinWidgets.tsx` — add a
+   `WidgetDefinition` (`type`, `title`, `icon`, `category`, `defaultSize`,
+   `Component`, optional `Settings`/`HeaderActions`) to `BUILTIN_DEFINITIONS`.
+   `category` (`public` | `private` | `diagnostics`) controls its menu section;
+   `system` widgets are registered but not shown in the add-widget menu.
+
+That's it — `TradingTerminal`, `WidgetMenu`, `WidgetSettingsManager` and
+`WidgetSimple` all read the registry, so no other wiring is needed. The widget
+`type` is a free-form string (`WidgetSchema.type` is `z.string().min(1)`); the
+prior built-in list lives as `BUILTIN_WIDGET_TYPES` in
+`packages/{client,types}/src/dashboard.ts` for reference.
+
+### As a module (no core changes)
+
+For anything community-facing or full-stack (a widget + a backend service),
+build a **module** instead of touching the core. Copy `templates/module-template/`
+and follow `docs/modules.md` (and the template's `AGENTS.md`). Modules register
+widgets at runtime via the host Terminal API and appear in the add-widget menu's
+**Modules** section — no PR to this repo required.
 
 ## Reporting Issues
 

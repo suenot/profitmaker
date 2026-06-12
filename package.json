@@ -2,7 +2,7 @@
   "name": "profitmaker",
   "private": true,
   "version": "3.0.0",
-  "workspaces": ["packages/*"],
+  "workspaces": ["packages/*", "templates/*"],
   "scripts": {
     "dev": "bun --filter '@profitmaker/client' dev",
     "build": "bun --filter '@profitmaker/client' build",

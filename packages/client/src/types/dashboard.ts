@@ -14,10 +14,14 @@ export type WidgetPosition = z.infer<typeof WidgetPositionSchema>;
 export const WidgetConfigSchema = z.record(z.any()).optional();
 export type WidgetConfig = z.infer<typeof WidgetConfigSchema>;
 
+// Built-in widget types. Kept for reference/defaults; the schema no longer
+// restricts `type` to this list so module-provided widget types validate too.
+export const BUILTIN_WIDGET_TYPES = ['chart', 'portfolio', 'orderForm', 'transactionHistory', 'custom', 'orderbook', 'trades', 'deals', 'tradesV2', 'dataProviderSettings', 'dataProviderDemo', 'dataProviderSetup', 'dataProviderDebug', 'notificationTest', 'debugUserData', 'debugCCXTCache', 'debugBingX', 'exchanges', 'markets', 'pairs', 'userBalances', 'userTradingData'] as const;
+
 // Widget schema
 export const WidgetSchema = z.object({
   id: z.string(), // uuid
-  type: z.enum(['chart', 'portfolio', 'orderForm', 'transactionHistory', 'custom', 'orderbook', 'trades', 'deals', 'tradesV2', 'dataProviderSettings', 'dataProviderDemo', 'dataProviderSetup', 'dataProviderDebug', 'notificationTest', 'debugUserData', 'debugCCXTCache', 'debugBingX', 'exchanges', 'markets', 'pairs', 'userBalances', 'userTradingData']),
+  type: z.string().min(1), // built-in or '<moduleId>.<widgetName>'; see BUILTIN_WIDGET_TYPES
   title: z.string(), // deprecated - keep for compatibility
   defaultTitle: z.string(),
   userTitle: z.string().optional(),

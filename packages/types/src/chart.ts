@@ -11,7 +11,7 @@ export interface ChartData {
   ohlcv: OHLCVData[];
 }
 
-export interface Timeframe {
+export interface ChartTimeframeOption {
   id: string;
   label: string;
   value: string;

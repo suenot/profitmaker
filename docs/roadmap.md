@@ -66,7 +66,14 @@ Profitmaker v3 is a working trading terminal with:
 - [ ] Internationalization (i18n) — EN, RU, ZH already started
 - [ ] DEX support (Uniswap, SushiSwap, etc.)
 - [ ] Mobile-responsive layout
-- [ ] Plugin system for community extensions
+- [x] **Module system for community extensions** — full-stack modules (widget
+  bundles + backend Elysia services) distributed as npm packages
+  (`profitmaker-module` keyword), installed/enabled from an in-terminal Module
+  Store. Dynamic `WidgetRegistry`, host `TerminalAPI` (`window.__PROFITMAKER__`),
+  SDK (`@profitmaker/module-sdk`) with a vite preset, and a template module.
+  See `docs/modules.md`.
+  - [ ] Enforce declared `permissions` at runtime (currently declarative only)
+  - [ ] MCP/CLI surface for AI-driven module authoring & install
 
 ## Provider Expansion
 

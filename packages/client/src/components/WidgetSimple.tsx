@@ -6,6 +6,7 @@ import GroupColorSelector from './ui/GroupColorSelector';
 import InstrumentHeaderControl from './ui/InstrumentHeaderControl';
 import { useGroupStore } from '@/store/groupStore';
 import { useSettingsDrawerStore } from '@/store/settingsDrawerStore';
+import { useWidgetRegistry } from '@/modules/registry';
 
 interface WidgetSimpleProps {
   id: string;
@@ -73,6 +74,7 @@ const WidgetSimple: React.FC<WidgetSimpleProps> = ({
   const [currentPosition, setCurrentPosition] = useState(position);
   const [currentSize, setCurrentSize] = useState(size);
   
+  const getWidgetDefinition = useWidgetRegistry(s => s.getDefinition);
   const moveWidget = useDashboardStore(s => s.moveWidget);
   const resizeWidget = useDashboardStore(s => s.resizeWidget);
   const bringWidgetToFront = useDashboardStore(s => s.bringWidgetToFront);
@@ -457,8 +459,9 @@ const WidgetSimple: React.FC<WidgetSimpleProps> = ({
     }
   }, [id, widgetType, userTitle, defaultTitle, groupId, openSettingsDrawer]);
 
-  // Check if widget has settings available
-  const hasSettings = widgetType && ['chart', 'orderbook', 'orderBook', 'portfolio', 'trades', 'orderForm', 'userBalances', 'userTradingData'].includes(widgetType);
+  // Check if widget has settings available (registry-driven: a widget has a
+  // settings button iff its definition provides a Settings panel).
+  const hasSettings = Boolean(widgetType && getWidgetDefinition(widgetType)?.Settings);
 
   // Check if group has complete instrument data to hide widget title
   const selectedGroup = groupId ? getGroupById(groupId) : undefined;
