@@ -1,0 +1,51 @@
+{
+  "name": "profitmaker-module-example",
+  "version": "0.1.0",
+  "description": "Example Profitmaker terminal module — backend service + a widget",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["profitmaker-module"],
+  "files": ["dist", "package.json", "README.md"],
+  "scripts": {
+    "build": "bun run build:frontend && bun run build:backend",
+    "build:frontend": "vite build",
+    "build:backend": "bun build src/backend/index.ts --target=bun --outdir dist/backend",
+    "typecheck": "tsc --noEmit"
+  },
+  "profitmaker": {
+    "manifestVersion": 1,
+    "id": "example",
+    "displayName": "Example Module",
+    "description": "A reference module: a backend heartbeat service and a hello widget.",
+    "minTerminalApi": ">=1.0.0",
+    "permissions": ["market-data", "storage", "jobs"],
+    "frontend": {
+      "entry": "dist/frontend/index.js",
+      "style": "dist/frontend/style.css",
+      "widgets": [
+        {
+          "type": "example.hello",
+          "title": "Example Hello",
+          "description": "Shows the group's ticker and a backend heartbeat counter.",
+          "category": "modules"
+        }
+      ]
+    },
+    "backend": {
+      "entry": "dist/backend/index.js",
+      "routes": ["/hello", "/state"],
+      "services": ["heartbeat"]
+    }
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "devDependencies": {
+    "@profitmaker/module-sdk": "workspace:*",
+    "@types/react": "^18.3.0",
+    "elysia": "^1.3.0",
+    "react": "^18.3.0",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.0"
+  }
+}

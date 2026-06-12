@@ -1,0 +1,14 @@
+/* Styles for the example module's widgets. Served at /modules/example/style.css
+   and injected by the host when the bundle loads. Scope your selectors to avoid
+   clashing with the host or other modules (e.g. prefix with the module id). */
+.pm-example-widget {
+  padding: 12px;
+}
+.pm-example-widget__price {
+  font-size: 24px;
+  margin: 8px 0;
+}
+.pm-example-widget__hint {
+  opacity: 0.7;
+  font-size: 12px;
+}
