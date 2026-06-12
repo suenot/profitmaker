@@ -51,6 +51,37 @@ function readJson<T>(file: string): T | null {
   }
 }
 
+/**
+ * npm package-name grammar (optionally scoped), deliberately a touch stricter
+ * than npm's legacy grammar: the FIRST character of each name part must be
+ * `[a-z0-9]` — no leading `-`, `.`, `_`, `~`, no whitespace, no slashes, no
+ * uppercase. That leading-char constraint is the load-bearing part: it stops a
+ * crafted name like `--registry=evil` or `-x` from being smuggled in as a flag
+ * to the `bun add/update/remove` subprocess. install() is an
+ * authenticated-but-remote endpoint, so this is the primary guard against
+ * argument injection (with the `--` end-of-options marker as defense-in-depth).
+ *
+ * NB: write the hyphen LAST inside the body class (`[a-z0-9._~-]`) so it stays a
+ * literal — `[a-z0-9-~]` would treat `9-~` as a range covering most of ASCII.
+ */
+const NPM_NAME_RE = /^(?:@[a-z0-9][a-z0-9._~-]*\/)?[a-z0-9][a-z0-9._~-]*$/;
+/** Conservative semver-ish range: no leading `-`, no whitespace, no shell-ish chars. */
+const VERSION_RE = /^[a-zA-Z0-9][a-zA-Z0-9.\-+~^>=<* ]*$/;
+
+function assertValidPackageName(name: unknown): asserts name is string {
+  if (typeof name !== 'string' || !NPM_NAME_RE.test(name)) {
+    throw new Error(`invalid package name: ${JSON.stringify(name)}`);
+  }
+}
+
+function assertValidVersion(version: string): void {
+  // A version cannot start with `-` (would look like a flag) and must match a
+  // conservative grammar. Empty is handled by the caller (version is optional).
+  if (version.startsWith('-') || !VERSION_RE.test(version)) {
+    throw new Error(`invalid version: ${JSON.stringify(version)}`);
+  }
+}
+
 class ModuleManager {
   private io: SocketIOServer | null = null;
   private modulesDir = '';
@@ -306,9 +337,16 @@ class ModuleManager {
    * which the partially-added package is left for the user to clean up).
    */
   async install(opts: { name: string; version?: string }): Promise<InstalledModule> {
+    // Validate BEFORE touching the filesystem or spawning anything: a name like
+    // `--registry=evil` must be rejected without ever reaching `bun add`.
+    assertValidPackageName(opts.name);
+    if (opts.version !== undefined) assertValidVersion(opts.version);
+
     this.ensureModulesDir();
     const spec = opts.version ? `${opts.name}@${opts.version}` : opts.name;
-    const proc = Bun.spawn(['bun', 'add', '--exact', spec], {
+    // `--` marks the end of options so `spec` is always treated as a positional
+    // argument, never as a flag (defense-in-depth on top of the validation).
+    const proc = Bun.spawn(['bun', 'add', '--exact', '--', spec], {
       cwd: this.modulesDir,
       stdout: 'pipe',
       stderr: 'pipe',
@@ -362,7 +400,10 @@ class ModuleManager {
     if (!m) throw new Error(`unknown module ${id}`);
     if (m.state.dev) throw new Error(`cannot upgrade dev module ${id}`);
 
-    const proc = Bun.spawn(['bun', 'update', m.state.npmName], {
+    // Re-validate the persisted name: modules.json could have been written by an
+    // earlier build (or tampered with) carrying a flag-like npmName.
+    assertValidPackageName(m.state.npmName);
+    const proc = Bun.spawn(['bun', 'update', '--', m.state.npmName], {
       cwd: this.modulesDir,
       stdout: 'pipe',
       stderr: 'pipe',
@@ -400,7 +441,9 @@ class ModuleManager {
       return { id, pendingRestart: false };
     }
 
-    const proc = Bun.spawn(['bun', 'remove', m.state.npmName], {
+    // Re-validate the persisted name before spawning (same rationale as upgrade).
+    assertValidPackageName(m.state.npmName);
+    const proc = Bun.spawn(['bun', 'remove', '--', m.state.npmName], {
       cwd: this.modulesDir,
       stdout: 'pipe',
       stderr: 'pipe',
