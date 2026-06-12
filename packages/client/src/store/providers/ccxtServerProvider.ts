@@ -668,6 +668,13 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
     };
   }
 
+  /** Full market metadata (limits/precision) for a single symbol, or null. */
+  async getMarketInfo(exchange: string, symbol: string, market: MarketType = 'spot'): Promise<any> {
+    const config = this.createInstanceConfig('metadata', 'public', exchange, market, 'regular', {});
+    await this.makeRequest('/api/exchange/instance', config);
+    return this.makeRequest('/api/exchange/market', { config, symbol });
+  }
+
   async getSymbols(exchange: string, market: MarketType = 'spot', limit?: number): Promise<string[]> {
     const caps = await this.getCapabilities(exchange, market);
     const symbols = caps.symbols ?? [];

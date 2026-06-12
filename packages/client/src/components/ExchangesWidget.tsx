@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useDataProviderStore } from '../store/dataProviderStore';
-import { getCCXT } from '../store/utils/ccxtUtils';
+import { moduleFetch } from '../modules/api';
 import { ChevronDown, Server, Globe, Database } from 'lucide-react';
 
 export const ExchangesWidget: React.FC = () => {
@@ -55,14 +55,15 @@ export const ExchangesWidget: React.FC = () => {
         let exchanges: string[] = [];
 
         switch (provider.type) {
-          case 'ccxt-browser':
-          case 'ccxt-server':
-            // Get all CCXT exchanges
-            const ccxt = getCCXT();
-            if (ccxt) {
-              exchanges = Object.keys(ccxt.exchanges || {}).sort();
+          case 'ccxt-server': {
+            // Get all CCXT exchanges from the server
+            const response = await moduleFetch('/api/exchange/list');
+            if (response.ok) {
+              const result = await response.json();
+              exchanges = ((result.data ?? result.exchanges ?? []) as string[]).sort();
             }
             break;
+          }
           case 'custom':
           case 'custom-server-with-adapter':
           case 'marketmaker.cc':

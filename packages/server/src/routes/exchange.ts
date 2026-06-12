@@ -119,6 +119,14 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
   // provider discovery path now that the browser CCXT bundle is gone.
   .get('/list', () => ({ success: true, data: (ccxt as any).exchanges as string[] }))
 
+  // Single market's full metadata (limits/precision) for order validation.
+  .post('/market', async ({ body }) => {
+    const { config, symbol } = body;
+    const instance = await getCCXTInstance(config);
+    const market = instance.markets?.[symbol] ?? null;
+    return { success: true, data: market };
+  }, { body: configWithSymbol })
+
   // --- authenticated trading (credentials travel in `config`) --------------
 
   .post('/createOrder', async ({ body, set }) => {

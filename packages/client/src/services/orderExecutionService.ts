@@ -1,10 +1,11 @@
-import type { 
-  PlaceOrderRequest, 
-  PlaceOrderResponse, 
-  AdvancedOrderOptions 
+import type {
+  PlaceOrderRequest,
+  PlaceOrderResponse,
+  AdvancedOrderOptions
 } from '../types/orders';
-import type { CCXTBrowserProvider } from '../types/dataProviders';
-import { createCCXTBrowserProvider } from '../store/providers/ccxtBrowserProvider';
+import type { CCXTServerProvider } from '../types/dataProviders';
+import type { ProviderCredentials } from '@profitmaker/types';
+import { createCCXTServerProvider } from '../store/providers/ccxtServerProvider';
 import { useDataProviderStore } from '../store/dataProviderStore';
 import { useUserStore } from '../store/userStore';
 
@@ -42,34 +43,18 @@ export async function executeOrder(
     // Get data provider for the exchange
     const dataProviderStore = useDataProviderStore.getState();
     const provider = dataProviderStore.getProviderForExchange(orderRequest.exchange);
-    
-    if (!provider || provider.type !== 'ccxt-browser') {
-      throw new Error(`No CCXT browser provider found for exchange ${orderRequest.exchange}`);
+
+    if (!provider || provider.type !== 'ccxt-server') {
+      throw new Error(`No CCXT server provider found for exchange ${orderRequest.exchange}`);
     }
 
-    // Get CCXT instance for trading
-    const ccxtProvider = createCCXTBrowserProvider(provider as CCXTBrowserProvider);
-    const tradingInstance = await ccxtProvider.getTradingInstance(
-      user.id,
-      orderRequest.accountId,
-      orderRequest.exchange,
-      orderRequest.market,
-      'regular', // Use regular CCXT for order execution
-      {
-        apiKey: account.key,
-        secret: account.privateKey,
-        password: account.password,
-        sandbox: false,
-      }
-    );
-
-    console.log(`🔍 [OrderExecution] CCXT instance capabilities:`, {
-      createOrder: tradingInstance.has?.createOrder,
-      createMarketOrder: tradingInstance.has?.createMarketOrder,
-      createLimitOrder: tradingInstance.has?.createLimitOrder,
-      createStopOrder: tradingInstance.has?.createStopOrder,
-      defaultType: tradingInstance.options?.defaultType,
-    });
+    const serverProvider = createCCXTServerProvider(provider as CCXTServerProvider);
+    const creds: ProviderCredentials = {
+      apiKey: account.key,
+      secret: account.privateKey,
+      password: account.password || undefined,
+      sandbox: false,
+    };
 
     // Prepare order parameters
     const { symbol, side, type, amount, price, stopPrice } = orderRequest;
@@ -138,16 +123,18 @@ export async function executeOrder(
     });
 
     let ccxtOrder: any;
-    
+
     try {
-      ccxtOrder = await tradingInstance.createOrder(
+      ccxtOrder = await serverProvider.trading.createOrder(creds, {
+        exchange: orderRequest.exchange,
         symbol,
-        ccxtOrderType,
+        type: ccxtOrderType,
         side,
         amount,
         price, // Can be undefined for market orders
-        orderParams
-      );
+        market: orderRequest.market as any,
+        params: orderParams,
+      });
     } catch (createOrderError: any) {
       console.error(`❌ [OrderExecution] Failed to create order:`, createOrderError);
       
@@ -176,36 +163,39 @@ export async function executeOrder(
     
     if (advancedOptions?.stopLoss?.enabled && advancedOptions.stopLoss.price) {
       try {
-        const stopLossOrder = await tradingInstance.createOrder(
+        const stopLossOrder = await serverProvider.trading.createOrder(creds, {
+          exchange: orderRequest.exchange,
           symbol,
-          'stop',
-          side === 'buy' ? 'sell' : 'buy', // Opposite side
+          type: 'stop',
+          side: side === 'buy' ? 'sell' : 'buy', // Opposite side
           amount,
-          undefined, // Market order
-          {
+          market: orderRequest.market as any,
+          params: {
             stopPrice: advancedOptions.stopLoss.price,
             reduceOnly: true,
-          }
-        );
+          },
+        });
         additionalOrders.push(stopLossOrder);
         console.log(`✅ [OrderExecution] Stop loss order placed:`, stopLossOrder);
       } catch (stopLossError) {
         console.warn(`⚠️ [OrderExecution] Failed to place stop loss:`, stopLossError);
       }
     }
-    
+
     if (advancedOptions?.takeProfit?.enabled && advancedOptions.takeProfit.price) {
       try {
-        const takeProfitOrder = await tradingInstance.createOrder(
+        const takeProfitOrder = await serverProvider.trading.createOrder(creds, {
+          exchange: orderRequest.exchange,
           symbol,
-          'limit',
-          side === 'buy' ? 'sell' : 'buy', // Opposite side
+          type: 'limit',
+          side: side === 'buy' ? 'sell' : 'buy', // Opposite side
           amount,
-          advancedOptions.takeProfit.price,
-          {
+          price: advancedOptions.takeProfit.price,
+          market: orderRequest.market as any,
+          params: {
             reduceOnly: true,
-          }
-        );
+          },
+        });
         additionalOrders.push(takeProfitOrder);
         console.log(`✅ [OrderExecution] Take profit order placed:`, takeProfitOrder);
       } catch (takeProfitError) {
@@ -258,20 +248,18 @@ export async function getMarketConstraints(
   try {
     const dataProviderStore = useDataProviderStore.getState();
     const provider = dataProviderStore.getProviderForExchange(exchange);
-    
-    if (!provider || provider.type !== 'ccxt-browser') {
-      throw new Error(`No CCXT browser provider found for exchange ${exchange}`);
+
+    if (!provider || provider.type !== 'ccxt-server') {
+      throw new Error(`No CCXT server provider found for exchange ${exchange}`);
     }
 
-    const ccxtProvider = createCCXTBrowserProvider(provider as CCXTBrowserProvider);
-    const metadataInstance = await ccxtProvider.getMetadataInstance(exchange, market);
+    const serverProvider = createCCXTServerProvider(provider as CCXTServerProvider);
+    const marketInfo = await serverProvider.getMarketInfo(exchange, symbol, market as any);
 
-    if (!metadataInstance.markets || !metadataInstance.markets[symbol]) {
+    if (!marketInfo) {
       throw new Error(`Symbol ${symbol} not found on ${exchange}`);
     }
 
-    const marketInfo = metadataInstance.markets[symbol];
-    
     return {
       minNotional: marketInfo.limits?.cost?.min || 0,
       minQty: marketInfo.limits?.amount?.min || 0,
@@ -330,27 +318,20 @@ export async function cancelOrder(
     // Get CCXT provider
     const dataProviderStore = useDataProviderStore.getState();
     const provider = dataProviderStore.getProviderForExchange(exchange);
-    
-    if (!provider || provider.type !== 'ccxt-browser') {
-      throw new Error(`No CCXT browser provider found for exchange ${exchange}`);
+
+    if (!provider || provider.type !== 'ccxt-server') {
+      throw new Error(`No CCXT server provider found for exchange ${exchange}`);
     }
 
-    const ccxtProvider = createCCXTBrowserProvider(provider as CCXTBrowserProvider);
-    const tradingInstance = await ccxtProvider.getTradingInstance(
-      user.id,
-      accountId,
-      exchange,
-      market,
-      'regular',
-      {
-        apiKey: account.key,
-        secret: account.privateKey,
-        password: account.password,
-        sandbox: false,
-      }
-    );
+    const serverProvider = createCCXTServerProvider(provider as CCXTServerProvider);
+    const creds: ProviderCredentials = {
+      apiKey: account.key,
+      secret: account.privateKey,
+      password: account.password || undefined,
+      sandbox: false,
+    };
 
-    const result = await tradingInstance.cancelOrder(orderId, symbol);
+    const result = await serverProvider.trading.cancelOrder(creds, exchange, orderId, symbol, market as any);
     console.log(`✅ [OrderExecution] Order cancelled successfully:`, result);
 
     return { success: true };
