@@ -4,6 +4,7 @@ import { db } from '../db';
 import { userSettings } from '../db/schema/user_settings';
 import { widgetSettings } from '../db/schema/widget_settings';
 import { getUserFromRequest } from '../middleware/requireUser';
+import { emitStateChanged, clientIdFromRequest } from '../services/stateEvents';
 
 export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
 
@@ -33,11 +34,13 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
     if (!user) { set.status = 401; return { error: 'Authentication required' }; }
     const existing = await db.select().from(userSettings)
       .where(and(eq(userSettings.userId, user.id), eq(userSettings.key, params.key)));
+    const origin = clientIdFromRequest(request);
     if (existing.length > 0) {
       const [row] = await db.update(userSettings)
         .set({ value: body.value, updatedAt: new Date() })
         .where(and(eq(userSettings.userId, user.id), eq(userSettings.key, params.key)))
         .returning();
+      emitStateChanged({ userId: user.id, domain: 'settings', action: 'updated', id: row.key, data: { key: row.key, value: row.value }, origin });
       return { success: true, data: { key: row.key, value: row.value } };
     }
     const [row] = await db.insert(userSettings).values({
@@ -45,6 +48,7 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
       key: params.key,
       value: body.value,
     }).returning();
+    emitStateChanged({ userId: user.id, domain: 'settings', action: 'created', id: row.key, data: { key: row.key, value: row.value }, origin });
     return { success: true, data: { key: row.key, value: row.value } };
   }, {
     body: t.Object({ value: t.Any() }),
@@ -67,6 +71,10 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
       }
       results[key] = value;
     }
+    const origin = clientIdFromRequest(request);
+    for (const [key, value] of Object.entries(results)) {
+      emitStateChanged({ userId: user.id, domain: 'settings', action: 'updated', id: key, data: { key, value }, origin });
+    }
     return { success: true, data: results };
   }, {
     body: t.Object({ settings: t.Record(t.String(), t.Any()) }),
@@ -78,6 +86,7 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
     if (!user) { set.status = 401; return { error: 'Authentication required' }; }
     await db.delete(userSettings)
       .where(and(eq(userSettings.userId, user.id), eq(userSettings.key, params.key)));
+    emitStateChanged({ userId: user.id, domain: 'settings', action: 'deleted', id: params.key, data: { key: params.key }, origin: clientIdFromRequest(request) });
     return { success: true };
   })
 
@@ -97,11 +106,13 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
     if (!user) { set.status = 401; return { error: 'Authentication required' }; }
     const existing = await db.select().from(widgetSettings)
       .where(and(eq(widgetSettings.widgetId, params.widgetId), eq(widgetSettings.userId, user.id)));
+    const origin = clientIdFromRequest(request);
     if (existing.length > 0) {
       const [row] = await db.update(widgetSettings)
         .set({ settings: body.settings, updatedAt: new Date() })
         .where(and(eq(widgetSettings.widgetId, params.widgetId), eq(widgetSettings.userId, user.id)))
         .returning();
+      emitStateChanged({ userId: user.id, domain: 'settings', action: 'updated', id: `widget:${params.widgetId}`, data: { widgetId: params.widgetId, settings: row.settings }, origin });
       return { success: true, data: row.settings };
     }
     const [row] = await db.insert(widgetSettings).values({
@@ -109,6 +120,7 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
       userId: user.id,
       settings: body.settings,
     }).returning();
+    emitStateChanged({ userId: user.id, domain: 'settings', action: 'created', id: `widget:${params.widgetId}`, data: { widgetId: params.widgetId, settings: row.settings }, origin });
     return { success: true, data: row.settings };
   }, {
     body: t.Object({ settings: t.Any() }),

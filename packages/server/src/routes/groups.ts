@@ -3,6 +3,7 @@ import { eq, and } from 'drizzle-orm';
 import { db } from '../db';
 import { groups } from '../db/schema/groups';
 import { getUserFromRequest } from '../middleware/requireUser';
+import { emitStateChanged, clientIdFromRequest } from '../services/stateEvents';
 
 export const groupRoutes = new Elysia({ prefix: '/api/groups' })
 
@@ -38,6 +39,7 @@ export const groupRoutes = new Elysia({ prefix: '/api/groups' })
       market: body.market,
       description: body.description,
     }).returning();
+    emitStateChanged({ userId: user.id, domain: 'group', action: 'created', id: group.id, data: group, origin: clientIdFromRequest(request) });
     return { success: true, data: group };
   }, {
     body: t.Object({
@@ -60,6 +62,7 @@ export const groupRoutes = new Elysia({ prefix: '/api/groups' })
       .where(and(eq(groups.id, params.id), eq(groups.userId, user.id)))
       .returning();
     if (!group) { set.status = 404; return { error: 'Group not found' }; }
+    emitStateChanged({ userId: user.id, domain: 'group', action: 'updated', id: group.id, data: group, origin: clientIdFromRequest(request) });
     return { success: true, data: group };
   }, {
     body: t.Object({
@@ -81,5 +84,6 @@ export const groupRoutes = new Elysia({ prefix: '/api/groups' })
       .where(and(eq(groups.id, params.id), eq(groups.userId, user.id)))
       .returning();
     if (!group) { set.status = 404; return { error: 'Group not found' }; }
+    emitStateChanged({ userId: user.id, domain: 'group', action: 'deleted', id: group.id, data: group, origin: clientIdFromRequest(request) });
     return { success: true };
   });

@@ -3,6 +3,7 @@ import { eq, and } from 'drizzle-orm';
 import { db } from '../db';
 import { dashboards, widgets } from '../db/schema/dashboards';
 import { getUserFromRequest } from '../middleware/requireUser';
+import { emitStateChanged, clientIdFromRequest } from '../services/stateEvents';
 
 // Helper: verify dashboard belongs to user
 const verifyDashboardOwner = async (dashboardId: string, userId: string) => {
@@ -43,6 +44,7 @@ export const widgetRoutes = new Elysia({ prefix: '/api/widgets' })
       isVisible: body.isVisible ?? true,
       isMinimized: false,
     }).returning();
+    emitStateChanged({ userId: user.id, domain: 'widget', action: 'created', id: widget.id, data: widget, origin: clientIdFromRequest(request) });
     return { success: true, data: widget };
   }, {
     body: t.Object({
@@ -72,6 +74,7 @@ export const widgetRoutes = new Elysia({ prefix: '/api/widgets' })
       .set({ ...body, updatedAt: new Date() })
       .where(eq(widgets.id, params.id))
       .returning();
+    emitStateChanged({ userId: user.id, domain: 'widget', action: 'updated', id: widget.id, data: widget, origin: clientIdFromRequest(request) });
     return { success: true, data: widget };
   }, {
     body: t.Object({
@@ -101,6 +104,10 @@ export const widgetRoutes = new Elysia({ prefix: '/api/widgets' })
         .returning();
       if (updated) results.push(updated);
     }
+    const origin = clientIdFromRequest(request);
+    for (const updated of results) {
+      emitStateChanged({ userId: user.id, domain: 'widget', action: 'updated', id: updated.id, data: updated, origin });
+    }
     return { success: true, data: results };
   }, {
     body: t.Object({
@@ -118,5 +125,6 @@ export const widgetRoutes = new Elysia({ prefix: '/api/widgets' })
       set.status = 403; return { error: 'Not your widget' };
     }
     await db.delete(widgets).where(eq(widgets.id, params.id));
+    emitStateChanged({ userId: user.id, domain: 'widget', action: 'deleted', id: existing.id, data: existing, origin: clientIdFromRequest(request) });
     return { success: true };
   });

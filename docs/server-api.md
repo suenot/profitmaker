@@ -58,6 +58,83 @@ curl -X POST http://localhost:3001/api/auth/logout \
 
 All endpoints except `/health` and `/api/auth/*` require authentication.
 
+### Single-user bootstrap (API token)
+
+The `API_TOKEN` is not just for server-to-server calls — it transparently resolves
+to a **single bootstrap user** (`default@local`, created lazily on first use). This
+means a token-only caller (an agent, a script, `curl`) can use **every** user-scoped
+route exactly like a logged-in user, with no registration or login step:
+
+```bash
+# No login needed — the API token IS a user.
+curl http://localhost:3001/api/dashboards -H "Authorization: Bearer $API_TOKEN"
+curl -X POST http://localhost:3001/api/dashboards \
+  -H "Authorization: Bearer $API_TOKEN" -H "Content-Type: application/json" \
+  -d '{"title":"Agent Dashboard"}'
+```
+
+Real session tokens continue to work unchanged and are scoped to their own user.
+
+---
+
+## Real-Time Control Channel
+
+REST mutations are not silent: every successful create/update/delete on a user-scoped
+resource broadcasts a `state:changed` event over Socket.IO to that user's room, so any
+connected UI updates live without polling. UI-only verbs (focus a widget, switch the
+active tab) that have no DB equivalent are driven via `POST /api/ui/command`.
+
+### Joining the user room (Socket.IO)
+
+```js
+const socket = io('http://localhost:3002', { transports: ['websocket'] });
+socket.on('connect', () => socket.emit('authenticate', { token: API_TOKEN })); // or a session token
+socket.on('authenticated', ({ userId }) => { /* now in room user:<userId> */ });
+```
+
+`authenticate` accepts the `API_TOKEN` (→ bootstrap user) or a valid session token.
+On success the socket joins `user:<userId>` and receives the events below.
+
+### `state:changed` (server → client)
+
+Emitted after a mutation commits, to the writer's user room:
+
+```ts
+{
+  domain: 'dashboard' | 'widget' | 'group' | 'settings' | 'provider',
+  action: 'created' | 'updated' | 'deleted',
+  id: string,        // row id (or settings key, or "widget:<id>" for per-widget settings)
+  data: object,      // full row after the mutation (minimal id payload for deletes)
+  origin?: string,   // X-Client-Id header of the writer, if sent — lets a client ignore its own echo
+  rev: number        // monotonic per-user counter; drop stale/duplicate events
+}
+```
+
+Send an `X-Client-Id: <id>` header on your own writes to receive it back as `origin`
+and suppress the echo. Use `rev` to discard out-of-order or duplicate events.
+
+### `POST /api/ui/command` (UI-only verbs)
+
+Emits a `ui:command` to the user room, awaits the first client's `ui:command:result`
+ack, and returns it. `503` if no client is connected; `504` on timeout (default 5s,
+override with `timeoutMs`).
+
+```bash
+curl -X POST http://localhost:3001/api/ui/command \
+  -H "Authorization: Bearer $API_TOKEN" -H "Content-Type: application/json" \
+  -d '{"type":"set_active_dashboard","payload":{"dashboardId":"<uuid>"}}'
+```
+
+| Command | Payload | Effect |
+|---------|---------|--------|
+| `set_active_dashboard` | `{ dashboardId }` | Switch the active dashboard tab |
+| `bring_widget_to_front` | `{ dashboardId, widgetId }` | Raise a widget's z-order |
+| `set_widget_settings` | `{ widgetId, widgetType, settings }` | Apply free-form per-widget settings (client maps to its store) |
+| `get_ui_state` | `{}` | Client returns `{ activeDashboardId, widgets: [{id, type}] }` |
+
+Clients listen for `ui:command` `{ id, type, payload }` and must reply with
+`ui:command:result` `{ id, ok, error?, data? }` (echo the same `id`).
+
 ---
 
 ## User State API
@@ -311,6 +388,8 @@ bun db:studio    # Open Drizzle Studio GUI
 | `408` | Request timeout (proxy) |
 | `409` | Conflict (e.g. email already registered) |
 | `500` | Server error |
+| `503` | No UI client connected (ui:command) |
+| `504` | ui:command timed out waiting for a client ack |
 
 ---
 

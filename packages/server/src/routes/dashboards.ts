@@ -3,6 +3,7 @@ import { eq, and } from 'drizzle-orm';
 import { db } from '../db';
 import { dashboards, widgets } from '../db/schema/dashboards';
 import { getUserFromRequest } from '../middleware/requireUser';
+import { emitStateChanged, clientIdFromRequest } from '../services/stateEvents';
 
 export const dashboardRoutes = new Elysia({ prefix: '/api/dashboards' })
 
@@ -36,6 +37,7 @@ export const dashboardRoutes = new Elysia({ prefix: '/api/dashboards' })
       layout: body.layout || {},
       isDefault: body.isDefault || false,
     }).returning();
+    emitStateChanged({ userId: user.id, domain: 'dashboard', action: 'created', id: dash.id, data: dash, origin: clientIdFromRequest(request) });
     return { success: true, data: dash };
   }, {
     body: t.Object({
@@ -55,6 +57,7 @@ export const dashboardRoutes = new Elysia({ prefix: '/api/dashboards' })
       .where(and(eq(dashboards.id, params.id), eq(dashboards.userId, user.id)))
       .returning();
     if (!dash) { set.status = 404; return { error: 'Dashboard not found' }; }
+    emitStateChanged({ userId: user.id, domain: 'dashboard', action: 'updated', id: dash.id, data: dash, origin: clientIdFromRequest(request) });
     return { success: true, data: dash };
   }, {
     body: t.Object({
@@ -73,5 +76,6 @@ export const dashboardRoutes = new Elysia({ prefix: '/api/dashboards' })
       .where(and(eq(dashboards.id, params.id), eq(dashboards.userId, user.id)))
       .returning();
     if (!dash) { set.status = 404; return { error: 'Dashboard not found' }; }
+    emitStateChanged({ userId: user.id, domain: 'dashboard', action: 'deleted', id: dash.id, data: dash, origin: clientIdFromRequest(request) });
     return { success: true };
   });

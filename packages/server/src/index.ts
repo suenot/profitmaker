@@ -16,9 +16,13 @@ import { exchangeRoutes } from './routes/exchange';
 import { websocketRoutes } from './routes/websocket';
 import { proxyRoutes } from './routes/proxy';
 import { moduleRoutes, moduleAssetRoutes } from './routes/modules';
+import { uiRoutes } from './routes/ui';
 import { moduleManager } from './modules/manager';
 import { cleanupCache } from './services/ccxtCache';
 import { validateSession, deleteExpiredSessions } from './services/auth';
+import { getBootstrapUser } from './services/bootstrapUser';
+import { setStateEventsIO, userRoom } from './services/stateEvents';
+import { setUiCommandsIO, registerUiCommandSocket } from './services/uiCommands';
 import { db } from './db';
 import {
   createSubscriptionKey,
@@ -88,6 +92,7 @@ const app = new Elysia()
   .use(exchangeRoutes)
   .use(websocketRoutes)
   .use(proxyRoutes)
+  .use(uiRoutes)
   .use(moduleRoutes)
   .use(moduleAssetRoutes);
 
@@ -139,6 +144,11 @@ const io = new SocketIOServer(PORT + 1, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
 });
 
+// Wire the Socket.IO server into the state-change and ui:command services so
+// REST mutations can broadcast to a user's room and commands can round-trip.
+setStateEventsIO(io);
+setUiCommandsIO(io);
+
 // Boot the module system once Socket.IO is available. A broken module records
 // its error and is skipped — it must never abort server boot.
 moduleManager.init(io).catch((err) => {
@@ -148,13 +158,34 @@ moduleManager.init(io).catch((err) => {
 io.on('connection', (socket) => {
   console.log(`Client connected: ${socket.id}`);
 
-  socket.on('authenticate', (data) => {
-    if (data.token !== API_TOKEN) {
+  // Acks for ui:command round-trips (POST /api/ui/command).
+  registerUiCommandSocket(socket);
+
+  socket.on('authenticate', async (data) => {
+    // Resolve the caller to a user: a bare API_TOKEN maps to the bootstrap
+    // user; otherwise the token must be a valid session. On success the socket
+    // joins that user's room so it receives state:changed / ui:command events.
+    let userId: string | null = null;
+    try {
+      if (data?.token === API_TOKEN) {
+        userId = (await getBootstrapUser()).id;
+      } else if (typeof data?.token === 'string') {
+        const user = await validateSession(db, data.token);
+        userId = user?.id ?? null;
+      }
+    } catch (err) {
+      console.error('[socket] authenticate failed:', err);
+    }
+
+    if (!userId) {
       socket.emit('auth_error', { error: 'Invalid token' });
       socket.disconnect();
       return;
     }
-    socket.emit('authenticated', { success: true });
+
+    socket.data.userId = userId;
+    socket.join(userRoom(userId));
+    socket.emit('authenticated', { success: true, userId });
   });
 
   socket.on('subscribe', async (data) => {

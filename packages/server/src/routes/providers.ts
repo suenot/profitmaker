@@ -3,6 +3,7 @@ import { eq, and } from 'drizzle-orm';
 import { db } from '../db';
 import { dataProviders } from '../db/schema/providers';
 import { getUserFromRequest } from '../middleware/requireUser';
+import { emitStateChanged, clientIdFromRequest } from '../services/stateEvents';
 
 export const providerRoutes = new Elysia({ prefix: '/api/providers' })
 
@@ -28,6 +29,7 @@ export const providerRoutes = new Elysia({ prefix: '/api/providers' })
       priority: body.priority ?? 100,
       config: body.config || {},
     }).returning();
+    emitStateChanged({ userId: user.id, domain: 'provider', action: 'created', id: provider.id, data: provider, origin: clientIdFromRequest(request) });
     return { success: true, data: provider };
   }, {
     body: t.Object({
@@ -50,6 +52,7 @@ export const providerRoutes = new Elysia({ prefix: '/api/providers' })
       .where(and(eq(dataProviders.id, params.id), eq(dataProviders.userId, user.id)))
       .returning();
     if (!provider) { set.status = 404; return { error: 'Provider not found' }; }
+    emitStateChanged({ userId: user.id, domain: 'provider', action: 'updated', id: provider.id, data: provider, origin: clientIdFromRequest(request) });
     return { success: true, data: provider };
   }, {
     body: t.Object({
@@ -70,5 +73,6 @@ export const providerRoutes = new Elysia({ prefix: '/api/providers' })
       .where(and(eq(dataProviders.id, params.id), eq(dataProviders.userId, user.id)))
       .returning();
     if (!provider) { set.status = 404; return { error: 'Provider not found' }; }
+    emitStateChanged({ userId: user.id, domain: 'provider', action: 'deleted', id: provider.id, data: provider, origin: clientIdFromRequest(request) });
     return { success: true };
   });
