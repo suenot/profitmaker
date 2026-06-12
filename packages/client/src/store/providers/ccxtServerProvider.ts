@@ -1,7 +1,29 @@
-import type { CCXTServerProvider } from '../../types/dataProviders';
+import type {
+  CCXTServerProvider,
+  Candle,
+  Trade,
+  OrderBook,
+  Ticker,
+  ExchangeBalances,
+  MarketType,
+  Timeframe,
+} from '../../types/dataProviders';
+import type {
+  MarketDataProvider,
+  ProviderInfo,
+  ProviderHealth,
+  ExchangeCapabilities,
+  ProviderTrading,
+  SubscriptionId,
+  FetchCandlesParams,
+  FetchTradesParams,
+  FetchOrderBookParams,
+  FetchTickerParams,
+  WatchParams,
+  CreateOrderParams,
+} from '@profitmaker/types';
 import {
   createCCXTInstanceConfig,
-  createStandardExchangeProxy,
   type CCXTInstanceConfig
 } from '../utils/ccxtProviderUtils';
 import { io, Socket } from 'socket.io-client';
@@ -30,7 +52,7 @@ export function deriveSocketUrl(serverUrl: string): string {
  * Взаимодействует с Express сервером для выполнения CCXT операций
  * Основная цель: обход CORS ограничений браузера при работе с биржами
  */
-export class CCXTServerProviderImpl {
+export class CCXTServerProviderImpl implements MarketDataProvider {
   private provider: CCXTServerProvider;
   private baseUrl: string;
   private socketUrl: string;
@@ -45,6 +67,15 @@ export class CCXTServerProviderImpl {
     this.socketUrl = (provider.config.socketUrl || deriveSocketUrl(provider.config.serverUrl)).replace(/\/$/, '');
     this.token = provider.config.token;
     this.timeout = provider.config.timeout || 30000;
+  }
+
+  get info(): ProviderInfo {
+    return {
+      id: this.provider.id,
+      name: this.provider.name,
+      type: this.provider.type,
+      exchanges: this.provider.exchanges,
+    };
   }
 
   /**
@@ -576,12 +607,195 @@ export class CCXTServerProviderImpl {
           'Content-Type': 'application/json',
         },
       });
-      
+
       return response.ok;
     } catch (error) {
       console.error(`❌ [CCXTServer] Health check failed:`, error);
       return false;
     }
+  }
+
+  // ===========================================================================
+  // MarketDataProvider contract
+  // ===========================================================================
+
+  async healthCheck(): Promise<ProviderHealth> {
+    try {
+      const response = await fetch(`${this.baseUrl}/health`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        return { ok: false, error: `Health endpoint returned ${response.status}` };
+      }
+      const body = await response.json().catch(() => ({}));
+      return {
+        ok: body.status === 'ok' || body.status === undefined,
+        version: body.version,
+        ccxtVersion: body.ccxtVersion,
+        socketPort: body.socketPort,
+        uptime: body.uptime,
+        db: body.db,
+      };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  async listExchanges(): Promise<string[]> {
+    const url = `${this.baseUrl}/api/exchange/list`;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const response = await fetch(url, { method: 'GET', headers });
+    if (!response.ok) {
+      throw new Error(`Failed to list exchanges: ${response.status}`);
+    }
+    const result = await response.json();
+    return (result.data ?? result.exchanges ?? []) as string[];
+  }
+
+  async getCapabilities(exchange: string, market: MarketType = 'spot'): Promise<ExchangeCapabilities> {
+    const instance = await this.getMetadataInstance(exchange, market);
+    const caps = await instance.getCapabilities();
+    const data = caps?.data ?? caps ?? {};
+    return {
+      has: data.has ?? {},
+      symbols: data.symbols ?? [],
+      markets: data.markets ?? [],
+      timeframes: Array.isArray(data.timeframes) ? data.timeframes : Object.keys(data.timeframes ?? {}),
+      fees: data.fees,
+    };
+  }
+
+  async getSymbols(exchange: string, market: MarketType = 'spot', limit?: number): Promise<string[]> {
+    const caps = await this.getCapabilities(exchange, market);
+    const symbols = caps.symbols ?? [];
+    return limit && limit > 0 ? symbols.slice(0, limit) : symbols;
+  }
+
+  async getMarkets(exchange: string): Promise<string[]> {
+    const caps = await this.getCapabilities(exchange);
+    const has = caps.has ?? {};
+    const markets: string[] = [];
+    if (has.spot) markets.push('spot');
+    if (has.margin) markets.push('margin');
+    if (has.swap || has.future) markets.push('futures');
+    if (has.option) markets.push('options');
+    return markets.length > 0 ? markets : ['spot'];
+  }
+
+  async getTimeframes(exchange: string): Promise<Timeframe[]> {
+    const caps = await this.getCapabilities(exchange);
+    const valid: Timeframe[] = ['1m', '3m', '5m', '15m', '30m', '1h', '2h', '4h', '6h', '12h', '1d', '1w', '1M'];
+    const set = new Set(caps.timeframes ?? []);
+    const result = valid.filter((tf) => set.has(tf));
+    return result.length > 0 ? result : ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
+  }
+
+  async fetchCandles(params: FetchCandlesParams): Promise<Candle[]> {
+    const instance = await this.getMetadataInstance(params.exchange, params.market ?? 'spot');
+    const ohlcv = await instance.fetchOHLCV(params.symbol, params.timeframe ?? '1m', params.since, params.limit);
+    return (ohlcv ?? []).map((c: any[]) => ({
+      timestamp: c[0], open: c[1], high: c[2], low: c[3], close: c[4], volume: c[5],
+    }));
+  }
+
+  async fetchTrades(params: FetchTradesParams): Promise<Trade[]> {
+    const instance = await this.getMetadataInstance(params.exchange, params.market ?? 'spot');
+    const trades = await instance.fetchTrades(params.symbol, params.since, params.limit);
+    return (trades ?? []) as Trade[];
+  }
+
+  async fetchOrderBook(params: FetchOrderBookParams): Promise<OrderBook> {
+    const instance = await this.getMetadataInstance(params.exchange, params.market ?? 'spot');
+    return (await instance.fetchOrderBook(params.symbol, params.limit)) as OrderBook;
+  }
+
+  async fetchTicker(params: FetchTickerParams): Promise<Ticker> {
+    const instance = await this.getMetadataInstance(params.exchange, params.market ?? 'spot');
+    const t: any = await instance.fetchTicker(params.symbol);
+    return {
+      symbol: t.symbol,
+      timestamp: t.timestamp ?? Date.now(),
+      bid: t.bid ?? 0,
+      ask: t.ask ?? 0,
+      last: t.last,
+      close: t.close,
+      midPrice: t.bid && t.ask ? (t.bid + t.ask) / 2 : undefined,
+    };
+  }
+
+  async fetchBalance(accountId: string, walletType: string = 'spot'): Promise<ExchangeBalances> {
+    // Authenticated balance is fetched via the trading instance; credentials are
+    // resolved by the caller (store) and passed to getTradingInstance separately.
+    // This thin path requires a pre-created instance for accountId; callers that
+    // need credentials use the trading block instead.
+    throw new Error(`fetchBalance requires credentials; use trading.fetchBalance via the store (account ${accountId}, ${walletType})`);
+  }
+
+  async watch(
+    params: WatchParams,
+    onData: (data: any) => void,
+    onError?: (error: any) => void,
+  ): Promise<SubscriptionId> {
+    const dataTypeMap: Record<string, 'ticker' | 'trades' | 'orderbook' | 'ohlcv' | 'balance'> = {
+      candles: 'ohlcv', trades: 'trades', orderbook: 'orderbook', ticker: 'ticker', balance: 'balance',
+    };
+    const wsType = dataTypeMap[params.dataType];
+    const config = this.createInstanceConfig('websocket', 'public', params.exchange, params.market ?? 'spot', 'pro');
+    return this.subscribeWebSocket(
+      params.exchange,
+      params.symbol,
+      wsType,
+      config,
+      onData,
+      onError ?? console.error,
+      params.timeframe,
+    );
+  }
+
+  async unsubscribe(subscriptionId: SubscriptionId): Promise<void> {
+    return this.unsubscribeWebSocket(subscriptionId);
+  }
+
+  async dispose(): Promise<void> {
+    return this.disconnectWebSocket();
+  }
+
+  get trading(): ProviderTrading {
+    const self = this;
+    return {
+      async createOrder(accountId: string, params: CreateOrderParams) {
+        return self.makeRequest('/api/exchange/createOrder', {
+          accountId,
+          exchangeId: params.exchange,
+          symbol: params.symbol,
+          type: params.type,
+          side: params.side,
+          amount: params.amount,
+          price: params.price,
+          marketType: params.market ?? 'spot',
+          params: params.params ?? {},
+        });
+      },
+      async cancelOrder(accountId: string, orderId: string, symbol: string, market: MarketType = 'spot') {
+        return self.makeRequest('/api/exchange/cancelOrder', {
+          accountId, orderId, symbol, marketType: market,
+        });
+      },
+      async fetchMyTrades(accountId: string, symbol?: string, since?: number, limit?: number) {
+        return self.makeRequest('/api/exchange/fetchMyTrades', { accountId, symbol, since, limit });
+      },
+      async fetchOrders(accountId: string, symbol?: string, since?: number, limit?: number) {
+        return self.makeRequest('/api/exchange/fetchOrders', { accountId, symbol, since, limit });
+      },
+      async fetchOpenOrders(accountId: string, symbol?: string) {
+        return self.makeRequest('/api/exchange/fetchOpenOrders', { accountId, symbol });
+      },
+      async fetchPositions(accountId: string, symbols?: string[]) {
+        return self.makeRequest('/api/exchange/fetchPositions', { accountId, symbols });
+      },
+    };
   }
 }
 
