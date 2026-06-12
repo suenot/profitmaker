@@ -3,53 +3,11 @@ import Widget from '@/components/WidgetSimple';
 import WidgetMenu from '@/components/WidgetMenu';
 import TabNavigation from '@/components/TabNavigation';
 import { useDashboardStore } from '@/store/dashboardStore';
-import ChartWidget from '@/components/widgets/Chart';
-import PortfolioWidget from '@/components/widgets/Portfolio';
-import UserBalancesWidget, { UserBalancesHeaderActions } from '@/components/widgets/UserBalancesWidget';
-import UserTradingDataWidget, { UserTradingDataHeaderActions } from '@/components/widgets/UserTradingDataWidget';
-import OrderFormWidget from '@/components/widgets/OrderForm';
-import TransactionHistoryWidget from '@/components/widgets/TransactionHistory';
-import { OrderBookWidgetV2 } from '@/components/widgets/OrderBookWidget';
-import { TradesWidgetV2 } from '@/components/widgets/TradesWidget';
-import { DataProviderSettingsWidget } from '@/components/widgets/DataProviderSettingsWidget';
-import { DataProviderDemoWidget } from '@/components/widgets/DataProviderDemoWidget';
-import { DataProviderSetupWidget } from '@/components/widgets/DataProviderSetupWidget';
-import { DataProviderDebugWidget } from '@/components/widgets/DataProviderDebugWidget';
-import NotificationTestWidget from '@/components/NotificationTestWidget';
-import DealsWidget from '@/components/widgets/DealsWidget';
-import { DebugUserData } from '@/components/DebugUserData';
-import { DebugCCXTCache } from '@/components/DebugCCXTCache';
-import { DebugBingXWidget } from '@/components/DebugBingXWidget';
-import { ExchangesWidget } from '@/components/ExchangesWidget';
-import { MarketsWidget } from '@/components/MarketsWidget';
-import { PairsWidget } from '@/components/PairsWidget';
+import { useWidgetRegistry } from '@/modules/registry';
+import UnknownWidgetPlaceholder from '@/modules/UnknownWidgetPlaceholder';
 import AlignmentGuides from '@/components/AlignmentGuides';
 import { GuideLineType } from '@/types/alignmentGuides';
 import CollapsedWidgetsZone from '@/components/CollapsedWidgetsZone';
-
-const widgetComponents: Record<string, React.FC<any>> = {
-  chart: ChartWidget,
-  portfolio: PortfolioWidget,
-      userBalances: UserBalancesWidget,
-    userTradingData: UserTradingDataWidget,
-  orderForm: OrderFormWidget,
-  transactionHistory: TransactionHistoryWidget,
-  custom: PortfolioWidget, // Placeholder
-  orderbook: OrderBookWidgetV2,
-  trades: TradesWidgetV2,
-  deals: DealsWidget,
-  dataProviderSettings: DataProviderSettingsWidget,
-  dataProviderDemo: DataProviderDemoWidget,
-  dataProviderSetup: DataProviderSetupWidget,
-  dataProviderDebug: DataProviderDebugWidget,
-  notificationTest: NotificationTestWidget,
-  debugUserData: DebugUserData,
-  debugCCXTCache: DebugCCXTCache,
-  debugBingX: DebugBingXWidget,
-  exchanges: ExchangesWidget,
-  markets: MarketsWidget,
-  pairs: PairsWidget,
-};
 
 const TradingTerminal: React.FC = () => {
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
@@ -59,7 +17,12 @@ const TradingTerminal: React.FC = () => {
   const activeDashboardId = useDashboardStore(s => s.activeDashboardId);
   const dashboards = useDashboardStore(s => s.dashboards);
   const removeWidget = useDashboardStore(s => s.removeWidget);
-  
+  const updateWidget = useDashboardStore(s => s.updateWidget);
+
+  // Subscribe to the widget registry so widgets re-render when modules
+  // register/unregister definitions at runtime.
+  const definitions = useWidgetRegistry(s => s.definitions);
+
   // Get current active dashboard
   const activeDashboard = dashboards.find(d => d.id === activeDashboardId);
   const widgets = activeDashboard?.widgets || [];
@@ -132,15 +95,12 @@ const TradingTerminal: React.FC = () => {
         <AlignmentGuides guideLines={guideLines} />
         
         {widgets.map((widget) => {
-          const WidgetComponent = widgetComponents[widget.type];
-          
-          // Create header actions for specific widget types
-          const headerActions = widget.type === 'userTradingData' 
-            ? <UserTradingDataHeaderActions widgetId={widget.id} />
-            : widget.type === 'userBalances'
-            ? <UserBalancesHeaderActions widgetId={widget.id} />
-            : undefined;
-          
+          const definition = definitions[widget.type];
+          const WidgetComponent = definition?.Component;
+          const HeaderActions = definition?.HeaderActions;
+
+          const onRemove = () => activeDashboard && removeWidget(activeDashboard.id, widget.id);
+
           return (
             <Widget
               key={widget.id}
@@ -155,13 +115,23 @@ const TradingTerminal: React.FC = () => {
               groupId={widget.groupId}
               widgetType={widget.type}
               showGroupSelector={widget.showGroupSelector}
-              headerActions={headerActions}
-              onRemove={() => activeDashboard && removeWidget(activeDashboard.id, widget.id)}
+              headerActions={HeaderActions ? <HeaderActions widgetId={widget.id} /> : undefined}
+              onRemove={onRemove}
             >
-              <WidgetComponent 
-                widgetId={widget.id}
-                selectedGroupId={widget.groupId}
-              />
+              {WidgetComponent ? (
+                <WidgetComponent
+                  widgetId={widget.id}
+                  groupId={widget.groupId}
+                  config={widget.config ?? {}}
+                  updateConfig={(patch) =>
+                    activeDashboard && updateWidget(activeDashboard.id, widget.id, {
+                      config: { ...(widget.config ?? {}), ...patch },
+                    })
+                  }
+                />
+              ) : (
+                <UnknownWidgetPlaceholder type={widget.type} onRemove={onRemove} />
+              )}
             </Widget>
           );
         })}
