@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useGroupStore } from '@/store/groupStore';
-import { Bug, ChevronRight } from 'lucide-react';
+import { Bug, ChevronRight, Package } from 'lucide-react';
 import { useWidgetRegistry } from '@/modules/registry';
 import { resolveIcon } from '@/modules/resolveIcon';
 import type { BuiltinWidgetDefinition } from '@/modules/builtinWidgets';
@@ -28,6 +28,7 @@ const WidgetMenu: React.FC<WidgetMenuProps> = ({ position, onClose }) => {
   const addWidget = useDashboardStore(s => s.addWidget);
   const activeDashboardId = useDashboardStore(s => s.activeDashboardId);
   const getActiveDashboard = useDashboardStore(s => s.getActiveDashboard);
+  const bringWidgetToFront = useDashboardStore(s => s.bringWidgetToFront);
   const { getTransparentGroup } = useGroupStore();
   const definitions = useWidgetRegistry(s => s.definitions);
   const getDefinition = useWidgetRegistry(s => s.getDefinition);
@@ -198,6 +199,22 @@ const WidgetMenu: React.FC<WidgetMenuProps> = ({ position, onClose }) => {
     onClose();
   };
 
+  // Module Store has category 'system' (not in the category sections above), so
+  // it gets a dedicated menu item. Open it, or focus an existing instance on the
+  // active dashboard instead of adding a duplicate.
+  const MODULE_STORE_TYPE = 'system.moduleStore';
+  const handleOpenModuleStore = () => {
+    if (!activeDashboardId) return;
+    const dashboard = getActiveDashboard();
+    const existing = dashboard?.widgets.find(w => w.type === MODULE_STORE_TYPE);
+    if (existing) {
+      bringWidgetToFront(activeDashboardId, existing.id);
+      onClose();
+      return;
+    }
+    handleAddWidget(MODULE_STORE_TYPE);
+  };
+
   // Handle diagnostics menu visibility with hover delay
   const handleDiagnosticsMouseEnter = useCallback(() => {
     // Clear any existing timeout
@@ -342,16 +359,29 @@ const WidgetMenu: React.FC<WidgetMenuProps> = ({ position, onClose }) => {
                 </span>
                 <span className="transition-colors duration-200">Diagnostics</span>
               </div>
-              <ChevronRight 
-                size={14} 
+              <ChevronRight
+                size={14}
                 className={`text-terminal-muted group-hover:text-terminal-text transition-all duration-200 ${
                   submenuPosition.placement === 'left' ? 'rotate-180' : ''
-                }`} 
+                }`}
               />
             </button>
           </div>
+
+          {/* Module Store — dedicated entry point (system widget, not a category) */}
+          <div className="mt-2 pt-2 border-t border-terminal-border/50">
+            <button
+              className="group flex items-center w-full space-x-3 px-3 py-2 rounded-md transition-all duration-200 text-left text-sm text-terminal-text hover:text-terminal-text hover:bg-terminal-accent/60 active:bg-terminal-accent/80 hover:shadow-sm"
+              onClick={handleOpenModuleStore}
+            >
+              <span className="text-terminal-muted group-hover:text-terminal-text transition-colors duration-200">
+                <Package size={16} />
+              </span>
+              <span className="transition-colors duration-200">Module Store</span>
+            </button>
+          </div>
         </div>
-        
+
         <div className="p-2 border-t border-terminal-border/50 text-xs text-terminal-muted px-3">
           Select a widget to add to the workspace
         </div>
