@@ -168,13 +168,19 @@ export interface MarketDataProvider {
   trading?: ProviderTrading;
 }
 
+/**
+ * Authenticated operations. Credentials travel with each call (the store
+ * resolves the decrypted account and passes them in); the provider forwards
+ * them to the server, which stays stateless about user accounts.
+ */
 export interface ProviderTrading {
-  createOrder(accountId: string, params: CreateOrderParams): Promise<any>;
-  cancelOrder(accountId: string, orderId: string, symbol: string, market?: MarketType): Promise<any>;
-  fetchMyTrades(accountId: string, symbol?: string, since?: number, limit?: number): Promise<any[]>;
-  fetchOrders(accountId: string, symbol?: string, since?: number, limit?: number): Promise<any[]>;
-  fetchOpenOrders(accountId: string, symbol?: string): Promise<any[]>;
-  fetchPositions(accountId: string, symbols?: string[]): Promise<any[]>;
+  createOrder(creds: ProviderCredentials, params: CreateOrderParams): Promise<any>;
+  cancelOrder(creds: ProviderCredentials, exchange: string, orderId: string, symbol: string, market?: MarketType): Promise<any>;
+  fetchBalance(creds: ProviderCredentials, exchange: string, walletType?: string): Promise<ExchangeBalances>;
+  fetchMyTrades(creds: ProviderCredentials, exchange: string, symbol?: string, since?: number, limit?: number): Promise<any[]>;
+  fetchOrders(creds: ProviderCredentials, exchange: string, symbol?: string, since?: number, limit?: number): Promise<any[]>;
+  fetchOpenOrders(creds: ProviderCredentials, exchange: string, symbol?: string): Promise<any[]>;
+  fetchPositions(creds: ProviderCredentials, exchange: string, symbols?: string[]): Promise<any[]>;
 }
 
 // --- tiny provider registry (module-system seam) ---------------------------

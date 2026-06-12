@@ -21,6 +21,7 @@ import type {
   FetchTickerParams,
   WatchParams,
   CreateOrderParams,
+  ProviderCredentials,
 } from '@profitmaker/types';
 import {
   createCCXTInstanceConfig,
@@ -725,12 +726,10 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
     };
   }
 
-  async fetchBalance(accountId: string, walletType: string = 'spot'): Promise<ExchangeBalances> {
-    // Authenticated balance is fetched via the trading instance; credentials are
-    // resolved by the caller (store) and passed to getTradingInstance separately.
-    // This thin path requires a pre-created instance for accountId; callers that
-    // need credentials use the trading block instead.
-    throw new Error(`fetchBalance requires credentials; use trading.fetchBalance via the store (account ${accountId}, ${walletType})`);
+  async fetchBalance(_accountId: string, _walletType: string = 'spot'): Promise<ExchangeBalances> {
+    // Public providers cannot fetch authenticated balances. Credentials live in
+    // the trading block; the store calls provider.trading.fetchBalance instead.
+    throw new Error('fetchBalance requires credentials — use provider.trading.fetchBalance');
   }
 
   async watch(
@@ -762,38 +761,66 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
     return this.disconnectWebSocket();
   }
 
+  /** Build a credentialed server config for an authenticated operation. */
+  private credsConfig(
+    creds: ProviderCredentials,
+    exchange: string,
+    market: string = 'spot',
+  ): CCXTInstanceConfig {
+    return createCCXTInstanceConfig(
+      this.provider.id,
+      'trading',
+      'account',
+      exchange,
+      market,
+      'regular',
+      {
+        apiKey: creds.apiKey,
+        secret: creds.secret,
+        password: creds.password,
+        sandbox: creds.sandbox,
+      },
+    );
+  }
+
   get trading(): ProviderTrading {
     const self = this;
     return {
-      async createOrder(accountId: string, params: CreateOrderParams) {
+      async createOrder(creds: ProviderCredentials, params: CreateOrderParams) {
+        const config = self.credsConfig(creds, params.exchange, params.market ?? 'spot');
         return self.makeRequest('/api/exchange/createOrder', {
-          accountId,
-          exchangeId: params.exchange,
+          config,
           symbol: params.symbol,
           type: params.type,
           side: params.side,
           amount: params.amount,
           price: params.price,
-          marketType: params.market ?? 'spot',
           params: params.params ?? {},
         });
       },
-      async cancelOrder(accountId: string, orderId: string, symbol: string, market: MarketType = 'spot') {
-        return self.makeRequest('/api/exchange/cancelOrder', {
-          accountId, orderId, symbol, marketType: market,
-        });
+      async cancelOrder(creds: ProviderCredentials, exchange: string, orderId: string, symbol: string, market: MarketType = 'spot') {
+        const config = self.credsConfig(creds, exchange, market);
+        return self.makeRequest('/api/exchange/cancelOrder', { config, orderId, symbol });
       },
-      async fetchMyTrades(accountId: string, symbol?: string, since?: number, limit?: number) {
-        return self.makeRequest('/api/exchange/fetchMyTrades', { accountId, symbol, since, limit });
+      async fetchBalance(creds: ProviderCredentials, exchange: string, walletType: string = 'spot') {
+        const config = self.credsConfig(creds, exchange, walletType);
+        return self.makeRequest('/api/exchange/fetchBalance', { config });
       },
-      async fetchOrders(accountId: string, symbol?: string, since?: number, limit?: number) {
-        return self.makeRequest('/api/exchange/fetchOrders', { accountId, symbol, since, limit });
+      async fetchMyTrades(creds: ProviderCredentials, exchange: string, symbol?: string, since?: number, limit?: number) {
+        const config = self.credsConfig(creds, exchange);
+        return self.makeRequest('/api/exchange/fetchMyTrades', { config, symbol, since, limit });
       },
-      async fetchOpenOrders(accountId: string, symbol?: string) {
-        return self.makeRequest('/api/exchange/fetchOpenOrders', { accountId, symbol });
+      async fetchOrders(creds: ProviderCredentials, exchange: string, symbol?: string, since?: number, limit?: number) {
+        const config = self.credsConfig(creds, exchange);
+        return self.makeRequest('/api/exchange/fetchOrders', { config, symbol, since, limit });
       },
-      async fetchPositions(accountId: string, symbols?: string[]) {
-        return self.makeRequest('/api/exchange/fetchPositions', { accountId, symbols });
+      async fetchOpenOrders(creds: ProviderCredentials, exchange: string, symbol?: string) {
+        const config = self.credsConfig(creds, exchange);
+        return self.makeRequest('/api/exchange/fetchOpenOrders', { config, symbol });
+      },
+      async fetchPositions(creds: ProviderCredentials, exchange: string, symbols?: string[]) {
+        const config = self.credsConfig(creds, exchange, 'futures');
+        return self.makeRequest('/api/exchange/fetchPositions', { config, symbols });
       },
     };
   }

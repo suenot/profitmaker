@@ -1,4 +1,5 @@
 import { Elysia, t } from 'elysia';
+import ccxt from 'ccxt';
 import { getCCXTInstance, type CCXTInstanceConfig } from '../services/ccxtCache';
 
 const configSchema = t.Object({
@@ -10,6 +11,18 @@ const configSchema = t.Object({
   password: t.Optional(t.String()),
   sandbox: t.Optional(t.Boolean()),
 });
+
+// Trading requests carry credentials in `config` (same shape as fetchBalance);
+// the server stays stateless about user accounts.
+const configWithCreds = t.Object({ config: configSchema });
+
+function requireCreds(config: CCXTInstanceConfig, set: { status?: number }): string | null {
+  if (!config.apiKey || !config.secret) {
+    set.status = 400;
+    return 'API credentials required for this operation';
+  }
+  return null;
+}
 
 const configWithSymbol = t.Object({
   config: configSchema,
@@ -101,6 +114,110 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
       },
     };
   }, { body: configOnly })
+
+  // List every exchange id CCXT knows about. Used by useExchangesList and the
+  // provider discovery path now that the browser CCXT bundle is gone.
+  .get('/list', () => ({ success: true, data: (ccxt as any).exchanges as string[] }))
+
+  // --- authenticated trading (credentials travel in `config`) --------------
+
+  .post('/createOrder', async ({ body, set }) => {
+    const { config, symbol, type, side, amount, price, params } = body;
+    const credErr = requireCreds(config, set);
+    if (credErr) return { error: credErr };
+    const instance = await getCCXTInstance(config);
+    const order = await instance.createOrder(symbol, type, side, amount, price, params || {});
+    return { success: true, data: order };
+  }, {
+    body: t.Object({
+      config: configSchema,
+      symbol: t.String(),
+      type: t.String(),
+      side: t.Union([t.Literal('buy'), t.Literal('sell')]),
+      amount: t.Number(),
+      price: t.Optional(t.Number()),
+      params: t.Optional(t.Record(t.String(), t.Any())),
+    }),
+  })
+
+  .post('/cancelOrder', async ({ body, set }) => {
+    const { config, orderId, symbol } = body;
+    const credErr = requireCreds(config, set);
+    if (credErr) return { error: credErr };
+    const instance = await getCCXTInstance(config);
+    const result = await instance.cancelOrder(orderId, symbol);
+    return { success: true, data: result };
+  }, {
+    body: t.Object({
+      config: configSchema,
+      orderId: t.String(),
+      symbol: t.String(),
+    }),
+  })
+
+  .post('/fetchMyTrades', async ({ body, set }) => {
+    const { config, symbol, since, limit } = body;
+    const credErr = requireCreds(config, set);
+    if (credErr) return { error: credErr };
+    const instance = await getCCXTInstance(config);
+    if (!instance.has?.fetchMyTrades) return { success: true, data: [] };
+    const trades = await instance.fetchMyTrades(symbol, since, limit);
+    return { success: true, data: trades };
+  }, {
+    body: t.Object({
+      config: configSchema,
+      symbol: t.Optional(t.String()),
+      since: t.Optional(t.Number()),
+      limit: t.Optional(t.Number()),
+    }),
+  })
+
+  .post('/fetchOrders', async ({ body, set }) => {
+    const { config, symbol, since, limit } = body;
+    const credErr = requireCreds(config, set);
+    if (credErr) return { error: credErr };
+    const instance = await getCCXTInstance(config);
+    if (!instance.has?.fetchOrders) return { success: true, data: [] };
+    const orders = await instance.fetchOrders(symbol, since, limit);
+    return { success: true, data: orders };
+  }, {
+    body: t.Object({
+      config: configSchema,
+      symbol: t.Optional(t.String()),
+      since: t.Optional(t.Number()),
+      limit: t.Optional(t.Number()),
+    }),
+  })
+
+  .post('/fetchOpenOrders', async ({ body, set }) => {
+    const { config, symbol } = body;
+    const credErr = requireCreds(config, set);
+    if (credErr) return { error: credErr };
+    const instance = await getCCXTInstance(config);
+    if (!instance.has?.fetchOpenOrders) return { success: true, data: [] };
+    const orders = await instance.fetchOpenOrders(symbol);
+    return { success: true, data: orders };
+  }, {
+    body: t.Object({
+      config: configSchema,
+      symbol: t.Optional(t.String()),
+    }),
+  })
+
+  .post('/fetchPositions', async ({ body, set }) => {
+    const { config, symbols } = body;
+    const credErr = requireCreds(config, set);
+    if (credErr) return { error: credErr };
+    const instance = await getCCXTInstance(config);
+    if (!instance.has?.fetchPositions) return { success: true, data: [] };
+    const positions = await instance.fetchPositions(symbols);
+    return { success: true, data: positions };
+  }, {
+    body: t.Object({
+      config: configSchema,
+      symbols: t.Optional(t.Array(t.String())),
+    }),
+  })
 
   .onError(({ error, set }) => {
     const message = error instanceof Error ? error.message : 'Unknown error';
