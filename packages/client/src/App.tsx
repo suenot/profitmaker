@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,6 +6,7 @@ import { CookieNotification } from "@/components/ui/cookie-notification";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { loadModules } from "./modules/loader";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import BottomLeftInfo from './components/BottomLeftInfo';
@@ -19,7 +21,14 @@ import { MasterPasswordDialog } from './components/MasterPasswordDialog';
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  // Load installed module frontends once, after the host runtime is in place
+  // (main.tsx ran initRuntime()). A missing/unreachable server is a no-op.
+  useEffect(() => {
+    void loadModules();
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <TooltipProvider>
@@ -45,6 +54,7 @@ const App = () => (
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

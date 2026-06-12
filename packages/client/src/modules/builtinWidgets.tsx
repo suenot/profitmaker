@@ -1,6 +1,7 @@
 import React from 'react';
 import type { WidgetDefinition, WidgetProps, WidgetSettingsProps } from '@profitmaker/module-sdk';
 import { useWidgetRegistry } from './registry';
+import ModuleStoreWidget from './ModuleStoreWidget';
 
 // Built-in widget components (props: { widgetId, selectedGroupId }).
 import ChartWidget from '@/components/widgets/Chart';
@@ -313,6 +314,16 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     defaultSize: { width: 800, height: 350 },
     showGroupSelector: true,
     Component: adaptComponent(PortfolioWidget),
+  },
+  {
+    // Module Store — browse/install/enable/disable terminal modules.
+    type: 'system.moduleStore',
+    title: 'Module Store',
+    icon: 'Package',
+    category: 'system',
+    defaultSize: { width: 700, height: 550 },
+    showGroupSelector: false,
+    Component: ModuleStoreWidget as React.ComponentType<WidgetProps>,
   },
 ];
 
