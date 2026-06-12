@@ -11,6 +11,7 @@ import {
   UpdateWidgetData,
   Widget,
 } from '@/types/dashboard';
+import { sync } from '@/services/syncBridge';
 
 // Helper function for generating uuid (v4, simple)
 function uuidv4() {
@@ -141,7 +142,12 @@ export const useDashboardStore = create<DashboardStore>()(
           state.dashboards.push(dashboard);
           state.activeDashboardId = id;
         });
-        
+
+        sync.dashboardCreated(
+          { title: data.title, description: data.description, layout: data.layout, isDefault: data.isDefault },
+          id,
+        );
+
         return id;
       },
 
@@ -149,23 +155,28 @@ export const useDashboardStore = create<DashboardStore>()(
         set((state) => {
           const index = state.dashboards.findIndex(d => d.id === dashboardId);
           if (index === -1) return;
-          
+
           state.dashboards.splice(index, 1);
-          
+
           // If removing active dashboard, select another one
           if (state.activeDashboardId === dashboardId) {
             state.activeDashboardId = state.dashboards[0]?.id;
           }
         });
+
+        sync.dashboardRemoved(dashboardId);
       },
 
       updateDashboard: (dashboardId, data) => {
         set((state) => {
           const dashboard = state.dashboards.find(d => d.id === dashboardId);
           if (!dashboard) return;
-          
+
           Object.assign(dashboard, data, { updatedAt: getCurrentTimestamp() });
         });
+
+        const { widgets: _w, ...rest } = data as UpdateDashboardData & { widgets?: unknown };
+        sync.dashboardUpdated(dashboardId, rest);
       },
 
       setActiveDashboard: (dashboardId) => {
@@ -241,7 +252,25 @@ export const useDashboardStore = create<DashboardStore>()(
           dashboard.widgets.push(widget);
           dashboard.updatedAt = getCurrentTimestamp();
         });
-        
+
+        const created = get().getWidgetById(dashboardId, widgetId);
+        if (created) {
+          sync.widgetCreated(
+            {
+              dashboardId,
+              type: created.type,
+              defaultTitle: created.defaultTitle,
+              userTitle: created.userTitle,
+              position: created.position,
+              config: created.config,
+              groupId: created.groupId,
+              showGroupSelector: created.showGroupSelector,
+              isVisible: created.isVisible,
+            },
+            widgetId,
+          );
+        }
+
         return widgetId;
       },
 
@@ -249,14 +278,14 @@ export const useDashboardStore = create<DashboardStore>()(
         set((state) => {
           const dashboard = state.dashboards.find(d => d.id === dashboardId);
           if (!dashboard) return;
-          
+
           const widgetToRemove = dashboard.widgets.find(w => w.id === widgetId);
           const index = dashboard.widgets.findIndex(w => w.id === widgetId);
-          
+
           if (index !== -1) {
             dashboard.widgets.splice(index, 1);
             dashboard.updatedAt = getCurrentTimestamp();
-            
+
             // Cleanup chart widget subscription
             if (widgetToRemove?.type === 'chart') {
               // Chart component cleanup will handle unsubscribe via useEffect cleanup
@@ -264,6 +293,8 @@ export const useDashboardStore = create<DashboardStore>()(
             }
           }
         });
+
+        sync.widgetRemoved(widgetId);
       },
 
       updateWidget: (dashboardId, widgetId, data) => {
@@ -277,77 +308,99 @@ export const useDashboardStore = create<DashboardStore>()(
           Object.assign(widget, data);
           dashboard.updatedAt = getCurrentTimestamp();
         });
+
+        // Map to the server widget columns (drop the deprecated `title` mirror).
+        const { title: _t, ...rest } = data as UpdateWidgetData & { title?: unknown };
+        sync.widgetUpdated(widgetId, rest);
       },
 
       updateWidgetConfig: (widgetId, patch) => {
+        let dashboardId: string | undefined;
+        let mergedConfig: Record<string, unknown> | undefined;
         set((state) => {
           for (const dashboard of state.dashboards) {
             const widget = dashboard.widgets.find(w => w.id === widgetId);
             if (widget) {
               widget.config = { ...(widget.config ?? {}), ...patch };
               dashboard.updatedAt = getCurrentTimestamp();
+              dashboardId = dashboard.id;
+              mergedConfig = widget.config as Record<string, unknown>;
               return;
             }
           }
         });
+
+        if (dashboardId && mergedConfig) sync.widgetUpdated(widgetId, { config: mergedConfig });
       },
 
       moveWidget: (dashboardId, widgetId, x, y) => {
         set((state) => {
           const dashboard = state.dashboards.find(d => d.id === dashboardId);
           if (!dashboard) return;
-          
+
           const widget = dashboard.widgets.find(w => w.id === widgetId);
           if (!widget) return;
-          
+
           widget.position.x = x;
           widget.position.y = y;
           dashboard.updatedAt = getCurrentTimestamp();
         });
+
+        const w = get().getWidgetById(dashboardId, widgetId);
+        if (w) sync.widgetPosition(widgetId, w.position);
       },
 
       resizeWidget: (dashboardId, widgetId, width, height) => {
         set((state) => {
           const dashboard = state.dashboards.find(d => d.id === dashboardId);
           if (!dashboard) return;
-          
+
           const widget = dashboard.widgets.find(w => w.id === widgetId);
           if (!widget) return;
-          
+
           widget.position.width = width;
           widget.position.height = height;
           dashboard.updatedAt = getCurrentTimestamp();
         });
+
+        const w = get().getWidgetById(dashboardId, widgetId);
+        if (w) sync.widgetPosition(widgetId, w.position);
       },
 
       bringWidgetToFront: (dashboardId, widgetId) => {
         set((state) => {
           const dashboard = state.dashboards.find(d => d.id === dashboardId);
           if (!dashboard) return;
-          
+
           const widget = dashboard.widgets.find(w => w.id === widgetId);
           if (!widget) return;
-          
+
           // Find maximum z-index among all widgets
           const maxZIndex = Math.max(...dashboard.widgets.map(w => w.position.zIndex || 1));
-          
+
           // Set current widget z-index higher than maximum
           widget.position.zIndex = maxZIndex + 1;
           dashboard.updatedAt = getCurrentTimestamp();
         });
+
+        const w = get().getWidgetById(dashboardId, widgetId);
+        if (w) sync.widgetPosition(widgetId, w.position);
       },
 
       toggleWidgetVisibility: (dashboardId, widgetId) => {
         set((state) => {
           const dashboard = state.dashboards.find(d => d.id === dashboardId);
           if (!dashboard) return;
-          
+
           const widget = dashboard.widgets.find(w => w.id === widgetId);
           if (!widget) return;
-          
+
           widget.isVisible = !widget.isVisible;
           dashboard.updatedAt = getCurrentTimestamp();
         });
+
+        const w = get().getWidgetById(dashboardId, widgetId);
+        if (w) sync.widgetUpdated(widgetId, { isVisible: w.isVisible });
       },
 
       toggleWidgetMinimized: (dashboardId, widgetId) => {
@@ -390,20 +443,30 @@ export const useDashboardStore = create<DashboardStore>()(
           widget.isMinimized = !widget.isMinimized;
           dashboard.updatedAt = getCurrentTimestamp();
         });
+
+        const w = get().getWidgetById(dashboardId, widgetId);
+        if (w) sync.widgetUpdated(widgetId, {
+          isMinimized: w.isMinimized,
+          position: w.position,
+          preCollapsePosition: w.preCollapsePosition ?? null,
+        });
       },
 
       updateWidgetTitle: (dashboardId, widgetId, userTitle) => {
         set((state) => {
           const dashboard = state.dashboards.find(d => d.id === dashboardId);
           if (!dashboard) return;
-          
+
           const widget = dashboard.widgets.find(w => w.id === widgetId);
           if (!widget) return;
-          
+
           // If empty string, clear userTitle, otherwise set it
           widget.userTitle = userTitle.trim() === '' ? undefined : userTitle.trim();
           dashboard.updatedAt = getCurrentTimestamp();
         });
+
+        const w = get().getWidgetById(dashboardId, widgetId);
+        if (w) sync.widgetUpdated(widgetId, { userTitle: w.userTitle ?? null });
       },
 
       // Utility methods
