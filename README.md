@@ -33,7 +33,11 @@ curl -s -X POST http://localhost:3001/api/dashboards \
   -d '{"title":"My Dashboard"}'
 ```
 
-See [docs/server-api.md](docs/server-api.md) for the full API reference.
+See [docs/server-api.md](docs/server-api.md) for the full API reference, and
+[docs/remote-control.md](docs/remote-control.md) for **driving a live terminal
+from the backend** — REST mutations stream to open browsers in real time, and
+UI verbs (switch tab, focus widget, read UI state) are executable over an API.
+Run `bun scripts/control-demo.ts` to see it end to end.
 
 ---
 
