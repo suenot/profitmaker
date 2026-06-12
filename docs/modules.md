@@ -233,14 +233,18 @@ host's static-asset design.
 
 `InstalledModule`: `{ id, npmName, version, enabled, dev?, pendingRestart?, error?, manifest }`.
 
+`$BASE` below is your terminal server — `localhost:3001` for local dev, or your
+deployed host (e.g. the production API `https://profitmaker-api.marketmaker.cc`).
+
 ```bash
+BASE=https://profitmaker-api.marketmaker.cc   # or localhost:3001 for local dev
 # list
-curl -H 'Authorization: Bearer <token>' localhost:3001/api/modules
+curl -H 'Authorization: Bearer <token>' $BASE/api/modules
 # install
 curl -X POST -H 'Authorization: Bearer <token>' -H 'Content-Type: application/json' \
-  -d '{"name":"profitmaker-module-example"}' localhost:3001/api/modules/install
+  -d '{"name":"profitmaker-module-example"}' $BASE/api/modules/install
 # call a module route
-curl -H 'Authorization: Bearer <token>' localhost:3001/api/modules/example/hello
+curl -H 'Authorization: Bearer <token>' $BASE/api/modules/example/hello
 ```
 
 ## Build & publish

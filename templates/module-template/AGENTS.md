@@ -136,12 +136,17 @@ Requirements the store enforces on install:
 
 ## 5. Install into a terminal
 
+Against any terminal server — `localhost:3001` locally, or a deployed host such
+as the production API `https://profitmaker-api.marketmaker.cc`:
+
 ```bash
+BASE=https://profitmaker-api.marketmaker.cc   # or localhost:3001 for local dev
 curl -X POST -H "Authorization: Bearer <token>" -H 'Content-Type: application/json' \
-  -d '{"name":"profitmaker-module-<id>"}' localhost:3001/api/modules/install
+  -d '{"name":"profitmaker-module-<id>"}' $BASE/api/modules/install
 ```
 
-Or pin a version: `{"name":"...","version":"1.2.3"}`.
+Or pin a version: `{"name":"...","version":"1.2.3"}`. You can also install from
+the in-terminal **Module Store** widget (Browse tab → Install).
 
 Lifecycle after install:
 - `POST /api/modules/<id>/enable` / `.../disable` — start/stop at runtime, no
