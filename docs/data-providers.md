@@ -2,76 +2,66 @@
 
 ## Overview
 
-Profitmaker supports multiple data providers that fetch market data from exchanges. The provider system abstracts away the difference between running CCXT in the browser vs. on a server.
+Profitmaker is **backend-required**: all market data and trading go through a
+`ccxt-server` provider that talks to the terminal server. There is no browser
+CCXT — the `window.ccxt` CDN bundle and the `ccxt-browser` provider were removed
+in Stage 2. The client provider implements the `MarketDataProvider` contract
+(`@profitmaker/types`); on the server, requests are dispatched through a
+pluggable **provider registry** (the built-in `ccxt`, or a module-supplied
+provider). See [architecture.md](./architecture.md#server-provider-registry).
 
-## Provider Types
+## Client provider types
 
-| Type | Class | Location | Description |
-|------|-------|----------|-------------|
-| `ccxt-browser` | `CCXTBrowserProviderImpl` | `packages/core/src/ccxtBrowserProvider.ts` | CCXT runs directly in the browser |
-| `ccxt-server` | `CCXTServerProviderImpl` | `packages/core/src/ccxtServerProvider.ts` | CCXT runs on Express server, browser sends HTTP requests |
-| `marketmaker.cc` | -- | Planned | External data provider |
-| `custom-server-with-adapter` | -- | Planned | Custom server with adapter interface |
+The client data-provider store (`dataProviderStore`) tracks these provider types:
 
-## Browser Provider (default)
+| Type | Class | Description |
+|------|-------|-------------|
+| `ccxt-server` | `CCXTServerProviderImpl` (`packages/client/src/store/providers/ccxtServerProvider.ts`) | Talks to the terminal server over HTTP + Socket.IO. **The only implemented type.** |
+| `marketmaker.cc` | -- | Planned — external data provider |
+| `custom-server-with-adapter` | -- | Planned — custom server with adapter interface |
 
-The browser provider is created automatically on first load:
+> The `ccxt-browser` type and `CCXTBrowserProviderImpl` were removed in Stage 2.
+
+## The default server provider
+
+A `ccxt-server` provider is created automatically on first load:
 
 ```typescript
 {
-  id: 'universal-browser',
-  type: 'ccxt-browser',
-  name: 'Universal Browser Provider',
+  id: 'primary-server',
+  type: 'ccxt-server',
+  name: 'Primary Server',
   status: 'connected',
   exchanges: ['*'],    // supports all exchanges
-  priority: 100,       // low priority (fallback)
-  config: { sandbox: false }
+  priority: 1,
+  config: {
+    // resolved client-side: VITE_SERVER_URL → page origin (prod) → http://localhost:3001
+    serverUrl: 'http://localhost:3001',
+  },
 }
 ```
 
-**How it works:**
-1. CCXT library loads in the browser
-2. Exchange instances are created and cached in `ccxtInstanceManager`
-3. REST calls go directly from browser to exchange API
-4. WebSocket connections (CCXT Pro) also run in browser
+The store's `persist` is at version 2 with a `migrate()` that drops any legacy
+`ccxt-browser` provider and ensures `primary-server` exists.
 
-**Limitations:**
-- Some exchanges block browser requests (CORS)
-- Browser has limited connection capacity
-- API keys are used in browser memory (encrypted at rest in localStorage)
+**First-run UX.** The terminal is gated by `BackendGate` (around the `/` route):
+it health-checks the server, and if unreachable shows `ConnectionScreen` — inputs
+for the server URL + access token with a **Test connection** button — which
+persists into the `primary-server` config. Once connected it renders the
+terminal and runs a 30s health poll, showing a non-blocking banner if the backend
+drops.
 
-## Server Provider
+**How a request flows:**
+1. The client sends an HTTP POST to `<serverUrl>/api/exchange/<method>` (or a
+   Socket.IO `subscribe` for streaming).
+2. The server resolves a provider via the registry (`registry.resolve(exchange,
+   providerId?)`) — the built-in `ccxt` by default.
+3. The provider calls the exchange (no CORS issues; CCXT Pro for WebSocket).
+4. The response (with a `provider` field naming the source) returns to the client,
+   which normalizes and stores it.
 
-The server provider routes all CCXT operations through the Express server, bypassing CORS restrictions.
-
-**Setup:**
-
-1. Start the server: `bun server:dev`
-2. Add a server provider in the UI (Data Provider Settings widget) or programmatically:
-
-```typescript
-const provider = dataProviderStore.getState().createProvider(
-  'ccxt-server',
-  'My Server Provider',
-  ['binance', 'bybit'],  // or ['*'] for all
-  {
-    serverUrl: 'http://localhost:3001',
-    apiToken: 'your-secret-token'
-  }
-);
-```
-
-**How it works:**
-1. Browser sends HTTP POST to `http://localhost:3001/api/exchange/<method>`
-2. Server creates/reuses a CCXT instance
-3. Server calls the exchange API (no CORS issues)
-4. Server returns the response to the browser
-
-**Advantages:**
-- No CORS problems
-- Server can run CCXT Pro for WebSocket streaming
-- API keys can stay on the server (not in browser)
-- Server can be deployed separately
+Credentials for authenticated calls travel in the request `config`; the server
+stays stateless about user accounts.
 
 ## Provider Selection
 
@@ -180,11 +170,12 @@ removeChartUpdateListener('binance', 'BTC/USDT', '1h', 'spot', listener);
 
 ## CCXT Instance Management
 
-Exchange instances are cached in `packages/core/src/ccxtInstanceManager.ts`:
+Exchange instances live **on the server**, cached in
+`packages/server/src/services/ccxtCache.ts` (used by the built-in `ccxt`
+provider):
 
 - Instances are keyed by: `{exchangeId}:{marketType}:{ccxtType}:{sandbox}:{apiKeyPrefix}`
-- Server-side cache TTL: 24 hours, cleanup every 10 minutes
-- Browser-side: instances persist for the page session
+- Cache TTL: 24 hours, cleanup every 10 minutes
 - Markets are loaded on first instance creation (`exchange.loadMarkets()`)
 
 ## Intelligent Method Selection
@@ -193,8 +184,9 @@ For order book fetching, the store includes `selectOptimalOrderBookMethod()` whi
 
 ## Supported Exchanges
 
-CCXT v4.4 supports 100+ exchanges. Common ones:
+CCXT supports 100+ exchanges. Common ones:
 
 binance, bybit, okx, bitget, kucoin, gate, mexc, huobi, kraken, coinbase, bitfinex, bitmex, phemex, deribit, and many more.
 
-Use `getAllSupportedExchanges()` to get the full list from the current CCXT version.
+The client's `useExchangesList` hook (and the provider discovery path) fetch the
+full list from the server: `GET /api/exchange/list` returns `ccxt.exchanges`.

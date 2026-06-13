@@ -2,7 +2,7 @@
 
 ## Overview
 
-Profitmaker stores exchange API keys locally in the browser's localStorage. Keys are encrypted with AES-256-GCM using a master password. No credentials are ever sent to external services (except to the exchanges themselves for trading).
+Profitmaker stores exchange API keys locally in the browser's localStorage, encrypted with AES-256-GCM using a master password. For authenticated operations they are decrypted in the browser and sent to the **terminal server** (which forwards them to the exchange and never persists them — see *Server* below); they are never sent to any other third party.
 
 ## Architecture
 
@@ -106,15 +106,18 @@ Following the original Kupi terminal philosophy, Profitmaker recommends creating
 - **localStorage** (`encryption-hash`): Password verification hash
 - **Memory**: Derived CryptoKey (cleared on page reload or lock)
 
-### Server (if used)
+### Server
 
-When using the server provider, API keys are sent in POST request bodies to the Express server. The server:
+All trading goes through the server (the terminal is backend-required). For
+authenticated operations, API keys are sent in POST request bodies to the server.
+The server:
 - Holds keys in memory only for the duration of the CCXT instance
 - Caches instances (with keys) for 24 hours
 - Does NOT persist keys to disk
-- Uses Bearer token auth to protect endpoints
+- Uses Bearer token / session / SSO auth to protect endpoints
 
-**Recommendation:** If running the server, use it only on localhost or a trusted network. Set a strong `API_TOKEN`.
+**Recommendation:** Run the server only on localhost or a trusted network (or
+behind TLS). Set a strong `API_TOKEN`.
 
 ## Security Considerations
 

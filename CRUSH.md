@@ -6,9 +6,9 @@ Bun workspace monorepo with 4 packages:
 
 ```
 packages/
-├── types/    # @profitmaker/types -- shared TypeScript types
-├── core/     # @profitmaker/core -- CCXT wrappers, providers, encryption, formatters
-├── server/   # @profitmaker/server -- Express + Socket.IO backend
+├── types/    # @profitmaker/types -- shared TypeScript types (incl. provider contracts)
+├── sdk/      # @profitmaker/module-sdk -- module SDK (widget/manifest/runtime)
+├── server/   # @profitmaker/server -- Elysia (Bun) + Socket.IO backend (+ provider registry)
 └── client/   # @profitmaker/client -- React + Vite frontend
 ```
 
@@ -18,15 +18,15 @@ All commands run from project root via Bun:
 
 ### Development
 - `bun dev` -- start Vite dev server (client, port 8080)
-- `bun server:dev` -- start Express server with watch mode (port 3001)
+- `bun server:dev` -- start the API server with watch mode (port 3001; needs `DATABASE_URL` + `API_TOKEN`)
 
 ### Build & Production
 - `bun run build` -- production build (client)
-- `bun server` -- start Express server
+- `bun server` -- start the API server
 
 ### Testing
 - `bun test` -- run Vitest (client)
-- `bun test packages/core/src/__tests__/ccxt-bun.test.ts` -- run CCXT integration tests
+- `bun test packages/server/src/routes/proxy.test.ts` -- run a server test
 
 ### Linting
 - `bun lint` -- ESLint check (client)
@@ -45,15 +45,15 @@ All commands run from project root via Bun:
 | State | Zustand 5 + Immer (persisted to localStorage) |
 | Data | TanStack React Query, CCXT 4.4 (REST + WebSocket) |
 | Charts | Night Vision (OHLCV), Recharts (pie/bar) |
-| Backend | Express 5, Socket.IO |
+| Backend | Elysia (Bun), Socket.IO |
 | Encryption | Web Crypto API, AES-256-GCM |
-| Testing | Vitest (client), bun:test (core) |
+| Testing | Vitest (client), bun:test (server) |
 
 ## Code Style
 
 ### Imports
 - Use `@/*` alias for src directory in client
-- Use `@profitmaker/types` and `@profitmaker/core` for cross-package imports
+- Use `@profitmaker/types` and `@profitmaker/module-sdk` for cross-package imports
 - Group: built-in, external, workspace packages, internal, type imports
 
 ### Naming
