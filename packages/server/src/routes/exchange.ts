@@ -26,9 +26,17 @@ const providerIdField = { providerId: t.Optional(t.String()) };
 // the legacy inline `config`. When `accountId` is present the server resolves the
 // real keys server-side (browser sends NO secrets); the inline-config path is
 // kept working transitionally for incremental client migration.
+//
+// Routing fields (`exchange`/`market`/`sandbox`) are ALSO accepted top-level as a
+// convenience for the accountId flow, so the client can send a flat body without
+// re-wrapping a secret-free `config`. They map to config.exchangeId/marketType/
+// sandbox; an inner `config` still wins per-field when both are present.
 const accountIdField = {
   accountId: t.Optional(t.String()),
   want: t.Optional(t.Union([t.Literal('trade'), t.Literal('read')])),
+  exchange: t.Optional(t.String()),
+  market: t.Optional(t.String()),
+  sandbox: t.Optional(t.Boolean()),
 };
 
 function requireCreds(config: ProviderRequestConfig, set: { status?: number | string }): string | null {
@@ -45,9 +53,32 @@ async function resolve(config: ProviderRequestConfig, providerId?: string) {
 }
 
 interface AuthedBody {
-  config: ProviderRequestConfig;
+  config?: ProviderRequestConfig;
   accountId?: string;
   want?: AccessWant;
+  // Flat routing convenience fields (accountId flow). Mapped into the config.
+  exchange?: string;
+  market?: string;
+  sandbox?: boolean;
+}
+
+/**
+ * Build the routing config from either an inner `config` object or the flat
+ * top-level convenience fields (`exchange`/`market`/`sandbox`). Inner-config
+ * fields win when both are present. Secrets are intentionally NOT carried here;
+ * they're attached only by the accountId path after the server-side fetch.
+ */
+function routingConfig(body: AuthedBody): ProviderRequestConfig {
+  const c = body.config ?? ({} as ProviderRequestConfig);
+  return {
+    // Routing-only: exchange id, market type, sandbox, ccxt type. Secrets are
+    // deliberately excluded so callers attach them explicitly (fetched keys on
+    // the accountId path, inline keys on the legacy path) and never leak across.
+    exchangeId: c.exchangeId ?? body.exchange ?? '',
+    marketType: c.marketType ?? body.market,
+    ccxtType: c.ccxtType,
+    sandbox: c.sandbox ?? body.sandbox,
+  };
 }
 
 /**
@@ -72,6 +103,12 @@ async function resolveAuthedConfig(
   required: AccessWant,
   set: { status?: number | string },
 ): Promise<{ config: ProviderRequestConfig } | { error: string }> {
+  const base = routingConfig(body);
+  if (!base.exchangeId) {
+    set.status = 400;
+    return { error: 'exchangeId (config.exchangeId or top-level exchange) is required' };
+  }
+
   if (body.accountId) {
     const ctx = await getSsoContextFromRequest(request);
     if (!ctx) {
@@ -89,9 +126,9 @@ async function resolveAuthedConfig(
       });
       return {
         config: {
-          // Strip any inline secrets the client may have sent; trust only the
-          // server-fetched keys on the accountId path.
-          ...body.config,
+          // Trust only the server-fetched keys on the accountId path; `base`
+          // never carries inline secrets (routingConfig drops them).
+          ...base,
           apiKey: creds.apiKey,
           secret: creds.secret,
           password: creds.password,
@@ -107,8 +144,9 @@ async function resolveAuthedConfig(
     }
   }
 
-  // Legacy inline-config path: pass the body config straight through.
-  return { config: body.config };
+  // Legacy inline-config path: keep any inline secrets the client sent in `config`
+  // (the only place secrets live on this path), merged onto the routing base.
+  return { config: { ...base, apiKey: body.config?.apiKey, secret: body.config?.secret, password: body.config?.password } };
 }
 
 const configWithSymbol = t.Object({
@@ -137,9 +175,11 @@ const configOnly = t.Object({
   ...providerIdField,
 });
 
-// Like configOnly, but also accepts the central-accounts {accountId, want}.
+// Like configOnly, but also accepts the central-accounts {accountId, want} and
+// the flat routing fields. `config` is optional here: the accountId flow may send
+// routing top-level instead of wrapping a (secret-free) config object.
 const authedConfigOnly = t.Object({
-  config: configSchema,
+  config: t.Optional(configSchema),
   ...providerIdField,
   ...accountIdField,
 });
@@ -233,7 +273,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     return { success: true, provider: served, data: order };
   }, {
     body: t.Object({
-      config: configSchema,
+      config: t.Optional(configSchema),
       symbol: t.String(),
       type: t.String(),
       side: t.Union([t.Literal('buy'), t.Literal('sell')]),
@@ -256,7 +296,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     return { success: true, provider: served, data: await instance.trading.cancelOrder(orderId, symbol) };
   }, {
     body: t.Object({
-      config: configSchema,
+      config: t.Optional(configSchema),
       orderId: t.String(),
       symbol: t.String(),
       ...providerIdField,
@@ -275,7 +315,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     return { success: true, provider: served, data: trades };
   }, {
     body: t.Object({
-      config: configSchema,
+      config: t.Optional(configSchema),
       symbol: t.Optional(t.String()),
       since: t.Optional(t.Number()),
       limit: t.Optional(t.Number()),
@@ -295,7 +335,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     return { success: true, provider: served, data: orders };
   }, {
     body: t.Object({
-      config: configSchema,
+      config: t.Optional(configSchema),
       symbol: t.Optional(t.String()),
       since: t.Optional(t.Number()),
       limit: t.Optional(t.Number()),
@@ -315,7 +355,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     return { success: true, provider: served, data: orders };
   }, {
     body: t.Object({
-      config: configSchema,
+      config: t.Optional(configSchema),
       symbol: t.Optional(t.String()),
       ...providerIdField,
       ...accountIdField,
@@ -333,7 +373,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     return { success: true, provider: served, data: positions };
   }, {
     body: t.Object({
-      config: configSchema,
+      config: t.Optional(configSchema),
       symbols: t.Optional(t.Array(t.String())),
       ...providerIdField,
       ...accountIdField,
