@@ -52,7 +52,10 @@ const MyTradesWidget: React.FC<MyTradesWidgetProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const activeUser = users.find(u => u.id === activeUserId);
-  const accountsWithKeys = (activeUser?.accounts || []).filter(acc => acc.key && acc.privateKey);
+  // Central accounts: keys live server-side; every listed account (own or
+  // shared-with-read) is readable via the accountId flow (fetchMyTrades →
+  // want:'read'). No client-side key gate.
+  const accountsWithKeys = (activeUser?.accounts || []).filter(acc => !!acc.id);
 
   const loadTrades = useCallback(async () => {
     if (!accountsWithKeys.length) {
@@ -241,7 +244,7 @@ const MyTradesWidget: React.FC<MyTradesWidgetProps> = ({
           )}
           {!error && !accountsWithKeys.length && (
             <div className="text-sm text-muted-foreground text-center py-6">
-              No account with API keys — add one to load trade history.
+              No exchange accounts — add one (Accounts panel) to load trade history.
             </div>
           )}
           {!error && accountsWithKeys.length > 0 && !loading && myTrades.length === 0 && (

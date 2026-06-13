@@ -39,7 +39,9 @@ const DealsWidget: React.FC<DealsWidgetProps> = ({
 
   const handleSyncFromAccount = useCallback(async () => {
     const activeUser = users.find(u => u.id === activeUserId);
-    const accounts = (activeUser?.accounts || []).filter(acc => acc.key && acc.privateKey);
+    // Central accounts: no client-side keys; every listed account is readable
+    // via the accountId flow (fetchMyTrades → want:'read').
+    const accounts = (activeUser?.accounts || []).filter(acc => !!acc.id);
     if (!accounts.length || syncing) return;
 
     setSyncing(true);
