@@ -9,6 +9,8 @@ import AlignmentGuides from '@/components/AlignmentGuides';
 import { GuideLineType } from '@/types/alignmentGuides';
 import CollapsedWidgetsZone from '@/components/CollapsedWidgetsZone';
 import { TimezoneToggle, timeInTz, type TZValue, TZ_OPTIONS } from '@/components/status/TimezoneToggle';
+import { ConnectionIndicator, type ConnectionStatus } from '@/components/status/ConnectionIndicator';
+import { useServerHealth } from '@/hooks/useServerHealth';
 
 const TZ_STORAGE_KEY = 'tz';
 
@@ -30,6 +32,10 @@ const TradingTerminal: React.FC = () => {
     setTz(next);
     if (typeof window !== 'undefined') localStorage.setItem(TZ_STORAGE_KEY, next);
   }, []);
+
+  // Real backend connectivity for the status-bar indicator (polls /health).
+  const health = useServerHealth();
+  const connStatus: ConnectionStatus = health.status === 'checking' ? 'warning' : health.status;
   
   // Subscribe to dashboard store changes
   const activeDashboardId = useDashboardStore(s => s.activeDashboardId);
@@ -167,12 +173,32 @@ const TradingTerminal: React.FC = () => {
       
       <div className="fixed bottom-2 right-2 flex items-center gap-2">
         <div className="flex items-center text-terminal-muted text-xs bg-terminal-accent/30 px-3 py-1 rounded-md">
-          <span className="mr-2 font-mono tabular-nums">{timeInTz(currentTime, tz)}</span>
-          <div className="flex items-center">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-            <span>Online</span>
-          </div>
+          <span className="font-mono tabular-nums">{timeInTz(currentTime, tz)}</span>
         </div>
+        <ConnectionIndicator
+          status={connStatus}
+          onlineLabel="Backend connected"
+          warningLabel="Checking connection…"
+          offlineLabel="Backend offline"
+          details={
+            health.lastCheckedAt != null ? (
+              <div className="space-y-0.5">
+                {health.latencyMs != null && (
+                  <div>
+                    <span className="text-gray-400">Ping: </span>
+                    <span style={{ color: '#22c55e' }}>{health.latencyMs} ms</span>
+                  </div>
+                )}
+                <div>
+                  <span className="text-gray-400">Updated: </span>
+                  <span className="text-gray-300">
+                    {Math.max(0, Math.round((currentTime.getTime() - health.lastCheckedAt) / 1000))}s ago
+                  </span>
+                </div>
+              </div>
+            ) : undefined
+          }
+        />
         <TimezoneToggle value={tz} onChange={handleTzChange} expandOnHover />
       </div>
     </div>
