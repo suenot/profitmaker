@@ -1,0 +1,24 @@
+{
+  "name": "@profitmaker/mcp",
+  "version": "1.0.0",
+  "description": "MCP server + shared command registry for driving a Profitmaker terminal (REST + ui:command) from AI agents",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "bin": {
+    "profitmaker-mcp": "src/bin.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./commands": "./src/commands/index.ts"
+  },
+  "files": ["src"],
+  "keywords": ["profitmaker", "trading", "terminal", "mcp", "agent"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@profitmaker/types": "workspace:*",
+    "socket.io-client": "^4.8.1",
+    "zod": "^3.23.8"
+  }
+}
