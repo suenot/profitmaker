@@ -161,35 +161,23 @@ interface OrderBookEntry {
 
 ## 🔧 Конфигурация поставщиков
 
-### CCXT Browser
-```typescript
-const ccxtBrowserProvider: CCXTBrowserProvider = {
-  id: 'binance-spot',
-  name: 'Binance Spot',
-  type: 'ccxt-browser',
-  status: 'disconnected',
-  config: {
-    exchangeId: 'binance',
-    sandbox: false,
-    apiKey: 'your-api-key', // опционально
-    secret: 'your-secret',  // опционально
-    // Дополнительные настройки...
-  }
-};
-```
+All market data and trading go through a `ccxt-server` provider (the browser
+CCXT path was removed in Stage 2). The default provider `primary-server` is
+created automatically; you rarely construct one by hand.
 
-### CCXT Server (заглушка)
+### CCXT Server
 ```typescript
 const ccxtServerProvider: CCXTServerProvider = {
-  id: 'binance-server',
-  name: 'Binance via Server',
+  id: 'primary-server',
+  name: 'Primary Server',
   type: 'ccxt-server',
-  status: 'disconnected',
+  status: 'connected',
+  exchanges: ['*'],
+  priority: 1,
   config: {
-    exchangeId: 'binance',
-    serverUrl: 'https://your-server.com/api',
-    privateKey: 'your-private-key',
-    timeout: 30000
+    serverUrl: 'http://localhost:3001', // or VITE_SERVER_URL / page origin
+    token: 'your-api-token',            // optional
+    timeout: 30000,
   }
 };
 ```

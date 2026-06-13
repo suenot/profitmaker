@@ -53,7 +53,7 @@ order is an exposed / realized / partially_realized position on the stock
 
 **client_server** – the hardware on which ``client_backend``` runs
 
-**client_backend** – express js server that is responsible for authorization, working with keys, working with ccxt_api and kupi_api
+**client_backend** – the terminal server (Elysia on Bun) responsible for authorization, working with keys, and working with ccxt_api and kupi_api
 
 **client_api** – api raised in ```client_backend```
 

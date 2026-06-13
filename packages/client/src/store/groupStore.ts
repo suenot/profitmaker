@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { Group, CreateGroupData, UpdateGroupData, GroupStoreState, GroupColors, GroupColor } from '../types/groups';
+import { sync } from '@/services/syncBridge';
 
 interface GroupStoreActions {
   // Group actions
@@ -46,10 +47,19 @@ export const useGroupStore = create<GroupStore>()(
         set((state) => ({
           groups: [...state.groups, newGroup]
         }));
-        
+
+        sync.groupCreated(
+          {
+            name: newGroup.name, color: newGroup.color, tradingPair: newGroup.tradingPair,
+            account: newGroup.account, exchange: newGroup.exchange, market: newGroup.market,
+            description: newGroup.description,
+          },
+          newGroup.id,
+        );
+
         return newGroup;
       },
-      
+
       // Update group
       updateGroup: (id: string, data: UpdateGroupData) => {
         set((state) => ({
@@ -59,8 +69,10 @@ export const useGroupStore = create<GroupStore>()(
               : group
           )
         }));
+
+        sync.groupUpdated(id, data);
       },
-      
+
       // Delete group
       deleteGroup: (id: string) => {
         const transparentGroup = get().getTransparentGroup();
@@ -68,6 +80,8 @@ export const useGroupStore = create<GroupStore>()(
           groups: state.groups.filter(group => group.id !== id),
           selectedGroupId: state.selectedGroupId === id ? transparentGroup?.id : state.selectedGroupId
         }));
+
+        sync.groupRemoved(id);
       },
       
       // Select group
@@ -94,6 +108,7 @@ export const useGroupStore = create<GroupStore>()(
               : group
           )
         }));
+        sync.groupUpdated(groupId, { tradingPair });
       },
 
       // Set account for group
@@ -105,6 +120,7 @@ export const useGroupStore = create<GroupStore>()(
               : group
           )
         }));
+        sync.groupUpdated(groupId, { account });
       },
 
       // Set exchange for group
@@ -116,6 +132,7 @@ export const useGroupStore = create<GroupStore>()(
               : group
           )
         }));
+        sync.groupUpdated(groupId, { exchange });
       },
 
       // Set market for group
@@ -127,6 +144,7 @@ export const useGroupStore = create<GroupStore>()(
               : group
           )
         }));
+        sync.groupUpdated(groupId, { market });
       },
 
       // Reset group settings
@@ -134,17 +152,18 @@ export const useGroupStore = create<GroupStore>()(
         set((state) => ({
           groups: state.groups.map(group =>
             group.id === groupId
-              ? { 
-                  ...group, 
-                  account: undefined, 
-                  exchange: undefined, 
+              ? {
+                  ...group,
+                  account: undefined,
+                  exchange: undefined,
                   market: undefined,
-                  tradingPair: undefined, 
-                  updatedAt: new Date().toISOString() 
+                  tradingPair: undefined,
+                  updatedAt: new Date().toISOString()
                 }
               : group
           )
         }));
+        sync.groupUpdated(groupId, { account: undefined, exchange: undefined, market: undefined, tradingPair: undefined });
       },
       
       // Initialize test data

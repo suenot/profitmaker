@@ -77,6 +77,7 @@ touches. **Not enforced at runtime** (yet). Allowed values:
 | `network` | makes its own outbound network requests (backend) |
 | `storage` | persists its own state via `ctx.storage` |
 | `jobs` | runs background jobs via `ctx.jobs` |
+| `provider` | registers a server-side data/trading provider via `ctx.providers` |
 
 ### Example
 
@@ -151,6 +152,8 @@ fetch: `getTerminal().api.fetch('/api/modules/example/hello')`.
 | `routesPrefix` | `string` | `'/api/modules/<id>'` — the mount prefix (informational; your routes are still root-relative). |
 | `io` | `ModuleSocketNamespace` | Socket.IO namespace `'/m/<id>'`. `io.emit(event, ...)` reaches clients connected to that namespace; `io.on('connection', ...)` for inbound. |
 | `ccxt.getInstance(cfg)` | `Promise<exchange>` | Shared server-side CCXT access — same instance cache and rate-limit budgets as the terminal. `cfg`: `{ exchangeId, marketType?, sandbox?, apiKey?, secret?, password? }`. |
+| `providers.register(factory)` | `Disposable` | Register a server-side data/trading provider (see **Provider modules** below). Auto-unregistered on stop/disable. |
+| `providers.unregister(id)` | `boolean` | Remove a provider this module registered. |
 | `storage` | `ModuleStorage` | Per-module persisted JSON: `get<T>(key)`, `set(key, value)`, `delete(key)`, `all()`. Backed by one file under the server's modules dir, written atomically (temp+rename) and debounced. Survives enable/disable; treat as small key/value state. |
 | `jobs` | `ModuleJobs` | `every(ms, fn, name?)` and `once(ms, fn)` return a `Disposable`. **All jobs are force-cleared when the module stops or is disabled**, so a forgotten interval can't outlive the module. |
 | `env.dataDir` | `string` | Absolute path to the module-state directory. |
@@ -178,6 +181,66 @@ const mod: BackendModule = {
 };
 export default mod;
 ```
+
+## Provider modules
+
+A **provider module** registers a server-side data/trading provider, so the
+terminal can serve market data from something other than the built-in `ccxt` —
+for example a different exchange SDK, an aggregator, or a **native binding** (a
+Rust implementation compiled to a Node.js napi addon, installed via
+`bun add your-native-pkg`). Nothing in the contract assumes pure JS.
+
+### Registration
+
+In `start(ctx)`, call `ctx.providers.register(factory)` with a
+`ServerProviderFactory` (from `@profitmaker/module-sdk`):
+
+```ts
+import type { ServerProviderFactory } from '@profitmaker/module-sdk';
+
+const factory: ServerProviderFactory = {
+  id: 'mock',                       // stable id used for explicit selection + listing
+  displayName: 'Mock Provider',
+  supportedExchanges: ['mockex'],   // or '*' for all
+  priority: 50,                     // lower wins; built-in ccxt is 100
+  create: (config) => makeInstance(config), // -> ServerProviderInstance
+};
+
+const mod: BackendModule = {
+  async start(ctx) {
+    ctx.providers.register(factory); // auto-unregistered on stop/disable
+  },
+};
+```
+
+`create(config)` returns a `ServerProviderInstance` implementing
+`fetchTicker/OrderBook/Trades/OHLCV/Balance`, `getCapabilities`, `getMarket`,
+`watch(dataType, symbol, timeframe?)`, and an optional `trading` block (omit it
+for a read-only provider). Methods return exchange-native payloads — the routes
+pass them straight through and the client normalizes.
+
+### Routing & priority
+
+`/api/exchange/*` and the Socket.IO watch loop resolve a provider via
+`registry.resolve(exchange, providerId?)`:
+
+- **Explicit:** include `providerId` in the request body (or the `subscribe`
+  payload) to force a provider.
+- **By priority:** otherwise the lowest-`priority` provider whose
+  `supportedExchanges` covers the exchange wins. The built-in `ccxt` is
+  priority `100`, so a module provider with a lower number takes precedence for
+  the exchanges it serves.
+
+Every `/api/exchange/*` response carries a `provider` field reporting which
+provider served it. `GET /api/providers/available` lists all registered
+providers (`{ id, displayName, exchanges, priority, fromModule? }`).
+
+### Lifecycle
+
+All providers a module registers are **auto-unregistered when the module stops
+or is disabled** — no manual cleanup needed.
+
+A full working example lives in [`examples/provider-module`](../examples/provider-module).
 
 ## Runtime model
 

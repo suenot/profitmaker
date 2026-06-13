@@ -112,13 +112,7 @@ export interface BaseDataProvider {
 }
 
 // Data provider types
-export type DataProviderType = 'ccxt-browser' | 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter' | 'custom';
-
-// Configuration for CCXT Browser - УПРОЩЕННАЯ ВЕРСИЯ
-export interface CCXTBrowserConfig {
-  sandbox?: boolean;
-  options?: Record<string, any>;
-}
+export type DataProviderType = 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter' | 'custom';
 
 // Configuration for CCXT Server - УПРОЩЕННАЯ ВЕРСИЯ
 export interface CCXTServerConfig {
@@ -157,11 +151,6 @@ export interface CustomProviderConfig {
 }
 
 // Specific provider types
-export interface CCXTBrowserProvider extends BaseDataProvider {
-  type: 'ccxt-browser';
-  config: CCXTBrowserConfig;
-}
-
 export interface CCXTServerProvider extends BaseDataProvider {
   type: 'ccxt-server';
   config: CCXTServerConfig;
@@ -185,7 +174,7 @@ export interface CustomProvider extends BaseDataProvider {
 }
 
 // Combined provider type
-export type DataProvider = CCXTBrowserProvider | CCXTServerProvider | MarketMakerProvider | CustomServerWithAdapterProvider | CustomProvider;
+export type DataProvider = CCXTServerProvider | MarketMakerProvider | CustomServerWithAdapterProvider | CustomProvider;
 
 // Utility types for provider-exchange mapping
 export interface ProviderExchangeMapping {
@@ -271,6 +260,13 @@ export interface SubscriptionKey {
   market?: MarketType; // Тип рынка (spot/futures)
 }
 
+export interface SubscriptionConfig {
+  providerId?: string; // Force a specific provider instead of auto-selection
+  isAggregated?: boolean; // для trades: использовать ли aggregate режим
+  tradesLimit?: number; // для trades: лимит количества
+  [key: string]: any; // дополнительные параметры
+}
+
 export interface ActiveSubscription {
   key: SubscriptionKey;
   subscriberCount: number;
@@ -282,11 +278,7 @@ export interface ActiveSubscription {
   wsConnection?: WebSocket; // для WebSocket соединений
   ccxtMethod?: string; // какой именно CCXT метод используется (watchOrderBook, watchBidsAsks, etc.)
   providerId?: string; // ID провайдера обслуживающего эту подписку
-  config?: {
-    isAggregated?: boolean; // для trades: использовать ли aggregate режим
-    tradesLimit?: number; // для trades: лимит количества
-    [key: string]: any; // дополнительные параметры
-  };
+  config?: SubscriptionConfig;
 }
 
 // CCXT specific types

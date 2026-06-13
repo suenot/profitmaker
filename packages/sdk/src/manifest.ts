@@ -19,6 +19,7 @@ export const ModulePermissionSchema = z.enum([
   'network', // makes its own outbound network requests (backend)
   'storage', // persists its own state via ctx.storage
   'jobs', // runs background jobs via ctx.jobs
+  'provider', // registers a server-side data/trading provider via ctx.providers
 ]);
 export type ModulePermission = z.infer<typeof ModulePermissionSchema>;
 

@@ -13,14 +13,9 @@ import TransactionHistoryWidget from '@/components/widgets/TransactionHistory';
 import { OrderBookWidgetV2 } from '@/components/widgets/OrderBookWidget';
 import { TradesWidgetV2 } from '@/components/widgets/TradesWidget';
 import { DataProviderSettingsWidget } from '@/components/widgets/DataProviderSettingsWidget';
-import { DataProviderDemoWidget } from '@/components/widgets/DataProviderDemoWidget';
 import { DataProviderSetupWidget } from '@/components/widgets/DataProviderSetupWidget';
 import { DataProviderDebugWidget } from '@/components/widgets/DataProviderDebugWidget';
-import NotificationTestWidget from '@/components/NotificationTestWidget';
 import DealsWidget from '@/components/widgets/DealsWidget';
-import { DebugUserData } from '@/components/DebugUserData';
-import { DebugCCXTCache } from '@/components/DebugCCXTCache';
-import { DebugBingXWidget } from '@/components/DebugBingXWidget';
 import { ExchangesWidget } from '@/components/ExchangesWidget';
 import { MarketsWidget } from '@/components/MarketsWidget';
 import { PairsWidget } from '@/components/PairsWidget';
@@ -186,69 +181,6 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
 
   // ---- Diagnostics ----
   {
-    type: 'exchanges',
-    title: 'Exchanges Diagnostic',
-    icon: 'Globe',
-    category: 'diagnostics',
-    defaultSize: { width: 600, height: 500 },
-    showGroupSelector: false,
-    Component: adaptComponent(ExchangesWidget),
-  },
-  {
-    type: 'markets',
-    title: 'Markets Diagnostic',
-    icon: 'Server',
-    category: 'diagnostics',
-    defaultSize: { width: 500, height: 450 },
-    showGroupSelector: false,
-    Component: adaptComponent(MarketsWidget),
-  },
-  {
-    type: 'pairs',
-    title: 'Pairs Diagnostic',
-    icon: 'TrendingUp',
-    category: 'diagnostics',
-    defaultSize: { width: 650, height: 550 },
-    showGroupSelector: false,
-    Component: adaptComponent(PairsWidget),
-  },
-  {
-    type: 'debugUserData',
-    title: 'Debug User Data',
-    icon: 'Users',
-    category: 'diagnostics',
-    defaultSize: { width: 600, height: 400 },
-    showGroupSelector: false,
-    Component: adaptComponent(DebugUserData),
-  },
-  {
-    type: 'debugCCXTCache',
-    title: 'Debug CCXT Cache',
-    icon: 'Database',
-    category: 'diagnostics',
-    defaultSize: { width: 700, height: 500 },
-    showGroupSelector: false,
-    Component: adaptComponent(DebugCCXTCache),
-  },
-  {
-    type: 'debugBingX',
-    title: 'Debug BingX',
-    icon: 'Bug',
-    category: 'diagnostics',
-    defaultSize: { width: 700, height: 600 },
-    showGroupSelector: false,
-    Component: adaptComponent(DebugBingXWidget),
-  },
-  {
-    type: 'notificationTest',
-    title: 'Notification Test',
-    icon: 'Bell',
-    category: 'diagnostics',
-    defaultSize: { width: 400, height: 500 },
-    showGroupSelector: false,
-    Component: adaptComponent(NotificationTestWidget),
-  },
-  {
     type: 'dataProviderSettings',
     title: 'Data Provider Settings',
     icon: 'Settings',
@@ -258,15 +190,6 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     Component: adaptComponent(DataProviderSettingsWidget),
   },
   {
-    type: 'dataProviderDemo',
-    title: 'Data Provider Demo',
-    icon: 'Bug',
-    category: 'diagnostics',
-    defaultSize: { width: 700, height: 400 },
-    showGroupSelector: false,
-    Component: adaptComponent(DataProviderDemoWidget),
-  },
-  {
     type: 'dataProviderSetup',
     title: 'Data Provider Setup',
     icon: 'Settings',
@@ -274,15 +197,6 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     defaultSize: { width: 500, height: 400 },
     showGroupSelector: false,
     Component: adaptComponent(DataProviderSetupWidget),
-  },
-  {
-    type: 'dataProviderDebug',
-    title: 'Data Provider Debug',
-    icon: 'Bug',
-    category: 'diagnostics',
-    defaultSize: { width: 700, height: 500 },
-    showGroupSelector: false,
-    Component: adaptComponent(DataProviderDebugWidget),
   },
 
   // ---- System (renderable from persisted dashboards; not in the add menu) ----
@@ -327,6 +241,47 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   },
 ];
 
+// Diagnostic widgets registered only in dev (import.meta.env.DEV). They surface
+// raw provider/exchange internals and are not meant for production users.
+const DEV_ONLY_DEFINITIONS: BuiltinWidgetDefinition[] = [
+  {
+    type: 'exchanges',
+    title: 'Exchanges Diagnostic',
+    icon: 'Globe',
+    category: 'diagnostics',
+    defaultSize: { width: 600, height: 500 },
+    showGroupSelector: false,
+    Component: adaptComponent(ExchangesWidget),
+  },
+  {
+    type: 'markets',
+    title: 'Markets Diagnostic',
+    icon: 'Server',
+    category: 'diagnostics',
+    defaultSize: { width: 500, height: 450 },
+    showGroupSelector: false,
+    Component: adaptComponent(MarketsWidget),
+  },
+  {
+    type: 'pairs',
+    title: 'Pairs Diagnostic',
+    icon: 'TrendingUp',
+    category: 'diagnostics',
+    defaultSize: { width: 650, height: 550 },
+    showGroupSelector: false,
+    Component: adaptComponent(PairsWidget),
+  },
+  {
+    type: 'dataProviderDebug',
+    title: 'Data Provider Debug',
+    icon: 'Bug',
+    category: 'diagnostics',
+    defaultSize: { width: 700, height: 500 },
+    showGroupSelector: false,
+    Component: adaptComponent(DataProviderDebugWidget),
+  },
+];
+
 let registered = false;
 
 /**
@@ -340,6 +295,11 @@ export function registerBuiltinWidgets(): void {
 
   const registerMany = useWidgetRegistry.getState().registerMany;
   registerMany(BUILTIN_DEFINITIONS);
+
+  // Dev-only diagnostic widgets (raw provider/exchange internals).
+  if (import.meta.env.DEV) {
+    registerMany(DEV_ONLY_DEFINITIONS);
+  }
 
   // 'orderbook' was historically also referenced as 'orderBook' (camelCase) in
   // the settings switch. Register an alias so either spelling resolves and shows

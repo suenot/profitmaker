@@ -1,15 +1,19 @@
-import { getCCXTInstance, type CCXTInstanceConfig } from './ccxtCache';
+import type { CCXTInstanceConfig } from './ccxtCache';
+import type { ServerProviderInstance, ServerWatchDataType } from '@profitmaker/types';
+import { providerRegistry } from '../providers';
 
 export interface WebSocketSubscription {
   id: string;
   socketId: string;
   exchangeId: string;
   symbol: string;
-  dataType: 'ticker' | 'trades' | 'orderbook' | 'ohlcv' | 'balance';
+  dataType: ServerWatchDataType;
   timeframe?: string;
   config: CCXTInstanceConfig;
+  /** Optional explicit provider; omitted ⇒ registry picks by priority. */
+  providerId?: string;
   isActive: boolean;
-  ccxtInstance?: any;
+  providerInstance?: ServerProviderInstance;
 }
 
 const activeSubscriptions = new Map<string, WebSocketSubscription>();
@@ -26,37 +30,14 @@ export const startWebSocketSubscription = async (
   emitData: (socketId: string, data: any) => void,
   emitError: (socketId: string, data: any) => void
 ): Promise<void> => {
-  const instance = await getCCXTInstance(subscription.config);
-  subscription.ccxtInstance = instance;
+  // Resolve through the provider registry so module-supplied providers serve
+  // streaming too; defaults to the built-in 'ccxt' (zero behavior change).
+  const { instance } = await providerRegistry.resolve(subscription.config, subscription.providerId);
+  subscription.providerInstance = instance;
 
   const watchData = async () => {
     try {
-      let data: any;
-      switch (subscription.dataType) {
-        case 'ticker':
-          if (!instance.has['watchTicker']) throw new Error(`${subscription.exchangeId} does not support watchTicker`);
-          data = await instance.watchTicker(subscription.symbol);
-          break;
-        case 'trades':
-          if (!instance.has['watchTrades']) throw new Error(`${subscription.exchangeId} does not support watchTrades`);
-          data = await instance.watchTrades(subscription.symbol);
-          break;
-        case 'orderbook':
-          if (!instance.has['watchOrderBook']) throw new Error(`${subscription.exchangeId} does not support watchOrderBook`);
-          data = await instance.watchOrderBook(subscription.symbol);
-          break;
-        case 'ohlcv':
-          if (!instance.has['watchOHLCV']) throw new Error(`${subscription.exchangeId} does not support watchOHLCV`);
-          if (!subscription.timeframe) throw new Error('Timeframe is required for OHLCV subscription');
-          data = await instance.watchOHLCV(subscription.symbol, subscription.timeframe);
-          break;
-        case 'balance':
-          if (!instance.has['watchBalance']) throw new Error(`${subscription.exchangeId} does not support watchBalance`);
-          data = await instance.watchBalance();
-          break;
-        default:
-          throw new Error(`Unsupported data type: ${subscription.dataType}`);
-      }
+      const data = await instance.watch(subscription.dataType, subscription.symbol, subscription.timeframe);
 
       emitData(subscription.socketId, {
         subscriptionId: subscription.id,

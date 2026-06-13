@@ -1,0 +1,19 @@
+{
+  "name": "@profitmaker/cli",
+  "version": "1.0.0",
+  "description": "profitmaker CLI — drive a Profitmaker terminal from the shell (same command registry as the MCP server)",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "profitmaker": "src/bin.ts"
+  },
+  "files": ["src"],
+  "keywords": ["profitmaker", "trading", "terminal", "cli"],
+  "license": "MIT",
+  "dependencies": {
+    "@profitmaker/mcp": "workspace:*",
+    "@profitmaker/types": "workspace:*",
+    "commander": "^12.1.0",
+    "zod": "^3.23.8"
+  }
+}

@@ -58,6 +58,147 @@ curl -X POST http://localhost:3001/api/auth/logout \
 
 All endpoints except `/health` and `/api/auth/*` require authentication.
 
+### Single-user bootstrap (API token)
+
+The `API_TOKEN` is not just for server-to-server calls — it transparently resolves
+to a **single bootstrap user** (`default@local`, created lazily on first use). This
+means a token-only caller (an agent, a script, `curl`) can use **every** user-scoped
+route exactly like a logged-in user, with no registration or login step:
+
+```bash
+# No login needed — the API token IS a user.
+curl http://localhost:3001/api/dashboards -H "Authorization: Bearer $API_TOKEN"
+curl -X POST http://localhost:3001/api/dashboards \
+  -H "Authorization: Bearer $API_TOKEN" -H "Content-Type: application/json" \
+  -d '{"title":"Agent Dashboard"}'
+```
+
+Real session tokens continue to work unchanged and are scoped to their own user.
+
+### Ecosystem SSO (auth.marketmaker.cc)
+
+profitmaker also accepts **SSO tokens** from the MarketMaker ecosystem auth
+service. A bearer token resolves in this order: `API_TOKEN` (→ bootstrap user) →
+local session token → **SSO JWT**. SSO JWTs are RS256, verified against the
+service's **public JWKS** (`https://auth.marketmaker.cc/.well-known/jwks.json`) —
+no shared secret is needed or stored. On first SSO login a local user row is
+auto-provisioned and **explicitly bound** to the token's `sub` (the auth-service
+user id), so each ecosystem user gets their own dashboards/widgets/groups.
+
+```bash
+# A valid SSO JWT works on every user-scoped route, just like a session token.
+curl http://localhost:3001/api/dashboards -H "Authorization: Bearer <sso-jwt>"
+```
+
+The browser obtains the JWT silently via the shared `*.marketmaker.cc` session
+cookie — see the client SSO flow and [docs/remote-control.md](remote-control.md).
+
+| Env var | Default | Meaning |
+|---------|---------|---------|
+| `AUTH_URL` | `https://auth.marketmaker.cc` | Auth service base (JWKS lives at `/.well-known/jwks.json`). Override for dev/staging. |
+| `AUTH_REQUIRED_SERVICE` | _(unset)_ | When set (e.g. `profitmaker`), the JWT must carry a role for that service in its `roles`/`services` claim. Default: any authenticated ecosystem user is allowed. |
+| `AUTH_VERIFY_ISSUER` | _(unset)_ | Set to `1` to also require the JWT `iss` to equal `AUTH_URL`. Off by default because the auth service currently issues ecosystem-wide tokens without `iss`. |
+
+The client exposes the same env knob as `VITE_AUTH_URL` (defaults to the public
+auth URL).
+
+**Production smoke test** (run after deploy to app.marketmaker.cc — needs a real
+ecosystem account):
+
+1. Log in at any `*.marketmaker.cc` site (or directly at auth.marketmaker.cc) so
+   the shared `mm_session` cookie is set.
+2. Open `https://app.marketmaker.cc`. The top bar should show your username +
+   logout (not "Login with MarketMaker"); the browser console shows a
+   `GET /api/v1/auth/session → 200`.
+3. Create a dashboard in the UI; confirm it persists per-user (a second
+   ecosystem account sees its own, separate dashboards).
+4. Log out → the chip reverts to the login button and the shared cookie is
+   cleared (you're logged out of the other subdomains too).
+
+Locally this path is verified with a generated RS256 keypair + a mock JWKS
+(`AUTH_URL`/`VITE_AUTH_URL` pointed at the mock): a crafted JWT passes the gate,
+auto-provisions a user, and a forged-key token is rejected with `403`.
+
+#### Trust model
+
+What the server trusts and how, stated plainly:
+
+- **Signature + freshness.** A token is accepted only if it is signed by a key in
+  the auth service's JWKS, the algorithm is **RS256** (pinned — an `alg` of
+  anything else, e.g. `HS256`, is rejected), and it is unexpired.
+- **Shape.** The token must carry `sub`, `email`, and a `roles`/`services` object.
+  A token lacking the role map is not an ecosystem session token and is rejected,
+  so the accepted set is narrower than "any RS256 token the auth service signed".
+- **No issuer/audience binding yet.** The auth service issues ecosystem-wide
+  tokens without `iss`/`aud`, so we cannot bind to them today. If it starts
+  setting `iss`, set `AUTH_VERIFY_ISSUER=1` to also require `iss == AUTH_URL`.
+- **Identity binding (no email takeover).** A local account is bound to **one**
+  SSO identity via `users.sso_user_id` (the JWT `sub`). Login keys on that
+  binding, never silently on email: an unbound local account adopts the SSO
+  identity on first login, but a *different* SSO identity presenting an
+  already-bound email is **refused with `403`** — it can never take over another
+  user's account.
+
+---
+
+## Real-Time Control Channel
+
+REST mutations are not silent: every successful create/update/delete on a user-scoped
+resource broadcasts a `state:changed` event over Socket.IO to that user's room, so any
+connected UI updates live without polling. UI-only verbs (focus a widget, switch the
+active tab) that have no DB equivalent are driven via `POST /api/ui/command`.
+
+### Joining the user room (Socket.IO)
+
+```js
+const socket = io('http://localhost:3002', { transports: ['websocket'] });
+socket.on('connect', () => socket.emit('authenticate', { token: API_TOKEN })); // or a session token
+socket.on('authenticated', ({ userId }) => { /* now in room user:<userId> */ });
+```
+
+`authenticate` accepts the `API_TOKEN` (→ bootstrap user) or a valid session token.
+On success the socket joins `user:<userId>` and receives the events below.
+
+### `state:changed` (server → client)
+
+Emitted after a mutation commits, to the writer's user room:
+
+```ts
+{
+  domain: 'dashboard' | 'widget' | 'group' | 'settings' | 'provider',
+  action: 'created' | 'updated' | 'deleted',
+  id: string,        // row id (or settings key, or "widget:<id>" for per-widget settings)
+  data: object,      // full row after the mutation (minimal id payload for deletes)
+  origin?: string,   // X-Client-Id header of the writer, if sent — lets a client ignore its own echo
+  rev: number        // monotonic per-user counter; drop stale/duplicate events
+}
+```
+
+Send an `X-Client-Id: <id>` header on your own writes to receive it back as `origin`
+and suppress the echo. Use `rev` to discard out-of-order or duplicate events.
+
+### `POST /api/ui/command` (UI-only verbs)
+
+Emits a `ui:command` to the user room, awaits the first client's `ui:command:result`
+ack, and returns it. `503` if no client is connected; `504` on timeout (default 5s,
+override with `timeoutMs`).
+
+```bash
+curl -X POST http://localhost:3001/api/ui/command \
+  -H "Authorization: Bearer $API_TOKEN" -H "Content-Type: application/json" \
+  -d '{"type":"set_active_dashboard","payload":{"dashboardId":"<uuid>"}}'
+```
+
+| Command | Payload | Effect |
+|---------|---------|--------|
+| `set_active_dashboard` | `{ dashboardId }` | Switch the active dashboard tab |
+| `bring_widget_to_front` | `{ dashboardId, widgetId }` | Raise a widget's z-order |
+| `set_widget_settings` | `{ widgetId, widgetType, settings }` | Apply free-form per-widget settings (client maps to its store) |
+| `get_ui_state` | `{}` | Client returns `{ activeDashboardId, widgets: [{id, type}] }` |
+
+Clients listen for `ui:command` `{ id, type, payload }` and must reply with
+`ui:command:result` `{ id, ok, error?, data? }` (echo the same `id`).
+
 ---
 
 ## User State API
@@ -221,9 +362,15 @@ Body: { "status": "disconnected", "priority": 100 }
 
 # Delete provider
 DELETE /api/providers/:id
+
+# List server-side providers registered in the provider registry (read-only):
+# the built-in 'ccxt' plus any module-supplied providers.
+GET /api/providers/available
+# -> { success, data: [{ id, displayName, exchanges, priority, fromModule? }] }
 ```
 
-Provider types: `ccxt-browser`, `ccxt-server`, `marketmaker.cc`, `custom-server-with-adapter`.
+Per-user provider types: `ccxt-server`, `marketmaker.cc`, `custom-server-with-adapter`
+(the `ccxt-browser` type was removed in Stage 2 — all data goes through the server).
 
 ---
 
@@ -237,16 +384,25 @@ All require a `config` object specifying the exchange:
 { "exchangeId": "binance", "marketType": "spot", "ccxtType": "regular" }
 ```
 
+These dispatch through the **server provider registry**. Every response includes
+a `provider` field naming the provider that served it (e.g. `"ccxt"`). Pass an
+optional top-level `providerId` to force a specific provider; omitted, the
+registry picks the lowest-`priority` provider supporting the exchange.
+
 | Endpoint | Body | Description |
 |----------|------|-------------|
-| `POST /api/exchange/instance` | `{ config }` | Create/get cached CCXT instance |
-| `POST /api/exchange/fetchTicker` | `{ config, symbol }` | Fetch ticker |
-| `POST /api/exchange/fetchOrderBook` | `{ config, symbol, limit? }` | Fetch order book |
-| `POST /api/exchange/fetchTrades` | `{ config, symbol, limit? }` | Fetch trades |
-| `POST /api/exchange/fetchOHLCV` | `{ config, symbol, timeframe?, limit? }` | Fetch candles |
-| `POST /api/exchange/fetchBalance` | `{ config }` | Fetch balance (requires API keys) |
-| `POST /api/exchange/capabilities` | `{ config }` | Get exchange features |
-| `POST /api/exchange/watch*` | `{ config, symbol }` | CCXT Pro WebSocket (requires `ccxtType: "pro"`) |
+| `GET /api/exchange/list` | — | All exchange ids CCXT knows |
+| `POST /api/exchange/instance` | `{ config }` | Create/get cached provider instance |
+| `POST /api/exchange/fetchTicker` | `{ config, symbol, providerId? }` | Fetch ticker |
+| `POST /api/exchange/fetchOrderBook` | `{ config, symbol, limit?, providerId? }` | Fetch order book |
+| `POST /api/exchange/fetchTrades` | `{ config, symbol, limit?, providerId? }` | Fetch trades |
+| `POST /api/exchange/fetchOHLCV` | `{ config, symbol, timeframe?, limit?, providerId? }` | Fetch candles |
+| `POST /api/exchange/fetchBalance` | `{ config, providerId? }` | Fetch balance (requires API keys in `config`) |
+| `POST /api/exchange/capabilities` | `{ config, providerId? }` | Get exchange features |
+| `POST /api/exchange/market` | `{ config, symbol, providerId? }` | One market's metadata (limits/precision) |
+| `POST /api/exchange/createOrder` | `{ config, symbol, type, side, amount, price?, params?, providerId? }` | Place order (creds in `config`) |
+| `POST /api/exchange/cancelOrder` | `{ config, orderId, symbol, providerId? }` | Cancel order |
+| `POST /api/exchange/fetchMyTrades` / `fetchOrders` / `fetchOpenOrders` / `fetchPositions` | `{ config, ..., providerId? }` | Authenticated reads |
 | `POST /api/proxy/request` | `{ url, method?, headers?, body?, timeout? }` | CORS proxy |
 
 ### WebSocket (Socket.IO)
@@ -261,7 +417,8 @@ socket.on('authenticated', () => {
     exchangeId: 'binance',
     symbol: 'BTC/USDT',
     dataType: 'trades',  // ticker | trades | orderbook | ohlcv | balance
-    config: { exchangeId: 'binance', marketType: 'spot', ccxtType: 'pro' }
+    config: { exchangeId: 'binance', marketType: 'spot', ccxtType: 'pro' },
+    providerId: 'ccxt'   // optional; omit to resolve by priority
   });
 });
 socket.on('data', (msg) => console.log(msg.dataType, msg.data));
@@ -311,6 +468,8 @@ bun db:studio    # Open Drizzle Studio GUI
 | `408` | Request timeout (proxy) |
 | `409` | Conflict (e.g. email already registered) |
 | `500` | Server error |
+| `503` | No UI client connected (ui:command) |
+| `504` | ui:command timed out waiting for a client ack |
 
 ---
 

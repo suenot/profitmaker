@@ -4,6 +4,16 @@ One-page reference for building a Profitmaker terminal **module** (an npm packag
 that adds widgets and/or backend services to a running terminal). Full docs:
 `docs/modules.md`. Starting point: copy `templates/module-template/`.
 
+**Driving a running terminal from the backend** (create/arrange/operate
+dashboards & widgets via API, with live updates to open browsers): see
+`docs/remote-control.md` and `docs/server-api.md`. Quick proof:
+`bun scripts/control-demo.ts`.
+
+**AI agents drive the terminal via MCP; humans/scripts via CLI** — both over one
+shared command registry (`@profitmaker/mcp`, 31 tools). MCP: `docs/mcp.md`
+(`.mcp.json`, tool reference, scalping-dashboard scenario). CLI: `docs/cli.md`
+(`profitmaker <domain> <verb>`). Stdio entrypoint: `profitmaker mcp`.
+
 A module is an npm package with the `profitmaker-module` keyword and a
 `profitmaker` key in `package.json` (the manifest). It may ship a `frontend`
 (widget bundle), a `backend` (Elysia plugin + services), or both. Host API

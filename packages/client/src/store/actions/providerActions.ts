@@ -9,9 +9,7 @@ import {
   validateProviderConfig 
 } from '../utils/providerUtils';
 import { useUserStore } from '../userStore';
-import { createCCXTBrowserProvider } from '../providers/ccxtBrowserProvider';
 import { createCCXTServerProvider } from '../providers/ccxtServerProvider';
-import { getCCXT } from '../utils/ccxtUtils';
 
 export interface ProviderActions {
   addProvider: (provider: DataProvider) => void;
@@ -25,7 +23,7 @@ export interface ProviderActions {
   isProviderEnabled: (providerId: string) => boolean;
   getEnabledProviders: () => DataProvider[];
   
-  createProvider: (type: 'ccxt-browser' | 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter', name: string, exchanges: string[], config?: any) => DataProvider;
+  createProvider: (type: 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter', name: string, exchanges: string[], config?: any) => DataProvider;
   updateProvider: (providerId: string, updates: { name?: string; exchanges?: string[]; priority?: number; config?: any }) => void;
   getProviderForExchange: (exchange: string) => DataProvider | null;
   getProviderExchangeMappings: (exchanges: string[]) => ProviderExchangeMapping[];
@@ -131,11 +129,11 @@ export const createProviderActions: StateCreator<
   },
 
   // NEW: Create provider with simplified config
-  createProvider: (type: 'ccxt-browser' | 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter', name: string, exchanges: string[], config: any = {}) => {
+  createProvider: (type: 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter', name: string, exchanges: string[], config: any = {}) => {
     const providers = Object.values(get().providers);
     const priority = getNextProviderPriority(providers);
     const id = generateProviderId(type, exchanges, name);
-    
+
     const baseProvider = {
       id,
       name,
@@ -144,19 +142,10 @@ export const createProviderActions: StateCreator<
       priority,
       status: 'connected' as const
     };
-    
+
     let newProvider: DataProvider;
-    
-    if (type === 'ccxt-browser') {
-      newProvider = {
-        ...baseProvider,
-        type: 'ccxt-browser',
-        config: {
-          sandbox: config.sandbox || false,
-          options: config.options || {}
-        }
-      };
-    } else if (type === 'ccxt-server') {
+
+    if (type === 'ccxt-server') {
       newProvider = {
         ...baseProvider,
         type: 'ccxt-server',
@@ -266,33 +255,26 @@ export const createProviderActions: StateCreator<
      try {
        // Delegate to provider-specific implementation
        switch (provider.type) {
-         case 'ccxt-browser': {
-           const ccxtProvider = createCCXTBrowserProvider(provider);
-           return await ccxtProvider.getSymbolsForExchange(exchange, limit, marketType);
+         case 'ccxt-server': {
+           const ccxtProvider = createCCXTServerProvider(provider);
+           return await ccxtProvider.getSymbols(exchange, (marketType as any) || 'spot', limit);
          }
-         case 'ccxt-server':
-           // CCXT Server provider will implement its own logic
-           console.log(`📊 Getting symbols for ${exchange} from CCXT Server provider ${provider.id}`);
-           // For now, return basic fallback until implementation
-           return ['BTC/USDT', 'ETH/USDT', 'BNB/USDT'];
-           
-         
-           
+
          case 'marketmaker.cc':
            // MarketMaker.cc provider will implement its own logic
            console.log(`📊 Getting symbols for ${exchange} from MarketMaker.cc provider ${provider.id}`);
            return ['BTC/USDT', 'ETH/USDT'];
-           
+
                    case 'custom-server-with-adapter':
             // Custom Server with Adapter provider will implement its own logic
             console.log(`📊 Getting symbols for ${exchange} from Custom Server with Adapter provider ${provider.id}`);
             return ['BTC/USDT', 'ETH/USDT'];
-           
+
          case 'custom':
            // Custom providers will implement their own logic
            console.log(`📊 Getting symbols for ${exchange} from custom provider ${provider.id}`);
            return [];
-           
+
          default:
            console.error(`❌ Unknown provider type: ${(provider as any).type}`);
            return [];
@@ -313,33 +295,26 @@ export const createProviderActions: StateCreator<
      try {
        // Delegate to provider-specific implementation
        switch (provider.type) {
-         case 'ccxt-browser': {
-           const ccxtProvider = createCCXTBrowserProvider(provider);
-           return await ccxtProvider.getMarketsForExchange(exchange);
+         case 'ccxt-server': {
+           const ccxtProvider = createCCXTServerProvider(provider);
+           return await ccxtProvider.getMarkets(exchange);
          }
-         case 'ccxt-server':
-           // CCXT Server provider will implement its own logic
-           console.log(`📈 Getting markets for ${exchange} from CCXT Server provider ${provider.id}`);
-           // For now, return basic fallback until implementation
-           return ['spot', 'futures', 'margin'];
-           
-         
-           
+
          case 'marketmaker.cc':
            // MarketMaker.cc provider will implement its own logic
            console.log(`📈 Getting markets for ${exchange} from MarketMaker.cc provider ${provider.id}`);
            return ['spot', 'futures'];
-           
+
                    case 'custom-server-with-adapter':
             // Custom Server with Adapter provider will implement its own logic
             console.log(`📈 Getting markets for ${exchange} from Custom Server with Adapter provider ${provider.id}`);
             return ['spot'];
-           
+
          case 'custom':
            // Custom providers will implement their own logic
            console.log(`📈 Getting markets for ${exchange} from custom provider ${provider.id}`);
            return ['spot'];
-           
+
          default:
            console.error(`❌ Unknown provider type: ${(provider as any).type}`);
            return ['spot'];
@@ -377,130 +352,33 @@ export const createProviderActions: StateCreator<
    return Array.from(allExchanges).sort();
  },
 
- // NEW: Get timeframes from provider for specific exchange
+ // Get timeframes for a specific exchange. Synchronous for UI callers: returns
+ // the server-derived cache if warm, else the full standard set, and kicks off a
+ // background refresh from the server provider's capabilities.
  getTimeframesForExchange: (exchange: string): Timeframe[] => {
-   // Default standard timeframes as fallback
-   const DEFAULT_TIMEFRAMES: Timeframe[] = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
-   
-   console.log(`🔍 [getTimeframesForExchange] Starting for exchange: ${exchange}`);
-   
-   try {
-     // 1. Try to get timeframes from active provider for this exchange
-     const provider = get().getProviderForExchange(exchange);
-     console.log(`🔍 [getTimeframesForExchange] Found provider for ${exchange}:`, provider);
-     
-     if (provider && (provider.type === 'ccxt-browser' || provider.type === 'ccxt-server')) {
-       console.log(`🔍 [getTimeframesForExchange] Trying to get timeframes from provider ${provider.id}`);
-       const timeframes = getTimeframesFromCCXT(exchange, provider);
-       console.log(`🔍 [getTimeframesForExchange] Got timeframes from CCXT:`, timeframes);
-       
-       if (timeframes.length > 0) {
-         console.log(`⏰ Got ${timeframes.length} timeframes for ${exchange} from provider ${provider.id}:`, timeframes);
-         return timeframes;
-       }
-     }
-     
-     // 2. Fallback: Try browser CCXT provider (universal provider)
-     const browserProvider = Object.values(get().providers).find(p => 
-       p.type === 'ccxt-browser' && p.exchanges.includes('*')
-     );
-     
-     console.log(`🔍 [getTimeframesForExchange] Found browser provider:`, browserProvider);
-     
-     if (browserProvider) {
-       console.log(`🔍 [getTimeframesForExchange] Trying browser provider fallback`);
-       const timeframes = getTimeframesFromCCXT(exchange, browserProvider);
-       console.log(`🔍 [getTimeframesForExchange] Got timeframes from browser fallback:`, timeframes);
-       
-       if (timeframes.length > 0) {
-         console.log(`⏰ Got ${timeframes.length} timeframes for ${exchange} from browser fallback:`, timeframes);
-         return timeframes;
-       }
-     }
-     
-     // 3. Final fallback: Standard timeframes
-     console.warn(`⚠️ [getTimeframesForExchange] Using default timeframes for ${exchange}:`, DEFAULT_TIMEFRAMES);
-     return DEFAULT_TIMEFRAMES;
-     
-   } catch (error) {
-     console.error(`❌ [getTimeframesForExchange] Error getting timeframes for ${exchange}:`, error);
-     return DEFAULT_TIMEFRAMES;
+   const cached = timeframesCache.get(exchange);
+   if (cached && cached.length > 0) {
+     return cached;
    }
+
+   // Warm the cache in the background (don't block the UI).
+   const provider = get().getProviderForExchange(exchange);
+   if (provider && provider.type === 'ccxt-server' && !timeframesInFlight.has(exchange)) {
+     timeframesInFlight.add(exchange);
+     const ccxtProvider = createCCXTServerProvider(provider);
+     ccxtProvider.getTimeframes(exchange)
+       .then((tfs) => { if (tfs.length > 0) timeframesCache.set(exchange, tfs); })
+       .catch((err) => console.warn(`[getTimeframesForExchange] refresh failed for ${exchange}:`, err))
+       .finally(() => timeframesInFlight.delete(exchange));
+   }
+
+   return STANDARD_TIMEFRAMES;
  }
 });
 
-// Helper function to get timeframes from CCXT
-function getTimeframesFromCCXT(exchange: string, provider: DataProvider): Timeframe[] {
-  console.log(`🔧 [getTimeframesFromCCXT] Starting for ${exchange} with provider ${provider.id}`);
-  
-  try {
-    // Use imported CCXT utilities
-    const ccxt = getCCXT();
-    console.log(`🔧 [getTimeframesFromCCXT] CCXT available:`, !!ccxt);
-    
-    if (!ccxt) {
-      console.warn(`⚠️ [getTimeframesFromCCXT] CCXT not available for ${exchange}`);
-      return [];
-    }
-    
-    console.log(`🔧 [getTimeframesFromCCXT] Available exchanges in CCXT:`, Object.keys(ccxt).filter(key => typeof ccxt[key] === 'function').slice(0, 10));
-    
-    const ExchangeClass = ccxt[exchange];
-    console.log(`🔧 [getTimeframesFromCCXT] ExchangeClass for ${exchange}:`, !!ExchangeClass);
-    
-    if (!ExchangeClass) {
-      console.warn(`⚠️ [getTimeframesFromCCXT] Exchange ${exchange} not found in CCXT`);
-      return [];
-    }
-    
-    // Create temporary instance WITHOUT API keys to get static info
-    console.log(`🔧 [getTimeframesFromCCXT] Creating temporary instance for ${exchange}`);
-    const tempInstance = new ExchangeClass();
-    
-    console.log(`🔧 [getTimeframesFromCCXT] Instance created, checking timeframes:`, !!tempInstance.timeframes);
-    console.log(`🔧 [getTimeframesFromCCXT] Raw timeframes object:`, tempInstance.timeframes);
-    
-    if (!tempInstance.timeframes) {
-      console.warn(`⚠️ [getTimeframesFromCCXT] Exchange ${exchange} does not support OHLCV/timeframes`);
-      return [];
-    }
-    
-    // Convert CCXT timeframes object to our Timeframe array
-    const ccxtTimeframes = tempInstance.timeframes;
-    const supportedTimeframes: Timeframe[] = [];
-    
-    // Map CCXT timeframes to our Timeframe type
-    const timeframeMapping: Record<string, Timeframe> = {
-      '1m': '1m',
-      '3m': '3m',
-      '5m': '5m', 
-      '15m': '15m',
-      '30m': '30m',
-      '1h': '1h',
-      '2h': '2h',
-      '4h': '4h',
-      '6h': '6h',
-      '12h': '12h',
-      '1d': '1d',
-      '1w': '1w',
-      '1M': '1M'
-    };
-    
-    console.log(`🔧 [getTimeframesFromCCXT] Processing timeframes:`, Object.keys(ccxtTimeframes));
-    
-    Object.keys(ccxtTimeframes).forEach(ccxtTf => {
-      const ourTf = timeframeMapping[ccxtTf];
-      console.log(`🔧 [getTimeframesFromCCXT] Mapping ${ccxtTf} -> ${ourTf}`);
-      if (ourTf) {
-        supportedTimeframes.push(ourTf);
-      }
-    });
-    
-    console.log(`🔧 [getTimeframesFromCCXT] Final supported timeframes:`, supportedTimeframes);
-    return supportedTimeframes;
-    
-  } catch (error) {
-    console.error(`❌ [getTimeframesFromCCXT] Error getting timeframes from CCXT for ${exchange}:`, error);
-    return [];
-  }
-} 
+// Standard timeframe set offered by the UI; used until the server cache warms.
+const STANDARD_TIMEFRAMES: Timeframe[] = ['1m', '3m', '5m', '15m', '30m', '1h', '2h', '4h', '6h', '12h', '1d', '1w', '1M'];
+
+// Per-exchange timeframe cache, warmed asynchronously from the server provider.
+const timeframesCache = new Map<string, Timeframe[]>();
+const timeframesInFlight = new Set<string>();

@@ -9,6 +9,7 @@ import { Badge } from './ui/badge';
 import UserDrawer from './UserDrawer';
 import NotificationHistory from './NotificationHistory';
 import { AnimatedLogo } from './AnimatedLogo';
+import { SsoUserChip } from './SsoUserChip';
 
 const TabNavigation: React.FC = () => {
   const [isUserDrawerOpen, setIsUserDrawerOpen] = useState(false);
@@ -206,7 +207,9 @@ const TabNavigation: React.FC = () => {
         </div>
         {/* Block with three icons */}
         <div className="flex items-center space-x-3 h-full">
-          <button 
+          {/* Ecosystem SSO: user chip when signed in, login button otherwise. */}
+          <SsoUserChip />
+          <button
             className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors relative"
             onClick={handleNotificationClick}
             title="Notifications"

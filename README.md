@@ -33,7 +33,15 @@ curl -s -X POST http://localhost:3001/api/dashboards \
   -d '{"title":"My Dashboard"}'
 ```
 
-See [docs/server-api.md](docs/server-api.md) for the full API reference.
+See [docs/server-api.md](docs/server-api.md) for the full API reference, and
+[docs/remote-control.md](docs/remote-control.md) for **driving a live terminal
+from the backend** — REST mutations stream to open browsers in real time, and
+UI verbs (switch tab, focus widget, read UI state) are executable over an API.
+Run `bun scripts/control-demo.ts` to see it end to end.
+
+AI agents drive the terminal over **MCP**, and humans/scripts over a
+**`profitmaker` CLI** — both on one shared command registry (31 tools). See
+[docs/mcp.md](docs/mcp.md) and [docs/cli.md](docs/cli.md).
 
 ---
 
@@ -80,9 +88,9 @@ See [docs/server-api.md](docs/server-api.md) for the full API reference.
 | **Deals** | Deal tracking with entry/exit analysis |
 
 ### Data Provider System
-- **CCXT Browser** -- direct exchange API calls from the browser
-- **CCXT Server** -- proxied through Elysia backend, bypasses CORS, WebSocket via CCXT Pro
-- **Pluggable architecture** -- provider priority, automatic fallback WS to REST
+- **CCXT Server** -- all market data + trading run through the Elysia backend (CORS-free, WebSocket via CCXT Pro); the browser has no CCXT
+- **Pluggable server registry** -- the built-in `ccxt` provider plus module-supplied providers (incl. native napi bindings); priority-based resolution, `providerId` override
+- **Automatic fallback** -- WebSocket to REST when an exchange lacks Pro support
 - **Subscription deduplication** -- one connection per data stream, shared across widgets
 
 ### Security
@@ -164,8 +172,8 @@ profitmaker/
 │   │       ├── services/     # auth, ccxtCache, wsSubscriptions,
 │   │       │                 # defaultDashboard
 │   │       └── middleware/    # requireUser (session validation)
-│   ├── types/              # @profitmaker/types -- shared types
-│   └── core/               # @profitmaker/core -- shared utilities
+│   ├── types/              # @profitmaker/types -- shared types (incl. provider contracts)
+│   └── sdk/                # @profitmaker/module-sdk -- module SDK
 ├── package.json            # Bun workspace root
 └── vite.config.ts          # Frontend build config
 ```
@@ -179,7 +187,7 @@ users
 │   └── widgets           (position, config, per-dashboard)
 ├── groups                (instrument linking)
 ├── exchange_accounts     (encrypted API keys)
-├── data_providers        (CCXT browser/server configs)
+├── data_providers        (ccxt-server provider configs)
 ├── user_settings         (key-value: theme, activeDashboardId, etc.)
 └── widget_settings       (per-widget, per-user configs)
 ```

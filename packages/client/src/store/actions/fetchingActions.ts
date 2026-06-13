@@ -1,10 +1,53 @@
 import type { StateCreator } from 'zustand';
 import type { DataProviderStore } from '../types';
-import type { DataProvider, DataType, CCXTBrowserProvider, CCXTServerProvider, Timeframe, MarketType, WalletType } from '../../types/dataProviders';
-import { getCCXT, getCCXTPro } from '../utils/ccxtUtils';
+import type { DataProvider, DataType, Timeframe, MarketType, WalletType } from '../../types/dataProviders';
 import { useUserStore } from '../userStore';
-import { getAccountForExchange, convertAccountForProvider, createExchangeInstance } from '../utils/providerUtils';
 import { getOHLCVLimit, getTradesLimit, logExchangeLimits } from '../../utils/exchangeLimits';
+
+/**
+ * Resolve a market-data instance (server proxy) for a provider. Stage 2 makes the
+ * ccxt-server the only data path, so every fetch goes through the provider's
+ * server-side instance rather than a browser CCXT object.
+ */
+const getServerInstance = async (
+  provider: DataProvider,
+  exchange: string,
+  market: MarketType,
+  kind: 'metadata' | 'websocket',
+): Promise<any> => {
+  if (provider.type !== 'ccxt-server') {
+    throw new Error(`Unsupported provider type for data fetching: ${provider.type}`);
+  }
+  const { createCCXTServerProvider } = await import('../providers/ccxtServerProvider');
+  const ccxtProvider = createCCXTServerProvider(provider);
+  return kind === 'websocket'
+    ? ccxtProvider.getWebSocketInstance(exchange, market, false)
+    : ccxtProvider.getMetadataInstance(exchange, market, false);
+};
+
+/**
+ * Resolve decrypted API credentials for an account so authenticated operations
+ * can be forwarded to the server provider's trading block.
+ */
+const resolveCredentials = async (
+  accountId: string,
+): Promise<{ apiKey: string; secret: string; password?: string; sandbox?: boolean } | null> => {
+  const userStore = useUserStore.getState();
+  const user = userStore.users.find((u) => u.accounts.some((acc) => acc.id === accountId));
+  if (!user) return null;
+  if (userStore.isLocked) {
+    console.warn('[credentials] store is locked; cannot decrypt account');
+    return null;
+  }
+  const account = await userStore.getDecryptedAccount(user.id, accountId);
+  if (!account || !account.key || !account.privateKey) return null;
+  return {
+    apiKey: account.key,
+    secret: account.privateKey,
+    password: account.password || undefined,
+    sandbox: false,
+  };
+};
 
 export interface FetchingActions {
   startDataFetching: (subscriptionKey: string) => Promise<void>;
@@ -101,36 +144,17 @@ export const createFetchingActions: StateCreator<
     });
   },
 
-  // Start WebSocket data fetching via CCXT Pro
+  // Start WebSocket data fetching via the server provider (CCXT Pro on the server)
   startWebSocketFetching: async (exchange: string, symbol: string, dataType: DataType, provider: DataProvider, timeframe: Timeframe = '1m', market: MarketType = 'spot') => {
-    if (provider.type !== 'ccxt-browser' && provider.type !== 'ccxt-server') {
+    if (provider.type !== 'ccxt-server') {
       console.warn(`⚠️ WebSocket not supported for provider type ${provider.type}`);
       return;
     }
 
-    const ccxtPro = getCCXTPro();
-    if (!ccxtPro) {
-      console.warn(`⚠️ CCXT Pro unavailable, switching to REST`);
-      await get().startRestFetching(exchange, symbol, dataType, provider, timeframe, market);
-      return;
-    }
-
     try {
-      // Use appropriate provider for proper instance management
-      let exchangeInstance: any;
-      if (provider.type === 'ccxt-browser') {
-        const { createCCXTBrowserProvider } = await import('../providers/ccxtBrowserProvider');
-        const ccxtProvider = createCCXTBrowserProvider(provider);
-        exchangeInstance = await ccxtProvider.getWebSocketInstance(exchange, market, false);
-      } else if (provider.type === 'ccxt-server') {
-        const { createCCXTServerProvider } = await import('../providers/ccxtServerProvider');
-        const ccxtProvider = createCCXTServerProvider(provider);
-        exchangeInstance = await ccxtProvider.getWebSocketInstance(exchange, market, false);
-      } else {
-        // Fallback for other provider types
-        exchangeInstance = createExchangeInstance(exchange, provider, ccxtPro);
-      }
-      
+      // Server-side WebSocket (CCXT Pro) instance via the provider proxy.
+      const exchangeInstance = await getServerInstance(provider, exchange, market, 'websocket');
+
       const subscriptionKey = get().getSubscriptionKey(exchange, symbol, dataType, timeframe, market, provider.id);
 
       // CCXT Pro supports WebSocket by default for all major exchanges
@@ -195,29 +219,26 @@ export const createFetchingActions: StateCreator<
         return;
       }
 
-      // First load historical data via REST for candles
+      // First load historical data via REST for candles (through the server)
       if (dataType === 'candles') {
         try {
           console.log(`📊 Loading historical candles for ${exchange} ${symbol} ${timeframe} before WebSocket`);
-          const ccxt = getCCXT();
-          if (ccxt) {
-            const restInstance = createExchangeInstance(exchange, provider, ccxt);
-            // Get optimal limit for WebSocket pre-load
-            const optimalLimit = getOHLCVLimit(exchange);
-            logExchangeLimits(exchange, optimalLimit, 'ohlcv');
-            const historicalCandles = await restInstance.fetchOHLCV(symbol, timeframe, undefined, optimalLimit);
-            if (historicalCandles && historicalCandles.length > 0) {
-              const formattedCandles = historicalCandles.map((c: any[]) => ({
-                timestamp: c[0],
-                open: c[1],
-                high: c[2],
-                low: c[3],
-                close: c[4],
-                volume: c[5]
-              }));
-              get().updateCandles(exchange, symbol, formattedCandles, timeframe, market);
-              console.log(`✅ Loaded ${formattedCandles.length} historical candles`);
-            }
+          const restInstance = await getServerInstance(provider, exchange, market, 'metadata');
+          // Get optimal limit for WebSocket pre-load
+          const optimalLimit = getOHLCVLimit(exchange);
+          logExchangeLimits(exchange, optimalLimit, 'ohlcv');
+          const historicalCandles = await restInstance.fetchOHLCV(symbol, timeframe, undefined, optimalLimit);
+          if (historicalCandles && historicalCandles.length > 0) {
+            const formattedCandles = historicalCandles.map((c: any[]) => ({
+              timestamp: c[0],
+              open: c[1],
+              high: c[2],
+              low: c[3],
+              close: c[4],
+              volume: c[5]
+            }));
+            get().updateCandles(exchange, symbol, formattedCandles, timeframe, market);
+            console.log(`✅ Loaded ${formattedCandles.length} historical candles`);
           }
         } catch (error) {
           console.warn(`⚠️ Failed to load historical candles:`, error);
@@ -378,31 +399,15 @@ export const createFetchingActions: StateCreator<
     }
   },
 
-  // Start REST data fetching
+  // Start REST data fetching (through the server provider)
   startRestFetching: async (exchange: string, symbol: string, dataType: DataType, provider: DataProvider, timeframe: Timeframe = '1m', market: MarketType = 'spot') => {
-    if (provider.type !== 'ccxt-browser' && provider.type !== 'ccxt-server') {
+    if (provider.type !== 'ccxt-server') {
       console.warn(`⚠️ REST not supported for provider type ${provider.type}`);
       return;
     }
 
-    const ccxt = getCCXT();
-    if (!ccxt) return;
-
     try {
-      // Use appropriate provider for proper instance management
-      let exchangeInstance: any;
-      if (provider.type === 'ccxt-browser') {
-        const { createCCXTBrowserProvider } = await import('../providers/ccxtBrowserProvider');
-        const ccxtProvider = createCCXTBrowserProvider(provider);
-        exchangeInstance = await ccxtProvider.getMetadataInstance(exchange, market, false);
-      } else if (provider.type === 'ccxt-server') {
-        const { createCCXTServerProvider } = await import('../providers/ccxtServerProvider');
-        const ccxtProvider = createCCXTServerProvider(provider);
-        exchangeInstance = await ccxtProvider.getMetadataInstance(exchange, market, false);
-      } else {
-        // Fallback for other provider types
-        exchangeInstance = createExchangeInstance(exchange, provider, ccxt);
-      }
+      const exchangeInstance = await getServerInstance(provider, exchange, market, 'metadata');
 
       const subscriptionKey = get().getSubscriptionKey(exchange, symbol, dataType, timeframe, market, provider.id);
       const interval = get().dataFetchSettings.restIntervals[dataType];
@@ -628,84 +633,35 @@ export const createFetchingActions: StateCreator<
     const exchange = account.exchange;
     
     console.log(`🔄 [Balance] Fetching balance for account ${accountId} (${exchange}:${walletType})`);
-    
+
     try {
       const provider = get().getProviderForExchange(exchange);
-      
+
       if (!provider) {
         console.error(`❌ [Balance] No provider found for exchange ${exchange}`);
         return;
       }
-      
-      if (provider.type !== 'ccxt-browser' && provider.type !== 'ccxt-server') {
+
+      if (provider.type !== 'ccxt-server') {
         console.error(`❌ [Balance] Provider type ${provider.type} not supported for balance fetching`);
         return;
       }
-      
-      const ccxt = getCCXT();
-      if (!ccxt) {
-        console.error('❌ [Balance] CCXT not available');
+
+      // Resolve decrypted credentials and fetch through the server provider.
+      const creds = await resolveCredentials(accountId);
+      if (!creds) {
+        console.warn(`⚠️ [Balance] No credentials available for account ${accountId}`);
         return;
       }
-      
-      const exchangeInstance = createExchangeInstance(exchange, provider, ccxt);
-      
-      // Set defaultType based on wallet type (CCXT best practice)
-      if (walletType === 'futures') {
-        exchangeInstance.options = exchangeInstance.options || {};
-        exchangeInstance.options['defaultType'] = 'future';
-      } else if (walletType === 'margin') {
-        exchangeInstance.options = exchangeInstance.options || {};
-        exchangeInstance.options['defaultType'] = 'margin';
-      } else if (walletType === 'spot') {
-        exchangeInstance.options = exchangeInstance.options || {};
-        exchangeInstance.options['defaultType'] = 'spot';
-      }
-      
-      console.log(`💰 [Balance] Fetching ${walletType} balance for account ${accountId} (${exchange}) with defaultType: ${exchangeInstance.options?.defaultType}`);
-      
-      // Use fetchBalance() for all types (CCXT recommended approach)
-      let balanceData = await exchangeInstance.fetchBalance();
-      
-      // For funding wallet, try special handling for different exchanges
-      if (walletType === 'funding') {
-        if (exchange === 'bybit' && exchangeInstance.has?.fetchBalance) {
-          try {
-            // For Bybit, use the all-balance endpoint for funding wallet
-            const fundingBalance = await exchangeInstance.fetchBalance({ type: 'funding' });
-            if (fundingBalance) {
-              balanceData = fundingBalance;
-              console.log(`💰 [Balance] Got Bybit funding balance for account ${accountId}:`, {
-                currencies: Object.keys(fundingBalance).filter(k => k !== 'info' && k !== 'datetime' && k !== 'timestamp').length
-              });
-            }
-          } catch (bybitError) {
-            console.warn(`⚠️ [Balance] Bybit funding balance failed for account ${accountId}, trying fetchFundingBalance:`, bybitError.message);
-            
-            // Fallback to fetchFundingBalance if available
-            if (exchangeInstance.has?.fetchFundingBalance) {
-              try {
-                balanceData = await exchangeInstance.fetchFundingBalance();
-              } catch (fallbackError) {
-                console.error(`❌ [Balance] Both funding methods failed for account ${accountId}:`, fallbackError.message);
-                return;
-              }
-            }
-          }
-        } else if (exchangeInstance.has?.fetchFundingBalance) {
-          // For other exchanges, try fetchFundingBalance
-          try {
-            balanceData = await exchangeInstance.fetchFundingBalance();
-          } catch (fundingError) {
-            console.warn(`⚠️ [Balance] fetchFundingBalance failed for account ${accountId} (${exchange}):`, fundingError.message);
-            return;
-          }
-        } else {
-          console.warn(`⚠️ [Balance] Funding balance not supported for account ${accountId} (${exchange})`);
-          return;
-        }
-      }
-      
+
+      const { createCCXTServerProvider } = await import('../providers/ccxtServerProvider');
+      const serverProvider = createCCXTServerProvider(provider);
+      const walletParam = walletType === 'funding' ? 'spot' : walletType;
+
+      console.log(`💰 [Balance] Fetching ${walletType} balance for account ${accountId} (${exchange}) via server`);
+
+      let balanceData = await serverProvider.trading.fetchBalance(creds, exchange, walletParam);
+
       if (!balanceData) {
         console.warn(`⚠️ [Balance] No balance data received for account ${accountId} (${exchange}:${walletType})`);
         return;

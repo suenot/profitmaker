@@ -1,11 +1,5 @@
 import { useState, useEffect } from 'react';
-
-// CCXT loaded via CDN script tag - available as window.ccxt
-declare global {
-  interface Window {
-    ccxt: any;
-  }
-}
+import { moduleFetch } from '../modules/api';
 
 // Interface for exchange information
 export interface ExchangeInfo {
@@ -14,7 +8,7 @@ export interface ExchangeInfo {
   has: any;
 }
 
-// Safe fallback exchanges list
+// Safe fallback exchanges list (used only if the server is unreachable)
 const getFallbackExchanges = (): ExchangeInfo[] => {
   return [
     { id: 'binance', name: 'Binance', has: {} },
@@ -31,81 +25,23 @@ const getFallbackExchanges = (): ExchangeInfo[] => {
   ];
 };
 
-// Safe loading of exchanges list from CCXT with full error handling
-const loadCCXTExchanges = (): Promise<ExchangeInfo[]> => {
-  return new Promise((resolve) => {
-    try {
-      const exchanges: ExchangeInfo[] = [];
-      
-      // Check CCXT availability with detailed logging
-      if (!window?.ccxt) {
-        console.warn('⚠️ CCXT not loaded via CDN, using fallback list');
-        resolve(getFallbackExchanges());
-        return;
-      }
-      
-      // Check window.ccxt.exchanges type  
-      let exchangeIds: string[] = [];
-      
-      if (Array.isArray(window.ccxt.exchanges)) {
-        // If it's an array
-        exchangeIds = window.ccxt.exchanges;
-        console.log('📋 window.ccxt.exchanges is array');
-      } else if (window.ccxt.exchanges && typeof window.ccxt.exchanges === 'object') {
-        // If it's an object - take keys
-        exchangeIds = Object.keys(window.ccxt.exchanges);
-        console.log('📋 window.ccxt.exchanges is object, using keys');
-      } else {
-        // Fallback: search for exchange class functions in window.ccxt
-        exchangeIds = Object.keys(window.ccxt).filter(key => {
-          const item = window.ccxt[key];
-          return typeof item === 'function' && 
-                 key !== 'Exchange' && 
-                 key !== 'version' && 
-                 key !== 'default' &&
-                 !key.startsWith('_') &&
-                 key.length > 2;
-        });
-        console.log('📋 Using fallback: scanning ccxt object keys');
-      }
-    
-      console.log(`🔍 Found ${exchangeIds.length} exchange classes in CCXT:`, exchangeIds);
-      
-      for (const exchangeId of exchangeIds) {
-        try {
-          const ExchangeClass = window.ccxt[exchangeId] as any;
-          if (ExchangeClass && typeof ExchangeClass === 'function') {
-            const exchange = new ExchangeClass();
-            exchanges.push({
-              id: exchangeId,
-              name: exchange.name || exchangeId,
-              has: exchange.has
-            });
-          }
-        } catch (error) {
-          // Some exchanges may not initialize without parameters
-          exchanges.push({
-            id: exchangeId,
-            name: exchangeId.charAt(0).toUpperCase() + exchangeId.slice(1),
-            has: {}
-          });
-        }
-      }
-      
-      // Sort by name
-      const sortedExchanges = exchanges.sort((a, b) => a.name.localeCompare(b.name));
-      console.log(`✅ Successfully loaded ${sortedExchanges.length} exchanges from CCXT`);
-      resolve(sortedExchanges);
-    } catch (error) {
-      console.error('🛡️ Safe error handling for CCXT exchanges loading:', error);
-      // Return fallback list to ensure functionality
-      resolve(getFallbackExchanges());
-    }
-  });
+const titleCase = (id: string) => id.charAt(0).toUpperCase() + id.slice(1);
+
+// Load the exchanges list from the terminal server (ccxt.exchanges).
+const loadServerExchanges = async (): Promise<ExchangeInfo[]> => {
+  const response = await moduleFetch('/api/exchange/list');
+  if (!response.ok) {
+    throw new Error(`GET /api/exchange/list -> ${response.status}`);
+  }
+  const result = await response.json();
+  const ids: string[] = result.data ?? result.exchanges ?? [];
+  return ids
+    .map((id) => ({ id, name: titleCase(id), has: {} }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 };
 
 /**
- * Hook for loading exchanges list from CCXT
+ * Hook for loading the exchanges list from the terminal server.
  */
 export const useExchangesList = () => {
   const [exchanges, setExchanges] = useState<ExchangeInfo[]>([]);
@@ -116,15 +52,14 @@ export const useExchangesList = () => {
     const loadExchanges = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
-        const exchangesList = await loadCCXTExchanges();
+        const exchangesList = await loadServerExchanges();
         setExchanges(exchangesList);
-        console.log(`🔥 useExchangesList: Successfully loaded ${exchangesList.length} exchanges`);
+        console.log(`🔥 useExchangesList: loaded ${exchangesList.length} exchanges from server`);
       } catch (err) {
-        console.error('🛡️ useExchangesList: Error loading exchanges:', err);
+        console.error('useExchangesList: error loading exchanges from server:', err);
         setError(err instanceof Error ? err.message : 'Failed to load exchanges');
-        // Set fallback list on any errors
         setExchanges(getFallbackExchanges());
       } finally {
         setLoading(false);
@@ -143,4 +78,4 @@ export const useExchangesList = () => {
     // Helper function to get exchange names for select options
     getSelectOptions: () => exchanges.map(ex => ({ value: ex.id, label: ex.name }))
   };
-}; 
+};

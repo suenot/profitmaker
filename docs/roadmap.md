@@ -4,7 +4,7 @@
 
 Profitmaker v3 is a working trading terminal with:
 - Widget-based dashboard system (drag, resize, snap, collapse)
-- CCXT Browser + Server data providers
+- Server-side data providers via a pluggable registry (built-in CCXT + module providers)
 - Real-time WebSocket streaming via CCXT Pro + Socket.IO
 - AES-256-GCM encryption for API keys
 - 20+ trading widgets (chart, orderbook, trades, order form, portfolio, deals, etc.)
@@ -102,4 +102,3 @@ Profitmaker v3 is a working trading terminal with:
 
 ### General
 - Main bundle is 1.7MB — needs code splitting and lazy loading
-- CCXT excluded from Vite optimizeDeps but still large in browser provider mode

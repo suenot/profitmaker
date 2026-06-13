@@ -420,7 +420,7 @@ export const useExchangeSupport = (exchangeId: string) => {
 
   return useMemo(() => {
     const supportingProviders = Object.values(providers).filter(provider => {
-      if (provider.type === 'ccxt-browser' || provider.type === 'ccxt-server') {
+      if (provider.type === 'ccxt-server') {
         return provider.exchanges.includes('*') || provider.exchanges.includes(exchangeId);
       }
       return false;

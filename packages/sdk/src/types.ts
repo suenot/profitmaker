@@ -6,6 +6,7 @@ import type {
   DataType,
   Timeframe,
   MarketType,
+  ServerProviderFactory,
 } from '@profitmaker/types';
 import type * as ReactNS from 'react';
 
@@ -221,6 +222,16 @@ export interface BackendModuleContext {
       secret?: string;
       password?: string;
     }): Promise<unknown>;
+  };
+  /**
+   * Register additional server-side data/trading providers (e.g. a Rust napi
+   * binding shipped in this module's npm package). Registered providers are
+   * resolved by /api/exchange/* and the watch loop alongside the built-in
+   * 'ccxt'. All of a module's providers are auto-unregistered on stop/disable.
+   */
+  providers: {
+    register(factory: ServerProviderFactory): Disposable;
+    unregister(id: string): boolean;
   };
   /** Per-module persisted JSON storage */
   storage: ModuleStorage;

@@ -3,8 +3,16 @@ import { eq, and } from 'drizzle-orm';
 import { db } from '../db';
 import { dataProviders } from '../db/schema/providers';
 import { getUserFromRequest } from '../middleware/requireUser';
+import { emitStateChanged, clientIdFromRequest } from '../services/stateEvents';
+import { providerRegistry } from '../providers';
 
 export const providerRoutes = new Elysia({ prefix: '/api/providers' })
+
+  // Server-side providers registered in the ServerProviderRegistry (built-in
+  // 'ccxt' + any module-supplied providers). Distinct from the per-user
+  // data-provider rows below; this lists what the SERVER can actually serve, so
+  // the client/UI/agents can pick a providerId. Read-only, no per-user state.
+  .get('/available', () => ({ success: true, data: providerRegistry.list() }))
 
   // List all providers for current user
   .get('/', async ({ request, set }) => {
@@ -28,6 +36,7 @@ export const providerRoutes = new Elysia({ prefix: '/api/providers' })
       priority: body.priority ?? 100,
       config: body.config || {},
     }).returning();
+    emitStateChanged({ userId: user.id, domain: 'provider', action: 'created', id: provider.id, data: provider, origin: clientIdFromRequest(request) });
     return { success: true, data: provider };
   }, {
     body: t.Object({
@@ -50,6 +59,7 @@ export const providerRoutes = new Elysia({ prefix: '/api/providers' })
       .where(and(eq(dataProviders.id, params.id), eq(dataProviders.userId, user.id)))
       .returning();
     if (!provider) { set.status = 404; return { error: 'Provider not found' }; }
+    emitStateChanged({ userId: user.id, domain: 'provider', action: 'updated', id: provider.id, data: provider, origin: clientIdFromRequest(request) });
     return { success: true, data: provider };
   }, {
     body: t.Object({
@@ -70,5 +80,6 @@ export const providerRoutes = new Elysia({ prefix: '/api/providers' })
       .where(and(eq(dataProviders.id, params.id), eq(dataProviders.userId, user.id)))
       .returning();
     if (!provider) { set.status = 404; return { error: 'Provider not found' }; }
+    emitStateChanged({ userId: user.id, domain: 'provider', action: 'deleted', id: provider.id, data: provider, origin: clientIdFromRequest(request) });
     return { success: true };
   });

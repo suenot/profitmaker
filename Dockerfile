@@ -4,7 +4,6 @@ WORKDIR /app
 # Install dependencies
 COPY package.json bun.lockb ./
 COPY packages/types/package.json packages/types/
-COPY packages/core/package.json packages/core/
 COPY packages/sdk/package.json packages/sdk/
 COPY packages/server/package.json packages/server/
 COPY packages/client/package.json packages/client/

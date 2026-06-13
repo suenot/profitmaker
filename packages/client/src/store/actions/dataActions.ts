@@ -1,27 +1,55 @@
 import type { StateCreator } from 'zustand';
 import type { DataProviderStore } from '../types';
 import type { DataType, DataFetchMethod, Candle, Trade, OrderBook, Ticker, ExchangeBalances, ActiveSubscription, Timeframe, MarketType, WalletType, DataProvider } from '../../types/dataProviders';
-import { getCCXT } from '../utils/ccxtUtils';
 import { getOHLCVLimit, getTradesLimit, logExchangeLimits } from '../../utils/exchangeLimits';
 
-// Helper function to create exchange instance based on provider type
+// Create a server-side market-data instance (proxy) for public market data.
+// Stage 2 routes every fetch through the ccxt-server provider.
 const createExchangeInstanceForProvider = async (
   provider: DataProvider,
   exchange: string,
   market: MarketType = 'spot',
   sandbox: boolean = false
 ): Promise<any> => {
-  if (provider.type === 'ccxt-browser') {
-    const { createCCXTBrowserProvider } = await import('../providers/ccxtBrowserProvider');
-    const ccxtProvider = createCCXTBrowserProvider(provider);
-    return await ccxtProvider.getMetadataInstance(exchange, market, sandbox);
-  } else if (provider.type === 'ccxt-server') {
-    const { createCCXTServerProvider } = await import('../providers/ccxtServerProvider');
-    const ccxtProvider = createCCXTServerProvider(provider);
-    return await ccxtProvider.getMetadataInstance(exchange, market, sandbox);
-  } else {
+  if (provider.type !== 'ccxt-server') {
     throw new Error(`Unsupported provider type: ${provider.type}`);
   }
+  const { createCCXTServerProvider } = await import('../providers/ccxtServerProvider');
+  const ccxtProvider = createCCXTServerProvider(provider);
+  return await ccxtProvider.getMetadataInstance(exchange, market, sandbox);
+};
+
+/**
+ * Resolve decrypted credentials for an account, for forwarding authenticated
+ * operations to the server provider's trading block.
+ */
+const resolveCredentials = async (
+  accountId: string,
+): Promise<{ apiKey: string; secret: string; password?: string; sandbox?: boolean } | null> => {
+  const { useUserStore } = await import('../userStore');
+  const userStore = useUserStore.getState();
+  const user = userStore.users.find((u) => u.accounts.some((acc) => acc.id === accountId));
+  if (!user) return null;
+  if (userStore.isLocked) {
+    console.warn('[credentials] store is locked; cannot decrypt account');
+    return null;
+  }
+  const account = await userStore.getDecryptedAccount(user.id, accountId);
+  if (!account || !account.key || !account.privateKey) return null;
+  return {
+    apiKey: account.key,
+    secret: account.privateKey,
+    password: account.password || undefined,
+    sandbox: false,
+  };
+};
+
+/** Get the server trading provider for an exchange, or null if unavailable. */
+const getServerTradingProvider = async (exchange: string, get: () => DataProviderStore) => {
+  const provider = get().getProviderForExchange(exchange);
+  if (!provider || provider.type !== 'ccxt-server') return null;
+  const { createCCXTServerProvider } = await import('../providers/ccxtServerProvider');
+  return createCCXTServerProvider(provider);
 };
 
 export interface DataActions {
@@ -497,8 +525,8 @@ export const createDataActions: StateCreator<
     try {
       // Use existing universal-browser provider for consistency
       const provider = get().getProviderForExchange(exchange);
-      if (!provider || (provider.type !== 'ccxt-browser' && provider.type !== 'ccxt-server')) {
-        throw new Error(`No suitable CCXT provider found for exchange: ${exchange}`);
+      if (!provider || provider.type !== 'ccxt-server') {
+        throw new Error(`No suitable CCXT server provider found for exchange: ${exchange}`);
       }
 
       // Get metadata instance (no API keys needed for historical data)
@@ -545,8 +573,8 @@ export const createDataActions: StateCreator<
     try {
       // Use existing universal-browser provider for consistency
       const provider = get().getProviderForExchange(exchange);
-      if (!provider || (provider.type !== 'ccxt-browser' && provider.type !== 'ccxt-server')) {
-        throw new Error(`No suitable CCXT provider found for exchange: ${exchange}`);
+      if (!provider || provider.type !== 'ccxt-server') {
+        throw new Error(`No suitable CCXT server provider found for exchange: ${exchange}`);
       }
 
       // Get metadata instance (no API keys needed for trades data)
@@ -594,47 +622,17 @@ export const createDataActions: StateCreator<
     console.log(`🚀 [OrderBook] Loading initial orderbook for ${exchange}:${market}:${symbol}`);
     
     try {
-      // Use CCXT for public market data (no API keys needed)
-      const ccxt = getCCXT();
-      
-      if (!ccxt) {
-        throw new Error('CCXT not available');
+      // Public market data through the server provider (no API keys needed)
+      const provider = get().getProviderForExchange(exchange);
+      if (!provider || provider.type !== 'ccxt-server') {
+        throw new Error(`No suitable CCXT server provider found for exchange: ${exchange}`);
       }
 
-      const ExchangeClass = ccxt[exchange];
-      if (!ExchangeClass) {
-        throw new Error(`Exchange ${exchange} not found in CCXT`);
-      }
+      const exchangeInstance = await createExchangeInstanceForProvider(provider, exchange, market, false);
 
-      // Create public instance without API keys
-      let defaultType: string = market;
-      if (exchange === 'bybit') {
-        const bybitCategoryMap: Record<string, string> = {
-          'spot': 'spot',
-          'futures': 'linear',
-          'swap': 'linear', 
-          'margin': 'spot',
-          'options': 'option'
-        };
-        defaultType = bybitCategoryMap[market] || market;
-        console.log(`🔍 [initializeOrderBookData] Bybit mapping: ${market} -> ${defaultType}`);
-      }
-
-      const exchangeInstance = new ExchangeClass({
-        sandbox: false,
-        enableRateLimit: true,
-        defaultType: defaultType,
-      });
-
-      // Wrap with request logger for debugging
-      const { wrapExchangeWithLogger } = await import('../../utils/requestLogger');
-      const loggedInstance = wrapExchangeWithLogger(exchangeInstance, exchange, 'public-orderbook');
-
-      await loggedInstance.loadMarkets();
-      
       // Load orderbook via REST
-      const orderbookData = await loggedInstance.fetchOrderBook(symbol);
-      
+      const orderbookData = await exchangeInstance.fetchOrderBook(symbol);
+
       if (!orderbookData) {
         throw new Error('No orderbook data received from exchange');
       }
@@ -680,71 +678,21 @@ export const createDataActions: StateCreator<
     console.log(`🚀 [Balance] Loading initial balance for account ${accountId} (${exchange}:${walletType})`);
     
     try {
-      // Use ccxtAccountManager for account-specific data
-      const { ccxtAccountManager } = await import('../utils/ccxtAccountManager');
-      
-      const config = {
-        accountId: accountId,
-        exchange: exchange,
-        apiKey: account.key,
-        secret: account.privateKey,
-        password: account.password || undefined,
-        sandbox: account.sandbox || false,
-        marketType: walletType // Use walletType as marketType for balance
-      };
-      
-      const exchangeInstance = await ccxtAccountManager.getRegularInstance(config);
-      
-      // Set defaultType based on wallet type (CCXT best practice)
-      if (walletType === 'futures') {
-        exchangeInstance.options = exchangeInstance.options || {};
-        exchangeInstance.options['defaultType'] = 'future';
-      } else if (walletType === 'margin') {
-        exchangeInstance.options = exchangeInstance.options || {};
-        exchangeInstance.options['defaultType'] = 'margin';
-      } else if (walletType === 'spot') {
-        exchangeInstance.options = exchangeInstance.options || {};
-        exchangeInstance.options['defaultType'] = 'spot';
+      // Fetch account balance through the server provider's trading block.
+      const serverProvider = await getServerTradingProvider(exchange, get);
+      if (!serverProvider) {
+        throw new Error(`No CCXT server provider found for exchange: ${exchange}`);
       }
-      
-      console.log(`💰 [Balance Init] Fetching ${walletType} balance for account ${accountId} (${exchange}) with defaultType: ${exchangeInstance.options?.defaultType}`);
-      
-      // Use fetchBalance() for all types (CCXT recommended approach)
-      let balanceData = await exchangeInstance.fetchBalance();
-      
-      // Try fetchFundingBalance() if supported for additional funding wallet data
-      if (exchangeInstance.has?.fetchFundingBalance) {
-        try {
-          const fundingBalance = await exchangeInstance.fetchFundingBalance();
-          console.log(`💰 [Balance Init] Also got funding balance for account ${accountId} (${exchange}):`, {
-            fundingCurrencies: Object.keys(fundingBalance).filter(k => k !== 'info' && k !== 'datetime' && k !== 'timestamp').length
-          });
-          // Merge funding balance into main balance if needed
-          if (fundingBalance && typeof fundingBalance === 'object') {
-            // Add funding balances to the main balance structure
-            Object.entries(fundingBalance).forEach(([currency, data]: [string, any]) => {
-              if (currency !== 'info' && currency !== 'datetime' && currency !== 'timestamp' && 
-                  data && typeof data === 'object') {
-                // If currency already exists, add funding amounts to it
-                if (balanceData[currency]) {
-                  balanceData[currency].funding = data;
-                } else {
-                  // Create new entry for funding-only currencies
-                  balanceData[currency] = {
-                    free: 0,
-                    used: 0,
-                    total: 0,
-                    funding: data
-                  };
-                }
-              }
-            });
-          }
-        } catch (fundingError) {
-          console.warn(`⚠️ [Balance Init] Could not fetch funding balance for account ${accountId} (${exchange}):`, fundingError.message);
-        }
+      const creds = await resolveCredentials(accountId);
+      if (!creds) {
+        throw new Error(`No credentials available for account ${accountId}`);
       }
-      
+
+      const walletParam = walletType === 'funding' ? 'spot' : walletType;
+      console.log(`💰 [Balance Init] Fetching ${walletType} balance for account ${accountId} (${exchange}) via server`);
+
+      const balanceData = await serverProvider.trading.fetchBalance(creds, exchange, walletParam);
+
       if (!balanceData) {
         throw new Error('No balance data received from exchange');
       }
@@ -789,8 +737,8 @@ export const createDataActions: StateCreator<
     try {
       // Use active provider for this exchange
       const provider = get().getProviderForExchange(exchange);
-      if (!provider || (provider.type !== 'ccxt-browser' && provider.type !== 'ccxt-server')) {
-        throw new Error(`No suitable CCXT provider found for exchange: ${exchange}`);
+      if (!provider || provider.type !== 'ccxt-server') {
+        throw new Error(`No suitable CCXT server provider found for exchange: ${exchange}`);
       }
 
       // Get metadata instance (no API keys needed for ticker data)
@@ -842,8 +790,8 @@ export const createDataActions: StateCreator<
     try {
       // Use existing universal-browser provider for consistency
       const provider = get().getProviderForExchange(exchange);
-      if (!provider || (provider.type !== 'ccxt-browser' && provider.type !== 'ccxt-server')) {
-        throw new Error(`No suitable CCXT provider found for exchange: ${exchange}`);
+      if (!provider || provider.type !== 'ccxt-server') {
+        throw new Error(`No suitable CCXT server provider found for exchange: ${exchange}`);
       }
 
       // Get metadata instance (no API keys needed for historical data)
@@ -918,548 +866,83 @@ export const createDataActions: StateCreator<
 
   // User trading data methods
   fetchMyTrades: async (accountId: string, symbol?: string, since?: number, limit?: number): Promise<Trade[]> => {
-    console.log(`🔍 [fetchMyTrades] Starting fetchMyTrades for accountId: ${accountId}, symbol: ${symbol}`);
-    
     const { useUserStore } = await import('../userStore');
     const { users } = useUserStore.getState();
     const user = users.find(u => u.accounts.some(acc => acc.id === accountId));
     const account = user?.accounts.find(acc => acc.id === accountId);
-    
-    if (!account || !account.key || !account.privateKey) {
-      const error = `Account ${accountId} not found or missing API keys`;
-      console.error(`❌ [fetchMyTrades] ${error}`);
-      throw new Error(error);
+    if (!account) {
+      throw new Error(`Account ${accountId} not found`);
     }
-    
-    console.log(`🔄 [fetchMyTrades] Loading trades for account ${accountId} (${account.exchange})`);
-    
-    try {
-      // Use CCXTAccountManager for better performance and consistency
-      const { ccxtAccountManager } = await import('../utils/ccxtAccountManager');
-      
-      // Create account config
-      const accountConfig = {
-        accountId: account.id,
-        exchange: account.exchange,
-        apiKey: account.key,
-        secret: account.privateKey,
-        password: account.password,
-        sandbox: false
-      };
-      
-      const exchangeInstance = await ccxtAccountManager.getRegularInstance(accountConfig, 'spot');
-      
-      // Intercept HTTP requests to log them
-      const originalFetch = exchangeInstance.fetch;
-      exchangeInstance.fetch = function(url: string, method: string = 'GET', headers: any = {}, body: any = undefined) {
-        console.log(`🌐 [fetchMyTrades] HTTP Request:`, {
-          url,
-          method,
-          headers: Object.keys(headers),
-          bodyLength: body ? body.length : 0,
-          timestamp: new Date().toISOString()
-        });
-        
-        return originalFetch.call(this, url, method, headers, body).then((response: any) => {
-          console.log(`🌐 [fetchMyTrades] HTTP Response:`, {
-            url,
-            status: response?.status || 'unknown',
-            responseLength: typeof response === 'string' ? response.length : 'unknown',
-            timestamp: new Date().toISOString()
-          });
-          return response;
-        }).catch((error: any) => {
-          console.error(`🌐 [fetchMyTrades] HTTP Error:`, {
-            url,
-            error: error.message,
-            timestamp: new Date().toISOString()
-          });
-          throw error;
-        });
-      };
-      
-      await exchangeInstance.loadMarkets();
-      
-      console.log(`🔍 [fetchMyTrades] Checking fetchMyTrades capability for ${account.exchange}: ${exchangeInstance.has.fetchMyTrades}`);
-      console.log(`🔍 [fetchMyTrades] Exchange URLs:`, {
-        api: exchangeInstance.urls?.api,
-        test: exchangeInstance.urls?.test,
-        www: exchangeInstance.urls?.www
-      });
-      console.log(`🔍 [fetchMyTrades] Exchange options:`, {
-        apiKey: account.key ? `${account.key.substring(0, 8)}...` : 'none',
-        secret: account.privateKey ? `${account.privateKey.substring(0, 8)}...` : 'none',
-        sandbox: exchangeInstance.sandbox,
-        enableRateLimit: exchangeInstance.enableRateLimit
-      });
-      
-      // Check if exchange supports fetchMyTrades
-      if (!exchangeInstance.has.fetchMyTrades) {
-        console.warn(`⚠️ [fetchMyTrades] Exchange ${account.exchange} does not support fetchMyTrades`);
-        return [];
-      }
-      
-      // Get supported markets for this exchange
-      const supportedMarkets = await get().getMarketsForExchange(account.exchange);
-      console.log(`🏪 [fetchMyTrades] Supported markets for ${account.exchange}:`, supportedMarkets);
-      
-      let allTrades: any[] = [];
-      
-      // Function to fetch trades for a specific market category
-      const fetchTradesForMarket = async (marketCategory?: string) => {
-        let marketTrades: any[] = [];
-        const marketLabel = marketCategory || 'default';
-        
-        console.log(`🔄 [fetchMyTrades] Fetching trades for market: ${marketLabel}`);
-        
-        // Set market category for Bybit and similar exchanges
-        if (marketCategory && account.exchange === 'bybit') {
-          // Map our market names to Bybit categories
-          const bybitCategoryMap: Record<string, string> = {
-            'spot': 'spot',
-            'futures': 'linear',
-            'swap': 'linear', 
-            'margin': 'spot',
-            'options': 'option'
-          };
-          
-          const bybitCategory = bybitCategoryMap[marketCategory];
-          if (bybitCategory) {
-            exchangeInstance.options = exchangeInstance.options || {};
-            exchangeInstance.options.defaultType = bybitCategory;
-            console.log(`🏪 [fetchMyTrades] Set Bybit category to: ${bybitCategory} for market: ${marketCategory}`);
-          }
-        }
-        
-        try {
-          console.log(`🔍 [fetchMyTrades] Calling exchangeInstance.fetchMyTrades for ${marketLabel} with params:`, {
-            symbol,
-            since,
-            limit
-          });
-          // Try to fetch trades for all symbols or specific symbol
-          marketTrades = await exchangeInstance.fetchMyTrades(symbol, since, limit);
-          console.log(`✅ [fetchMyTrades] Fetched ${marketTrades.length} trades for ${marketLabel}`);
-        } catch (error) {
-          console.warn(`⚠️ [fetchMyTrades] Failed to fetch trades for ${marketLabel} with symbol=${symbol}, error:`, error.message);
-          
-          // Some exchanges might require specific symbols, try to get popular trading pairs
-          if (!symbol && account.exchange === 'bybit') {
-            console.log(`🔄 [fetchMyTrades] Trying to fetch trades for popular symbols on ${account.exchange} (${marketLabel})`);
-            const popularSymbols = ['BTC/USDT', 'ETH/USDT', 'BNB/USDT', 'SOL/USDT', 'XRP/USDT'];
-            
-            for (const popularSymbol of popularSymbols) {
-              try {
-                const symbolTrades = await exchangeInstance.fetchMyTrades(popularSymbol, since, Math.min(limit || 100, 20));
-                marketTrades.push(...symbolTrades);
-                console.log(`✅ [fetchMyTrades] Fetched ${symbolTrades.length} trades for ${popularSymbol} in ${marketLabel}`);
-              } catch (symbolError) {
-                console.warn(`⚠️ [fetchMyTrades] Failed to fetch trades for ${popularSymbol} in ${marketLabel}:`, symbolError.message);
-              }
-            }
-          }
-        }
-        
-        return marketTrades;
-      };
-      
-      // Fetch trades for all supported markets
-      if (supportedMarkets.length > 0) {
-        for (const market of supportedMarkets) {
-          try {
-            const marketTrades = await fetchTradesForMarket(market);
-            allTrades.push(...marketTrades);
-            console.log(`📊 [fetchMyTrades] Added ${marketTrades.length} trades from ${market} market`);
-          } catch (error) {
-            console.warn(`⚠️ [fetchMyTrades] Failed to fetch trades for ${market} market:`, error.message);
-            // Continue with other markets
-          }
-        }
-      } else {
-        // Fallback: fetch without specific market category
-        console.log(`🔄 [fetchMyTrades] No specific markets found, using default approach`);
-        const defaultTrades = await fetchTradesForMarket();
-        allTrades.push(...defaultTrades);
-      }
-      
-      // Remove duplicates and sort by timestamp
-      const uniqueTrades = allTrades.filter((trade, index, self) => 
-        index === self.findIndex(t => t.id === trade.id)
-      ).sort((a, b) => b.timestamp - a.timestamp);
-      
-      console.log(`✅ [fetchMyTrades] Total unique trades loaded: ${uniqueTrades.length} for account ${accountId} across ${supportedMarkets.length} markets`);
-      
-      return uniqueTrades.map((trade: any) => ({
-        id: trade.id,
-        timestamp: trade.timestamp,
-        symbol: trade.symbol,
-        side: trade.side,
-        amount: trade.amount,
-        price: trade.price,
-        cost: trade.cost,
-        fee: trade.fee,
-        info: trade.info
-      }));
-      
-    } catch (error) {
-      console.error(`❌ [fetchMyTrades] Failed to load trades for account ${accountId}:`, error);
-      console.error(`❌ [fetchMyTrades] Error details:`, {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        accountId,
-        exchange: account.exchange
-      });
-      throw error;
+
+    const serverProvider = await getServerTradingProvider(account.exchange, get);
+    if (!serverProvider) {
+      throw new Error(`No CCXT server provider found for exchange: ${account.exchange}`);
     }
+    const creds = await resolveCredentials(accountId);
+    if (!creds) {
+      throw new Error(`No credentials available for account ${accountId}`);
+    }
+
+    console.log(`🔄 [fetchMyTrades] Loading trades for account ${accountId} (${account.exchange}) via server`);
+    const trades = await serverProvider.trading.fetchMyTrades(creds, account.exchange, symbol, since, limit);
+
+    return (trades || []).map((trade: any) => ({
+      id: trade.id,
+      timestamp: trade.timestamp,
+      symbol: trade.symbol,
+      side: trade.side,
+      amount: trade.amount,
+      price: trade.price,
+      cost: trade.cost,
+      fee: trade.fee,
+      info: trade.info,
+    }));
   },
 
   fetchOrders: async (accountId: string, symbol?: string, since?: number, limit?: number): Promise<any[]> => {
-    console.log(`🔍 [fetchOrders] ============ STARTING FETCH ORDERS ============`);
-    console.log(`🔍 [fetchOrders] Starting fetchOrders for accountId: ${accountId}, symbol: ${symbol}`);
-    
     const { useUserStore } = await import('../userStore');
     const { users } = useUserStore.getState();
     const user = users.find(u => u.accounts.some(acc => acc.id === accountId));
     const account = user?.accounts.find(acc => acc.id === accountId);
-    
-    if (!account || !account.key || !account.privateKey) {
-      const error = `Account ${accountId} not found or missing API keys`;
-      console.error(`❌ [fetchOrders] ${error}`);
-      throw new Error(error);
+    if (!account) {
+      throw new Error(`Account ${accountId} not found`);
     }
-    
-    console.log(`🔄 [fetchOrders] Loading orders for account ${accountId} (${account.exchange})`);
-    console.log(`🔄 [fetchOrders] Account details:`, {
-      id: account.id,
-      exchange: account.exchange,
-      hasKey: !!account.key,
-      hasSecret: !!account.privateKey
-    });
-    
-    try {
-      const ccxt = getCCXT();
-      if (!ccxt) {
-        throw new Error('CCXT not available');
-      }
-      
-      const ExchangeClass = ccxt[account.exchange];
-      if (!ExchangeClass) {
-        throw new Error(`Exchange ${account.exchange} not found in CCXT`);
-      }
-      
-      // Get supported markets for this exchange
-      const supportedMarkets = await get().getMarketsForExchange(account.exchange);
-      console.log(`🏪 [fetchOrders] Supported markets for ${account.exchange}:`, supportedMarkets);
-      console.log(`🏪 [fetchOrders] Market count: ${supportedMarkets.length}`);
-      
-      let allOrders: any[] = [];
-      
-      // Function to fetch orders for a specific market category
-      const fetchOrdersForMarket = async (marketCategory?: string) => {
-        let marketOrders: any[] = [];
-        const marketLabel = marketCategory || 'default';
-        
-        console.log(`🔄 [fetchOrders] Fetching orders for market: ${marketLabel}`);
-        
-        // Create account config
-        const accountConfig = {
-          accountId: account.id,
-          exchange: account.exchange,
-          apiKey: account.key,
-          secret: account.privateKey,
-          password: account.password,
-          sandbox: false
-        };
-        
-        // Get exchange instance through account manager
-        const { ccxtAccountManager } = await import('../utils/ccxtAccountManager');
-        const exchangeInstance = await ccxtAccountManager.getRegularInstance(accountConfig, marketCategory || 'spot');
-        
-        console.log(`🔍 [fetchOrders] Exchange capabilities for ${account.exchange} (${marketLabel}):`);
-        console.log(`🔍 [fetchOrders] has.fetchOrders: ${exchangeInstance.has.fetchOrders}`);
-        console.log(`🔍 [fetchOrders] has.fetchOpenOrders: ${exchangeInstance.has.fetchOpenOrders}`);
-        console.log(`🔍 [fetchOrders] has.fetchClosedOrders: ${exchangeInstance.has.fetchClosedOrders}`);
-        console.log(`🔍 [fetchOrders] has.fetchCanceledOrders: ${exchangeInstance.has.fetchCanceledOrders}`);
-        console.log(`🔍 [fetchOrders] defaultType: ${exchangeInstance.options?.defaultType}`);
-        
-        // Try fetchOrders first
-        if (exchangeInstance.has.fetchOrders) {
-          try {
-            console.log(`🔄 [fetchOrders] Trying fetchOrders for ${account.exchange} (${marketLabel})`);
-            const orders = await exchangeInstance.fetchOrders(symbol, since, limit);
-            marketOrders = orders;
-            console.log(`✅ [fetchOrders] fetchOrders successful for ${marketLabel}: ${orders.length} orders`);
-          } catch (error) {
-            console.warn(`⚠️ [fetchOrders] fetchOrders failed for ${account.exchange} (${marketLabel}):`, error.message);
-            
-            // Fallback to alternative methods
-            if (exchangeInstance.has.fetchOpenOrders || exchangeInstance.has.fetchClosedOrders) {
-              console.log(`🔄 [fetchOrders] Using fallback methods for ${account.exchange} (${marketLabel})`);
-              
-              // Fetch open orders
-              if (exchangeInstance.has.fetchOpenOrders) {
-                try {
-                  const openOrders = await exchangeInstance.fetchOpenOrders(symbol);
-                  marketOrders.push(...openOrders);
-                  console.log(`✅ [fetchOrders] Fetched ${openOrders.length} open orders for ${marketLabel}`);
-                } catch (openError) {
-                  console.warn(`⚠️ [fetchOrders] Failed to fetch open orders for ${marketLabel}:`, openError.message);
-                }
-              }
-              
-              // Fetch closed orders
-              if (exchangeInstance.has.fetchClosedOrders) {
-                try {
-                  const closedOrders = await exchangeInstance.fetchClosedOrders(symbol, since, limit);
-                  marketOrders.push(...closedOrders);
-                  console.log(`✅ [fetchOrders] Fetched ${closedOrders.length} closed orders for ${marketLabel}`);
-                } catch (closedError) {
-                  console.warn(`⚠️ [fetchOrders] Failed to fetch closed orders for ${marketLabel}:`, closedError.message);
-                }
-              }
-              
-              // Fetch canceled orders
-              if (exchangeInstance.has.fetchCanceledOrders) {
-                try {
-                  const canceledOrders = await exchangeInstance.fetchCanceledOrders(symbol, since, limit);
-                  marketOrders.push(...canceledOrders);
-                  console.log(`✅ [fetchOrders] Fetched ${canceledOrders.length} canceled orders for ${marketLabel}`);
-                } catch (canceledError) {
-                  console.warn(`⚠️ [fetchOrders] Failed to fetch canceled orders for ${marketLabel}:`, canceledError.message);
-                }
-              }
-            }
-          }
-        } else {
-          // Use alternative methods if fetchOrders not supported
-          if (exchangeInstance.has.fetchOpenOrders || exchangeInstance.has.fetchClosedOrders) {
-            console.log(`🔄 [fetchOrders] Using alternative methods for ${account.exchange} (${marketLabel})`);
-            
-            // Fetch open orders
-            if (exchangeInstance.has.fetchOpenOrders) {
-              try {
-                const openOrders = await exchangeInstance.fetchOpenOrders(symbol);
-                marketOrders.push(...openOrders);
-                console.log(`✅ [fetchOrders] Fetched ${openOrders.length} open orders for ${marketLabel}`);
-              } catch (openError) {
-                console.warn(`⚠️ [fetchOrders] Failed to fetch open orders for ${marketLabel}:`, openError.message);
-              }
-            }
-            
-            // Fetch closed orders
-            if (exchangeInstance.has.fetchClosedOrders) {
-              try {
-                const closedOrders = await exchangeInstance.fetchClosedOrders(symbol, since, limit);
-                marketOrders.push(...closedOrders);
-                console.log(`✅ [fetchOrders] Fetched ${closedOrders.length} closed orders for ${marketLabel}`);
-              } catch (closedError) {
-                console.warn(`⚠️ [fetchOrders] Failed to fetch closed orders for ${marketLabel}:`, closedError.message);
-              }
-            }
-          }
-        }
-        
-        return marketOrders;
-      };
-      
-      // Fetch orders for all supported markets
-      if (supportedMarkets.length > 0) {
-        for (const market of supportedMarkets) {
-          try {
-            const marketOrders = await fetchOrdersForMarket(market);
-            allOrders.push(...marketOrders);
-            console.log(`📊 [fetchOrders] Added ${marketOrders.length} orders from ${market} market`);
-          } catch (error) {
-            console.warn(`⚠️ [fetchOrders] Failed to fetch orders for ${market} market:`, error.message);
-            // Continue with other markets
-          }
-        }
-      } else {
-        // Fallback: fetch without specific market category
-        console.log(`🔄 [fetchOrders] No specific markets found, using default approach`);
-        const defaultOrders = await fetchOrdersForMarket();
-        allOrders.push(...defaultOrders);
-      }
-      
-      // Sort by timestamp (newest first) and remove duplicates
-      const uniqueOrders = allOrders.filter((order, index, self) => 
-        index === self.findIndex(o => o.id === order.id)
-      ).sort((a, b) => b.timestamp - a.timestamp);
-      
-      console.log(`✅ [fetchOrders] Total unique orders loaded: ${uniqueOrders.length} for account ${accountId} across ${supportedMarkets.length} markets`);
-      
-      // Detailed logging for first few orders
-      uniqueOrders.slice(0, 5).forEach((order, index) => {
-        console.log(`📋 [fetchOrders] Order ${index + 1}:`, {
-          id: order.id,
-          symbol: order.symbol,
-          type: order.type,
-          side: order.side,
-          amount: order.amount,
-          price: order.price,
-          status: order.status,
-          timestamp: order.timestamp,
-          datetime: order.datetime,
-          filled: order.filled,
-          remaining: order.remaining,
-          average: order.average,
-          fee: order.fee
-        });
-      });
-      
-      return uniqueOrders;
-      
-    } catch (error) {
-      console.error(`❌ [fetchOrders] Failed to load orders for account ${accountId}:`, error);
-      console.error(`❌ [fetchOrders] Error details:`, {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        accountId,
-        exchange: account.exchange
-      });
-      throw error;
+
+    const serverProvider = await getServerTradingProvider(account.exchange, get);
+    if (!serverProvider) {
+      throw new Error(`No CCXT server provider found for exchange: ${account.exchange}`);
     }
+    const creds = await resolveCredentials(accountId);
+    if (!creds) {
+      throw new Error(`No credentials available for account ${accountId}`);
+    }
+
+    console.log(`🔄 [fetchOrders] Loading orders for account ${accountId} (${account.exchange}) via server`);
+    const orders = await serverProvider.trading.fetchOrders(creds, account.exchange, symbol, since, limit);
+    return (orders || []).sort((a: any, b: any) => b.timestamp - a.timestamp);
   },
 
   fetchOpenOrders: async (accountId: string, symbol?: string): Promise<any[]> => {
-    console.log(`🔍 [fetchOpenOrders] Starting fetchOpenOrders for accountId: ${accountId}, symbol: ${symbol}`);
-    
     const { useUserStore } = await import('../userStore');
     const { users } = useUserStore.getState();
-    
     const user = users.find(u => u.accounts.some(acc => acc.id === accountId));
     const account = user?.accounts.find(acc => acc.id === accountId);
-    
-    if (!account || !account.key || !account.privateKey) {
-      const error = `Account ${accountId} not found or missing API keys`;
-      console.error(`❌ [fetchOpenOrders] ${error}`);
-      throw new Error(error);
+    if (!account) {
+      throw new Error(`Account ${accountId} not found`);
     }
-    
-    console.log(`🔄 [fetchOpenOrders] Loading open orders for account ${accountId} (${account.exchange})`);
-    
-    try {
-      // Use CCXTAccountManager for better performance and consistency
-      const { ccxtAccountManager } = await import('../utils/ccxtAccountManager');
-      
-      // Account configuration
-      const accountConfig = {
-        accountId: account.id,
-        exchange: account.exchange,
-        apiKey: account.key,
-        secret: account.privateKey,
-        password: account.password,
-        sandbox: false
-      };
-      
-      let allOrders: any[] = [];
-      
-      // OPTIMIZED APPROACH: Smart strategy for fetching orders
-      if (account.exchange === 'bybit') {
-        // For Bybit: Try to get orders for main categories in priority order
-        const bybitCategories = ['linear', 'spot']; // linear covers futures+swap, spot covers spot+margin
-        
-        for (const category of bybitCategories) {
-          try {
-            console.log(`🔄 [fetchOpenOrders] Trying Bybit category: ${category}`);
-            
-            const exchangeInstance = await ccxtAccountManager.getRegularInstance(
-              accountConfig, 
-              category === 'linear' ? 'futures' : 'spot'
-            );
-            
-            // ДЕТАЛЬНАЯ ОТЛАДКА ДЛЯ SPOT
-            if (category === 'spot') {
-              console.log(`🔍 [fetchOpenOrders] Bybit SPOT instance details:`);
-              console.log(`  - defaultType:`, exchangeInstance.defaultType);
-              console.log(`  - options.defaultType:`, exchangeInstance.options?.defaultType);
-              console.log(`  - has.fetchOpenOrders:`, exchangeInstance.has.fetchOpenOrders);
-              console.log(`  - Current markets loaded:`, !!exchangeInstance.markets);
-              console.log(`  - Instance class:`, exchangeInstance.constructor.name);
-            }
-            
-            if (!exchangeInstance.has.fetchOpenOrders) {
-              console.warn(`⚠️ [fetchOpenOrders] Bybit ${category} does not support fetchOpenOrders`);
-              continue;
-            }
-            
-            console.log(`🔍 [fetchOpenOrders] About to call fetchOpenOrders for ${category} with symbol: ${symbol}`);
-            console.log(`🔍 [fetchOpenOrders] Instance before call:`, {
-              defaultType: exchangeInstance.defaultType,
-              options: exchangeInstance.options,
-              verbose: exchangeInstance.verbose
-            });
-            
-            // Enable verbose logging for this specific call to see the actual API request
-            const originalVerbose = exchangeInstance.verbose;
-            exchangeInstance.verbose = true;
-            
-            const orders = await exchangeInstance.fetchOpenOrders(symbol);
-            
-            // Restore original verbose setting
-            exchangeInstance.verbose = originalVerbose;
-            
-            console.log(`✅ [fetchOpenOrders] Fetched ${orders.length} orders from Bybit ${category}`);
-            allOrders.push(...orders);
-            
-            // If we got orders from linear, it likely covers most futures/swap orders
-            // If we got orders from spot, it covers spot/margin orders
-            
-          } catch (error) {
-            console.warn(`⚠️ [fetchOpenOrders] Failed to fetch from Bybit ${category}:`, error.message);
-            console.error(`🔍 [fetchOpenOrders] Full error for ${category}:`, error);
-            continue;
-          }
-        }
-      } else {
-        // For other exchanges: Use a more conservative approach
-        // Try spot first (most universal), then futures if needed
-        const exchangeCategories = ['spot', 'futures'];
-        
-        for (const category of exchangeCategories) {
-          try {
-            console.log(`🔄 [fetchOpenOrders] Trying ${account.exchange} category: ${category}`);
-            
-            const exchangeInstance = await ccxtAccountManager.getRegularInstance(
-              accountConfig, 
-              category
-            );
-            
-            if (!exchangeInstance.has.fetchOpenOrders) {
-              console.warn(`⚠️ [fetchOpenOrders] ${account.exchange} ${category} does not support fetchOpenOrders`);
-              continue;
-            }
-            
-            const orders = await exchangeInstance.fetchOpenOrders(symbol);
-            console.log(`✅ [fetchOpenOrders] Fetched ${orders.length} orders from ${account.exchange} ${category}`);
-            allOrders.push(...orders);
-            
-          } catch (error) {
-            console.warn(`⚠️ [fetchOpenOrders] Failed to fetch from ${account.exchange} ${category}:`, error.message);
-            continue;
-          }
-        }
-      }
-      
-      // Remove duplicates and sort by timestamp
-      const uniqueOrders = allOrders.filter((order, index, self) => 
-        index === self.findIndex(o => o.id === order.id)
-      ).sort((a, b) => b.timestamp - a.timestamp);
-      
-      console.log(`✅ [fetchOpenOrders] Total unique orders loaded: ${uniqueOrders.length} for account ${accountId} using optimized strategy`);
-      
-      return uniqueOrders;
-      
-    } catch (error) {
-      console.error(`❌ [fetchOpenOrders] Failed to load open orders for account ${accountId}:`, error);
-      console.error(`❌ [fetchOpenOrders] Error details:`, {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        accountId,
-        exchange: account.exchange
-      });
-      throw error;
+
+    const serverProvider = await getServerTradingProvider(account.exchange, get);
+    if (!serverProvider) {
+      throw new Error(`No CCXT server provider found for exchange: ${account.exchange}`);
     }
+    const creds = await resolveCredentials(accountId);
+    if (!creds) {
+      throw new Error(`No credentials available for account ${accountId}`);
+    }
+
+    console.log(`🔄 [fetchOpenOrders] Loading open orders for account ${accountId} (${account.exchange}) via server`);
+    const orders = await serverProvider.trading.fetchOpenOrders(creds, account.exchange, symbol);
+    return (orders || []).sort((a: any, b: any) => b.timestamp - a.timestamp);
   },
 
   fetchPositions: async (accountId: string, symbols?: string[]): Promise<any[]> => {
@@ -1467,99 +950,21 @@ export const createDataActions: StateCreator<
     const { users } = useUserStore.getState();
     const user = users.find(u => u.accounts.some(acc => acc.id === accountId));
     const account = user?.accounts.find(acc => acc.id === accountId);
-    
-    if (!account || !account.key || !account.privateKey) {
-      throw new Error(`Account ${accountId} not found or missing API keys`);
+    if (!account) {
+      throw new Error(`Account ${accountId} not found`);
     }
-    
-    console.log(`🔄 [fetchPositions] Loading positions for account ${accountId} (${account.exchange})`);
-    
-    try {
-      // Get supported markets for this exchange (positions are usually in futures/swap markets)
-      const supportedMarkets = await get().getMarketsForExchange(account.exchange);
-      console.log(`🏪 [fetchPositions] Supported markets for ${account.exchange}:`, supportedMarkets);
-      
-      // Filter to position-supporting markets (futures, swap)
-      const positionMarkets = supportedMarkets.filter(market => 
-        market === 'futures' || market === 'swap'
-      );
-      
-      let allPositions: any[] = [];
-      
-      // Use CCXTAccountManager for better performance and consistency
-      const { ccxtAccountManager } = await import('../utils/ccxtAccountManager');
-      
-      // Account configuration
-      const accountConfig = {
-        accountId: account.id,
-        exchange: account.exchange,
-        apiKey: account.key,
-        secret: account.privateKey,
-        password: account.password,
-        sandbox: false
-      };
-      
-      // Function to fetch positions for a specific market category
-      const fetchPositionsForMarket = async (marketCategory: string) => {
-        console.log(`🔄 [fetchPositions] Fetching positions for market: ${marketCategory}`);
-        
-        try {
-          // Get exchange instance for this market type
-          const exchangeInstance = await ccxtAccountManager.getRegularInstance(
-            accountConfig, 
-            marketCategory
-          );
-          
-          console.log(`🔍 [fetchPositions] Exchange instance created for ${marketCategory}, checking capabilities...`);
-          
-          // Check if exchange supports fetchPositions
-          if (!exchangeInstance.has.fetchPositions) {
-            console.warn(`⚠️ [fetchPositions] Exchange ${account.exchange} does not support fetchPositions for ${marketCategory}`);
-            return [];
-          }
-          
-          console.log(`🔍 [fetchPositions] Calling exchangeInstance.fetchPositions for ${marketCategory} with symbols:`, symbols);
-          const marketPositions = await exchangeInstance.fetchPositions(symbols);
-          console.log(`✅ [fetchPositions] Fetched ${marketPositions.length} positions for ${marketCategory}`);
-          
-          return marketPositions;
-        } catch (error) {
-          console.warn(`⚠️ [fetchPositions] Failed to fetch positions for ${marketCategory}, error:`, error.message);
-          return [];
-        }
-      };
-      
-      // Fetch positions for position-supporting markets
-      if (positionMarkets.length > 0) {
-        for (const market of positionMarkets) {
-          try {
-            const marketPositions = await fetchPositionsForMarket(market);
-            allPositions.push(...marketPositions);
-            console.log(`📊 [fetchPositions] Added ${marketPositions.length} positions from ${market} market`);
-          } catch (error) {
-            console.warn(`⚠️ [fetchPositions] Failed to fetch positions for ${market} market:`, error.message);
-            // Continue with other markets
-          }
-        }
-      } else {
-        // Fallback: try futures market as default for positions
-        console.log(`🔄 [fetchPositions] No position markets found, trying futures as default`);
-        const defaultPositions = await fetchPositionsForMarket('futures');
-        allPositions.push(...defaultPositions);
-      }
-      
-      // Remove duplicates and sort
-      const uniquePositions = allPositions.filter((position, index, self) => 
-        index === self.findIndex(p => p.symbol === position.symbol && p.side === position.side)
-      );
-      
-      console.log(`✅ [fetchPositions] Total unique positions loaded: ${uniquePositions.length} for account ${accountId} across ${positionMarkets.length} markets`);
-      
-      return uniquePositions;
-      
-    } catch (error) {
-      console.error(`❌ [fetchPositions] Failed to load positions for account ${accountId}:`, error);
-      throw error;
+
+    const serverProvider = await getServerTradingProvider(account.exchange, get);
+    if (!serverProvider) {
+      throw new Error(`No CCXT server provider found for exchange: ${account.exchange}`);
     }
-     }
+    const creds = await resolveCredentials(accountId);
+    if (!creds) {
+      throw new Error(`No credentials available for account ${accountId}`);
+    }
+
+    console.log(`🔄 [fetchPositions] Loading positions for account ${accountId} (${account.exchange}) via server`);
+    const positions = await serverProvider.trading.fetchPositions(creds, account.exchange, symbols);
+    return positions || [];
+  }
  });
