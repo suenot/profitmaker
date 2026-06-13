@@ -132,9 +132,15 @@ export interface ExchangeCapabilities {
 export type SubscriptionId = string;
 
 /**
- * The market-data contract. A provider exposes read-only market data plus an
- * optional trading block for authenticated operations. All data-fetch methods
+ * The CLIENT market-data contract. A provider exposes read-only market data plus
+ * an optional trading block for authenticated operations. All data-fetch methods
  * return our normalized types (Candle/Trade/OrderBook/...), not raw CCXT shapes.
+ *
+ * This is intentionally NOT the same interface as the server-side
+ * `ServerMarketDataProvider` (serverProviderContract.ts) — see that file for the
+ * three concrete asymmetries (per-call vs per-request-config binding, normalized
+ * vs raw return types, callback vs pull streaming) that justify keeping them
+ * separate rather than unifying.
  */
 export interface MarketDataProvider {
   readonly info: ProviderInfo;

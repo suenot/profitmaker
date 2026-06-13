@@ -8,15 +8,31 @@ import type { ExchangeCapabilities } from './providerContract';
  * one backend (the built-in ccxt, or a module-supplied provider — e.g. a Rust
  * implementation wrapped in a Node.js napi binding).
  *
- * Why this is a SEPARATE interface from the client `MarketDataProvider` (rather
- * than a shared one): the two live on opposite sides of the HTTP boundary and
- * have genuinely different shapes. The client contract takes already-normalized
- * params and returns normalized domain types for UI consumption. The server
- * contract is constructed per-request from a `ProviderRequestConfig` (exchange +
- * optional credentials + market type) and returns raw, exchange-native payloads
- * that the routes serialize straight through (the client normalizes). Unifying
- * them would distort one side; they intentionally share only the leaf data
- * types and `ExchangeCapabilities`.
+ * NOT UNIFIED with the client `MarketDataProvider` — deliberately. Unification
+ * was the default (per the design ruling: one contract if the differences are
+ * cosmetic), but these two are GENUINELY ASYMMETRIC, so the asymmetry is
+ * documented here in the open rather than hidden behind `any`/casts. The three
+ * concrete differences:
+ *
+ *  1. Binding/lifecycle. The client provider is ONE instance per provider;
+ *     exchange + credentials are per-CALL arguments (`params`, `creds`). The
+ *     server provider is constructed PER REQUEST-CONFIG (`create(config)`), so
+ *     exchange + credentials + market type are baked into the instance and the
+ *     methods take a bare `symbol`. This is exactly the "server needs a
+ *     per-request credentials/exchange context the client doesn't" case the
+ *     ruling called out as the trigger to keep them separate + document.
+ *  2. Return types. The client returns NORMALIZED domain types (Candle/Trade/
+ *     OrderBook/Ticker) for the UI. The server returns RAW exchange-native
+ *     payloads (`unknown`) that the routes serialize straight through; the
+ *     client normalizes on receipt. Collapsing these would force a normalize
+ *     step onto the server (pointless round-trip) or leak `unknown` into the
+ *     client surface.
+ *  3. Streaming model. The client `watch(params, onData, onError)` returns a
+ *     `SubscriptionId` (callback + handle). The server `watch(dataType, symbol)`
+ *     returns the NEXT payload as a `Promise` that the host loops — there is no
+ *     callback registry on the server side.
+ *
+ * They intentionally share only the leaf data types and `ExchangeCapabilities`.
  */
 
 /** Per-request config passed to a server provider (mirrors the wire `config`). */
