@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
-import { Plus, Info, Edit, Trash2, TrendingUp, Eye } from 'lucide-react';
+import { Plus, Info, Edit, Trash2, TrendingUp, Eye, RefreshCw } from 'lucide-react';
 import { Deal } from '../../types/deals';
 
 interface DealsListProps {
@@ -10,6 +10,8 @@ interface DealsListProps {
   onAddDeal: () => void;
   onEditDeal: (dealId: string) => void;
   onDeleteDeal: (dealId: string) => void;
+  onSyncFromAccount?: () => void;
+  syncing?: boolean;
 }
 
 const DealsList: React.FC<DealsListProps> = ({
@@ -17,7 +19,9 @@ const DealsList: React.FC<DealsListProps> = ({
   onSelectDeal,
   onAddDeal,
   onEditDeal,
-  onDeleteDeal
+  onDeleteDeal,
+  onSyncFromAccount,
+  syncing
 }) => {
   const [selectedNote, setSelectedNote] = useState<string | null>(null);
   const [noteContent, setNoteContent] = useState<string>('');
@@ -58,10 +62,25 @@ const DealsList: React.FC<DealsListProps> = ({
           <TrendingUp className="h-5 w-5 text-primary" />
           <span className="font-medium">Deals</span>
         </div>
-        <Button onClick={onAddDeal} size="sm" className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Deal
-        </Button>
+        <div className="flex items-center gap-2">
+          {onSyncFromAccount && (
+            <Button
+              onClick={onSyncFromAccount}
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              disabled={syncing}
+              title="Aggregate your trade history into deals"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing…' : 'Sync Trades'}
+            </Button>
+          )}
+          <Button onClick={onAddDeal} size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Deal
+          </Button>
+        </div>
       </div>
       <div className="flex-1 p-3 overflow-auto">
         {/* Summary Statistics */}

@@ -206,7 +206,7 @@ export const usePlaceOrderStore = create<PlaceOrderWidgetsStore>()(
       
       // Market-specific validation
       if (validationRules) {
-        const { symbol: constraints, balance, marketPrice } = validationRules;
+        const { symbol: constraints, balance, marketPrice, balanceLoaded } = validationRules;
         
         if (formData.amount < constraints.minQty) {
           errors.push({ 
@@ -238,15 +238,14 @@ export const usePlaceOrderStore = create<PlaceOrderWidgetsStore>()(
         
         // Balance validation. Use the live ticker price for market orders (fall
         // back to the maxPrice cap only when no live price is available yet).
-        // Skip the check when available <= 0: that means the balance is unknown
-        // (placeholder until fetchBalance(accountId) is wired), not actually empty —
-        // blocking every order on a stand-in figure would be wrong.
+        // Only enforced once the real balance has loaded (balanceLoaded) — avoids
+        // a false "insufficient" during the pre-fetch window where available is 0.
         const marketRefPrice = marketPrice && marketPrice > 0 ? marketPrice : (constraints.maxPrice || 1);
         const estimatedCost = formData.type === 'market'
           ? formData.amount * marketRefPrice
           : (formData.price || 0) * formData.amount;
 
-        if (balance.available > 0 && estimatedCost > balance.available) {
+        if (balanceLoaded && estimatedCost > balance.available) {
           errors.push({
             field: 'amount',
             message: `Insufficient balance. Available: ${balance.available} ${balance.currency}`

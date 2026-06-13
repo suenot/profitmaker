@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Deal, DealsViewMode, DealTrade } from '../../types/deals';
 import { useDealsStore } from '../../store/dealsStore';
+import { useUserStore } from '../../store/userStore';
+import { useDataProviderStore } from '../../store/dataProviderStore';
 import DealsList from './DealsList';
 import DealDetails from './DealDetails';
 
@@ -19,18 +21,41 @@ const DealsWidget: React.FC<DealsWidgetProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<DealsViewMode>(initialMode);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(initialDealId || null);
+  const [syncing, setSyncing] = useState(false);
 
   // Real, persisted deals (replaces the previous mock + local-useState).
   const deals = useDealsStore((s) => s.deals);
   const addDeal = useDealsStore((s) => s.addDeal);
   const updateDeal = useDealsStore((s) => s.updateDeal);
   const deleteDeal = useDealsStore((s) => s.deleteDeal);
+  const ingestTrades = useDealsStore((s) => s.ingestTrades);
 
-  // NOTE (live data source, DEFERRED — task #5 §B): to auto-populate deals from
-  // real trade history, call dataProviderStore.fetchMyTrades(accountId) and feed
-  // the result into useDealsStore.getState().ingestTrades(trades). The store seam
-  // is ready; wiring the account/credential selection here is gated on the
-  // trading→accountId flow (the same MyTradesWidget picker is still mock too).
+  // Live source: pull real trade history for the active user's accounts via the
+  // accountId flow (fetchMyTrades routes through want='read') and aggregate it
+  // into deals (group-by-symbol). The per-deal "Add Trades" picker (MyTradesWidget)
+  // is the other live entry point.
+  const { users, activeUserId } = useUserStore();
+  const { fetchMyTrades } = useDataProviderStore();
+
+  const handleSyncFromAccount = useCallback(async () => {
+    const activeUser = users.find(u => u.id === activeUserId);
+    const accounts = (activeUser?.accounts || []).filter(acc => acc.key && acc.privateKey);
+    if (!accounts.length || syncing) return;
+
+    setSyncing(true);
+    try {
+      for (const account of accounts) {
+        try {
+          const trades = await fetchMyTrades(account.id, undefined, undefined, 200);
+          if (trades.length) ingestTrades(trades);
+        } catch (err) {
+          console.error(`Failed to sync trades for account ${account.id}:`, err);
+        }
+      }
+    } finally {
+      setSyncing(false);
+    }
+  }, [users, activeUserId, fetchMyTrades, ingestTrades, syncing]);
 
   const handleSelectDeal = (dealId: string) => {
     setSelectedDealId(dealId);
@@ -96,6 +121,8 @@ const DealsWidget: React.FC<DealsWidgetProps> = ({
       onAddDeal={handleAddDeal}
       onEditDeal={handleEditDeal}
       onDeleteDeal={handleDeleteDeal}
+      onSyncFromAccount={handleSyncFromAccount}
+      syncing={syncing}
     />
   );
 };

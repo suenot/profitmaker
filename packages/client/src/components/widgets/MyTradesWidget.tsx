@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
-import { ArrowLeft, Plus, Search, User, TrendingUp, TrendingDown, Clock, Check } from 'lucide-react';
+import { ArrowLeft, Search, User, TrendingUp, Check, RefreshCw } from 'lucide-react';
 import { Checkbox } from '../ui/checkbox';
+import { useUserStore } from '../../store/userStore';
+import { useDataProviderStore } from '../../store/dataProviderStore';
 
 interface MyTrade {
   id: string;
@@ -16,7 +18,7 @@ interface MyTrade {
   amount: number;
   fee: number;
   value: number;
-  pnl?: number;
+  pnl?: number | null;
   orderType: string;
 }
 
@@ -24,6 +26,14 @@ interface MyTradesWidgetProps {
   selectionMode?: boolean;
   onBack?: () => void;
   onTradesSelected?: (trades: MyTrade[]) => void;
+}
+
+/** Format an epoch-ms timestamp as "YYYY-MM-DD HH:mm:ss". */
+const pad = (n: number) => String(n).padStart(2, '0');
+function formatDateTime(timestamp: number): string {
+  const d = new Date(timestamp);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+    `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 const MyTradesWidget: React.FC<MyTradesWidgetProps> = ({
@@ -34,86 +44,73 @@ const MyTradesWidget: React.FC<MyTradesWidgetProps> = ({
   const [selectedTrades, setSelectedTrades] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mock data for trades
-  const myTrades: MyTrade[] = [
-    {
-      id: 'TXN123456',
-      datetime: '2024-06-01 14:23:45',
-      stock: 'BTC',
-      symbol: 'BTC/USDT',
-      side: 'buy',
-      type: 'limit',
-      orderType: 'market',
-      price: 43250.50,
-      amount: 0.1234,
-      value: 5337.02,
-      fee: 5.34,
-      pnl: null
-    },
-    {
-      id: 'TXN123455',
-      datetime: '2024-06-01 14:20:32',
-      stock: 'ETH',
-      symbol: 'ETH/USDT',
-      side: 'sell',
-      type: 'market',
-      orderType: 'limit',
-      price: 2845.30,
-      amount: 2.5670,
-      value: 7305.51,
-      fee: 0.0026,
-      pnl: 245.67
-    },
-    {
-      id: 'TXN123454',
-      datetime: '2024-06-01 14:18:21',
-      stock: 'SOL',
-      symbol: 'SOL/USDT',
-      side: 'buy',
-      type: 'limit',
-      orderType: 'market',
-      price: 98.45,
-      amount: 15.67,
-      value: 1543.32,
-      fee: 1.54,
-      pnl: null
-    },
-    {
-      id: 'TXN123453',
-      datetime: '2024-06-01 14:15:18',
-      stock: 'BNB',
-      symbol: 'BNB/USDT',
-      side: 'sell',
-      type: 'stop-limit',
-      orderType: 'stop-limit',
-      price: 315.67,
-      amount: 12.34,
-      value: 3897.37,
-      fee: 3.90,
-      pnl: -89.45
-    },
-    {
-      id: 'TXN123452',
-      datetime: '2024-06-01 14:12:05',
-      stock: 'BTC',
-      symbol: 'BTC/USDT',
-      side: 'buy',
-      type: 'market',
-      orderType: 'market',
-      price: 43100.00,
-      amount: 0.0567,
-      value: 2443.77,
-      fee: 2.44,
-      pnl: null
-    }
-  ];
+  // Real trade history via the accountId flow (private read, want='read').
+  const { users, activeUserId } = useUserStore();
+  const { fetchMyTrades } = useDataProviderStore();
+  const [myTrades, setMyTrades] = useState<MyTrade[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  const activeUser = users.find(u => u.id === activeUserId);
+  const accountsWithKeys = (activeUser?.accounts || []).filter(acc => acc.key && acc.privateKey);
+
+  const loadTrades = useCallback(async () => {
+    if (!accountsWithKeys.length) {
+      setMyTrades([]);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const all: MyTrade[] = [];
+      for (const account of accountsWithKeys) {
+        try {
+          const trades = await fetchMyTrades(account.id, undefined, undefined, 200);
+          for (const t of trades) {
+            const raw = t as typeof t & { symbol?: string; cost?: number; fee?: { cost: number }; type?: string };
+            const sym = raw.symbol || 'UNKNOWN';
+            const value = typeof raw.cost === 'number' ? raw.cost : t.price * t.amount;
+            all.push({
+              id: t.id,
+              datetime: formatDateTime(t.timestamp),
+              stock: sym.split('/')[0] || sym,
+              symbol: sym,
+              type: raw.type || 'market',
+              orderType: raw.type || 'market',
+              side: t.side,
+              price: t.price,
+              amount: t.amount,
+              value,
+              fee: raw.fee?.cost ?? 0,
+              pnl: null,
+            });
+          }
+        } catch (err) {
+          console.error(`Failed to load trades for account ${account.id}:`, err);
+        }
+      }
+      all.sort((a, b) => (b.datetime > a.datetime ? 1 : -1));
+      setMyTrades(all);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load trades');
+    } finally {
+      setLoading(false);
+    }
+    // accountsWithKeys is derived each render; key off the id list to avoid loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeUserId, accountsWithKeys.map(a => a.id).join(','), fetchMyTrades]);
+
+  useEffect(() => {
+    loadTrades();
+  }, [loadTrades]);
+
+  // Mock data for trades
+  // Stats computed from the loaded trades (P&L isn't available from fetchMyTrades,
+  // so it's omitted rather than faked).
   const stats = {
-    totalTrades: 247,
-    totalVolume: 125678.90,
-    totalFees: 234.56,
-    totalPnl: 567.89,
-    winRate: 68.5
+    totalTrades: myTrades.length,
+    totalVolume: myTrades.reduce((sum, t) => sum + t.value, 0),
+    totalFees: myTrades.reduce((sum, t) => sum + t.fee, 0),
   };
 
   const filteredTrades = myTrades.filter(trade =>
@@ -176,12 +173,23 @@ const MyTradesWidget: React.FC<MyTradesWidgetProps> = ({
           <User className="h-5 w-5 text-primary" />
           <span className="font-medium">{selectionMode ? 'Select Trades' : 'My Trades'}</span>
         </div>
-        {selectionMode && selectedTrades.size > 0 && (
-          <Button onClick={handleConfirmSelection} className="gap-2">
-            <Check className="h-4 w-4" />
-            Add Selected ({selectedTrades.size})
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={loadTrades}
+            disabled={loading}
+            title="Refresh trades"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
-        )}
+          {selectionMode && selectedTrades.size > 0 && (
+            <Button onClick={handleConfirmSelection} className="gap-2">
+              <Check className="h-4 w-4" />
+              Add Selected ({selectedTrades.size})
+            </Button>
+          )}
+        </div>
       </div>
       <div className="flex-1 p-3 overflow-auto">
         <div className="space-y-4">
@@ -190,16 +198,16 @@ const MyTradesWidget: React.FC<MyTradesWidgetProps> = ({
             <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
               <div className="flex items-center gap-2 text-green-500 text-sm">
                 <TrendingUp className="h-4 w-4" />
-                Total P&L
+                Total Fees
               </div>
-              <div className="text-xl font-bold text-green-500">
-                +{formatCurrency(stats.totalPnl)}
+              <div className="text-xl font-bold">
+                {formatCurrency(stats.totalFees)}
               </div>
               <div className="text-xs text-muted-foreground">
-                Win Rate: {stats.winRate}%
+                {stats.totalTrades} trades
               </div>
             </div>
-            
+
             <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
               <div className="flex items-center gap-2 text-blue-500 text-sm">
                 <User className="h-4 w-4" />
@@ -224,6 +232,23 @@ const MyTradesWidget: React.FC<MyTradesWidgetProps> = ({
               className="pl-10"
             />
           </div>
+
+          {/* Status / empty states */}
+          {error && (
+            <div className="text-sm text-red-400 border border-red-500/30 bg-red-500/10 rounded-md p-3">
+              {error}
+            </div>
+          )}
+          {!error && !accountsWithKeys.length && (
+            <div className="text-sm text-muted-foreground text-center py-6">
+              No account with API keys — add one to load trade history.
+            </div>
+          )}
+          {!error && accountsWithKeys.length > 0 && !loading && myTrades.length === 0 && (
+            <div className="text-sm text-muted-foreground text-center py-6">
+              No trades found for the selected account(s).
+            </div>
+          )}
 
           {/* Trades Table */}
           <div className="rounded-md border">
@@ -313,7 +338,9 @@ const MyTradesWidget: React.FC<MyTradesWidgetProps> = ({
               </div>
               <div>
                 <div className="text-muted-foreground">Avg Trade</div>
-                <div className="font-bold">{formatCurrency(stats.totalVolume / stats.totalTrades)}</div>
+                <div className="font-bold">
+                  {formatCurrency(stats.totalTrades > 0 ? stats.totalVolume / stats.totalTrades : 0)}
+                </div>
               </div>
             </div>
           )}

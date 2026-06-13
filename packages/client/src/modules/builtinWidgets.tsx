@@ -156,7 +156,6 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'deals',
     title: 'Deals',
-    menuLabel: 'Deals (not ready)',
     icon: 'Handshake',
     category: 'private',
     defaultSize: { width: 900, height: 600 },
@@ -166,7 +165,6 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'orderForm',
     title: 'Place Order',
-    menuLabel: 'Place Order (not ready)',
     icon: 'FileText',
     category: 'private',
     defaultSize: { width: 350, height: 550 },

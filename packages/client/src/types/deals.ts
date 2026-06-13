@@ -49,6 +49,10 @@ export interface DealsListProps {
   onAddDeal: () => void;
   onEditDeal: (dealId: string) => void;
   onDeleteDeal: (dealId: string) => void;
+  /** Aggregate real trade history (fetchMyTrades) into deals. Optional. */
+  onSyncFromAccount?: () => void;
+  /** True while a sync is in flight (spins the button icon). */
+  syncing?: boolean;
 }
 
 // Props for deal details component
