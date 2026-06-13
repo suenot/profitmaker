@@ -9,6 +9,7 @@ import { OrderBook, OrderBookEntry, MarketType } from '../../types/dataProviders
 interface OrderBookWidgetV2Props {
   dashboardId?: string;
   widgetId?: string;
+  selectedGroupId?: string;
   initialExchange?: string;
   initialSymbol?: string;
 }
@@ -16,6 +17,7 @@ interface OrderBookWidgetV2Props {
 const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
   dashboardId = 'default',
   widgetId = 'orderbook-widget-v2',
+  selectedGroupId,
   initialExchange = 'binance',
   initialSymbol = 'BTC/USDT'
 }) => {
@@ -32,11 +34,17 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
 
   const { getWidget, updateWidget, setWidgetSettings } = useOrderBookWidgetsStore();
   const { getGroupById, selectedGroupId: globalSelectedGroupId, getTransparentGroup } = useGroupStore();
-  
+
   const widget = getWidget(widgetId);
-  
-  // Get instrument data from selectedGroup (like Chart and Trades widgets)
-  const selectedGroup = getGroupById(globalSelectedGroupId);
+
+  // Resolve the instrument from THIS widget's bound group (selectedGroupId),
+  // falling back to the global picker, then the transparent group — identical to
+  // Chart and Trades. Reading only the global picker here meant a remote group
+  // retarget (PUT /api/groups/:id) moved the chart but left the order book on the
+  // old symbol; deriving from the bound group makes the subscription effect below
+  // (deps: exchange/symbol/market) resubscribe correctly.
+  const currentGroupId = selectedGroupId || globalSelectedGroupId;
+  const selectedGroup = currentGroupId ? getGroupById(currentGroupId) : getTransparentGroup();
   const exchange = selectedGroup?.exchange || 'binance';
   const symbol = selectedGroup?.tradingPair || 'BTC/USDT';
   const market = (selectedGroup?.market as MarketType) || 'spot';

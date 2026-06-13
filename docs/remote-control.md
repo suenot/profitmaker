@@ -141,9 +141,23 @@ PROFITMAKER_URL=http://localhost:3001 PROFITMAKER_TOKEN=test-token bun scripts/c
 
 It creates a dashboard, adds chart/orderbook/trades/orderForm widgets, creates a
 BTC/USDT group and binds the widgets to it, switches the active tab, moves and
-resizes widgets, retargets the group to ETH/USDT (every bound widget follows),
-sets the chart timeframe, hides a widget, renames a widget, asserts `get_ui_state`,
-and removes a widget — 26 assertions across 12 steps.
+resizes widgets, retargets the group to ETH/USDT (every bound widget follows —
+chart, order book, and trades all resubscribe to the new symbol), verifies the
+widgets stay bound to the retargeted group, sets the chart timeframe, hides a
+widget, renames a widget, asserts `get_ui_state`, and removes a widget —
+28 assertions across 14 steps.
+
+### Group retarget → live resubscription
+
+Changing a group's `tradingPair`/`exchange`/`market` (locally via the picker or
+remotely via `PUT /api/groups/:id`) retargets **every widget bound to that
+group**: each drops its old market-data subscription and resubscribes to the new
+symbol. The chart, order book, and trades widgets all derive their instrument
+from the widget's bound group (falling back to the global picker, then the
+transparent group), so a remote retarget moves all of them together. Verified in
+the browser via `dataProviderStore` active subscriptions: after a BTC/USDT →
+ETH/USDT retarget the candles + order book subscriptions flip to ETH/USDT with no
+leaked BTC/USDT subscription (ref-counted cleanup).
 
 ## Known gaps — what is *not* yet code-drivable
 
@@ -167,11 +181,13 @@ Honest list of current limitations (v1 of the control surface):
 
 ## Verification (June 2026)
 
-`scripts/control-demo.ts` runs green (26/26). Browser-observed (chrome-devtools):
+`scripts/control-demo.ts` runs green (28/28). Browser-observed (chrome-devtools):
 a curl-created dashboard tab appears without reload; a curl `PUT` moves a widget
 to the asserted pixel position; `set_active_dashboard` switches the tab and URL;
 hiding a widget drops it from the rendered DOM (4 widgets → 3 boxes); a renamed
 widget shows its new title; retargeting the group to ETH/USDT updates the bound
-widgets' instrument footer to `ETHUSDT`; two browser tabs converge in under a
-second; with the server stopped the terminal keeps working off localStorage and
-re-hydrates on reconnect.
+widgets' instrument footer to `ETHUSDT` and flips the candles + order book
+subscriptions to ETH/USDT with no leaked BTC/USDT subscription (and back to
+BTC/USDT on a reverse retarget, prices ~63.5k); two browser tabs converge in
+under a second; with the server stopped the terminal keeps working off
+localStorage and re-hydrates on reconnect.

@@ -213,6 +213,17 @@ async function main(): Promise<void> {
   const grpEvt = await watcher.waitFor((e) => e.domain === 'group' && e.action === 'updated' && e.id === group.id && e.data?.tradingPair === 'ETH/USDT');
   assert(!!grpEvt, 'state:changed {group, updated, ETH/USDT} observed — every widget on this group now follows ETH/USDT');
 
+  // 7b. Verify the retarget actually reaches the widgets: every widget is still
+  // bound to the group, so each must resubscribe to the new symbol. (Regression
+  // guard for the bug where the OrderBook ignored its bound group and kept
+  // streaming the old symbol — see docs/remote-control.md. Browser-side proof:
+  // dataProviderStore.activeSubscriptions flips chart+orderbook+trades to the new
+  // symbol with no leaked old subscription.)
+  step('Verify all widgets stay bound to the retargeted group');
+  const liveWidgets = (await api(`/api/dashboards/${dash.id}`)).data.widgets as any[];
+  const allBound = liveWidgets.length > 0 && liveWidgets.every((w) => w.groupId === group.id);
+  assert(allBound, `all ${liveWidgets.length} widgets bound to the ETH/USDT group → all resubscribe to the new symbol`);
+
   // 8. set_widget_settings chart timeframe 5m (ui:command)
   step('set_widget_settings → chart timeframe 5m (ui:command)');
   const tfResp = await api('/api/ui/command', {
