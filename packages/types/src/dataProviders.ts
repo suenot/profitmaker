@@ -112,13 +112,7 @@ export interface BaseDataProvider {
 }
 
 // Data provider types
-export type DataProviderType = 'ccxt-browser' | 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter' | 'custom';
-
-// Configuration for CCXT Browser - УПРОЩЕННАЯ ВЕРСИЯ
-export interface CCXTBrowserConfig {
-  sandbox?: boolean;
-  options?: Record<string, any>;
-}
+export type DataProviderType = 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter' | 'custom';
 
 // Configuration for CCXT Server - УПРОЩЕННАЯ ВЕРСИЯ
 export interface CCXTServerConfig {
@@ -157,11 +151,6 @@ export interface CustomProviderConfig {
 }
 
 // Specific provider types
-export interface CCXTBrowserProvider extends BaseDataProvider {
-  type: 'ccxt-browser';
-  config: CCXTBrowserConfig;
-}
-
 export interface CCXTServerProvider extends BaseDataProvider {
   type: 'ccxt-server';
   config: CCXTServerConfig;
@@ -185,7 +174,7 @@ export interface CustomProvider extends BaseDataProvider {
 }
 
 // Combined provider type
-export type DataProvider = CCXTBrowserProvider | CCXTServerProvider | MarketMakerProvider | CustomServerWithAdapterProvider | CustomProvider;
+export type DataProvider = CCXTServerProvider | MarketMakerProvider | CustomServerWithAdapterProvider | CustomProvider;
 
 // Utility types for provider-exchange mapping
 export interface ProviderExchangeMapping {

@@ -12,8 +12,6 @@ import NotFound from "./pages/NotFound";
 import BackendGate from './components/BackendGate';
 import BottomLeftInfo from './components/BottomLeftInfo';
 import RightClickInfo from './components/RightClickInfo';
-import TestProviderIntegration from './components/TestProviderIntegration';
-import TestTimeframes from './components/TestTimeframes';
 import { TestChartWidget } from './components/TestChartWidget';
 import TestCCXTServerProvider from './components/TestCCXTServerProvider';
 import TestDebugWidgetCCXTServer from './components/TestDebugWidgetCCXTServer';
@@ -38,8 +36,6 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<BackendGate><Index /></BackendGate>} />
-            <Route path="/test-providers" element={<TestProviderIntegration />} />
-            <Route path="/test-timeframes" element={<TestTimeframes />} />
             <Route path="/test-chart" element={<TestChartWidget />} />
             <Route path="/test-ccxt-server" element={<TestCCXTServerProvider />} />
             <Route path="/test-debug-ccxt-server" element={<TestDebugWidgetCCXTServer />} />

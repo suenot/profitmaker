@@ -23,7 +23,7 @@ export interface ProviderActions {
   isProviderEnabled: (providerId: string) => boolean;
   getEnabledProviders: () => DataProvider[];
   
-  createProvider: (type: 'ccxt-browser' | 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter', name: string, exchanges: string[], config?: any) => DataProvider;
+  createProvider: (type: 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter', name: string, exchanges: string[], config?: any) => DataProvider;
   updateProvider: (providerId: string, updates: { name?: string; exchanges?: string[]; priority?: number; config?: any }) => void;
   getProviderForExchange: (exchange: string) => DataProvider | null;
   getProviderExchangeMappings: (exchanges: string[]) => ProviderExchangeMapping[];
@@ -129,11 +129,11 @@ export const createProviderActions: StateCreator<
   },
 
   // NEW: Create provider with simplified config
-  createProvider: (type: 'ccxt-browser' | 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter', name: string, exchanges: string[], config: any = {}) => {
+  createProvider: (type: 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter', name: string, exchanges: string[], config: any = {}) => {
     const providers = Object.values(get().providers);
     const priority = getNextProviderPriority(providers);
     const id = generateProviderId(type, exchanges, name);
-    
+
     const baseProvider = {
       id,
       name,
@@ -142,19 +142,10 @@ export const createProviderActions: StateCreator<
       priority,
       status: 'connected' as const
     };
-    
+
     let newProvider: DataProvider;
-    
-    if (type === 'ccxt-browser') {
-      newProvider = {
-        ...baseProvider,
-        type: 'ccxt-browser',
-        config: {
-          sandbox: config.sandbox || false,
-          options: config.options || {}
-        }
-      };
-    } else if (type === 'ccxt-server') {
+
+    if (type === 'ccxt-server') {
       newProvider = {
         ...baseProvider,
         type: 'ccxt-server',

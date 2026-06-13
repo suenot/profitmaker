@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useDataProviderStore } from '../store/dataProviderStore';
 import { moduleFetch } from '../modules/api';
-import { ChevronDown, Server, Globe, Database } from 'lucide-react';
+import { ChevronDown, Server, Database } from 'lucide-react';
 
 export const ExchangesWidget: React.FC = () => {
   const { providers, getEnabledProviders } = useDataProviderStore();
@@ -94,8 +94,6 @@ export const ExchangesWidget: React.FC = () => {
 
   const getProviderIcon = (type: string) => {
     switch (type) {
-      case 'ccxt-browser':
-        return <Globe size={16} className="text-terminal-text/80" />;
       case 'ccxt-server':
         return <Server size={16} className="text-terminal-text/80" />;
       case 'stocksharp':

@@ -23,11 +23,45 @@ import type {
   CreateOrderParams,
   ProviderCredentials,
 } from '@profitmaker/types';
-import {
-  createCCXTInstanceConfig,
-  type CCXTInstanceConfig
-} from '../utils/ccxtProviderUtils';
 import { io, Socket } from 'socket.io-client';
+
+// Config describing a server-side CCXT instance. Kept here (rather than the
+// deleted ccxtProviderUtils) since the server provider is its only consumer.
+export interface CCXTInstanceConfig {
+  providerId: string;
+  userId: string;
+  accountId: string;
+  exchangeId: string;
+  marketType: string;
+  ccxtType: 'regular' | 'pro';
+  apiKey?: string;
+  secret?: string;
+  password?: string;
+  sandbox?: boolean;
+}
+
+const createCCXTInstanceConfig = (
+  providerId: string,
+  userId: string,
+  accountId: string,
+  exchangeId: string,
+  marketType: string,
+  ccxtType: 'regular' | 'pro',
+  credentials?: {
+    apiKey?: string;
+    secret?: string;
+    password?: string;
+    sandbox?: boolean;
+  }
+): CCXTInstanceConfig => ({
+  providerId,
+  userId,
+  accountId,
+  exchangeId,
+  marketType,
+  ccxtType,
+  ...credentials,
+});
 
 interface ServerResponse<T = any> {
   success: boolean;

@@ -14,48 +14,20 @@ export const createExchangeInstance = (exchange: string, provider: DataProvider,
   if (!ExchangeClass) {
     throw new Error(`Exchange ${exchange} not found in CCXT`);
   }
-  
-  // Get user credentials for this exchange
-  let activeUser: User | undefined;
-  try {
-    const userState = useUserStore.getState();
-    activeUser = userState.users.find((u: User) => u.id === userState.activeUserId);
-  } catch (error) {
-    console.warn('Failed to get user store:', error);
-    activeUser = undefined;
-  }
-  
+
   let config: any = {};
-  
-  if (provider.type === 'ccxt-browser') {
-    const browserConfig = provider.config as any;
-    config = {
-      sandbox: browserConfig.sandbox || false,
-      options: browserConfig.options || {}
-    };
-    
-    // Add user credentials if available
-    if (activeUser) {
-      const account = getAccountForExchange(activeUser, exchange);
-      if (account && account.key && account.privateKey) {
-        const providerAccount = convertAccountForProvider(account);
-        config.apiKey = providerAccount.apiKey;
-        config.secret = providerAccount.secret;
-        if (providerAccount.password) config.password = providerAccount.password;
-        if (providerAccount.uid) config.uid = providerAccount.uid;
-      }
-    }
-  } else if (provider.type === 'ccxt-server') {
+
+  if (provider.type === 'ccxt-server') {
     const serverConfig = provider.config as any;
     config = {
       serverUrl: serverConfig.serverUrl,
       timeout: serverConfig.timeout || 30000,
       sandbox: serverConfig.sandbox || false
     };
-    
+
     // For server providers, credentials are managed on server side
   }
-  
+
   return new ExchangeClass(config);
 };
 
@@ -221,10 +193,8 @@ export const getProviderDisplayInfo = (provider: DataProvider): { title: string;
     ? 'All exchanges' 
     : provider.exchanges.join(', ');
     
-  const typeText = provider.type === 'ccxt-browser' 
-    ? 'Browser' 
-    : provider.type === 'ccxt-server' 
-    ? 'Server' 
+  const typeText = provider.type === 'ccxt-server'
+    ? 'Server'
     : 'Custom';
     
   return {

@@ -19,8 +19,6 @@ import { DataProviderDebugWidget } from '@/components/widgets/DataProviderDebugW
 import NotificationTestWidget from '@/components/NotificationTestWidget';
 import DealsWidget from '@/components/widgets/DealsWidget';
 import { DebugUserData } from '@/components/DebugUserData';
-import { DebugCCXTCache } from '@/components/DebugCCXTCache';
-import { DebugBingXWidget } from '@/components/DebugBingXWidget';
 import { ExchangesWidget } from '@/components/ExchangesWidget';
 import { MarketsWidget } from '@/components/MarketsWidget';
 import { PairsWidget } from '@/components/PairsWidget';
@@ -220,24 +218,6 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     defaultSize: { width: 600, height: 400 },
     showGroupSelector: false,
     Component: adaptComponent(DebugUserData),
-  },
-  {
-    type: 'debugCCXTCache',
-    title: 'Debug CCXT Cache',
-    icon: 'Database',
-    category: 'diagnostics',
-    defaultSize: { width: 700, height: 500 },
-    showGroupSelector: false,
-    Component: adaptComponent(DebugCCXTCache),
-  },
-  {
-    type: 'debugBingX',
-    title: 'Debug BingX',
-    icon: 'Bug',
-    category: 'diagnostics',
-    defaultSize: { width: 700, height: 600 },
-    showGroupSelector: false,
-    Component: adaptComponent(DebugBingXWidget),
   },
   {
     type: 'notificationTest',

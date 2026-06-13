@@ -14,7 +14,7 @@ import { DataProviderType, DataProvider } from '../../types/dataProviders';
 import { Plus, Settings, X, Edit, Save, Trash2 } from 'lucide-react';
 
 interface NewProviderFormData {
-  type: 'ccxt-browser' | 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter';
+  type: 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter';
   name: string;
   exchanges: string[];
   priority?: number;
@@ -35,7 +35,7 @@ const DataProviderSetupWidgetInner: React.FC = () => {
   const { showSuccess, showError } = useNotificationStore();
   
   const [formData, setFormData] = useState<NewProviderFormData>({
-    type: 'ccxt-browser',
+    type: 'ccxt-server',
     name: '',
     exchanges: [],
     timeout: 30000
@@ -102,7 +102,7 @@ const DataProviderSetupWidgetInner: React.FC = () => {
   const startEdit = (provider: DataProvider) => {
     setEditingProviderId(provider.id);
     setEditFormData({
-      type: provider.type as 'ccxt-browser' | 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter',
+      type: provider.type as 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter',
       name: provider.name,
       exchanges: [...provider.exchanges],
       priority: provider.priority,
@@ -179,10 +179,8 @@ const DataProviderSetupWidgetInner: React.FC = () => {
 
     try {
       const config: any = {};
-      
-      if (formData.type === 'ccxt-browser') {
-        config.options = {};
-      } else if (formData.type === 'ccxt-server') {
+
+      if (formData.type === 'ccxt-server') {
         config.serverUrl = formData.serverUrl;
         config.timeout = formData.timeout || 30000;
         config.token = formData.token;
@@ -217,7 +215,7 @@ const DataProviderSetupWidgetInner: React.FC = () => {
       
       // Clear form
       setFormData({
-        type: 'ccxt-browser',
+        type: 'ccxt-server',
         name: '',
         exchanges: [],
         timeout: 30000
@@ -318,20 +316,14 @@ const DataProviderSetupWidgetInner: React.FC = () => {
         {/* Provider type selection */}
           <div className="space-y-2">
             <Label>Provider Type</Label>
-            <Select 
-              value={formData.type} 
-              onValueChange={(value: 'ccxt-browser' | 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter') => handleFormChange('type', value)}
+            <Select
+              value={formData.type}
+              onValueChange={(value: 'ccxt-server' | 'marketmaker.cc' | 'custom-server-with-adapter') => handleFormChange('type', value)}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ccxt-browser">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-medium">CCXT Browser</span>
-                    <span className="text-xs text-green-600 dark:text-green-400">Implemented</span>
-                  </div>
-                </SelectItem>
                 <SelectItem value="ccxt-server">
                   <div className="flex flex-col gap-0.5">
                     <span className="font-medium">CCXT Server</span>
