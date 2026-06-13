@@ -164,6 +164,9 @@ export function TimezoneToggle({
         onClick={cycle}
         onContextMenu={(e) => {
           e.preventDefault();
+          // Don't let the right-click bubble to the terminal's own context menu
+          // (the add-widget menu lives on the page container).
+          e.stopPropagation();
           setOpen((v) => !v);
         }}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full backdrop-blur-sm border text-xs font-medium shadow-lg transition-all cursor-pointer hover:scale-105"
