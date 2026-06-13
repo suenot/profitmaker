@@ -98,6 +98,26 @@ cookie — see the client SSO flow and [docs/remote-control.md](remote-control.m
 | `AUTH_URL` | `https://auth.marketmaker.cc` | Auth service base (JWKS lives at `/.well-known/jwks.json`). Override for dev/staging. |
 | `AUTH_REQUIRED_SERVICE` | _(unset)_ | When set (e.g. `profitmaker`), the JWT must carry a role for that service in its `roles`/`services` claim. Default: any authenticated ecosystem user is allowed. |
 
+The client exposes the same env knob as `VITE_AUTH_URL` (defaults to the public
+auth URL).
+
+**Production smoke test** (run after deploy to app.marketmaker.cc — needs a real
+ecosystem account):
+
+1. Log in at any `*.marketmaker.cc` site (or directly at auth.marketmaker.cc) so
+   the shared `mm_session` cookie is set.
+2. Open `https://app.marketmaker.cc`. The top bar should show your username +
+   logout (not "Login with MarketMaker"); the browser console shows a
+   `GET /api/v1/auth/session → 200`.
+3. Create a dashboard in the UI; confirm it persists per-user (a second
+   ecosystem account sees its own, separate dashboards).
+4. Log out → the chip reverts to the login button and the shared cookie is
+   cleared (you're logged out of the other subdomains too).
+
+Locally this path is verified with a generated RS256 keypair + a mock JWKS
+(`AUTH_URL`/`VITE_AUTH_URL` pointed at the mock): a crafted JWT passes the gate,
+auto-provisions a user, and a forged-key token is rejected with `403`.
+
 ---
 
 ## Real-Time Control Channel
