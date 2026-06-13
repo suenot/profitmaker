@@ -78,7 +78,8 @@ export interface DataActions {
   fetchOrders: (accountId: string, symbol?: string, since?: number, limit?: number) => Promise<any[]>;
   fetchOpenOrders: (accountId: string, symbol?: string) => Promise<any[]>;
   fetchPositions: (accountId: string, symbols?: string[]) => Promise<any[]>;
-  
+  fetchLedger: (accountId: string, code?: string, since?: number, limit?: number) => Promise<any[]>;
+
   // Central store data updates
   updateCandles: (exchange: string, symbol: string, candles: Candle[], timeframe?: Timeframe, market?: MarketType) => void;
   updateTrades: (exchange: string, symbol: string, trades: Trade[], market?: MarketType) => void;
@@ -887,6 +888,29 @@ export const createDataActions: StateCreator<
       fee: trade.fee,
       info: trade.info,
     }));
+  },
+
+  fetchLedger: async (accountId: string, code?: string, since?: number, limit?: number): Promise<any[]> => {
+    const { useUserStore } = await import('../userStore');
+    const { users } = useUserStore.getState();
+    const user = users.find(u => u.accounts.some(acc => acc.id === accountId));
+    const account = user?.accounts.find(acc => acc.id === accountId);
+    if (!account) {
+      throw new Error(`Account ${accountId} not found`);
+    }
+
+    const serverProvider = await getServerTradingProvider(account.exchange, get);
+    if (!serverProvider) {
+      throw new Error(`No CCXT server provider found for exchange: ${account.exchange}`);
+    }
+    const creds = resolveCredentials(accountId, 'read');
+    if (!creds) {
+      throw new Error(`No credentials available for account ${accountId}`);
+    }
+
+    console.log(`🔄 [fetchLedger] Loading ledger for account ${accountId} (${account.exchange}) via server`);
+    const entries = await serverProvider.trading.fetchLedger(creds, account.exchange, code, since, limit);
+    return entries || [];
   },
 
   fetchOrders: async (accountId: string, symbol?: string, since?: number, limit?: number): Promise<any[]> => {

@@ -380,6 +380,26 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     }),
   })
 
+  .post('/fetchLedger', async ({ body, request, set }) => {
+    const { code, since, limit, providerId } = body;
+    const resolved = await resolveAuthedConfig(request, body, 'read', set);
+    if ('error' in resolved) return resolved;
+    const { config } = resolved;
+    if (!body.accountId) { const credErr = requireCreds(config, set); if (credErr) return { error: credErr }; }
+    const { instance, providerId: served } = await resolve(config, providerId);
+    const entries = instance.trading ? await instance.trading.fetchLedger(code, since, limit) : [];
+    return { success: true, provider: served, data: entries };
+  }, {
+    body: t.Object({
+      config: t.Optional(configSchema),
+      code: t.Optional(t.String()),
+      since: t.Optional(t.Number()),
+      limit: t.Optional(t.Number()),
+      ...providerIdField,
+      ...accountIdField,
+    }),
+  })
+
   .onError(({ error, set }) => {
     const message = error instanceof Error ? error.message : 'Unknown error';
     // Map known CCXT/registry errors to appropriate HTTP codes

@@ -55,6 +55,11 @@ function makeCcxtInstance(config: ProviderRequestConfig): ServerProviderInstance
       if (!ex.has?.fetchPositions) return [];
       return ex.fetchPositions(symbols);
     },
+    async fetchLedger(code, since, limit) {
+      const ex = await instanceP;
+      if (!ex.has?.fetchLedger) return [];
+      return ex.fetchLedger(code, since, limit);
+    },
   };
 
   return {

@@ -91,6 +91,8 @@ export interface ServerProviderTrading {
   fetchOrders(symbol?: string, since?: number, limit?: number): Promise<unknown[]>;
   fetchOpenOrders(symbol?: string): Promise<unknown[]>;
   fetchPositions(symbols?: string[]): Promise<unknown[]>;
+  /** Account balance-movement history (deposits/withdrawals/trades/fees/transfers). */
+  fetchLedger(code?: string, since?: number, limit?: number): Promise<unknown[]>;
 }
 
 /**

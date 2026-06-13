@@ -123,6 +123,7 @@ export interface DataProviderActions {
   fetchOrders: (accountId: string, symbol?: string, since?: number, limit?: number) => Promise<any[]>;
   fetchOpenOrders: (accountId: string, symbol?: string) => Promise<any[]>;
   fetchPositions: (accountId: string, symbols?: string[]) => Promise<any[]>;
+  fetchLedger: (accountId: string, code?: string, since?: number, limit?: number) => Promise<any[]>;
 
   // Central store data updates
   updateCandles: (exchange: string, symbol: string, candles: Candle[], timeframe?: Timeframe, market?: MarketType) => void;

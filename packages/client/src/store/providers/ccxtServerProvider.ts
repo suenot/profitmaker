@@ -916,6 +916,14 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
           symbols,
         });
       },
+      async fetchLedger(auth: TradeAuth, exchange: string, code?: string, since?: number, limit?: number) {
+        return self.makeRequest('/api/exchange/fetchLedger', {
+          ...self.authBody(auth, exchange),
+          code,
+          since,
+          limit,
+        });
+      },
     };
   }
 }

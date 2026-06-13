@@ -213,6 +213,7 @@ export interface ProviderTrading {
   fetchOrders(auth: TradeAuth, exchange: string, symbol?: string, since?: number, limit?: number): Promise<any[]>;
   fetchOpenOrders(auth: TradeAuth, exchange: string, symbol?: string): Promise<any[]>;
   fetchPositions(auth: TradeAuth, exchange: string, symbols?: string[]): Promise<any[]>;
+  fetchLedger(auth: TradeAuth, exchange: string, code?: string, since?: number, limit?: number): Promise<any[]>;
 }
 
 // --- tiny provider registry (module-system seam) ---------------------------
