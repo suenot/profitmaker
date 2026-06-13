@@ -8,10 +8,28 @@ import UnknownWidgetPlaceholder from '@/modules/UnknownWidgetPlaceholder';
 import AlignmentGuides from '@/components/AlignmentGuides';
 import { GuideLineType } from '@/types/alignmentGuides';
 import CollapsedWidgetsZone from '@/components/CollapsedWidgetsZone';
+import { TimezoneToggle, timeInTz, type TZValue, TZ_OPTIONS } from '@/components/status/TimezoneToggle';
+
+const TZ_STORAGE_KEY = 'tz';
 
 const TradingTerminal: React.FC = () => {
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  // Timezone for the status-bar clock, controlled here so the clock re-renders
+  // when the shared TimezoneToggle changes it. Persisted under the same key the
+  // toggle uses when uncontrolled, so the two stay in sync across reloads.
+  const [tz, setTz] = useState<TZValue>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(TZ_STORAGE_KEY) as TZValue | null;
+      if (stored && TZ_OPTIONS.some(o => o.value === stored)) return stored;
+    }
+    return 'utc';
+  });
+
+  const handleTzChange = useCallback((next: TZValue) => {
+    setTz(next);
+    if (typeof window !== 'undefined') localStorage.setItem(TZ_STORAGE_KEY, next);
+  }, []);
   
   // Subscribe to dashboard store changes
   const activeDashboardId = useDashboardStore(s => s.activeDashboardId);
@@ -147,12 +165,15 @@ const TradingTerminal: React.FC = () => {
       {/* Collapsed widgets zone */}
       <CollapsedWidgetsZone />
       
-      <div className="fixed bottom-2 right-2 flex items-center text-terminal-muted text-xs bg-terminal-accent/30 px-3 py-1 rounded-md">
-        <span className="mr-2">{currentTime.toLocaleTimeString('ru-RU', { hour12: false })}</span>
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-          <span>Online</span>
+      <div className="fixed bottom-2 right-2 flex items-center gap-2">
+        <div className="flex items-center text-terminal-muted text-xs bg-terminal-accent/30 px-3 py-1 rounded-md">
+          <span className="mr-2 font-mono tabular-nums">{timeInTz(currentTime, tz)}</span>
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+            <span>Online</span>
+          </div>
         </div>
+        <TimezoneToggle value={tz} onChange={handleTzChange} expandOnHover />
       </div>
     </div>
   );
