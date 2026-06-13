@@ -22,11 +22,13 @@ export const UserTradingDataHeaderActions: React.FC<{
 
   const activeUser = users.find(u => u.id === activeUserId);
 
+  // Central accounts: keys live server-side. Every listed account (own or
+  // shared-with-read) is readable via the accountId flow — no client-key gate.
   const accountsWithKeys = useMemo(() => {
     if (!activeUser?.accounts || !Array.isArray(activeUser.accounts)) {
       return [];
     }
-    return activeUser.accounts.filter(acc => acc.key && acc.privateKey);
+    return activeUser.accounts.filter(acc => !!acc.id);
   }, [activeUser?.accounts]);
 
   const hasValidAccounts = accountsWithKeys.length > 0;
@@ -83,11 +85,13 @@ const UserTradingDataWidget: React.FC<UserTradingDataWidgetProps> = ({
   const ordersTabRef = useRef<TabRefreshHandle>(null);
 
   // Get all user accounts with API keys
+  // Central accounts: keys live server-side. Every listed account (own or
+  // shared-with-read) is readable via the accountId flow — no client-key gate.
   const accountsWithKeys = useMemo(() => {
     if (!activeUser?.accounts || !Array.isArray(activeUser.accounts)) {
       return [];
     }
-    return activeUser.accounts.filter(acc => acc.key && acc.privateKey);
+    return activeUser.accounts.filter(acc => !!acc.id);
   }, [activeUser?.accounts]);
 
   const hasValidAccounts = accountsWithKeys.length > 0;
@@ -139,9 +143,9 @@ const UserTradingDataWidget: React.FC<UserTradingDataWidgetProps> = ({
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-4">
         <User className="h-12 w-12 text-terminal-text/80 mb-4" />
-        <h3 className="text-lg font-medium text-terminal-text mb-2">No Active User</h3>
+        <h3 className="text-lg font-medium text-terminal-text mb-2">Not signed in</h3>
         <p className="text-terminal-muted">
-          Please select or create a user account to view trading data
+          Sign in with your MarketMaker account to view trading data
         </p>
       </div>
     );
@@ -151,14 +155,13 @@ const UserTradingDataWidget: React.FC<UserTradingDataWidgetProps> = ({
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-4">
         <BarChart3 className="h-12 w-12 text-terminal-text/80 mb-4" />
-        <h3 className="text-lg font-medium text-terminal-text mb-2">No API Keys Configured</h3>
+        <h3 className="text-lg font-medium text-terminal-text mb-2">No exchange accounts</h3>
         <p className="text-terminal-muted mb-4">
-          Add API keys to your exchange accounts to view trading data
+          Add an exchange account (Accounts panel) to view trading data
         </p>
         <div className="text-sm text-terminal-muted">
-          <p>Current user: {activeUser.email}</p>
+          <p>Current identity: {activeUser.email}</p>
           <p>Accounts: {activeUser.accounts.length}</p>
-          <p>With API keys: {accountsWithKeys.length}</p>
         </div>
       </div>
     );

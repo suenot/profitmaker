@@ -7,6 +7,7 @@ import { start as startSyncBridge } from './services/syncBridge'
 import { bootstrap as bootstrapSso, getSsoToken } from './services/ssoClient'
 import { useSessionStore } from './services/sessionManager'
 import { useDataProviderStore } from './store/dataProviderStore'
+import { initAccounts } from './store/accountStore'
 
 // Populate the widget registry with all built-in widgets, then install the host
 // Terminal API (window.__PROFITMAKER__) — both BEFORE the first render and
@@ -30,6 +31,12 @@ useSessionStore.subscribe(() => {
   }
   hadToken = hasToken;
 });
+
+// Load the active identity's central exchange accounts on startup (and on every
+// identity switch) so the Users/Balances/Trading-Data widgets populate without
+// having to open the Accounts panel first. Covers both a cached session present
+// synchronously on reload and a fresh-login session landed by bootstrap.
+initAccounts();
 
 // Resolve an ecosystem SSO session (shared *.marketmaker.cc cookie) BEFORE the
 // sync bridge connects, so it presents the SSO token. Non-blocking and tolerant

@@ -353,17 +353,30 @@ function readLegacyLocalAccounts(): AddAccountInput[] {
   }
 }
 
-// Keep the derived identity view fresh: when sessions change (add/switch/remove)
-// and the active identity has no loaded accounts yet, fetch them.
-if (typeof window !== 'undefined') {
-  let lastActiveId: string | undefined = getActiveSession()?.id;
-  useSessionStore.subscribe(() => {
+/**
+ * Load the active identity's central accounts on app init, then keep them fresh
+ * across identity changes. Called once from main.tsx (after the SSO bootstrap is
+ * wired). Without this, accounts only loaded on UserDrawer-open / addAccount /
+ * session-CHANGE — so on a normal reload (active session already set, no change
+ * event) accountsBySession stayed empty and balance/trading-data widgets showed
+ * "Accounts: 0". Idempotent: skips an identity whose accounts are already loaded.
+ */
+export function initAccounts(): void {
+  if (typeof window === 'undefined') return;
+
+  let lastActiveId: string | undefined;
+
+  const loadActive = () => {
     const activeId = getActiveSession()?.id;
-    if (activeId && activeId !== lastActiveId) {
-      lastActiveId = activeId;
-      if (!useAccountStore.getState().accountsBySession[activeId]) {
-        void useAccountStore.getState().loadAccounts();
-      }
+    if (!activeId || activeId === lastActiveId) return;
+    lastActiveId = activeId;
+    if (!useAccountStore.getState().accountsBySession[activeId]) {
+      void useAccountStore.getState().loadAccounts();
     }
-  });
+  };
+
+  // Initial load for the session that's already active on startup (the case the
+  // change-only subscribe missed), then on every subsequent add/switch/remove.
+  loadActive();
+  useSessionStore.subscribe(loadActive);
 }

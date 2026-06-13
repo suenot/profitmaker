@@ -18,7 +18,7 @@ vi.mock('../modules/api', () => ({
   resolveServerToken: () => undefined,
 }));
 
-import { useAccountStore, buildUsers, type ExchangeAccount } from './accountStore';
+import { useAccountStore, buildUsers, initAccounts, type ExchangeAccount } from './accountStore';
 import { useSessionStore, upsertSession } from '../services/sessionManager';
 
 // --- helpers ---------------------------------------------------------------
@@ -225,5 +225,42 @@ describe('userStore back-compat projection (buildUsers)', () => {
     expect(users[0].accounts[0].id).toBe('cred-1');
     // identity with no loaded accounts yet → empty array, not undefined
     expect(users[1].accounts).toEqual([]);
+  });
+});
+
+describe('initAccounts (regression: load on init for an already-active session)', () => {
+  // initAccounts is window-guarded (browser-only); provide a window for the test.
+  beforeEach(() => {
+    if (typeof (globalThis as any).window === 'undefined') {
+      (globalThis as any).window = globalThis;
+    }
+  });
+  afterEach(() => {
+    if ((globalThis as any).window === globalThis) delete (globalThis as any).window;
+  });
+
+  test('loads the active identity accounts immediately (no session-CHANGE needed)', async () => {
+    // The session is ALREADY active before init runs — exactly the reload case
+    // where the change-only subscribe never fired and accounts stayed empty.
+    seedActiveSession('u1');
+    moduleFetch.mockResolvedValue(jsonResponse([SERVER_ITEM]));
+
+    initAccounts();
+    // initAccounts kicks off loadAccounts() async; let it settle.
+    await vi.waitFor(() => {
+      expect(useAccountStore.getState().accountsBySession['u1']).toBeDefined();
+    });
+
+    expect(moduleFetch).toHaveBeenCalledWith('/api/accounts', { method: 'GET' });
+    expect(useAccountStore.getState().accountsBySession['u1']).toHaveLength(1);
+  });
+
+  test('does not re-fetch an identity whose accounts are already loaded', async () => {
+    seedActiveSession('u1');
+    useAccountStore.setState({ accountsBySession: { u1: [SERVER_ITEM] } });
+
+    initAccounts();
+    await new Promise((r) => setTimeout(r, 10));
+    expect(moduleFetch).not.toHaveBeenCalled();
   });
 });
