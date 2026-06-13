@@ -2,6 +2,12 @@ import { Elysia, t } from 'elysia';
 import ccxt from 'ccxt';
 import type { ProviderRequestConfig } from '@profitmaker/types';
 import { providerRegistry } from '../providers';
+import { getSsoContextFromRequest } from '../middleware/requireUser';
+import {
+  fetchCredentials,
+  AuthAccountsError,
+  type AccessWant,
+} from '../services/authAccounts';
 
 const configSchema = t.Object({
   exchangeId: t.String(),
@@ -16,6 +22,15 @@ const configSchema = t.Object({
 // Optional explicit provider selection; omitted ⇒ registry picks by priority.
 const providerIdField = { providerId: t.Optional(t.String()) };
 
+// Central-accounts fields, accepted on every authenticated endpoint alongside
+// the legacy inline `config`. When `accountId` is present the server resolves the
+// real keys server-side (browser sends NO secrets); the inline-config path is
+// kept working transitionally for incremental client migration.
+const accountIdField = {
+  accountId: t.Optional(t.String()),
+  want: t.Optional(t.Union([t.Literal('trade'), t.Literal('read')])),
+};
+
 function requireCreds(config: ProviderRequestConfig, set: { status?: number | string }): string | null {
   if (!config.apiKey || !config.secret) {
     set.status = 400;
@@ -27,6 +42,73 @@ function requireCreds(config: ProviderRequestConfig, set: { status?: number | st
 /** Resolve a provider instance for a request, returning it + the resolved id. */
 async function resolve(config: ProviderRequestConfig, providerId?: string) {
   return providerRegistry.resolve(config, providerId);
+}
+
+interface AuthedBody {
+  config: ProviderRequestConfig;
+  accountId?: string;
+  want?: AccessWant;
+}
+
+/**
+ * Build the CCXT request config for an authenticated endpoint, honoring both the
+ * central-accounts path and the legacy inline-secret path.
+ *
+ *  - `accountId` present (preferred): fetch decrypted keys from auth server-side
+ *    at the required access level and merge them into a secret-free `config`. Any
+ *    secrets the client happened to send inline are IGNORED on this path.
+ *  - else: fall back to the inline `config.apiKey/secret/password` (legacy).
+ *
+ * `required` is 'trade' for order placement/cancel and 'read' for private reads.
+ * On the accountId path with required='trade', a read-only/read-grant credential
+ * is refused (403) by fetchCredentials. On the legacy path no central access
+ * decision exists, so the usual `requireCreds` check applies at the call site.
+ *
+ * Returns null on success (writing into `set` on failure), or a config to use.
+ */
+async function resolveAuthedConfig(
+  request: Request,
+  body: AuthedBody,
+  required: AccessWant,
+  set: { status?: number | string },
+): Promise<{ config: ProviderRequestConfig } | { error: string }> {
+  if (body.accountId) {
+    const ctx = await getSsoContextFromRequest(request);
+    if (!ctx) {
+      set.status = 401;
+      return { error: 'SSO authentication required for accountId access' };
+    }
+    // Trading endpoints force want='trade'; reads honor an explicit want but
+    // never need more than 'read'. Never let a body downgrade a trade op.
+    const want: AccessWant = required === 'trade' ? 'trade' : (body.want ?? 'read');
+    try {
+      const creds = await fetchCredentials({
+        ssoUserId: ctx.ssoUserId,
+        credentialId: body.accountId,
+        want,
+      });
+      return {
+        config: {
+          // Strip any inline secrets the client may have sent; trust only the
+          // server-fetched keys on the accountId path.
+          ...body.config,
+          apiKey: creds.apiKey,
+          secret: creds.secret,
+          password: creds.password,
+        },
+      };
+    } catch (err) {
+      if (err instanceof AuthAccountsError) {
+        set.status = err.status;
+        return { error: err.message };
+      }
+      set.status = 502;
+      return { error: 'failed to resolve account credentials' };
+    }
+  }
+
+  // Legacy inline-config path: pass the body config straight through.
+  return { config: body.config };
 }
 
 const configWithSymbol = t.Object({
@@ -53,6 +135,13 @@ const configWithSymbolTimeframeLimit = t.Object({
 const configOnly = t.Object({
   config: configSchema,
   ...providerIdField,
+});
+
+// Like configOnly, but also accepts the central-accounts {accountId, want}.
+const authedConfigOnly = t.Object({
+  config: configSchema,
+  ...providerIdField,
+  ...accountIdField,
 });
 
 export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
@@ -102,13 +191,15 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     return { success: true, provider: served, data: await instance.fetchOHLCV(symbol, timeframe ?? '1m', undefined, limit) };
   }, { body: configWithSymbolTimeframeLimit })
 
-  .post('/fetchBalance', async ({ body, set }) => {
-    const { config, providerId } = body;
-    const credErr = requireCreds(config, set);
-    if (credErr) return { error: credErr };
+  .post('/fetchBalance', async ({ body, request, set }) => {
+    const { providerId } = body;
+    const resolved = await resolveAuthedConfig(request, body, 'read', set);
+    if ('error' in resolved) return resolved;
+    const { config } = resolved;
+    if (!body.accountId) { const credErr = requireCreds(config, set); if (credErr) return { error: credErr }; }
     const { instance, providerId: served } = await resolve(config, providerId);
     return { success: true, provider: served, data: await instance.fetchBalance() };
-  }, { body: configOnly })
+  }, { body: authedConfigOnly })
 
   .post('/capabilities', async ({ body }) => {
     const { config, providerId } = body;
@@ -129,10 +220,13 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
 
   // --- authenticated trading (credentials travel in `config`) --------------
 
-  .post('/createOrder', async ({ body, set }) => {
-    const { config, symbol, type, side, amount, price, params, providerId } = body;
-    const credErr = requireCreds(config, set);
-    if (credErr) return { error: credErr };
+  .post('/createOrder', async ({ body, request, set }) => {
+    const { symbol, type, side, amount, price, params, providerId } = body;
+    // Trade-level: accountId path forces want='trade' and 403s on read-only.
+    const resolved = await resolveAuthedConfig(request, body, 'trade', set);
+    if ('error' in resolved) return resolved;
+    const { config } = resolved;
+    if (!body.accountId) { const credErr = requireCreds(config, set); if (credErr) return { error: credErr }; }
     const { instance, providerId: served } = await resolve(config, providerId);
     if (!instance.trading) { set.status = 400; return { error: `provider '${served}' has no trading support` }; }
     const order = await instance.trading.createOrder(symbol, type, side, amount, price, params || {});
@@ -147,13 +241,16 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
       price: t.Optional(t.Number()),
       params: t.Optional(t.Record(t.String(), t.Any())),
       ...providerIdField,
+      ...accountIdField,
     }),
   })
 
-  .post('/cancelOrder', async ({ body, set }) => {
-    const { config, orderId, symbol, providerId } = body;
-    const credErr = requireCreds(config, set);
-    if (credErr) return { error: credErr };
+  .post('/cancelOrder', async ({ body, request, set }) => {
+    const { orderId, symbol, providerId } = body;
+    const resolved = await resolveAuthedConfig(request, body, 'trade', set);
+    if ('error' in resolved) return resolved;
+    const { config } = resolved;
+    if (!body.accountId) { const credErr = requireCreds(config, set); if (credErr) return { error: credErr }; }
     const { instance, providerId: served } = await resolve(config, providerId);
     if (!instance.trading) { set.status = 400; return { error: `provider '${served}' has no trading support` }; }
     return { success: true, provider: served, data: await instance.trading.cancelOrder(orderId, symbol) };
@@ -163,13 +260,16 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
       orderId: t.String(),
       symbol: t.String(),
       ...providerIdField,
+      ...accountIdField,
     }),
   })
 
-  .post('/fetchMyTrades', async ({ body, set }) => {
-    const { config, symbol, since, limit, providerId } = body;
-    const credErr = requireCreds(config, set);
-    if (credErr) return { error: credErr };
+  .post('/fetchMyTrades', async ({ body, request, set }) => {
+    const { symbol, since, limit, providerId } = body;
+    const resolved = await resolveAuthedConfig(request, body, 'read', set);
+    if ('error' in resolved) return resolved;
+    const { config } = resolved;
+    if (!body.accountId) { const credErr = requireCreds(config, set); if (credErr) return { error: credErr }; }
     const { instance, providerId: served } = await resolve(config, providerId);
     const trades = instance.trading ? await instance.trading.fetchMyTrades(symbol, since, limit) : [];
     return { success: true, provider: served, data: trades };
@@ -180,13 +280,16 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
       since: t.Optional(t.Number()),
       limit: t.Optional(t.Number()),
       ...providerIdField,
+      ...accountIdField,
     }),
   })
 
-  .post('/fetchOrders', async ({ body, set }) => {
-    const { config, symbol, since, limit, providerId } = body;
-    const credErr = requireCreds(config, set);
-    if (credErr) return { error: credErr };
+  .post('/fetchOrders', async ({ body, request, set }) => {
+    const { symbol, since, limit, providerId } = body;
+    const resolved = await resolveAuthedConfig(request, body, 'read', set);
+    if ('error' in resolved) return resolved;
+    const { config } = resolved;
+    if (!body.accountId) { const credErr = requireCreds(config, set); if (credErr) return { error: credErr }; }
     const { instance, providerId: served } = await resolve(config, providerId);
     const orders = instance.trading ? await instance.trading.fetchOrders(symbol, since, limit) : [];
     return { success: true, provider: served, data: orders };
@@ -197,13 +300,16 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
       since: t.Optional(t.Number()),
       limit: t.Optional(t.Number()),
       ...providerIdField,
+      ...accountIdField,
     }),
   })
 
-  .post('/fetchOpenOrders', async ({ body, set }) => {
-    const { config, symbol, providerId } = body;
-    const credErr = requireCreds(config, set);
-    if (credErr) return { error: credErr };
+  .post('/fetchOpenOrders', async ({ body, request, set }) => {
+    const { symbol, providerId } = body;
+    const resolved = await resolveAuthedConfig(request, body, 'read', set);
+    if ('error' in resolved) return resolved;
+    const { config } = resolved;
+    if (!body.accountId) { const credErr = requireCreds(config, set); if (credErr) return { error: credErr }; }
     const { instance, providerId: served } = await resolve(config, providerId);
     const orders = instance.trading ? await instance.trading.fetchOpenOrders(symbol) : [];
     return { success: true, provider: served, data: orders };
@@ -212,13 +318,16 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
       config: configSchema,
       symbol: t.Optional(t.String()),
       ...providerIdField,
+      ...accountIdField,
     }),
   })
 
-  .post('/fetchPositions', async ({ body, set }) => {
-    const { config, symbols, providerId } = body;
-    const credErr = requireCreds(config, set);
-    if (credErr) return { error: credErr };
+  .post('/fetchPositions', async ({ body, request, set }) => {
+    const { symbols, providerId } = body;
+    const resolved = await resolveAuthedConfig(request, body, 'read', set);
+    if ('error' in resolved) return resolved;
+    const { config } = resolved;
+    if (!body.accountId) { const credErr = requireCreds(config, set); if (credErr) return { error: credErr }; }
     const { instance, providerId: served } = await resolve(config, providerId);
     const positions = instance.trading ? await instance.trading.fetchPositions(symbols) : [];
     return { success: true, provider: served, data: positions };
@@ -227,6 +336,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
       config: configSchema,
       symbols: t.Optional(t.Array(t.String())),
       ...providerIdField,
+      ...accountIdField,
     }),
   })
 
