@@ -39,6 +39,10 @@ from the backend** — REST mutations stream to open browsers in real time, and
 UI verbs (switch tab, focus widget, read UI state) are executable over an API.
 Run `bun scripts/control-demo.ts` to see it end to end.
 
+AI agents drive the terminal over **MCP**, and humans/scripts over a
+**`profitmaker` CLI** — both on one shared command registry (31 tools). See
+[docs/mcp.md](docs/mcp.md) and [docs/cli.md](docs/cli.md).
+
 ---
 
 ## Tech Stack

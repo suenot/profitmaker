@@ -10,6 +10,11 @@ operate a live trading workspace with no human in the loop.
 This is the control surface. It is the companion to the data/CRUD reference in
 [server-api.md](server-api.md); read that for the full endpoint list.
 
+For agents and scripts, the surface below is also wrapped in a shared command
+registry: **MCP tools** for AI agents ([mcp.md](mcp.md)) and a **`profitmaker`
+CLI** for the shell ([cli.md](cli.md)) — both call exactly the endpoints
+described here. Prefer those over raw `curl` when you can.
+
 ## How it works
 
 ```
