@@ -513,9 +513,12 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
       // WebSocket методы - настоящие WebSocket соединения
       async watchTicker(symbol: string, onData?: (data: any) => void, onError?: (error: any) => void): Promise<string> {
         if (!onData) {
-          // Если нет callback, возвращаем одноразовые данные
+          // No callback => one-shot REST poll. makeRequest already unwraps the
+          // server envelope ({success,data} -> data), so return it directly.
+          // Reading `.data` here double-unwraps to undefined and silently drops
+          // every poll, freezing the UI after the initial REST seed.
           const response = await self.makeRequest('/api/exchange/watchTicker', { config, symbol });
-          return response.data;
+          return response;
         }
 
         // Подписываемся на WebSocket поток
@@ -531,8 +534,9 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
 
       async watchOrderBook(symbol: string, limit?: number, onData?: (data: any) => void, onError?: (error: any) => void): Promise<string> {
         if (!onData) {
+          // One-shot REST poll: makeRequest already unwrapped the envelope.
           const response = await self.makeRequest('/api/exchange/watchOrderBook', { config, symbol, limit });
-          return response.data;
+          return response;
         }
 
         return self.subscribeWebSocket(
@@ -547,8 +551,9 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
 
       async watchTrades(symbol: string, onData?: (data: any) => void, onError?: (error: any) => void): Promise<string> {
         if (!onData) {
+          // One-shot REST poll: makeRequest already unwrapped the envelope.
           const response = await self.makeRequest('/api/exchange/watchTrades', { config, symbol });
-          return response.data;
+          return response;
         }
 
         return self.subscribeWebSocket(
@@ -563,8 +568,9 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
 
       async watchOHLCV(symbol: string, timeframe: string, onData?: (data: any) => void, onError?: (error: any) => void): Promise<string> {
         if (!onData) {
+          // One-shot REST poll: makeRequest already unwrapped the envelope.
           const response = await self.makeRequest('/api/exchange/watchOHLCV', { config, symbol, timeframe });
-          return response.data;
+          return response;
         }
 
         return self.subscribeWebSocket(
@@ -580,8 +586,9 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
 
       async watchBalance(onData?: (data: any) => void, onError?: (error: any) => void): Promise<string> {
         if (!onData) {
+          // One-shot REST poll: makeRequest already unwrapped the envelope.
           const response = await self.makeRequest('/api/exchange/watchBalance', { config });
-          return response.data;
+          return response;
         }
 
         return self.subscribeWebSocket(
