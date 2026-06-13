@@ -260,6 +260,13 @@ export interface SubscriptionKey {
   market?: MarketType; // Тип рынка (spot/futures)
 }
 
+export interface SubscriptionConfig {
+  providerId?: string; // Force a specific provider instead of auto-selection
+  isAggregated?: boolean; // для trades: использовать ли aggregate режим
+  tradesLimit?: number; // для trades: лимит количества
+  [key: string]: any; // дополнительные параметры
+}
+
 export interface ActiveSubscription {
   key: SubscriptionKey;
   subscriberCount: number;
@@ -271,11 +278,7 @@ export interface ActiveSubscription {
   wsConnection?: WebSocket; // для WebSocket соединений
   ccxtMethod?: string; // какой именно CCXT метод используется (watchOrderBook, watchBidsAsks, etc.)
   providerId?: string; // ID провайдера обслуживающего эту подписку
-  config?: {
-    isAggregated?: boolean; // для trades: использовать ли aggregate режим
-    tradesLimit?: number; // для trades: лимит количества
-    [key: string]: any; // дополнительные параметры
-  };
+  config?: SubscriptionConfig;
 }
 
 // CCXT specific types

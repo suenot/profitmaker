@@ -21,6 +21,7 @@ import { moduleManager } from './modules/manager';
 import { cleanupCache } from './services/ccxtCache';
 import { validateSession, deleteExpiredSessions } from './services/auth';
 import { getBootstrapUser } from './services/bootstrapUser';
+import { getSsoUserFromToken } from './services/ssoAuth';
 import { setStateEventsIO, userRoom } from './services/stateEvents';
 import { setUiCommandsIO, registerUiCommandSocket } from './services/uiCommands';
 import { db } from './db';
@@ -76,9 +77,13 @@ const app = new Elysia()
     // Allow server-to-server API_TOKEN
     if (token === API_TOKEN) return;
 
-    // Allow valid user session token
+    // Allow valid local user session token
     const user = await validateSession(db, token);
     if (user) return;
+
+    // Allow a valid SSO JWT from auth.marketmaker.cc (verified via public JWKS).
+    const ssoUser = await getSsoUserFromToken(token);
+    if (ssoUser) return;
 
     set.status = 403;
     return { error: 'Invalid token' };
@@ -162,16 +167,17 @@ io.on('connection', (socket) => {
   registerUiCommandSocket(socket);
 
   socket.on('authenticate', async (data) => {
-    // Resolve the caller to a user: a bare API_TOKEN maps to the bootstrap
-    // user; otherwise the token must be a valid session. On success the socket
-    // joins that user's room so it receives state:changed / ui:command events.
+    // Resolve the caller to a user (same order as the HTTP gate): a bare
+    // API_TOKEN maps to the bootstrap user; else a valid local session; else a
+    // valid SSO JWT from auth.marketmaker.cc. On success the socket joins that
+    // user's room so it receives state:changed / ui:command events.
     let userId: string | null = null;
     try {
       if (data?.token === API_TOKEN) {
         userId = (await getBootstrapUser()).id;
       } else if (typeof data?.token === 'string') {
-        const user = await validateSession(db, data.token);
-        userId = user?.id ?? null;
+        const session = await validateSession(db, data.token);
+        userId = session?.id ?? (await getSsoUserFromToken(data.token))?.id ?? null;
       }
     } catch (err) {
       console.error('[socket] authenticate failed:', err);

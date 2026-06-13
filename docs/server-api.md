@@ -75,6 +75,29 @@ curl -X POST http://localhost:3001/api/dashboards \
 
 Real session tokens continue to work unchanged and are scoped to their own user.
 
+### Ecosystem SSO (auth.marketmaker.cc)
+
+profitmaker also accepts **SSO tokens** from the MarketMaker ecosystem auth
+service. A bearer token resolves in this order: `API_TOKEN` (→ bootstrap user) →
+local session token → **SSO JWT**. SSO JWTs are RS256, verified against the
+service's **public JWKS** (`https://auth.marketmaker.cc/.well-known/jwks.json`) —
+no shared secret is needed or stored. On first SSO login a local user row is
+auto-provisioned (keyed by the token's email), so each ecosystem user gets their
+own dashboards/widgets/groups.
+
+```bash
+# A valid SSO JWT works on every user-scoped route, just like a session token.
+curl http://localhost:3001/api/dashboards -H "Authorization: Bearer <sso-jwt>"
+```
+
+The browser obtains the JWT silently via the shared `*.marketmaker.cc` session
+cookie — see the client SSO flow and [docs/remote-control.md](remote-control.md).
+
+| Env var | Default | Meaning |
+|---------|---------|---------|
+| `AUTH_URL` | `https://auth.marketmaker.cc` | Auth service base (JWKS lives at `/.well-known/jwks.json`). Override for dev/staging. |
+| `AUTH_REQUIRED_SERVICE` | _(unset)_ | When set (e.g. `profitmaker`), the JWT must carry a role for that service in its `roles`/`services` claim. Default: any authenticated ecosystem user is allowed. |
+
 ---
 
 ## Real-Time Control Channel
