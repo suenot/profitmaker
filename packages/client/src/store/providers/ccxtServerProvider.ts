@@ -222,24 +222,19 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
 
       this.socket.on('connect', () => {
         console.log(`✅ [CCXTServer] WebSocket connected`);
-
-        // Authenticate with the live token (SSO session preferred).
-        const token = this.authToken();
-        if (token) {
-          this.socket!.emit('authenticate', { token });
-        } else {
-          resolve(this.socket!);
-        }
-      });
-
-      this.socket.on('authenticated', () => {
-        console.log(`🔐 [CCXTServer] WebSocket authenticated`);
+        // Market data is PUBLIC — do NOT authenticate this socket. The server
+        // allows public `subscribe`; gating the stream on auth froze the
+        // orderbook/chart whenever the SSO token was missing or stale at connect
+        // time (an empty/invalid `authenticate` makes the server drop the socket).
+        // Resolve immediately so subscriptions proceed regardless of auth state.
         resolve(this.socket!);
       });
 
+      // Auth events are unused for the public market-data socket. NEVER reject on
+      // auth_error here — doing so tears down public market data. (Private data
+      // goes through the authenticated REST/accountId path, not this socket.)
       this.socket.on('auth_error', (error) => {
-        console.error(`❌ [CCXTServer] WebSocket auth error:`, error);
-        reject(new Error(`Authentication failed: ${error.error}`));
+        console.warn(`⚠️ [CCXTServer] WS auth_error ignored (market data is public):`, error);
       });
 
       this.socket.on('connect_error', (error) => {
