@@ -362,9 +362,15 @@ Body: { "status": "disconnected", "priority": 100 }
 
 # Delete provider
 DELETE /api/providers/:id
+
+# List server-side providers registered in the provider registry (read-only):
+# the built-in 'ccxt' plus any module-supplied providers.
+GET /api/providers/available
+# -> { success, data: [{ id, displayName, exchanges, priority, fromModule? }] }
 ```
 
-Provider types: `ccxt-browser`, `ccxt-server`, `marketmaker.cc`, `custom-server-with-adapter`.
+Per-user provider types: `ccxt-server`, `marketmaker.cc`, `custom-server-with-adapter`
+(the `ccxt-browser` type was removed in Stage 2 — all data goes through the server).
 
 ---
 
@@ -378,16 +384,25 @@ All require a `config` object specifying the exchange:
 { "exchangeId": "binance", "marketType": "spot", "ccxtType": "regular" }
 ```
 
+These dispatch through the **server provider registry**. Every response includes
+a `provider` field naming the provider that served it (e.g. `"ccxt"`). Pass an
+optional top-level `providerId` to force a specific provider; omitted, the
+registry picks the lowest-`priority` provider supporting the exchange.
+
 | Endpoint | Body | Description |
 |----------|------|-------------|
-| `POST /api/exchange/instance` | `{ config }` | Create/get cached CCXT instance |
-| `POST /api/exchange/fetchTicker` | `{ config, symbol }` | Fetch ticker |
-| `POST /api/exchange/fetchOrderBook` | `{ config, symbol, limit? }` | Fetch order book |
-| `POST /api/exchange/fetchTrades` | `{ config, symbol, limit? }` | Fetch trades |
-| `POST /api/exchange/fetchOHLCV` | `{ config, symbol, timeframe?, limit? }` | Fetch candles |
-| `POST /api/exchange/fetchBalance` | `{ config }` | Fetch balance (requires API keys) |
-| `POST /api/exchange/capabilities` | `{ config }` | Get exchange features |
-| `POST /api/exchange/watch*` | `{ config, symbol }` | CCXT Pro WebSocket (requires `ccxtType: "pro"`) |
+| `GET /api/exchange/list` | — | All exchange ids CCXT knows |
+| `POST /api/exchange/instance` | `{ config }` | Create/get cached provider instance |
+| `POST /api/exchange/fetchTicker` | `{ config, symbol, providerId? }` | Fetch ticker |
+| `POST /api/exchange/fetchOrderBook` | `{ config, symbol, limit?, providerId? }` | Fetch order book |
+| `POST /api/exchange/fetchTrades` | `{ config, symbol, limit?, providerId? }` | Fetch trades |
+| `POST /api/exchange/fetchOHLCV` | `{ config, symbol, timeframe?, limit?, providerId? }` | Fetch candles |
+| `POST /api/exchange/fetchBalance` | `{ config, providerId? }` | Fetch balance (requires API keys in `config`) |
+| `POST /api/exchange/capabilities` | `{ config, providerId? }` | Get exchange features |
+| `POST /api/exchange/market` | `{ config, symbol, providerId? }` | One market's metadata (limits/precision) |
+| `POST /api/exchange/createOrder` | `{ config, symbol, type, side, amount, price?, params?, providerId? }` | Place order (creds in `config`) |
+| `POST /api/exchange/cancelOrder` | `{ config, orderId, symbol, providerId? }` | Cancel order |
+| `POST /api/exchange/fetchMyTrades` / `fetchOrders` / `fetchOpenOrders` / `fetchPositions` | `{ config, ..., providerId? }` | Authenticated reads |
 | `POST /api/proxy/request` | `{ url, method?, headers?, body?, timeout? }` | CORS proxy |
 
 ### WebSocket (Socket.IO)
@@ -402,7 +417,8 @@ socket.on('authenticated', () => {
     exchangeId: 'binance',
     symbol: 'BTC/USDT',
     dataType: 'trades',  // ticker | trades | orderbook | ohlcv | balance
-    config: { exchangeId: 'binance', marketType: 'spot', ccxtType: 'pro' }
+    config: { exchangeId: 'binance', marketType: 'spot', ccxtType: 'pro' },
+    providerId: 'ccxt'   // optional; omit to resolve by priority
   });
 });
 socket.on('data', (msg) => console.log(msg.dataType, msg.data));

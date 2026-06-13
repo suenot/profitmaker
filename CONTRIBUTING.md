@@ -21,9 +21,9 @@ bun server:dev   # Server on port 3001 (optional)
 
 ```
 packages/
-├── types/    # @profitmaker/types -- shared TypeScript types
-├── core/     # @profitmaker/core -- CCXT wrappers, encryption, formatters
-├── server/   # @profitmaker/server -- Express + Socket.IO backend
+├── types/    # @profitmaker/types -- shared TypeScript types (incl. provider contracts)
+├── sdk/      # @profitmaker/module-sdk -- module SDK (widget/manifest/runtime)
+├── server/   # @profitmaker/server -- Elysia (Bun) + Socket.IO backend (+ provider registry)
 └── client/   # @profitmaker/client -- React + Vite frontend (widgets, stores, UI)
 ```
 

@@ -6,32 +6,32 @@ Profitmaker v3 is a Bun workspace monorepo:
 
 ```
 packages/
-├── types/    @profitmaker/types        Shared TypeScript types, Zod schemas
-├── core/     @profitmaker/core         CCXT providers, encryption, formatters, utils
+├── types/    @profitmaker/types        Shared TypeScript types, Zod schemas (incl. provider contracts)
 ├── sdk/      @profitmaker/module-sdk    Module SDK: TerminalAPI types, manifest schema, vite preset, runtime shims
-├── server/   @profitmaker/server       Express 5 + Socket.IO backend (+ module manager)
+├── server/   @profitmaker/server       Elysia (Bun) + Socket.IO backend (+ provider registry, module manager)
 └── client/   @profitmaker/client       React 18 + Vite frontend (+ widget registry, module runtime)
 ```
+
+> `@profitmaker/core` was removed in Stage 2 (zero imports); shared logic/types
+> moved into `@profitmaker/types` or the relevant package.
 
 ### Dependency Graph
 
 ```
 @profitmaker/client
-  ├── @profitmaker/core
-  │     └── @profitmaker/types
+  ├── @profitmaker/types
   └── @profitmaker/module-sdk
         └── @profitmaker/types
 
 @profitmaker/server
-  ├── @profitmaker/core
   ├── @profitmaker/module-sdk
   └── @profitmaker/types
 ```
 
-Both client and server depend on core and types. Cross-package imports use workspace protocol:
+Both client and server depend on types. Cross-package imports use the workspace protocol:
 
 ```json
-// packages/core/package.json
+// packages/client/package.json
 "dependencies": {
   "@profitmaker/types": "workspace:*"
 }
@@ -50,10 +50,10 @@ Both client and server depend on core and types. Cross-package imports use works
 | Routing | TanStack Router | 1.x |
 | Charts | Night Vision (OHLCV), Recharts (pie/bar) | -- |
 | Exchange API | CCXT (REST + WebSocket Pro) | 4.4 |
-| Backend | Express | 5.1 |
+| Backend | Elysia (Bun) | 1.3 |
 | Realtime | Socket.IO | 4.8 |
 | Encryption | Web Crypto API (AES-256-GCM) | -- |
-| Testing | Vitest (client), bun:test (core) | -- |
+| Testing | Vitest (client), bun:test (server) | -- |
 | Virtualization | TanStack Virtual | 3.x |
 
 ## Package Details
@@ -85,27 +85,19 @@ Key exports:
 - `runtime/*` -- shims that alias a module's `react`/`react-dom`/`zustand`/SDK
   imports to the host singletons on `window.__PROFITMAKER__`
 
-### @profitmaker/core
-
-Business logic shared between client and server.
-
-Key exports:
-- `CCXTBrowserProviderImpl` -- CCXT running in the browser
-- `CCXTServerProviderImpl` -- CCXT proxied through Express server
-- `ccxtInstanceManager` -- caches and manages exchange instances
-- `ccxtAccountManager` -- maps user accounts to exchange instances
-- `encryption` -- AES-256-GCM encryption utilities
-- `formatters` -- price, volume, percentage formatting
-- `exchangeLimits` -- rate limit management per exchange
-- `webSocketUtils` -- WebSocket connection helpers
+> **Removed in Stage 2:** `@profitmaker/core` and the browser CCXT path. There is
+> no `window.ccxt` / CDN bundle anymore — all market data and trading go through
+> the server. Shared types now live in `@profitmaker/types`; client type files
+> re-export from it.
 
 ### @profitmaker/server
 
-Express 5 server with:
-- REST endpoints for CCXT operations (`/api/exchange/*`)
+Elysia (on Bun) server with:
+- REST endpoints for market-data/trading operations (`/api/exchange/*`),
+  dispatched through the **server provider registry** (see below)
 - Socket.IO server for real-time data streaming
-- CCXT instance caching (24h TTL, auto-cleanup every 10min)
-- Bearer token authentication
+- Provider instance caching (24h TTL, auto-cleanup every 10min)
+- Bearer token / session / SSO authentication
 - CORS proxy for exchanges that block browser requests
 
 ### @profitmaker/client
@@ -114,33 +106,43 @@ React SPA with:
 - Vite dev server on port 8080
 - Free-form dashboard with draggable, resizable widgets
 - Zustand stores persisted to localStorage
-- Multiple data provider support (browser CCXT, server CCXT)
+- A single data path: the `ccxt-server` provider (default `primary-server`),
+  gated by `BackendGate` (health-checked; first-run `ConnectionScreen`)
 - Widget grouping system (shared exchange/symbol context)
+
+## Server provider registry
+
+The server serves data/trading through a pluggable **provider registry**, not a
+hardcoded CCXT call, so the terminal can offer more than one backend (the
+built-in `ccxt`, or a module-supplied provider such as a Rust napi binding).
+
+```
+ServerProviderFactory { id, displayName, supportedExchanges, priority, create() }
+  -> registered at boot ('ccxt', priority 100, all exchanges)
+  -> or by a module via ctx.providers.register() (auto-unregistered on stop)
+
+registry.resolve(exchange, providerId?)
+  -> explicit providerId, else lowest-priority factory supporting the exchange
+  -> create(config) -> ServerProviderInstance (per request config)
+```
+
+`/api/exchange/*` and the Socket.IO watch loop both dispatch through
+`registry.resolve()`. Requests may pass an optional `providerId`; responses
+echo the resolved provider in a `provider` field. `GET /api/providers/available`
+lists the registered providers. See [modules.md](./modules.md#provider-modules).
 
 ## Data Flow
 
-### Market Data (Browser Provider)
+### Market Data (REST)
 
 ```
 User opens widget
   -> Widget subscribes via dataProviderStore.subscribe()
-  -> Store finds best provider for exchange
-  -> CCXTBrowserProviderImpl creates/reuses exchange instance
-  -> CCXT fetches data directly from exchange API
-  -> Data stored in dataProviderStore.marketData
-  -> Widget reads from store, re-renders
-```
-
-### Market Data (Server Provider)
-
-```
-User opens widget
-  -> Widget subscribes via dataProviderStore.subscribe()
-  -> Store finds server provider for exchange
-  -> CCXTServerProviderImpl sends HTTP POST to Express server
-  -> Server creates/reuses CCXT instance
-  -> CCXT fetches data from exchange API (no CORS issues)
-  -> Response sent back to browser
+  -> Store selects the ccxt-server provider for the exchange
+  -> CCXTServerProviderImpl sends HTTP POST to the server (/api/exchange/*)
+  -> Server registry.resolve(exchange, providerId?) -> provider instance
+  -> Provider fetches data (built-in ccxt, or a module provider)
+  -> Response (with `provider` field) sent back to the browser
   -> Data stored in dataProviderStore.marketData
   -> Widget reads from store, re-renders
 ```
@@ -150,8 +152,8 @@ User opens widget
 ```
 Client connects to Socket.IO server
   -> Client sends 'authenticate' event with token
-  -> Client sends 'subscribe' event (exchange, symbol, dataType)
-  -> Server creates CCXT Pro WebSocket subscription
+  -> Client sends 'subscribe' event (exchange, symbol, dataType, providerId?)
+  -> Server resolves the provider via the registry and starts a watch loop
   -> Server emits 'data' events to client
   -> Client updates dataProviderStore
   -> Widgets re-render with live data

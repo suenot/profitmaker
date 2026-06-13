@@ -16,7 +16,18 @@ A module may ship a **frontend** (a widget bundle), a **backend** (an Elysia
 plugin + background services), or both. The host:
 - mounts the backend plugin under `/api/modules/<id>` (auth-protected),
 - serves the frontend bundle at `/modules/<id>/bundle.js` (public),
-- gives the backend a `BackendModuleContext` (log, storage, jobs, io, ccxt).
+- gives the backend a `BackendModuleContext` (log, storage, jobs, io, ccxt, providers).
+
+### Module flavors
+
+- **Widget module** — ships a frontend bundle with one or more widgets.
+- **Backend/service module** — ships backend routes + background jobs (this
+  template's `example`).
+- **Provider module** — registers a server-side data/trading provider via
+  `ctx.providers.register(factory)`, so the terminal can serve market data from
+  something other than the built-in `ccxt` (including a native napi/Rust binding).
+  Declares the `provider` permission. See `examples/provider-module` and
+  `docs/modules.md` → *Provider modules*. A module can combine flavors.
 
 ## 1. Scaffold
 

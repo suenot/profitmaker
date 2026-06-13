@@ -1,0 +1,29 @@
+{
+  "name": "profitmaker-module-mock-provider",
+  "version": "0.1.0",
+  "description": "Example Profitmaker module that registers a server-side mock data provider",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["profitmaker-module"],
+  "files": ["dist", "package.json", "README.md"],
+  "scripts": {
+    "build": "bun build src/backend/index.ts --target=bun --outdir dist/backend",
+    "typecheck": "tsc --noEmit"
+  },
+  "profitmaker": {
+    "manifestVersion": 1,
+    "id": "mock-provider",
+    "displayName": "Mock Provider",
+    "description": "Registers a server-side 'mock' data provider (static/random data) to demonstrate ctx.providers.register.",
+    "minTerminalApi": ">=1.0.0",
+    "permissions": ["provider", "market-data"],
+    "backend": {
+      "entry": "dist/backend/index.js",
+      "services": ["mock-provider"]
+    }
+  },
+  "devDependencies": {
+    "@profitmaker/module-sdk": "workspace:*",
+    "typescript": "^5.5.3"
+  }
+}
