@@ -12,9 +12,6 @@ import NotFound from "./pages/NotFound";
 import BackendGate from './components/BackendGate';
 import BottomLeftInfo from './components/BottomLeftInfo';
 import RightClickInfo from './components/RightClickInfo';
-import { TestChartWidget } from './components/TestChartWidget';
-import TestCCXTServerProvider from './components/TestCCXTServerProvider';
-import TestDebugWidgetCCXTServer from './components/TestDebugWidgetCCXTServer';
 import WidgetSettingsManager from './components/WidgetSettingsManager';
 import { MasterPasswordDialog } from './components/MasterPasswordDialog';
 
@@ -36,9 +33,6 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<BackendGate><Index /></BackendGate>} />
-            <Route path="/test-chart" element={<TestChartWidget />} />
-            <Route path="/test-ccxt-server" element={<TestCCXTServerProvider />} />
-            <Route path="/test-debug-ccxt-server" element={<TestDebugWidgetCCXTServer />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
