@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useGroupStore } from '@/store/groupStore';
-import { Bug, ChevronRight, Package } from 'lucide-react';
+import { Bug, ChevronRight, Package, BookOpen } from 'lucide-react';
 import { useWidgetRegistry } from '@/modules/registry';
 import { resolveIcon } from '@/modules/resolveIcon';
 import type { BuiltinWidgetDefinition } from '@/modules/builtinWidgets';
@@ -215,6 +215,21 @@ const WidgetMenu: React.FC<WidgetMenuProps> = ({ position, onClose }) => {
     handleAddWidget(MODULE_STORE_TYPE);
   };
 
+  // API & Agents docs — also a 'system' widget, so it gets its own dedicated
+  // entry. Open it, or focus an existing instance on the active dashboard.
+  const DOCS_TYPE = 'system.docs';
+  const handleOpenDocs = () => {
+    if (!activeDashboardId) return;
+    const dashboard = getActiveDashboard();
+    const existing = dashboard?.widgets.find(w => w.type === DOCS_TYPE);
+    if (existing) {
+      bringWidgetToFront(activeDashboardId, existing.id);
+      onClose();
+      return;
+    }
+    handleAddWidget(DOCS_TYPE);
+  };
+
   // Handle diagnostics menu visibility with hover delay
   const handleDiagnosticsMouseEnter = useCallback(() => {
     // Clear any existing timeout
@@ -368,8 +383,8 @@ const WidgetMenu: React.FC<WidgetMenuProps> = ({ position, onClose }) => {
             </button>
           </div>
 
-          {/* Module Store — dedicated entry point (system widget, not a category) */}
-          <div className="mt-2 pt-2 border-t border-terminal-border/50">
+          {/* Module Store + API & Agents — dedicated entry points (system widgets, not categories) */}
+          <div className="mt-2 pt-2 border-t border-terminal-border/50 space-y-1">
             <button
               className="group flex items-center w-full space-x-3 px-3 py-2 rounded-md transition-all duration-200 text-left text-sm text-terminal-text hover:text-terminal-text hover:bg-terminal-accent/60 active:bg-terminal-accent/80 hover:shadow-sm"
               onClick={handleOpenModuleStore}
@@ -378,6 +393,15 @@ const WidgetMenu: React.FC<WidgetMenuProps> = ({ position, onClose }) => {
                 <Package size={16} />
               </span>
               <span className="transition-colors duration-200">Module Store</span>
+            </button>
+            <button
+              className="group flex items-center w-full space-x-3 px-3 py-2 rounded-md transition-all duration-200 text-left text-sm text-terminal-text hover:text-terminal-text hover:bg-terminal-accent/60 active:bg-terminal-accent/80 hover:shadow-sm"
+              onClick={handleOpenDocs}
+            >
+              <span className="text-terminal-muted group-hover:text-terminal-text transition-colors duration-200">
+                <BookOpen size={16} />
+              </span>
+              <span className="transition-colors duration-200">API &amp; Agents</span>
             </button>
           </div>
         </div>

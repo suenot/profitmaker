@@ -2,6 +2,7 @@ import React from 'react';
 import type { WidgetDefinition, WidgetProps, WidgetSettingsProps } from '@profitmaker/module-sdk';
 import { useWidgetRegistry } from './registry';
 import ModuleStoreWidget from './ModuleStoreWidget';
+import DocsWidget from './DocsWidget';
 
 // Built-in widget components (props: { widgetId, selectedGroupId }).
 import ChartWidget from '@/components/widgets/Chart';
@@ -238,6 +239,16 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     defaultSize: { width: 700, height: 550 },
     showGroupSelector: false,
     Component: ModuleStoreWidget as React.ComponentType<WidgetProps>,
+  },
+  {
+    // API & Agents — in-app reference for driving the terminal via REST/CLI/MCP.
+    type: 'system.docs',
+    title: 'API & Agents',
+    icon: 'BookOpen',
+    category: 'system',
+    defaultSize: { width: 760, height: 600 },
+    showGroupSelector: false,
+    Component: DocsWidget as React.ComponentType<WidgetProps>,
   },
 ];
 
