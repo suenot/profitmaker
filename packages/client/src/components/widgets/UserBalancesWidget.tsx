@@ -29,7 +29,10 @@ export const UserBalancesHeaderActions: React.FC<{ widgetId: string }> = ({ widg
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   const activeUser = users.find(u => u.id === activeUserId);
-  const accountsWithKeys = activeUser?.accounts?.filter(acc => acc.key && acc.privateKey) || [];
+  // Central accounts: keys live server-side, so we no longer gate on
+  // acc.key/privateKey (always absent in the browser). Any listed central
+  // account (own or shared-with-read) is balance-readable via the accountId flow.
+  const accountsWithKeys = activeUser?.accounts?.filter(acc => !!acc.id) || [];
   const hasValidAccounts = accountsWithKeys.length > 0;
 
   // Clear balance data for a specific account
@@ -64,13 +67,8 @@ export const UserBalancesHeaderActions: React.FC<{ widgetId: string }> = ({ widg
       // STEP 2: Fetch fresh balance data
       console.log(`📥 [USER-BALANCES-WIDGET-REFRESH] Fetching fresh balance data...`);
       for (const account of accountsWithKeys) {
-        if (!account.key || !account.privateKey) {
-          console.log(`⚠️ [USER-BALANCES-WIDGET-REFRESH] Skipping account ${account.exchange} (${account.email}) - no API keys`);
-          continue;
-        }
-        
         try {
-          console.log(`🚀 [USER-BALANCES-WIDGET-REFRESH] Fetching balances for account ${account.id} (${account.exchange}:${account.email})`);
+          console.log(`🚀 [USER-BALANCES-WIDGET-REFRESH] Fetching balances for account ${account.id} (${account.exchange}:${account.label || account.email || ''})`);
           
           // Fetch both trading and funding balances using new architecture - EXACT SAME as subscribeToAllAccounts
           await initializeBalanceData(account.id, 'trading');
@@ -144,8 +142,8 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
         accounts: activeUser.accounts.map(acc => ({
           id: acc.id,
           exchange: acc.exchange,
-          email: acc.email,
-          hasKeys: !!(acc.key && acc.privateKey)
+          label: acc.label || acc.email,
+          access: acc.access_level
         }))
       } : null
     });
@@ -177,17 +175,17 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
     }> = [];
     
     activeUser.accounts.forEach(account => {
-      if (!account.key || !account.privateKey) return; // Skip accounts without API keys
-      
+      // Central accounts have no client-side keys; every listed account is
+      // balance-readable server-side via the accountId flow.
       ['trading', 'funding'].forEach(walletType => {
         // IMPORTANT: Direct call to getBalance() creates automatic Zustand subscription
         const exchangeBalances = getBalance(account.id, walletType as WalletType);
-        
+
         if (exchangeBalances?.balances && exchangeBalances.balances.length > 0) {
           balances.push({
             accountId: account.id,
             exchange: account.exchange,
-            email: account.email,
+            email: account.label || account.email || account.exchange,
             walletType: walletType as WalletType,
             balances: exchangeBalances.balances,
             timestamp: exchangeBalances.timestamp
@@ -208,7 +206,6 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
       widgetId,
       activeUserId,
       totalAccounts: activeUser?.accounts?.length || 0,
-      accountsWithKeys: activeUser?.accounts?.filter(acc => acc.key && acc.privateKey).length || 0,
       balanceGroups: allBalances.length,
       totalBalances: allBalances.reduce((sum, group) => sum + group.balances.length, 0),
       lastUpdates: allBalances.map(group => ({
@@ -460,19 +457,16 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
       return;
     }
     
-    console.log(`🚀 [UserBalances] Starting balance fetch for ${activeUser.accounts.length} accounts:`, 
-      activeUser.accounts.map(acc => ({ exchange: acc.exchange, email: acc.email, hasKeys: !!(acc.key && acc.privateKey) }))
+    console.log(`🚀 [UserBalances] Starting balance fetch for ${activeUser.accounts.length} central accounts:`,
+      activeUser.accounts.map(acc => ({ exchange: acc.exchange, label: acc.label || acc.email }))
     );
-    
+
     for (const account of activeUser.accounts) {
-      if (!account.key || !account.privateKey) {
-        console.log(`⚠️ [UserBalances] Skipping account ${account.exchange} (${account.email}) - no API keys`);
-        continue;
-      }
-      
+      // Central accounts: no client-side keys; balances resolve server-side via
+      // the accountId flow (want:'read'). No client-key gate.
       try {
-        console.log(`🚀 [UserBalances] Fetching balances for account ${account.id} (${account.exchange}:${account.email})`);
-        
+        console.log(`🚀 [UserBalances] Fetching balances for account ${account.id} (${account.exchange}:${account.label || account.email || ''})`);
+
         // Fetch both trading and funding balances using new architecture
         await initializeBalanceData(account.id, 'trading');
         await initializeBalanceData(account.id, 'funding');
@@ -503,8 +497,9 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
     }
   }, [activeUser?.accounts, subscribeToAllAccounts]);
 
-  // Check if we have any accounts with API keys
-  const accountsWithKeys = activeUser?.accounts.filter(acc => acc.key && acc.privateKey) || [];
+  // Central accounts: every listed account (own or shared-with-read) is
+  // balance-readable server-side — no client-side key gate.
+  const accountsWithKeys = activeUser?.accounts.filter(acc => !!acc.id) || [];
   const hasValidAccounts = accountsWithKeys.length > 0;
 
   // Calculate total portfolio value for display
@@ -648,14 +643,13 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-4">
         <Wallet className="h-12 w-12 text-terminal-text/80 mb-4" />
-        <h3 className="text-lg font-medium text-terminal-text mb-2">No API Keys Configured</h3>
+        <h3 className="text-lg font-medium text-terminal-text mb-2">No exchange accounts</h3>
         <p className="text-terminal-muted mb-4">
-          Add API keys to your exchange accounts to view balances
+          Add an exchange account (Accounts panel) to view balances
         </p>
         <div className="text-sm text-terminal-muted">
-          <p>Current user: {activeUser.email}</p>
+          <p>Current identity: {activeUser.email}</p>
           <p>Accounts: {activeUser.accounts.length}</p>
-          <p>With API keys: {accountsWithKeys.length}</p>
         </div>
       </div>
     );

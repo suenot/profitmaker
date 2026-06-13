@@ -26,12 +26,13 @@ const UserTradingDataSettings: React.FC<UserTradingDataSettingsProps> = ({
   const { users, activeUserId } = useUserStore();
   const activeUser = users.find(u => u.id === activeUserId);
   
-  // Get all user accounts with API keys
+  // Central accounts: keys live server-side; list every account for the active
+  // identity (no client-key gate).
   const accountsWithKeys = useMemo(() => {
     if (!activeUser?.accounts || !Array.isArray(activeUser.accounts)) {
       return [];
     }
-    return activeUser.accounts.filter(acc => acc.key && acc.privateKey);
+    return activeUser.accounts.filter(acc => !!acc.id);
   }, [activeUser?.accounts]);
   const handleTradesLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
@@ -69,7 +70,7 @@ const UserTradingDataSettings: React.FC<UserTradingDataSettingsProps> = ({
                 <SelectItem key={account.id} value={account.id}>
                   <div className="flex flex-col">
                     <span className="font-medium">{account.exchange}</span>
-                    <span className="text-xs text-terminal-muted">{account.email}</span>
+                    <span className="text-xs text-terminal-muted">{account.label || account.email || account.id.slice(0, 8)}</span>
                   </div>
                 </SelectItem>
               ))}
