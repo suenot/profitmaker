@@ -46,6 +46,15 @@ export interface FetchingActions {
   stopDataFetching: (subscriptionKey: string) => void;
   startWebSocketFetching: (exchange: string, symbol: string, dataType: DataType, provider: DataProvider, timeframe?: Timeframe, market?: MarketType) => Promise<void>;
   startRestFetching: (exchange: string, symbol: string, dataType: DataType, provider: DataProvider, timeframe?: Timeframe, market?: MarketType) => Promise<void>;
+  /**
+   * Re-start every registered-but-inactive subscription. Used to RECOVER after a
+   * transient auth gap: when market-data fetches fire before the SSO token is
+   * available (e.g. right after a fresh-login redirect, before bootstrap lands),
+   * those first requests 401 and leave the subscription registered with
+   * isActive=false. Calling this once the token appears restarts exactly those
+   * (startDataFetching early-returns on already-active ones, so it's safe/idempotent).
+   */
+  restartInactiveSubscriptions: () => Promise<void>;
   fetchBalance: (accountId: string, walletType: WalletType) => Promise<void>;
 }
 
@@ -134,6 +143,20 @@ export const createFetchingActions: StateCreator<
       delete state.activeSubscriptions[subscriptionKey].intervalId;
       delete state.activeSubscriptions[subscriptionKey].wsConnection;
     });
+  },
+
+  // Recover subscriptions that aren't currently running (e.g. their first fetch
+  // 401'd because the SSO token wasn't ready yet). startDataFetching no-ops on
+  // already-active subscriptions, so this only revives the stalled ones.
+  restartInactiveSubscriptions: async (): Promise<void> => {
+    const inactiveKeys = Object.entries(get().activeSubscriptions)
+      .filter(([, s]) => s.subscriberCount > 0 && !s.isActive)
+      .map(([key]) => key);
+    if (inactiveKeys.length === 0) return;
+    console.log(`🔁 Restarting ${inactiveKeys.length} inactive subscription(s) after auth became available`);
+    for (const key of inactiveKeys) {
+      await get().startDataFetching(key);
+    }
   },
 
   // Start WebSocket data fetching via the server provider (CCXT Pro on the server)
