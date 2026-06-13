@@ -54,15 +54,16 @@ export const createDefaultDashboard = async (userId: string) => {
     tradingPair: 'BTC/USDT',
   }).returning();
 
-  // Create default browser provider
+  // Create default server provider (browser CCXT path was removed in Stage 2;
+  // serverUrl is resolved client-side: VITE_SERVER_URL → page origin → localhost)
   await db.insert(dataProviders).values({
-    id: `universal-browser-${userId.slice(0, 8)}`,
+    id: `primary-server-${userId.slice(0, 8)}`,
     userId,
-    name: 'Universal Browser Provider',
-    type: 'ccxt-browser',
+    name: 'Primary Server',
+    type: 'ccxt-server',
     status: 'connected',
     exchanges: ['*'],
-    priority: 100,
+    priority: 1,
     config: { sandbox: false },
   }).onConflictDoNothing();
 
