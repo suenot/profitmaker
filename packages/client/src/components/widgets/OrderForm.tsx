@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { ChevronDown, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { usePlaceOrderStore } from '../../store/placeOrderStore';
 import { useGroupStore } from '../../store/groupStore';
 import { useDataProviderStore } from '../../store/dataProviderStore';
-import { useUserStore } from '../../store/userStore';
+import { useOrderFormWidgetStore } from '../../store/orderFormWidgetStore';
 import { getMarketConstraints } from '../../services/orderExecutionService';
-import { formatVolume, formatOrderSize } from '../../utils/formatters';
+import { formatVolume } from '../../utils/formatters';
 import type { OrderType, OrderSide, OrderValidationRules } from '../../types/orders';
+import type { MarketType } from '../../types/dataProviders';
 
 interface OrderFormWidgetProps {
   widgetId?: string;
@@ -19,8 +20,6 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
   dashboardId = 'default',
   selectedGroupId
 }) => {
-  console.log(`🎯 [OrderForm] Widget mounted:`, { widgetId, dashboardId, selectedGroupId });
-
   // Store hooks
   const {
     getWidget,
@@ -28,8 +27,6 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
     updateFormData,
     toggleAdvancedMode,
     updateAdvancedOptions,
-    validateOrder,
-    calculateEstimate,
     updateValidationRules,
     placeOrder,
     setLoading,
@@ -37,8 +34,16 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
   } = usePlaceOrderStore();
 
   const { getGroupById, selectedGroupId: globalSelectedGroupId } = useGroupStore();
-  const { getProviderForExchange } = useDataProviderStore();
-  const { users, activeUserId } = useUserStore();
+  const {
+    getTicker,
+    initializeTickerData,
+    subscribe,
+    unsubscribe,
+    activeProviderId,
+  } = useDataProviderStore();
+
+  // Persisted per-widget settings (default order type/TIF, post/reduce-only, confirm).
+  const orderFormSettings = useOrderFormWidgetStore((s) => s.getWidget(widgetId).settings);
 
   // Widget state
   const widget = getWidget(widgetId);
@@ -67,68 +72,80 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
 
   const exchange = selectedGroup?.exchange || '';
   const symbol = selectedGroup?.tradingPair || '';
-  const market = selectedGroup?.market || 'spot';
+  const market = (selectedGroup?.market || 'spot') as MarketType;
   const accountId = selectedGroup?.account || '';
 
-  console.log(`🔍 [OrderForm] Current instrument:`, {
-    isInstrumentSelected,
-    exchange,
-    symbol,
-    market,
-    accountId,
-    hasGroup: !!selectedGroup
-  });
+  // Live ticker price for this instrument (public market data). Reading from the
+  // store re-renders as updates stream in via the subscription effect below.
+  const ticker = isInstrumentSelected ? getTicker(exchange, symbol, market) : null;
+  const livePrice = ticker?.last ?? ticker?.midPrice ?? ticker?.close ??
+    (ticker && ticker.bid && ticker.ask ? (ticker.bid + ticker.ask) / 2 : undefined);
 
-  // Initialize widget on mount
+  // Initialize widget on mount, seeding the form with the persisted defaults
+  // (order type, time-in-force, post-only / reduce-only flags).
   useEffect(() => {
     initializeWidget(widgetId, currentGroupId || undefined);
-  }, [initializeWidget, widgetId, currentGroupId]);
+    updateFormData(widgetId, {
+      type: orderFormSettings.defaultOrderType,
+      timeInForce: orderFormSettings.defaultTimeInForce,
+      postOnly: orderFormSettings.postOnly,
+      reduceOnly: orderFormSettings.reduceOnly,
+    });
+    // Only re-seed on widget/group change, not on every settings edit (those apply
+    // to the NEXT init); the settings panel is the place to change live values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initializeWidget, updateFormData, widgetId, currentGroupId]);
 
   // Update form symbol when group changes
   useEffect(() => {
     if (isInstrumentSelected && symbol !== formData.symbol) {
       updateFormData(widgetId, { symbol });
-      console.log(`📝 [OrderForm] Updated symbol to: ${symbol}`);
     }
   }, [isInstrumentSelected, symbol, formData.symbol, updateFormData, widgetId]);
+
+  // Base/quote currencies (e.g. BTC/USDT) for display and balance lookups.
+  const baseCurrency = symbol.split('/')[0] || '';
+  const quoteCurrency = symbol.split('/')[1] || '';
 
   // Load market constraints when instrument changes
   useEffect(() => {
     if (!isInstrumentSelected) return;
 
     let isCancelled = false;
-    
+
     const loadConstraints = async () => {
       try {
         setLoading(widgetId, true);
-        console.log(`🔄 [OrderForm] Loading constraints for ${exchange}:${symbol}:${market}`);
-        
+
         const constraints = await getMarketConstraints(exchange, symbol, market);
-        
+
         if (isCancelled) return;
-        
-        // Get user balance
-        const activeUser = users.find(u => u.id === activeUserId);
-        const account = activeUser?.accounts.find(acc => acc.id === accountId);
-        
-        // For now, use a mock balance - will be replaced with real balance data
-        const mockBalance = {
-          available: 1000, // USDT
-          currency: 'USDT'
+
+        // DEFERRED (account-coupled, task #5 §A / blocked by #3): real available
+        // balance must come from fetchBalance(accountId) for `quoteCurrency` once
+        // accounts-fe's trading→accountId migration lands. Until then we seed a
+        // placeholder so the constraints/estimate UI is exercisable; the estimate
+        // and max-amount math already key off the LIVE ticker price below, so only
+        // the "Available" figure is a stand-in. See handleRefresh wiring + the
+        // SendMessage thread with accounts-fe for the final getBalance signature.
+        const placeholderBalance = {
+          available: 0,
+          currency: quoteCurrency || 'USDT',
         };
 
         const rules: OrderValidationRules = {
           symbol: constraints,
-          balance: mockBalance,
+          balance: placeholderBalance,
+          // Seed with the current live price if we already have a ticker; the
+          // ticker effect keeps marketPrice fresh as updates stream in.
+          marketPrice: livePrice,
           leverage: market === 'futures' ? 1 : undefined,
           marginMode: market === 'futures' ? 'isolated' : undefined,
         };
 
         updateValidationRules(widgetId, rules);
-        console.log(`✅ [OrderForm] Loaded constraints:`, constraints);
-        
       } catch (error) {
-        console.error(`❌ [OrderForm] Failed to load constraints:`, error);
+        console.error('[OrderForm] Failed to load constraints:', error);
       } finally {
         if (!isCancelled) {
           setLoading(widgetId, false);
@@ -137,11 +154,51 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
     };
 
     loadConstraints();
-    
+
     return () => {
       isCancelled = true;
     };
-  }, [isInstrumentSelected, exchange, symbol, market, accountId, setLoading, updateValidationRules, widgetId, users, activeUserId]);
+    // livePrice is intentionally omitted: it only SEEDS the rules here; the
+    // marketPrice-sync effect below keeps it current without refetching constraints.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInstrumentSelected, exchange, symbol, market, quoteCurrency, setLoading, updateValidationRules, widgetId]);
+
+  // Live ticker subscription (public market data — no account/credentials needed).
+  // REST-seed via initializeTickerData, then stream updates with subscribe('ticker');
+  // mirrors the plumbing Chart/Trades/OrderBook use. The component reads the latest
+  // value through getTicker() above on each store update.
+  useEffect(() => {
+    if (!isInstrumentSelected || !activeProviderId) return;
+
+    let isCancelled = false;
+    const subscriberId = `${dashboardId}-${widgetId}`;
+
+    const startTicker = async () => {
+      try {
+        await initializeTickerData(exchange, symbol, market);
+        if (isCancelled) return;
+        await subscribe(subscriberId, exchange, symbol, 'ticker', undefined, market);
+      } catch (error) {
+        // Non-fatal: the form still works off REST constraints + any cached ticker.
+        console.error('[OrderForm] Failed to start ticker subscription:', error);
+      }
+    };
+
+    startTicker();
+
+    return () => {
+      isCancelled = true;
+      unsubscribe(subscriberId, exchange, symbol, 'ticker', undefined, market);
+    };
+  }, [isInstrumentSelected, activeProviderId, exchange, symbol, market, dashboardId, widgetId, initializeTickerData, subscribe, unsubscribe]);
+
+  // Keep validationRules.marketPrice in sync with the live ticker so the estimate
+  // and max-amount/balance checks track the real market price, not maxPrice.
+  useEffect(() => {
+    if (!isInstrumentSelected || !validationRules || !livePrice || livePrice <= 0) return;
+    if (validationRules.marketPrice === livePrice) return;
+    updateValidationRules(widgetId, { ...validationRules, marketPrice: livePrice });
+  }, [livePrice, isInstrumentSelected, validationRules, updateValidationRules, widgetId]);
 
   // Form handlers
   const handleOrderTypeChange = useCallback((type: OrderType) => {
@@ -175,15 +232,25 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
 
   const handleSubmit = useCallback(async (side: OrderSide) => {
     if (isSubmitting) return;
-    
+
+    // Optional confirmation gate (settings.confirmBeforeSubmit).
+    if (orderFormSettings.confirmBeforeSubmit) {
+      const priceLabel = formData.type === 'market'
+        ? (livePrice ? `~${formatVolume(livePrice)} ${quoteCurrency}` : 'market price')
+        : `${formData.price || 0} ${quoteCurrency}`;
+      const ok = window.confirm(
+        `Place ${side.toUpperCase()} ${formData.type} order: ${formData.amount} ${baseCurrency} @ ${priceLabel}?`
+      );
+      if (!ok) return;
+    }
+
     updateFormData(widgetId, { side });
-    
+
     // Small delay to let the side update propagate
-    setTimeout(async () => {
-      const response = await placeOrder(widgetId);
-      console.log(`📤 [OrderForm] Order response:`, response);
+    setTimeout(() => {
+      placeOrder(widgetId);
     }, 100);
-  }, [isSubmitting, updateFormData, placeOrder, widgetId]);
+  }, [isSubmitting, orderFormSettings.confirmBeforeSubmit, formData.type, formData.amount, formData.price, livePrice, quoteCurrency, baseCurrency, updateFormData, placeOrder, widgetId]);
 
 
 
@@ -194,10 +261,8 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
 
   const isFormValid = validationErrors.length === 0;
 
-  // Currency display helpers
-  const baseCurrency = symbol.split('/')[0] || '';
-  const quoteCurrency = symbol.split('/')[1] || '';
-  
+  // (baseCurrency / quoteCurrency are declared above, near the constraints effect.)
+
   const estimatedCost = useMemo(() => {
     if (!orderEstimate) return 0;
     return orderEstimate.estimatedCost;
@@ -247,20 +312,35 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
             </span>
           </div>
         </div>
-        {/* Price display would go here - could connect to ticker data */}
+        {/* Live price from the ticker subscription */}
+        <div className="ml-3 text-right">
+          <div className="text-xs text-terminal-muted">Last Price</div>
+          <div className="text-sm font-medium font-mono text-terminal-text">
+            {livePrice && livePrice > 0
+              ? `${formatVolume(livePrice)} ${quoteCurrency}`
+              : '—'}
+          </div>
+        </div>
       </div>
-      
-      {/* Trading status */}
+
+      {/* Trading status. validationRules===null is a transient pre-load state, not
+          an error — show a soft "loading" message instead of "unavailable". */}
       {isLoading ? (
         <div className="bg-terminal-accent/30 p-3 rounded-md mb-4">
-          <div className="text-sm text-terminal-muted">Loading market data...</div>
+          <div className="text-sm text-terminal-muted">Loading market data…</div>
         </div>
       ) : !validationRules ? (
         <div className="bg-terminal-accent/30 p-3 rounded-md mb-4">
-          <div className="text-sm text-terminal-muted">Market data unavailable</div>
+          <div className="text-sm text-terminal-muted">Waiting for market data…</div>
+        </div>
+      ) : !livePrice ? (
+        <div className="bg-terminal-accent/20 p-3 rounded-md mb-4">
+          <div className="text-sm text-terminal-muted">
+            Constraints loaded — waiting for a live price to estimate cost…
+          </div>
         </div>
       ) : null}
-      
+
       {/* Order type tabs */}
       <div className="mb-4">
         <div className="flex border-b border-terminal-border">
@@ -450,20 +530,27 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
           </div>
         </div>
         
-        {/* Balance info */}
+        {/* Balance info.
+            DEFERRED (task #5 §A / blocked by #3): "Available" and the balance-derived
+            "Max Amount" come from a placeholder balance until fetchBalance(accountId)
+            is wired (see the constraints effect TODO). The estimate/price are live. */}
         {orderEstimate && (
           <div className="grid grid-cols-2 gap-2 mt-4">
             <div>
               <div className="text-sm text-terminal-muted mb-1">Available</div>
               <div className="flex justify-between text-xs">
-                                 <span>{formatVolume(orderEstimate.available)}</span>
+                <span>
+                  {orderEstimate.available > 0 ? formatVolume(orderEstimate.available) : '—'}
+                </span>
                 <span>{quoteCurrency}</span>
               </div>
             </div>
             <div>
               <div className="text-sm text-terminal-muted mb-1">Max Amount</div>
               <div className="flex justify-between text-xs">
-                                 <span>{formatVolume(orderEstimate.maxAmount)}</span>
+                <span>
+                  {orderEstimate.available > 0 ? formatVolume(orderEstimate.maxAmount) : '—'}
+                </span>
                 <span>{baseCurrency}</span>
               </div>
             </div>

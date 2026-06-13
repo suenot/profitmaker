@@ -100,6 +100,14 @@ export interface OrderValidationRules {
     available: number;
     currency: string;
   };
+  /**
+   * Live reference price (from the ticker) used to estimate market-order cost and
+   * the max affordable amount. Preferred over MarketConstraints.maxPrice (a hard
+   * cap, not a market price). Optional: undefined until the first ticker arrives.
+   */
+  marketPrice?: number;
+  /** Taker fee rate as a fraction (e.g. 0.001 = 0.1%). Falls back to a default when unknown. */
+  takerFeeRate?: number;
   leverage?: number; // For futures
   marginMode?: 'isolated' | 'cross'; // For futures
 } 
