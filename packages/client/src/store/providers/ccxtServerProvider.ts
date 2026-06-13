@@ -842,11 +842,12 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
   }
 
   /**
-   * Build the auth portion of an authenticated request body. Central-accounts
-   * path sends `{ accountId, want, exchange, market }` (NO secrets — the server
-   * resolves keys via auth under the caller's SSO identity); the legacy path
-   * sends `{ config }` with inline credentials. Op-specific fields are merged by
-   * the caller.
+   * Build the auth portion of an authenticated request body. Both paths send a
+   * `config` (so the server knows exchangeId/marketType/ccxtType); the central-
+   * accounts path adds `accountId` + `want` and carries NO secrets (the server
+   * resolves keys via auth under the caller's SSO identity, ignoring any inline
+   * credentials), while the legacy path puts inline credentials in the config.
+   * Op-specific fields are merged by the caller.
    */
   private authBody(
     auth: TradeAuth,
@@ -854,7 +855,9 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
     market: string = 'spot',
   ): Record<string, any> {
     if (isAccountRef(auth)) {
-      return { accountId: auth.accountId, want: auth.want, exchange, market };
+      // No credentials on the config — the server fetches them server-side.
+      const config = this.credsConfig({}, exchange, market);
+      return { config, accountId: auth.accountId, want: auth.want };
     }
     return { config: this.credsConfig(auth, exchange, market) };
   }
