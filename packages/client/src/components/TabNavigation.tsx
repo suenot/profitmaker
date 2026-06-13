@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Bell, Sun, Moon, User, X } from 'lucide-react';
+import { Plus, Bell, Sun, Moon, X } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
-import { useUserStore } from '@/store/userStore';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useNotificationStore } from '@/store/notificationStore';
-import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Badge } from './ui/badge';
 import UserDrawer from './UserDrawer';
 import NotificationHistory from './NotificationHistory';
@@ -64,11 +62,6 @@ const TabNavigation: React.FC = () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, [activeDashboardId, dashboards, setActiveDashboard]);
-
-  // Get active user
-  const activeUserId = useUserStore(s => s.activeUserId);
-  const users = useUserStore(s => s.users);
-  const activeUser = users.find(u => u.id === activeUserId);
 
   // Get notification store
   const { unreadCount, setHistoryOpen } = useNotificationStore();
@@ -205,10 +198,8 @@ const TabNavigation: React.FC = () => {
             </button>
           </div>
         </div>
-        {/* Block with three icons */}
+        {/* Block with navbar icons */}
         <div className="flex items-center space-x-3 h-full">
-          {/* Ecosystem SSO: user chip when signed in, login button otherwise. */}
-          <SsoUserChip />
           <button
             className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors relative"
             onClick={handleNotificationClick}
@@ -216,15 +207,15 @@ const TabNavigation: React.FC = () => {
           >
             <Bell size={18} className="text-terminal-muted" />
             {unreadCount > 0 && (
-              <Badge 
-                variant="destructive" 
+              <Badge
+                variant="destructive"
                 className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center rounded-full"
               >
                 {unreadCount > 99 ? '99+' : unreadCount}
               </Badge>
             )}
           </button>
-          <button 
+          <button
             className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors"
             onClick={handleThemeClick}
             title="Click - toggle theme, Option+Click - theme settings"
@@ -235,19 +226,10 @@ const TabNavigation: React.FC = () => {
               <Moon size={18} className="text-terminal-muted" />
             )}
           </button>
-          <button className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors" onClick={() => setIsUserDrawerOpen(true)}>
-            {activeUser ? (
-              <Avatar className="w-7 h-7">
-                {activeUser.avatarUrl ? (
-                  <AvatarImage src={activeUser.avatarUrl} alt={activeUser.email} />
-                ) : (
-                  <AvatarFallback>{activeUser.email.slice(0, 2).toUpperCase()}</AvatarFallback>
-                )}
-              </Avatar>
-            ) : (
-              <User size={18} className="text-terminal-muted" />
-            )}
-          </button>
+          {/* Single auth/identity control: active-identity avatar → compact
+              dropdown (switch identities, add login, manage accounts, log out).
+              "Manage accounts" opens the exchange-accounts drawer. */}
+          <SsoUserChip onManageAccounts={() => setIsUserDrawerOpen(true)} />
         </div>
       </div>
       <UserDrawer open={isUserDrawerOpen} onOpenChange={setIsUserDrawerOpen} />
