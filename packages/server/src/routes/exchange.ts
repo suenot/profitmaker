@@ -46,6 +46,12 @@ const configOnly = t.Object({
   config: configSchema,
 });
 
+// Which provider served a response. Today everything is the built-in ccxt path;
+// the forthcoming server ProviderRegistry (task #13) will set this from
+// registry.resolve(exchange, providerId?). Clients/agents can read `provider`
+// to know the source without a wire-format change later.
+const BUILTIN_PROVIDER = 'ccxt';
+
 export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
   .post('/instance', async ({ body }) => {
     const config = body as CCXTInstanceConfig;
@@ -65,28 +71,28 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     const { config, symbol } = body;
     const instance = await getCCXTInstance(config);
     const ticker = await instance.fetchTicker(symbol);
-    return { success: true, data: ticker };
+    return { success: true, provider: BUILTIN_PROVIDER, data: ticker };
   }, { body: configWithSymbol })
 
   .post('/fetchOrderBook', async ({ body }) => {
     const { config, symbol, limit } = body;
     const instance = await getCCXTInstance(config);
     const orderbook = await instance.fetchOrderBook(symbol, limit);
-    return { success: true, data: orderbook };
+    return { success: true, provider: BUILTIN_PROVIDER, data: orderbook };
   }, { body: configWithSymbolAndLimit })
 
   .post('/fetchTrades', async ({ body }) => {
     const { config, symbol, limit } = body;
     const instance = await getCCXTInstance(config);
     const trades = await instance.fetchTrades(symbol, undefined, limit);
-    return { success: true, data: trades };
+    return { success: true, provider: BUILTIN_PROVIDER, data: trades };
   }, { body: configWithSymbolAndLimit })
 
   .post('/fetchOHLCV', async ({ body }) => {
     const { config, symbol, timeframe, limit } = body;
     const instance = await getCCXTInstance(config);
     const ohlcv = await instance.fetchOHLCV(symbol, timeframe, undefined, limit);
-    return { success: true, data: ohlcv };
+    return { success: true, provider: BUILTIN_PROVIDER, data: ohlcv };
   }, { body: configWithSymbolTimeframeLimit })
 
   .post('/fetchBalance', async ({ body, set }) => {
@@ -97,7 +103,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     }
     const instance = await getCCXTInstance(config);
     const balance = await instance.fetchBalance();
-    return { success: true, data: balance };
+    return { success: true, provider: BUILTIN_PROVIDER, data: balance };
   }, { body: configOnly })
 
   .post('/capabilities', async ({ body }) => {
@@ -105,6 +111,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     const instance = await getCCXTInstance(config);
     return {
       success: true,
+      provider: BUILTIN_PROVIDER,
       data: {
         has: instance.has,
         markets: Object.keys(instance.markets || {}),
@@ -117,14 +124,14 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
 
   // List every exchange id CCXT knows about. Used by useExchangesList and the
   // provider discovery path now that the browser CCXT bundle is gone.
-  .get('/list', () => ({ success: true, data: (ccxt as any).exchanges as string[] }))
+  .get('/list', () => ({ success: true, provider: BUILTIN_PROVIDER, data: (ccxt as any).exchanges as string[] }))
 
   // Single market's full metadata (limits/precision) for order validation.
   .post('/market', async ({ body }) => {
     const { config, symbol } = body;
     const instance = await getCCXTInstance(config);
     const market = instance.markets?.[symbol] ?? null;
-    return { success: true, data: market };
+    return { success: true, provider: BUILTIN_PROVIDER, data: market };
   }, { body: configWithSymbol })
 
   // --- authenticated trading (credentials travel in `config`) --------------
@@ -135,7 +142,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     if (credErr) return { error: credErr };
     const instance = await getCCXTInstance(config);
     const order = await instance.createOrder(symbol, type, side, amount, price, params || {});
-    return { success: true, data: order };
+    return { success: true, provider: BUILTIN_PROVIDER, data: order };
   }, {
     body: t.Object({
       config: configSchema,
@@ -154,7 +161,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     if (credErr) return { error: credErr };
     const instance = await getCCXTInstance(config);
     const result = await instance.cancelOrder(orderId, symbol);
-    return { success: true, data: result };
+    return { success: true, provider: BUILTIN_PROVIDER, data: result };
   }, {
     body: t.Object({
       config: configSchema,
@@ -168,9 +175,9 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     const credErr = requireCreds(config, set);
     if (credErr) return { error: credErr };
     const instance = await getCCXTInstance(config);
-    if (!instance.has?.fetchMyTrades) return { success: true, data: [] };
+    if (!instance.has?.fetchMyTrades) return { success: true, provider: BUILTIN_PROVIDER, data: [] };
     const trades = await instance.fetchMyTrades(symbol, since, limit);
-    return { success: true, data: trades };
+    return { success: true, provider: BUILTIN_PROVIDER, data: trades };
   }, {
     body: t.Object({
       config: configSchema,
@@ -185,9 +192,9 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     const credErr = requireCreds(config, set);
     if (credErr) return { error: credErr };
     const instance = await getCCXTInstance(config);
-    if (!instance.has?.fetchOrders) return { success: true, data: [] };
+    if (!instance.has?.fetchOrders) return { success: true, provider: BUILTIN_PROVIDER, data: [] };
     const orders = await instance.fetchOrders(symbol, since, limit);
-    return { success: true, data: orders };
+    return { success: true, provider: BUILTIN_PROVIDER, data: orders };
   }, {
     body: t.Object({
       config: configSchema,
@@ -202,9 +209,9 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     const credErr = requireCreds(config, set);
     if (credErr) return { error: credErr };
     const instance = await getCCXTInstance(config);
-    if (!instance.has?.fetchOpenOrders) return { success: true, data: [] };
+    if (!instance.has?.fetchOpenOrders) return { success: true, provider: BUILTIN_PROVIDER, data: [] };
     const orders = await instance.fetchOpenOrders(symbol);
-    return { success: true, data: orders };
+    return { success: true, provider: BUILTIN_PROVIDER, data: orders };
   }, {
     body: t.Object({
       config: configSchema,
@@ -217,9 +224,9 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
     const credErr = requireCreds(config, set);
     if (credErr) return { error: credErr };
     const instance = await getCCXTInstance(config);
-    if (!instance.has?.fetchPositions) return { success: true, data: [] };
+    if (!instance.has?.fetchPositions) return { success: true, provider: BUILTIN_PROVIDER, data: [] };
     const positions = await instance.fetchPositions(symbols);
-    return { success: true, data: positions };
+    return { success: true, provider: BUILTIN_PROVIDER, data: positions };
   }, {
     body: t.Object({
       config: configSchema,

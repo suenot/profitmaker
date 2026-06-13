@@ -4,6 +4,7 @@ import './index.css'
 import { registerBuiltinWidgets } from './modules/builtinWidgets'
 import { initRuntime } from './modules/runtime'
 import { start as startSyncBridge } from './services/syncBridge'
+import { bootstrap as bootstrapSso } from './services/ssoClient'
 
 // Populate the widget registry with all built-in widgets, then install the host
 // Terminal API (window.__PROFITMAKER__) — both BEFORE the first render and
@@ -11,9 +12,9 @@ import { start as startSyncBridge } from './services/syncBridge'
 registerBuiltinWidgets();
 initRuntime();
 
-// Connect dashboards/groups to the server for real-time, backend-driven control.
-// Safe to call when the server is unreachable — it retries in the background and
-// the terminal keeps working off localStorage until it connects.
-startSyncBridge();
+// Resolve an ecosystem SSO session (shared *.marketmaker.cc cookie) BEFORE the
+// sync bridge connects, so it presents the SSO token. Non-blocking and tolerant
+// of an unreachable auth service — the bridge falls back to API_TOKEN/dev token.
+bootstrapSso().finally(() => startSyncBridge());
 
 createRoot(document.getElementById("root")!).render(<App />);

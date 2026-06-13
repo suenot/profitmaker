@@ -1,5 +1,6 @@
 import { useDataProviderStore } from '@/store/dataProviderStore';
 import type { CCXTServerProvider, DataProvider } from '@/types/dataProviders';
+import { getSsoToken } from '@/services/ssoClient';
 
 /**
  * Server base + authenticated fetch for the module system.
@@ -43,9 +44,13 @@ export function resolveServerBase(): string {
   return DEV_FALLBACK_BASE;
 }
 
-/** The Bearer token (if any) configured on the resolved ccxt-server provider. */
+/**
+ * The Bearer token for terminal-server calls: the SSO session token (preferred,
+ * when an ecosystem user is logged in) else the token configured on the resolved
+ * ccxt-server provider.
+ */
 export function resolveServerToken(): string | undefined {
-  return resolveCcxtServerProvider()?.config.token;
+  return getSsoToken() || resolveCcxtServerProvider()?.config.token;
 }
 
 /**

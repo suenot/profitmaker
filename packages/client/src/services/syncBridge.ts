@@ -1,5 +1,6 @@
 import { io, type Socket } from 'socket.io-client';
 import { resolveServerBase, resolveServerToken } from '@/modules/api';
+import { getSsoToken } from '@/services/ssoClient';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useGroupStore } from '@/store/groupStore';
 import { useChartWidgetsStore } from '@/store/chartWidgetStore';
@@ -61,9 +62,12 @@ function resolveBase(): string {
   return resolveServerBase();
 }
 
-/** Bearer token: ccxt-server provider, else localStorage override, else Vite env. */
+/** Bearer token: SSO session (preferred), else ccxt-server provider, else
+ *  localStorage override, else Vite env. The SSO token wins so an authenticated
+ *  ecosystem user is scoped to their own server-side account. */
 function resolveToken(): string | undefined {
   return (
+    getSsoToken() ||
     resolveServerToken() ||
     (typeof localStorage !== 'undefined' ? localStorage.getItem('profitmaker.apiToken') || undefined : undefined) ||
     (import.meta.env.VITE_API_TOKEN as string | undefined)
