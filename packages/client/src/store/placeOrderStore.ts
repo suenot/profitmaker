@@ -206,7 +206,7 @@ export const usePlaceOrderStore = create<PlaceOrderWidgetsStore>()(
       
       // Market-specific validation
       if (validationRules) {
-        const { symbol: constraints, balance } = validationRules;
+        const { symbol: constraints, balance, marketPrice } = validationRules;
         
         if (formData.amount < constraints.minQty) {
           errors.push({ 
@@ -236,15 +236,20 @@ export const usePlaceOrderStore = create<PlaceOrderWidgetsStore>()(
           });
         }
         
-        // Balance validation
-        const estimatedCost = formData.type === 'market' 
-          ? formData.amount * (constraints.maxPrice || 1) // Rough estimate for market orders
+        // Balance validation. Use the live ticker price for market orders (fall
+        // back to the maxPrice cap only when no live price is available yet).
+        // Skip the check when available <= 0: that means the balance is unknown
+        // (placeholder until fetchBalance(accountId) is wired), not actually empty —
+        // blocking every order on a stand-in figure would be wrong.
+        const marketRefPrice = marketPrice && marketPrice > 0 ? marketPrice : (constraints.maxPrice || 1);
+        const estimatedCost = formData.type === 'market'
+          ? formData.amount * marketRefPrice
           : (formData.price || 0) * formData.amount;
-          
-        if (estimatedCost > balance.available) {
-          errors.push({ 
-            field: 'amount', 
-            message: `Insufficient balance. Available: ${balance.available} ${balance.currency}` 
+
+        if (balance.available > 0 && estimatedCost > balance.available) {
+          errors.push({
+            field: 'amount',
+            message: `Insufficient balance. Available: ${balance.available} ${balance.currency}`
           });
         }
       }
@@ -267,16 +272,24 @@ export const usePlaceOrderStore = create<PlaceOrderWidgetsStore>()(
         return null;
       }
       
-      const { symbol: constraints, balance } = validationRules;
-      
-      // Calculate estimated cost and commission
-      const price = formData.type === 'market' 
-        ? constraints.maxPrice // Use max price as estimate for market orders
-        : (formData.price || constraints.maxPrice);
-        
+      const { symbol: constraints, balance, marketPrice, takerFeeRate } = validationRules;
+
+      // Reference price: live ticker for market orders (fall back to the form's
+      // limit price, then any live price, then the maxPrice cap as a last resort).
+      const referencePrice = marketPrice && marketPrice > 0 ? marketPrice : constraints.maxPrice;
+      const price = formData.type === 'market'
+        ? referencePrice
+        : (formData.price || referencePrice);
+
+      // Without a usable price we cannot estimate cost / max amount meaningfully.
+      if (!price || price <= 0) {
+        return null;
+      }
+
       const estimatedCost = price * formData.amount;
-      const commission = estimatedCost * 0.001; // 0.1% commission estimate
-      
+      const feeRate = typeof takerFeeRate === 'number' && takerFeeRate >= 0 ? takerFeeRate : 0.001;
+      const commission = estimatedCost * feeRate;
+
       const estimate: OrderEstimate = {
         estimatedCost,
         commission,

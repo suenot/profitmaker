@@ -27,6 +27,7 @@ import TradesSettingsWrapper from '@/components/widgets/TradesSettingsWrapper';
 import OrderBookSettingsWrapper from '@/components/widgets/OrderBookSettingsWrapper';
 import UserBalancesSettingsWrapper from '@/components/widgets/UserBalancesSettingsWrapper';
 import UserTradingDataSettingsWrapper from '@/components/widgets/UserTradingDataSettingsWrapper';
+import OrderFormSettingsWrapper from '@/components/widgets/OrderFormSettingsWrapper';
 
 /**
  * Built-in widget definition. Extends the SDK contract with `menuLabel`, a
@@ -70,9 +71,6 @@ function adaptSettings(
  *  for widgets that previously had a switch case but no real settings panel. */
 const PortfolioSettingsPlaceholder: React.FC<WidgetSettingsProps> = () => (
   <div className="text-terminal-muted">Portfolio settings coming soon...</div>
-);
-const OrderFormSettingsPlaceholder: React.FC<WidgetSettingsProps> = () => (
-  <div className="text-terminal-muted">Order Form settings coming soon...</div>
 );
 
 const headerActionsUserTradingData: React.FC<{ widgetId: string }> = ({ widgetId }) => (
@@ -175,7 +173,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     showGroupSelector: true,
     needsTransparentGroup: true,
     Component: adaptComponent(OrderFormWidget),
-    Settings: OrderFormSettingsPlaceholder,
+    Settings: adaptSettings(OrderFormSettingsWrapper),
   },
 
   // ---- Diagnostics ----
