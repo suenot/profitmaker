@@ -206,13 +206,11 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
         set({ error: await readJsonError(res) });
         return null;
       }
+      // The POST response is the SHORT shape { id, exchange, label, read_only }
+      // (no shared/access_level/has_ro_keys/created_at), so re-GET the list to
+      // refresh the row with full badge metadata rather than appending a partial.
       const created = ExchangeAccountSchema.parse(await res.json());
-      set((state) => ({
-        accountsBySession: {
-          ...state.accountsBySession,
-          [active.id]: [...(state.accountsBySession[active.id] ?? []), created],
-        },
-      }));
+      await get().loadAccounts();
       return created;
     } catch (e) {
       set({ error: e instanceof Error ? e.message : 'Failed to add account' });
