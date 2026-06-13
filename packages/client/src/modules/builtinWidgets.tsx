@@ -112,7 +112,6 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'orderbook',
     title: 'Order Book',
-    menuLabel: 'Order Book (not ready)',
     icon: 'BookOpen',
     category: 'public',
     defaultSize: { width: 500, height: 650 },
@@ -148,7 +147,6 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'userTradingData',
     title: 'User Trading Data',
-    menuLabel: 'User Trading Data (not ready)',
     icon: 'BarChart3',
     category: 'private',
     defaultSize: { width: 800, height: 650 },

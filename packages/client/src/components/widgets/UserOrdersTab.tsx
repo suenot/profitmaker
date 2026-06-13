@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ShoppingCart, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { ExchangeAccount } from '../../store/userStore';
 import { UserTradingDataWidgetSettings } from '../../store/userTradingDataWidgetStore';
+import { TabRefreshHandle } from './UserTradesTab';
 
 interface Order {
   id: string;
@@ -31,25 +32,12 @@ interface UserOrdersTabProps {
   settings: UserTradingDataWidgetSettings;
 }
 
-const UserOrdersTab: React.FC<UserOrdersTabProps> = ({
+const UserOrdersTab = forwardRef<TabRefreshHandle, UserOrdersTabProps>(({
   widgetId,
   accounts,
   settings
-}) => {
-  console.log(`🚀 [UserOrdersTab] Component mounted/re-rendered:`, {
-    widgetId,
-    accountsLength: accounts.length,
-    accounts: accounts.map(acc => ({
-      id: acc.id,
-      exchange: acc.exchange,
-      email: acc.email,
-      hasKey: !!acc.key,
-      hasPrivateKey: !!acc.privateKey
-    })),
-    settings
-  });
-
-  const [orders, setOrders] = useState<Array<Order & { 
+}, ref) => {
+  const [orders, setOrders] = useState<Array<Order & {
     accountId: string;
     exchange: string;
     email: string;
@@ -62,47 +50,22 @@ const UserOrdersTab: React.FC<UserOrdersTabProps> = ({
 
   // Load orders for accounts
   const loadOrders = useCallback(async () => {
-    console.log(`🔍 [UserOrdersTab] Starting loadOrders. Accounts length: ${accounts.length}`);
-    console.log(`🔍 [UserOrdersTab] Settings:`, { showClosedOrders: settings.showClosedOrders });
-    console.log(`🔍 [UserOrdersTab] Accounts:`, accounts.map(acc => ({ 
-      id: acc.id, 
-      exchange: acc.exchange, 
-      email: acc.email,
-      hasKey: !!acc.key,
-      hasPrivateKey: !!acc.privateKey 
-    })));
-    
     if (!accounts.length) {
-      console.log(`⚠️ [UserOrdersTab] No accounts found, returning early`);
       return;
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
-      console.log(`📊 [UserOrdersTab] Loading orders for ${accounts.length} account(s)`);
-      
       const allOrders: (Order & { accountId: string; exchange: string; email: string; })[] = [];
-      
+
       // Load orders from each account
       for (const account of accounts) {
         try {
-          console.log(`🔄 [UserOrdersTab] Fetching orders for account ${account.id} (${account.exchange})`);
-          console.log(`🔍 [UserOrdersTab] Account details:`, {
-            id: account.id,
-            exchange: account.exchange,
-            email: account.email,
-            hasKey: !!account.key,
-            hasPrivateKey: !!account.privateKey,
-            keyLength: account.key?.length || 0,
-            privateKeyLength: account.privateKey?.length || 0
-          });
-          
           let orders: any[] = [];
-          
+
           if (settings.showClosedOrders) {
-            console.log(`📋 [UserOrdersTab] Fetching ALL orders (open + closed) for account ${account.id}`);
             try {
               // Try to fetch all orders (open + closed)
               orders = await dataProvider.fetchOrders(
@@ -112,7 +75,6 @@ const UserOrdersTab: React.FC<UserOrdersTabProps> = ({
                 100 // limit
               );
             } catch (error) {
-              console.warn(`⚠️ [UserOrdersTab] fetchOrders failed for ${account.id}, falling back to fetchOpenOrders:`, error.message);
               // Fallback to open orders only if fetchOrders fails
               orders = await dataProvider.fetchOpenOrders(
                 account.id,
@@ -120,16 +82,13 @@ const UserOrdersTab: React.FC<UserOrdersTabProps> = ({
               );
             }
           } else {
-            console.log(`📋 [UserOrdersTab] Fetching OPEN orders only for account ${account.id}`);
             // Fetch only open orders
             orders = await dataProvider.fetchOpenOrders(
               account.id,
               undefined // symbol - get all symbols
             );
           }
-          
-          console.log(`📊 [UserOrdersTab] Raw orders received for account ${account.id}:`, orders);
-          
+
           // Transform and add account info
           const ordersWithAccount = orders.map(order => ({
             ...order,
@@ -137,37 +96,20 @@ const UserOrdersTab: React.FC<UserOrdersTabProps> = ({
             exchange: account.exchange || 'Unknown',
             email: account.email || 'Unknown'
           }));
-          
-          console.log(`📊 [UserOrdersTab] Orders with account info:`, ordersWithAccount);
-          
+
           allOrders.push(...ordersWithAccount);
-          
-          console.log(`✅ [UserOrdersTab] Loaded ${orders.length} orders for account ${account.id}`);
         } catch (error) {
-          console.error(`❌ [UserOrdersTab] Failed to load orders for account ${account.id}:`, error);
-          console.error(`❌ [UserOrdersTab] Error details:`, {
-            message: error instanceof Error ? error.message : 'Unknown error',
-            stack: error instanceof Error ? error.stack : undefined,
-            accountId: account.id,
-            exchange: account.exchange
-          });
+          console.error(`Failed to load orders for account ${account.id}:`, error);
           // Continue with other accounts even if one fails
         }
       }
-      
+
       // Sort orders by timestamp (newest first)
       allOrders.sort((a, b) => b.timestamp - a.timestamp);
-      
-      console.log(`🔄 [UserOrdersTab] Before setOrders - allOrders length: ${allOrders.length}`);
-      console.log(`📊 [UserOrdersTab] Before setOrders - allOrders:`, allOrders);
-      
+
       setOrders(allOrders);
-      
-      console.log(`✅ [UserOrdersTab] Total orders loaded: ${allOrders.length}`);
-      console.log(`📊 [UserOrdersTab] Final orders:`, allOrders);
-      
     } catch (error) {
-      console.error('❌ [UserOrdersTab] Failed to load orders:', error);
+      console.error('Failed to load orders:', error);
       setError(error instanceof Error ? error.message : 'Failed to load orders');
     } finally {
       setLoading(false);
@@ -182,15 +124,10 @@ const UserOrdersTab: React.FC<UserOrdersTabProps> = ({
     }
   }, [loadOrders, settings.activeTab]);
 
-  // Debug orders state changes
-  useEffect(() => {
-    console.log(`🔍 [UserOrdersTab] Orders state changed:`, {
-      ordersLength: orders.length,
-      orders: orders,
-      loading,
-      error
-    });
-  }, [orders, loading, error]);
+  // Expose refresh() to the parent widget's header refresh button.
+  useImperativeHandle(ref, () => ({
+    refresh: loadOrders
+  }), [loadOrders]);
 
   // Format currency value
   const formatCurrency = useCallback((value: number, currency?: string) => {
@@ -417,6 +354,8 @@ const UserOrdersTab: React.FC<UserOrdersTabProps> = ({
       </div>
     </div>
   );
-};
+});
+
+UserOrdersTab.displayName = 'UserOrdersTab';
 
 export default UserOrdersTab; 

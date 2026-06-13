@@ -1,9 +1,15 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { TrendingUp, TrendingDown, Clock, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { ExchangeAccount } from '../../store/userStore';
 import { UserTradingDataWidgetSettings } from '../../store/userTradingDataWidgetStore';
+
+// Imperative handle exposed to the parent widget so its header refresh button can
+// re-fetch this tab's data without remounting (see UserTradingDataWidget#handleRefreshData).
+export interface TabRefreshHandle {
+  refresh: () => Promise<void>;
+}
 
 interface Trade {
   id: string;
@@ -27,11 +33,11 @@ interface UserTradesTabProps {
   settings: UserTradingDataWidgetSettings;
 }
 
-const UserTradesTab: React.FC<UserTradesTabProps> = ({
+const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
   widgetId,
   accounts,
   settings
-}) => {
+}, ref) => {
   const [trades, setTrades] = useState<Array<Trade & {
     accountId: string;
     exchange: string;
@@ -56,15 +62,11 @@ const UserTradesTab: React.FC<UserTradesTabProps> = ({
     setError(null);
 
     try {
-      console.log(`📊 Loading trades for ${accounts.length} account(s)`);
-
       const allTrades: (Trade & { accountId: string; exchange: string; email: string; })[] = [];
 
       // Load trades from each account
       for (const account of accounts) {
         try {
-          console.log(`🔄 Fetching trades for account ${account.id} (${account.exchange})`);
-
           const trades = await dataProvider.fetchMyTrades(
             account.id,
             undefined, // symbol - get all symbols
@@ -94,10 +96,8 @@ const UserTradesTab: React.FC<UserTradesTabProps> = ({
           });
 
           allTrades.push(...tradesWithAccount);
-
-          console.log(`✅ Loaded ${trades.length} trades for account ${account.id}`);
         } catch (error) {
-          console.error(`❌ Failed to load trades for account ${account.id}:`, error);
+          console.error(`Failed to load trades for account ${account.id}:`, error);
           // Continue with other accounts even if one fails
         }
       }
@@ -106,10 +106,8 @@ const UserTradesTab: React.FC<UserTradesTabProps> = ({
       allTrades.sort((a, b) => b.timestamp - a.timestamp);
 
       setTrades(allTrades);
-      console.log(`✅ Total trades loaded: ${allTrades.length}`);
-
     } catch (error) {
-      console.error('❌ Failed to load trades:', error);
+      console.error('Failed to load trades:', error);
       setError(error instanceof Error ? error.message : 'Failed to load trades');
     } finally {
       setLoading(false);
@@ -123,6 +121,11 @@ const UserTradesTab: React.FC<UserTradesTabProps> = ({
       loadTrades();
     }
   }, [loadTrades, settings.activeTab]);
+
+  // Expose refresh() to the parent widget's header refresh button.
+  useImperativeHandle(ref, () => ({
+    refresh: loadTrades
+  }), [loadTrades]);
 
   // Format currency value
   const formatCurrency = useCallback((value: number, currency?: string) => {
@@ -306,6 +309,8 @@ const UserTradesTab: React.FC<UserTradesTabProps> = ({
       </div>
     </div>
   );
-};
+});
+
+UserTradesTab.displayName = 'UserTradesTab';
 
 export default UserTradesTab;
