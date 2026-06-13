@@ -101,6 +101,9 @@ Runs ESLint on the client package.
 | `PORT` | `3001` | HTTP server port (Socket.IO runs on `PORT + 1`) |
 | `API_TOKEN` | `your-secret-token` | Bearer token for server API authentication |
 | `DATABASE_URL` | -- | Postgres connection string (**required** to boot the server) |
+| `AUTH_URL` | `https://auth.marketmaker.cc` | Auth service base (JWKS verification + the `/api/accounts` user-plane proxy) |
+| `AUTH_INTERNAL_URL` | `https://auth.marketmaker.cc` | Base for the server↔auth **internal** credential fetch; lets ops point it at a private address |
+| `AUTH_INTERNAL_SECRET` | -- | Server↔auth shared secret for `POST /api/v1/internal/exchange-credentials`. **Must equal the auth service's `AUTH_INTERNAL_SECRET`.** Unset ⇒ the central-account `accountId` trading flow returns 503; the rest of the server still boots. Never log or commit it |
 | `VITE_SERVER_URL` | -- | Client: server base URL; falls back to the page origin (prod) or `http://localhost:3001` (dev) |
 
 The client defaults to a `ccxt-server` provider pointed at `VITE_SERVER_URL`
