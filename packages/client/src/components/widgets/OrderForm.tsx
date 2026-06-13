@@ -40,6 +40,8 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
     subscribe,
     unsubscribe,
     activeProviderId,
+    initializeBalanceData,
+    getBalance,
   } = useDataProviderStore();
 
   // Persisted per-widget settings (default order type/TIF, post/reduce-only, confirm).
@@ -75,11 +77,26 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
   const market = (selectedGroup?.market || 'spot') as MarketType;
   const accountId = selectedGroup?.account || '';
 
+  // Base/quote currencies (e.g. BTC/USDT) for display and balance lookups.
+  const baseCurrency = symbol.split('/')[0] || '';
+  const quoteCurrency = symbol.split('/')[1] || '';
+
   // Live ticker price for this instrument (public market data). Reading from the
   // store re-renders as updates stream in via the subscription effect below.
   const ticker = isInstrumentSelected ? getTicker(exchange, symbol, market) : null;
   const livePrice = ticker?.last ?? ticker?.midPrice ?? ticker?.close ??
     (ticker && ticker.bid && ticker.ask ? (ticker.bid + ticker.ask) / 2 : undefined);
+
+  // Live account balance (private read via the accountId flow — internally routed
+  // with want='read'). getBalance() is a synchronous selector that registers a
+  // Zustand subscription, so this re-renders when balance data updates. The buy
+  // side spends quote (e.g. USDT); the sell side spends base (e.g. BTC). We feed
+  // the QUOTE available into validationRules.balance because the estimate/validation
+  // math is cost-denominated (maxAmount = available / price).
+  const WALLET_TYPE = 'trading' as const;
+  const exchangeBalances = isInstrumentSelected ? getBalance(accountId, WALLET_TYPE) : null;
+  const quoteAvailable = exchangeBalances?.balances.find(b => b.currency === quoteCurrency)?.free ?? 0;
+  const baseAvailable = exchangeBalances?.balances.find(b => b.currency === baseCurrency)?.free ?? 0;
 
   // Initialize widget on mount, seeding the form with the persisted defaults
   // (order type, time-in-force, post-only / reduce-only flags).
@@ -103,10 +120,6 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
     }
   }, [isInstrumentSelected, symbol, formData.symbol, updateFormData, widgetId]);
 
-  // Base/quote currencies (e.g. BTC/USDT) for display and balance lookups.
-  const baseCurrency = symbol.split('/')[0] || '';
-  const quoteCurrency = symbol.split('/')[1] || '';
-
   // Load market constraints when instrument changes
   useEffect(() => {
     if (!isInstrumentSelected) return;
@@ -117,25 +130,28 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
       try {
         setLoading(widgetId, true);
 
-        const constraints = await getMarketConstraints(exchange, symbol, market);
+        // Load market constraints and account balance in parallel. Balance is a
+        // private read; it routes through the accountId flow (want='read') and
+        // populates the store, which we read reactively via getBalance() above.
+        const [constraints] = await Promise.all([
+          getMarketConstraints(exchange, symbol, market),
+          initializeBalanceData(accountId, WALLET_TYPE).catch((error) => {
+            // Non-fatal: the form still works off constraints; "Available" shows —.
+            console.error('[OrderForm] Failed to load balance:', error);
+            return null;
+          }),
+        ]);
 
         if (isCancelled) return;
 
-        // DEFERRED (account-coupled, task #5 §A / blocked by #3): real available
-        // balance must come from fetchBalance(accountId) for `quoteCurrency` once
-        // accounts-fe's trading→accountId migration lands. Until then we seed a
-        // placeholder so the constraints/estimate UI is exercisable; the estimate
-        // and max-amount math already key off the LIVE ticker price below, so only
-        // the "Available" figure is a stand-in. See handleRefresh wiring + the
-        // SendMessage thread with accounts-fe for the final getBalance signature.
-        const placeholderBalance = {
-          available: 0,
-          currency: quoteCurrency || 'USDT',
-        };
-
         const rules: OrderValidationRules = {
           symbol: constraints,
-          balance: placeholderBalance,
+          // Quote available (cost budget); kept fresh by the balance-sync effect.
+          balance: {
+            available: quoteAvailable,
+            currency: quoteCurrency || 'USDT',
+          },
+          balanceLoaded: !!exchangeBalances,
           // Seed with the current live price if we already have a ticker; the
           // ticker effect keeps marketPrice fresh as updates stream in.
           marketPrice: livePrice,
@@ -158,10 +174,11 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
     return () => {
       isCancelled = true;
     };
-    // livePrice is intentionally omitted: it only SEEDS the rules here; the
-    // marketPrice-sync effect below keeps it current without refetching constraints.
+    // livePrice and quoteAvailable are intentionally omitted: they only SEED the
+    // rules here; the marketPrice-sync and balance-sync effects below keep them
+    // current without refetching constraints.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isInstrumentSelected, exchange, symbol, market, quoteCurrency, setLoading, updateValidationRules, widgetId]);
+  }, [isInstrumentSelected, exchange, symbol, market, accountId, quoteCurrency, initializeBalanceData, setLoading, updateValidationRules, widgetId]);
 
   // Live ticker subscription (public market data — no account/credentials needed).
   // REST-seed via initializeTickerData, then stream updates with subscribe('ticker');
@@ -199,6 +216,21 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
     if (validationRules.marketPrice === livePrice) return;
     updateValidationRules(widgetId, { ...validationRules, marketPrice: livePrice });
   }, [livePrice, isInstrumentSelected, validationRules, updateValidationRules, widgetId]);
+
+  // Keep validationRules.balance in sync with the live quote available as balance
+  // updates stream in (getBalance subscription) without refetching constraints.
+  const balanceLoaded = !!exchangeBalances;
+  useEffect(() => {
+    if (!isInstrumentSelected || !validationRules) return;
+    if (validationRules.balance.available === quoteAvailable &&
+        validationRules.balance.currency === (quoteCurrency || 'USDT') &&
+        validationRules.balanceLoaded === balanceLoaded) return;
+    updateValidationRules(widgetId, {
+      ...validationRules,
+      balance: { available: quoteAvailable, currency: quoteCurrency || 'USDT' },
+      balanceLoaded,
+    });
+  }, [quoteAvailable, quoteCurrency, balanceLoaded, isInstrumentSelected, validationRules, updateValidationRules, widgetId]);
 
   // Form handlers
   const handleOrderTypeChange = useCallback((type: OrderType) => {
@@ -530,27 +562,30 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
           </div>
         </div>
         
-        {/* Balance info.
-            DEFERRED (task #5 §A / blocked by #3): "Available" and the balance-derived
-            "Max Amount" come from a placeholder balance until fetchBalance(accountId)
-            is wired (see the constraints effect TODO). The estimate/price are live. */}
+        {/* Balance info — live available balances from the account (accountId flow).
+            Available = quote (buy budget); Base = base-asset holdings (sell side);
+            Max Amount = quote-affordable size at the live price. Shows — until the
+            balance has loaded. */}
         {orderEstimate && (
-          <div className="grid grid-cols-2 gap-2 mt-4">
+          <div className="grid grid-cols-3 gap-2 mt-4">
             <div>
               <div className="text-sm text-terminal-muted mb-1">Available</div>
               <div className="flex justify-between text-xs">
-                <span>
-                  {orderEstimate.available > 0 ? formatVolume(orderEstimate.available) : '—'}
-                </span>
+                <span>{balanceLoaded ? formatVolume(orderEstimate.available) : '—'}</span>
                 <span>{quoteCurrency}</span>
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-terminal-muted mb-1">Holdings</div>
+              <div className="flex justify-between text-xs">
+                <span>{balanceLoaded ? formatVolume(baseAvailable) : '—'}</span>
+                <span>{baseCurrency}</span>
               </div>
             </div>
             <div>
               <div className="text-sm text-terminal-muted mb-1">Max Amount</div>
               <div className="flex justify-between text-xs">
-                <span>
-                  {orderEstimate.available > 0 ? formatVolume(orderEstimate.maxAmount) : '—'}
-                </span>
+                <span>{balanceLoaded ? formatVolume(orderEstimate.maxAmount) : '—'}</span>
                 <span>{baseCurrency}</span>
               </div>
             </div>

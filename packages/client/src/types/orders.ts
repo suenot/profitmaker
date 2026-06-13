@@ -101,6 +101,12 @@ export interface OrderValidationRules {
     currency: string;
   };
   /**
+   * True once the account balance has actually been fetched. Distinguishes a real
+   * zero balance (block on insufficient funds) from the pre-load window where
+   * available is still 0 because nothing has been fetched yet (don't block).
+   */
+  balanceLoaded?: boolean;
+  /**
    * Live reference price (from the ticker) used to estimate market-order cost and
    * the max affordable amount. Preferred over MarketConstraints.maxPrice (a hard
    * cap, not a market price). Optional: undefined until the first ticker arrives.
