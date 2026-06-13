@@ -18,6 +18,7 @@ import { proxyRoutes } from './routes/proxy';
 import { moduleRoutes, moduleAssetRoutes } from './routes/modules';
 import { uiRoutes } from './routes/ui';
 import { moduleManager } from './modules/manager';
+import { registerBuiltinProviders } from './providers';
 import { cleanupCache } from './services/ccxtCache';
 import { validateSession, deleteExpiredSessions } from './services/auth';
 import { getBootstrapUser } from './services/bootstrapUser';
@@ -154,6 +155,10 @@ const io = new SocketIOServer(PORT + 1, {
 setStateEventsIO(io);
 setUiCommandsIO(io);
 
+// Register the built-in 'ccxt' provider before serving any /api/exchange request
+// (modules register additional providers during moduleManager.init).
+registerBuiltinProviders();
+
 // Boot the module system once Socket.IO is available. A broken module records
 // its error and is skipped — it must never abort server boot.
 moduleManager.init(io).catch((err) => {
@@ -195,7 +200,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('subscribe', async (data) => {
-    const { exchangeId, symbol, dataType, timeframe, config } = data;
+    const { exchangeId, symbol, dataType, timeframe, config, providerId } = data;
     if (!exchangeId || !symbol || !dataType) {
       socket.emit('subscription_error', { error: 'Missing required parameters' });
       return;
@@ -217,6 +222,7 @@ io.on('connection', (socket) => {
       dataType,
       timeframe,
       config: { ...config, ccxtType: 'pro' as const },
+      providerId,
       isActive: true,
     };
 

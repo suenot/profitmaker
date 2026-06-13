@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import ccxt from 'ccxt';
-import { getCCXTInstance, type CCXTInstanceConfig } from '../services/ccxtCache';
+import type { ProviderRequestConfig } from '@profitmaker/types';
+import { providerRegistry } from '../providers';
 
 const configSchema = t.Object({
   exchangeId: t.String(),
@@ -12,11 +13,10 @@ const configSchema = t.Object({
   sandbox: t.Optional(t.Boolean()),
 });
 
-// Trading requests carry credentials in `config` (same shape as fetchBalance);
-// the server stays stateless about user accounts.
-const configWithCreds = t.Object({ config: configSchema });
+// Optional explicit provider selection; omitted ⇒ registry picks by priority.
+const providerIdField = { providerId: t.Optional(t.String()) };
 
-function requireCreds(config: CCXTInstanceConfig, set: { status?: number }): string | null {
+function requireCreds(config: ProviderRequestConfig, set: { status?: number }): string | null {
   if (!config.apiKey || !config.secret) {
     set.status = 400;
     return 'API credentials required for this operation';
@@ -24,15 +24,22 @@ function requireCreds(config: CCXTInstanceConfig, set: { status?: number }): str
   return null;
 }
 
+/** Resolve a provider instance for a request, returning it + the resolved id. */
+async function resolve(config: ProviderRequestConfig, providerId?: string) {
+  return providerRegistry.resolve(config, providerId);
+}
+
 const configWithSymbol = t.Object({
   config: configSchema,
   symbol: t.String(),
+  ...providerIdField,
 });
 
 const configWithSymbolAndLimit = t.Object({
   config: configSchema,
   symbol: t.String(),
   limit: t.Optional(t.Number()),
+  ...providerIdField,
 });
 
 const configWithSymbolTimeframeLimit = t.Object({
@@ -40,109 +47,96 @@ const configWithSymbolTimeframeLimit = t.Object({
   symbol: t.String(),
   timeframe: t.Optional(t.String()),
   limit: t.Optional(t.Number()),
+  ...providerIdField,
 });
 
 const configOnly = t.Object({
   config: configSchema,
+  ...providerIdField,
 });
-
-// Which provider served a response. Today everything is the built-in ccxt path;
-// the forthcoming server ProviderRegistry (task #13) will set this from
-// registry.resolve(exchange, providerId?). Clients/agents can read `provider`
-// to know the source without a wire-format change later.
-const BUILTIN_PROVIDER = 'ccxt';
 
 export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
   .post('/instance', async ({ body }) => {
-    const config = body as CCXTInstanceConfig;
+    // NOTE: /instance takes the bare config as the body. The client's
+    // CCXTInstanceConfig carries its own `providerId` (the *client* provider id,
+    // e.g. 'primary-server') which is NOT a server-registry id — so we resolve
+    // by priority here and ignore any providerId on the config. Explicit
+    // server-provider selection happens on the data endpoints via the
+    // top-level `providerId` field.
+    const config = body as ProviderRequestConfig;
     if (!config.exchangeId) return { error: 'exchangeId is required' };
-    await getCCXTInstance(config);
+    // Instantiate (and cache) the provider instance; surfaces config errors early.
+    const { providerId } = await resolve(config);
     return {
       success: true,
+      provider: providerId,
       exchangeId: config.exchangeId,
       marketType: config.marketType || 'spot',
       ccxtType: config.ccxtType || 'regular',
       sandbox: config.sandbox || false,
       hasCredentials: !!(config.apiKey && config.secret),
     };
-  }, { body: configSchema })
+  }, { body: t.Object({ ...configSchema.properties }, { additionalProperties: true }) })
 
   .post('/fetchTicker', async ({ body }) => {
-    const { config, symbol } = body;
-    const instance = await getCCXTInstance(config);
-    const ticker = await instance.fetchTicker(symbol);
-    return { success: true, provider: BUILTIN_PROVIDER, data: ticker };
+    const { config, symbol, providerId } = body;
+    const { instance, providerId: served } = await resolve(config, providerId);
+    return { success: true, provider: served, data: await instance.fetchTicker(symbol) };
   }, { body: configWithSymbol })
 
   .post('/fetchOrderBook', async ({ body }) => {
-    const { config, symbol, limit } = body;
-    const instance = await getCCXTInstance(config);
-    const orderbook = await instance.fetchOrderBook(symbol, limit);
-    return { success: true, provider: BUILTIN_PROVIDER, data: orderbook };
+    const { config, symbol, limit, providerId } = body;
+    const { instance, providerId: served } = await resolve(config, providerId);
+    return { success: true, provider: served, data: await instance.fetchOrderBook(symbol, limit) };
   }, { body: configWithSymbolAndLimit })
 
   .post('/fetchTrades', async ({ body }) => {
-    const { config, symbol, limit } = body;
-    const instance = await getCCXTInstance(config);
-    const trades = await instance.fetchTrades(symbol, undefined, limit);
-    return { success: true, provider: BUILTIN_PROVIDER, data: trades };
+    const { config, symbol, limit, providerId } = body;
+    const { instance, providerId: served } = await resolve(config, providerId);
+    return { success: true, provider: served, data: await instance.fetchTrades(symbol, undefined, limit) };
   }, { body: configWithSymbolAndLimit })
 
   .post('/fetchOHLCV', async ({ body }) => {
-    const { config, symbol, timeframe, limit } = body;
-    const instance = await getCCXTInstance(config);
-    const ohlcv = await instance.fetchOHLCV(symbol, timeframe, undefined, limit);
-    return { success: true, provider: BUILTIN_PROVIDER, data: ohlcv };
+    const { config, symbol, timeframe, limit, providerId } = body;
+    const { instance, providerId: served } = await resolve(config, providerId);
+    return { success: true, provider: served, data: await instance.fetchOHLCV(symbol, timeframe ?? '1m', undefined, limit) };
   }, { body: configWithSymbolTimeframeLimit })
 
   .post('/fetchBalance', async ({ body, set }) => {
-    const { config } = body;
-    if (!config.apiKey || !config.secret) {
-      set.status = 400;
-      return { error: 'API credentials required for balance' };
-    }
-    const instance = await getCCXTInstance(config);
-    const balance = await instance.fetchBalance();
-    return { success: true, provider: BUILTIN_PROVIDER, data: balance };
+    const { config, providerId } = body;
+    const credErr = requireCreds(config, set);
+    if (credErr) return { error: credErr };
+    const { instance, providerId: served } = await resolve(config, providerId);
+    return { success: true, provider: served, data: await instance.fetchBalance() };
   }, { body: configOnly })
 
   .post('/capabilities', async ({ body }) => {
-    const { config } = body;
-    const instance = await getCCXTInstance(config);
-    return {
-      success: true,
-      provider: BUILTIN_PROVIDER,
-      data: {
-        has: instance.has,
-        markets: Object.keys(instance.markets || {}),
-        symbols: instance.symbols || [],
-        timeframes: instance.timeframes || {},
-        fees: instance.fees || {},
-      },
-    };
+    const { config, providerId } = body;
+    const { instance, providerId: served } = await resolve(config, providerId);
+    return { success: true, provider: served, data: await instance.getCapabilities() };
   }, { body: configOnly })
 
   // List every exchange id CCXT knows about. Used by useExchangesList and the
   // provider discovery path now that the browser CCXT bundle is gone.
-  .get('/list', () => ({ success: true, provider: BUILTIN_PROVIDER, data: (ccxt as any).exchanges as string[] }))
+  .get('/list', () => ({ success: true, provider: 'ccxt', data: (ccxt as any).exchanges as string[] }))
 
   // Single market's full metadata (limits/precision) for order validation.
   .post('/market', async ({ body }) => {
-    const { config, symbol } = body;
-    const instance = await getCCXTInstance(config);
-    const market = instance.markets?.[symbol] ?? null;
-    return { success: true, provider: BUILTIN_PROVIDER, data: market };
+    const { config, symbol, providerId } = body;
+    const { instance, providerId: served } = await resolve(config, providerId);
+    return { success: true, provider: served, data: await instance.getMarket(symbol) };
   }, { body: configWithSymbol })
 
   // --- authenticated trading (credentials travel in `config`) --------------
 
   .post('/createOrder', async ({ body, set }) => {
-    const { config, symbol, type, side, amount, price, params } = body;
+    const { config, symbol, type, side, amount, price, params, providerId } = body;
     const credErr = requireCreds(config, set);
     if (credErr) return { error: credErr };
-    const instance = await getCCXTInstance(config);
-    const order = await instance.createOrder(symbol, type, side, amount, price, params || {});
-    return { success: true, provider: BUILTIN_PROVIDER, data: order };
+    const { instance, providerId: served } = await resolve(config, providerId);
+    if (!instance.trading) { set.status = 400; return { error: `provider '${served}' has no trading support` }; }
+    const order = await instance.trading.createOrder(symbol, type, side, amount, price, params || {});
+    return { success: true, provider: served, data: order };
   }, {
     body: t.Object({
       config: configSchema,
@@ -152,94 +146,96 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
       amount: t.Number(),
       price: t.Optional(t.Number()),
       params: t.Optional(t.Record(t.String(), t.Any())),
+      ...providerIdField,
     }),
   })
 
   .post('/cancelOrder', async ({ body, set }) => {
-    const { config, orderId, symbol } = body;
+    const { config, orderId, symbol, providerId } = body;
     const credErr = requireCreds(config, set);
     if (credErr) return { error: credErr };
-    const instance = await getCCXTInstance(config);
-    const result = await instance.cancelOrder(orderId, symbol);
-    return { success: true, provider: BUILTIN_PROVIDER, data: result };
+    const { instance, providerId: served } = await resolve(config, providerId);
+    if (!instance.trading) { set.status = 400; return { error: `provider '${served}' has no trading support` }; }
+    return { success: true, provider: served, data: await instance.trading.cancelOrder(orderId, symbol) };
   }, {
     body: t.Object({
       config: configSchema,
       orderId: t.String(),
       symbol: t.String(),
+      ...providerIdField,
     }),
   })
 
   .post('/fetchMyTrades', async ({ body, set }) => {
-    const { config, symbol, since, limit } = body;
+    const { config, symbol, since, limit, providerId } = body;
     const credErr = requireCreds(config, set);
     if (credErr) return { error: credErr };
-    const instance = await getCCXTInstance(config);
-    if (!instance.has?.fetchMyTrades) return { success: true, provider: BUILTIN_PROVIDER, data: [] };
-    const trades = await instance.fetchMyTrades(symbol, since, limit);
-    return { success: true, provider: BUILTIN_PROVIDER, data: trades };
+    const { instance, providerId: served } = await resolve(config, providerId);
+    const trades = instance.trading ? await instance.trading.fetchMyTrades(symbol, since, limit) : [];
+    return { success: true, provider: served, data: trades };
   }, {
     body: t.Object({
       config: configSchema,
       symbol: t.Optional(t.String()),
       since: t.Optional(t.Number()),
       limit: t.Optional(t.Number()),
+      ...providerIdField,
     }),
   })
 
   .post('/fetchOrders', async ({ body, set }) => {
-    const { config, symbol, since, limit } = body;
+    const { config, symbol, since, limit, providerId } = body;
     const credErr = requireCreds(config, set);
     if (credErr) return { error: credErr };
-    const instance = await getCCXTInstance(config);
-    if (!instance.has?.fetchOrders) return { success: true, provider: BUILTIN_PROVIDER, data: [] };
-    const orders = await instance.fetchOrders(symbol, since, limit);
-    return { success: true, provider: BUILTIN_PROVIDER, data: orders };
+    const { instance, providerId: served } = await resolve(config, providerId);
+    const orders = instance.trading ? await instance.trading.fetchOrders(symbol, since, limit) : [];
+    return { success: true, provider: served, data: orders };
   }, {
     body: t.Object({
       config: configSchema,
       symbol: t.Optional(t.String()),
       since: t.Optional(t.Number()),
       limit: t.Optional(t.Number()),
+      ...providerIdField,
     }),
   })
 
   .post('/fetchOpenOrders', async ({ body, set }) => {
-    const { config, symbol } = body;
+    const { config, symbol, providerId } = body;
     const credErr = requireCreds(config, set);
     if (credErr) return { error: credErr };
-    const instance = await getCCXTInstance(config);
-    if (!instance.has?.fetchOpenOrders) return { success: true, provider: BUILTIN_PROVIDER, data: [] };
-    const orders = await instance.fetchOpenOrders(symbol);
-    return { success: true, provider: BUILTIN_PROVIDER, data: orders };
+    const { instance, providerId: served } = await resolve(config, providerId);
+    const orders = instance.trading ? await instance.trading.fetchOpenOrders(symbol) : [];
+    return { success: true, provider: served, data: orders };
   }, {
     body: t.Object({
       config: configSchema,
       symbol: t.Optional(t.String()),
+      ...providerIdField,
     }),
   })
 
   .post('/fetchPositions', async ({ body, set }) => {
-    const { config, symbols } = body;
+    const { config, symbols, providerId } = body;
     const credErr = requireCreds(config, set);
     if (credErr) return { error: credErr };
-    const instance = await getCCXTInstance(config);
-    if (!instance.has?.fetchPositions) return { success: true, provider: BUILTIN_PROVIDER, data: [] };
-    const positions = await instance.fetchPositions(symbols);
-    return { success: true, provider: BUILTIN_PROVIDER, data: positions };
+    const { instance, providerId: served } = await resolve(config, providerId);
+    const positions = instance.trading ? await instance.trading.fetchPositions(symbols) : [];
+    return { success: true, provider: served, data: positions };
   }, {
     body: t.Object({
       config: configSchema,
       symbols: t.Optional(t.Array(t.String())),
+      ...providerIdField,
     }),
   })
 
   .onError(({ error, set }) => {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    // Map known CCXT errors to appropriate HTTP codes
+    // Map known CCXT/registry errors to appropriate HTTP codes
     if (message.includes('not found')) {
       set.status = 404;
-    } else if (message.includes('not available') || message.includes('not supported')) {
+    } else if (message.includes('not available') || message.includes('not supported') || message.includes('does not support')) {
       set.status = 400;
     } else {
       set.status = 500;

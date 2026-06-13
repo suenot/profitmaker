@@ -9,6 +9,7 @@ import type {
 } from '@profitmaker/module-sdk';
 
 import { getCCXTInstance } from '../services/ccxtCache';
+import { providerRegistry } from '../providers';
 
 /**
  * Directory holding installed-module state files (`<id>.json`). One file per
@@ -145,6 +146,8 @@ export interface BuiltContext {
   ctx: BackendModuleContext;
   /** Force-clear all jobs this module registered (called on stop/disable). */
   clearJobs(): void;
+  /** Unregister every provider this module registered (called on stop/disable). */
+  clearProviders(): void;
 }
 
 /**
@@ -169,6 +172,9 @@ export function buildBackendModuleContext(
   const storage = new FileStorage(modulesDir, id);
   const dataDir = stateDir(modulesDir);
 
+  // Track providers this module registers so they're all torn down on stop.
+  const registeredProviderIds = new Set<string>();
+
   const ctx: BackendModuleContext = {
     id,
     version,
@@ -186,10 +192,33 @@ export function buildBackendModuleContext(
           password: config.password,
         }),
     },
+    providers: {
+      register: (factory) => {
+        providerRegistry.register(factory, id);
+        registeredProviderIds.add(factory.id);
+        log.info(`registered server provider '${factory.id}'`);
+        return {
+          dispose: () => {
+            providerRegistry.unregister(factory.id);
+            registeredProviderIds.delete(factory.id);
+          },
+        };
+      },
+      unregister: (providerId) => {
+        registeredProviderIds.delete(providerId);
+        return providerRegistry.unregister(providerId);
+      },
+    },
     storage,
     jobs,
     env: { dataDir },
   };
 
-  return { ctx, clearJobs: () => jobs.clearAll() };
+  const clearProviders = () => {
+    const removed = providerRegistry.unregisterModule(id);
+    registeredProviderIds.clear();
+    if (removed.length > 0) log.info(`unregistered ${removed.length} provider(s): ${removed.join(', ')}`);
+  };
+
+  return { ctx, clearJobs: () => jobs.clearAll(), clearProviders };
 }

@@ -4,8 +4,15 @@ import { db } from '../db';
 import { dataProviders } from '../db/schema/providers';
 import { getUserFromRequest } from '../middleware/requireUser';
 import { emitStateChanged, clientIdFromRequest } from '../services/stateEvents';
+import { providerRegistry } from '../providers';
 
 export const providerRoutes = new Elysia({ prefix: '/api/providers' })
+
+  // Server-side providers registered in the ServerProviderRegistry (built-in
+  // 'ccxt' + any module-supplied providers). Distinct from the per-user
+  // data-provider rows below; this lists what the SERVER can actually serve, so
+  // the client/UI/agents can pick a providerId. Read-only, no per-user state.
+  .get('/available', () => ({ success: true, data: providerRegistry.list() }))
 
   // List all providers for current user
   .get('/', async ({ request, set }) => {

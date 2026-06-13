@@ -39,6 +39,7 @@ interface LoadedModule {
   backend?: BackendModule;
   handles?: BackendModuleHandles;
   clearJobs?: () => void;
+  clearProviders?: () => void;
 }
 
 const MODULES_PKG = { name: 'profitmaker-installed-modules', private: true };
@@ -250,7 +251,7 @@ class ModuleManager {
       throw new Error(`backend entry not found: ${entryAbs}`);
     }
 
-    const { ctx, clearJobs } = buildBackendModuleContext(id, version, this.io, this.modulesDir);
+    const { ctx, clearJobs, clearProviders } = buildBackendModuleContext(id, version, this.io, this.modulesDir);
     const mod = (await import(pathToFileURL(entryAbs).href)) as {
       default?: BackendModule;
     } & Partial<BackendModule>;
@@ -268,6 +269,7 @@ class ModuleManager {
     m.backend = backend;
     m.handles = handles ?? undefined;
     m.clearJobs = clearJobs;
+    m.clearProviders = clearProviders;
     m.state.error = undefined;
 
     if (handles?.routes && typeof handles.routes.handle === 'function') {
@@ -295,6 +297,11 @@ class ModuleManager {
       console.error(`[modules] clearJobs failed for ${id}:`, err);
     }
     try {
+      m.clearProviders?.();
+    } catch (err) {
+      console.error(`[modules] clearProviders failed for ${id}:`, err);
+    }
+    try {
       await m.backend?.stop?.();
     } catch (err) {
       console.error(`[modules] stop() threw for ${id}:`, err);
@@ -302,6 +309,7 @@ class ModuleManager {
     m.backend = undefined;
     m.handles = undefined;
     m.clearJobs = undefined;
+    m.clearProviders = undefined;
     console.log(`[modules] stopped ${id}`);
   }
 
