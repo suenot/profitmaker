@@ -25,6 +25,9 @@ const PM_URL = (process.env.PROFITMAKER_API_URL || 'https://profitmaker-api.mark
 // The two bingx accounts connected to suenot@gmail.com in the auth vault.
 const TRENDER_ID = 'd4a27718-fbc4-42e9-8080-0dcbab2f5a9e';
 const HIGHRISK2_ID = 'b2b6d582-ffbc-4d4a-a9f6-2279b4cd4f2d';
+// A bybit READ-ONLY account ('investor-ro') with a WORKING key — used for the
+// live-balance assertion (server egress IP is whitelisted on this bybit key).
+const BYBIT_RO_ID = '03676cc8-dcc5-4c40-b883-f8de0425fe91';
 
 const HAVE_LOGIN = !!(process.env.MM_LOGIN && process.env.MM_PASS);
 
@@ -149,6 +152,39 @@ describe.skipIf(!HAVE_LOGIN)('central-accounts integration (live, gated on MM_LO
       console.warn('[integration] fetchBalance reached BingX but the key/IP was rejected (100413) — balance assertion pending owner IP whitelist of 195.178.4.137; server→auth→exchange path verified');
       ctx.skip();
     }
+  });
+
+  it('accountId fetchBalance returns LIVE balances via the bybit read-only account', async (ctx) => {
+    if (!token) { ctx.skip(); return; }
+
+    // The bybit 'investor-ro' key works from the server IP, so this exercises the
+    // FULL path with real data: server → auth vault (decrypt) → bybit → balances.
+    const res = await fetch(`${PM_URL}/api/exchange/fetchBalance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        config: { exchangeId: 'bybit', marketType: 'swap' },
+        accountId: BYBIT_RO_ID,
+        want: 'read',
+      }),
+    });
+    const text = await res.text();
+    let body: any = null;
+    try { body = JSON.parse(text); } catch { /* shouldn't happen on the 200 path */ }
+
+    // Must be our own success, not a gate rejection and not an exchange error.
+    expect(res.status).toBe(200);
+    expect(body?.success).toBe(true);
+
+    // A real ccxt balance carries a `total` map of asset → amount. Assert the
+    // shape (not specific holdings, which vary) — this is the live-data proof.
+    expect(body?.data).toBeTruthy();
+    expect(typeof body.data.total).toBe('object');
+    expect(body.data.total).not.toBeNull();
+    expect(Object.keys(body.data.total).length).toBeGreaterThan(0);
+    // ccxt also exposes free/used alongside total.
+    expect(body.data).toHaveProperty('free');
+    expect(body.data).toHaveProperty('used');
   });
 });
 
