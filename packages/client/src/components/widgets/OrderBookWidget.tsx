@@ -63,24 +63,7 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
   // Get data from store (automatically updated) with market from store
   const rawOrderBook = getOrderBook(exchange, symbol, market as any);
   const activeSubscriptions = getActiveSubscriptionsList();
-  
-  // Detailed logging of orderbook data
-  React.useEffect(() => {
-    console.log(`📊 [OrderBook-${widgetId}] Raw data received:`, {
-      exchange,
-      symbol,
-      market,
-      rawOrderBook,
-      hasData: !!rawOrderBook,
-      dataKeys: rawOrderBook ? Object.keys(rawOrderBook) : null,
-      bidsLength: rawOrderBook?.bids?.length || 0,
-      asksLength: rawOrderBook?.asks?.length || 0,
-      timestamp: rawOrderBook?.timestamp,
-      firstBid: rawOrderBook?.bids?.[0],
-      firstAsk: rawOrderBook?.asks?.[0]
-    });
-  }, [rawOrderBook, exchange, symbol, market, widgetId]);
-  
+
   // Check if there's an active subscription for current exchange/symbol/market
   const currentSubscription = activeSubscriptions.find(sub => 
     sub.key.exchange === exchange && 
@@ -91,51 +74,15 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
 
   // Processing and formatting orderbook data
   const processedOrderBook = useMemo(() => {
-    console.log(`🔄 [OrderBook-${widgetId}] Processing orderbook data:`, {
-      hasRawData: !!rawOrderBook,
-      rawOrderBook: rawOrderBook
-    });
-    
     if (!rawOrderBook) {
-      console.log(`❌ [OrderBook-${widgetId}] No raw orderbook data`);
       return null;
     }
 
     try {
       // Check that data is in correct format
-      if (!rawOrderBook.bids || !rawOrderBook.asks || 
+      if (!rawOrderBook.bids || !rawOrderBook.asks ||
           !Array.isArray(rawOrderBook.bids) || !Array.isArray(rawOrderBook.asks)) {
-        console.warn(`❌ [OrderBook-${widgetId}] Invalid orderbook data format:`, {
-          rawOrderBook,
-          hasBids: !!rawOrderBook.bids,
-          hasAsks: !!rawOrderBook.asks,
-          bidsIsArray: Array.isArray(rawOrderBook.bids),
-          asksIsArray: Array.isArray(rawOrderBook.asks),
-          bidsType: typeof rawOrderBook.bids,
-          asksType: typeof rawOrderBook.asks
-        });
         return null;
-      }
-
-      // Log format of first entry for debugging
-      if (rawOrderBook.bids.length > 0) {
-        const firstBid = rawOrderBook.bids[0];
-        console.log(`📊 [OrderBook-${widgetId}] Format sample - bid:`, {
-          isArray: Array.isArray(firstBid),
-          type: typeof firstBid,
-          value: firstBid,
-          keys: firstBid && typeof firstBid === 'object' ? Object.keys(firstBid) : null
-        });
-      }
-      
-      if (rawOrderBook.asks.length > 0) {
-        const firstAsk = rawOrderBook.asks[0];
-        console.log(`📊 [OrderBook-${widgetId}] Format sample - ask:`, {
-          isArray: Array.isArray(firstAsk),
-          type: typeof firstAsk,
-          value: firstAsk,
-          keys: firstAsk && typeof firstAsk === 'object' ? Object.keys(firstAsk) : null
-        });
       }
 
       const formatEntry = (entry: OrderBookEntry | [number, number]) => {
@@ -143,13 +90,6 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
         if (Array.isArray(entry)) {
           const [price, amount] = entry;
           if (typeof price !== 'number' || typeof amount !== 'number') {
-            console.warn(`❌ [OrderBook-${widgetId}] Invalid orderbook array entry:`, {
-              entry,
-              price,
-              amount,
-              priceType: typeof price,
-              amountType: typeof amount
-            });
             return null;
           }
           return {
@@ -158,16 +98,9 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
             total: price * amount
           };
         }
-        
+
         // Handle object format {price, amount}
         if (!entry || typeof entry.price !== 'number' || typeof entry.amount !== 'number') {
-          console.warn(`❌ [OrderBook-${widgetId}] Invalid orderbook object entry:`, {
-            entry,
-            hasPrice: 'price' in entry,
-            hasAmount: 'amount' in entry,
-            priceType: typeof entry.price,
-            amountType: typeof entry.amount
-          });
           return null;
         }
         return {
@@ -180,16 +113,6 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
       // Take only needed depth and filter null values
       const bids = (rawOrderBook.bids as (OrderBookEntry | [number, number])[]).slice(0, displayDepth).map(formatEntry).filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
       const asks = (rawOrderBook.asks as (OrderBookEntry | [number, number])[]).slice(0, displayDepth).map(formatEntry).filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
-      
-      console.log(`📊 [OrderBook-${widgetId}] Processed entries:`, {
-        originalBidsLength: rawOrderBook.bids.length,
-        originalAsksLength: rawOrderBook.asks.length,
-        processedBidsLength: bids.length,
-        processedAsksLength: asks.length,
-        displayDepth,
-        sampleBid: bids[0],
-        sampleAsk: asks[0]
-      });
 
     // Add cumulative volumes if needed
     if (showCumulative) {
@@ -212,19 +135,11 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
         asks,
         timestamp: rawOrderBook.timestamp,
         spread: asks.length > 0 && bids.length > 0 ? asks[0].price - bids[0].price : 0,
-        spreadPercent: asks.length > 0 && bids.length > 0 
-          ? ((asks[0].price - bids[0].price) / bids[0].price) * 100 
+        spreadPercent: asks.length > 0 && bids.length > 0
+          ? ((asks[0].price - bids[0].price) / bids[0].price) * 100
           : 0
       };
-      
-      console.log(`✅ [OrderBook-${widgetId}] Processing completed successfully:`, {
-        result,
-        hasBids: result.bids.length > 0,
-        hasAsks: result.asks.length > 0,
-        spread: result.spread,
-        spreadPercent: result.spreadPercent
-      });
-      
+
       return result;
     } catch (error) {
       console.error(`❌ [OrderBook-${widgetId}] Error processing orderbook data:`, error);
@@ -272,7 +187,6 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
   // REST data initialization and WebSocket subscription management
   useEffect(() => {
     if (!activeProviderId) {
-      console.log(`⏸️ [OrderBook-${widgetId}] No active provider, skipping initialization`);
       return;
     }
 
@@ -289,52 +203,36 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
       previousSubscriptionRef.current.market !== market;
 
     if (subscriptionChanged) {
-      console.log(`🔄 [OrderBook-${widgetId}] Subscription parameters changed:`, {
-        previous: previousSubscriptionRef.current,
-        current: currentSubscription
-      });
-
       // Update loading state
       updateWidget(widgetId, { isLoading: true, error: null });
 
       // Initialize with REST data first
       const initializeData = async () => {
         try {
-          console.log(`🚀 [OrderBook-${widgetId}] Initializing orderbook data via REST for ${exchange}:${market}:${symbol}`);
-          
-          const initialOrderBook = await initializeOrderBookData(exchange, symbol, market);
-          
-          console.log(`✅ [OrderBook-${widgetId}] REST initialization completed:`, {
-            bids: initialOrderBook.bids.length,
-            asks: initialOrderBook.asks.length,
-            timestamp: initialOrderBook.timestamp
-          });
+          await initializeOrderBookData(exchange, symbol, market);
 
           // Start WebSocket subscription for real-time updates
           const subscriberId = `${dashboardId}-${widgetId}`;
           const subscriptionResult = await subscribe(subscriberId, exchange, symbol, 'orderbook', undefined, market);
-          
+
           if (subscriptionResult.success) {
-            updateWidget(widgetId, { 
-              isSubscribed: true, 
-              isLoading: false, 
-              error: null 
+            updateWidget(widgetId, {
+              isSubscribed: true,
+              isLoading: false,
+              error: null
             });
-            console.log(`📡 [OrderBook-${widgetId}] WebSocket subscription started for ${exchange}:${market}:${symbol}`);
           } else {
-            updateWidget(widgetId, { 
-              isSubscribed: false, 
-              isLoading: false, 
-              error: subscriptionResult.error || 'Subscription failed' 
+            updateWidget(widgetId, {
+              isSubscribed: false,
+              isLoading: false,
+              error: subscriptionResult.error || 'Subscription failed'
             });
-            console.error(`❌ [OrderBook-${widgetId}] WebSocket subscription failed:`, subscriptionResult.error);
           }
 
         } catch (error) {
-          console.error(`❌ [OrderBook-${widgetId}] REST initialization failed:`, error);
-          updateWidget(widgetId, { 
-            isLoading: false, 
-            error: error instanceof Error ? error.message : 'Failed to load orderbook data' 
+          updateWidget(widgetId, {
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'Failed to load orderbook data'
           });
         }
       };
@@ -348,7 +246,6 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
       if (previousSubscriptionRef.current) {
         const subscriberId = `${dashboardId}-${widgetId}`;
         unsubscribe(subscriberId, exchange, symbol, 'orderbook', undefined, market);
-        console.log(`🧹 [OrderBook-${widgetId}] Cleaned up subscription for ${exchange}:${market}:${symbol}`);
       }
     };
   }, [exchange, symbol, market, activeProviderId, widgetId, dashboardId, initializeOrderBookData, subscribe, unsubscribe, updateWidget]);
@@ -361,32 +258,29 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
 
     try {
       updateWidget(widgetId, { isLoading: true, error: null });
-      
+
       // Initialize with REST data first
-      console.log(`🚀 [OrderBook-${widgetId}] Manual subscription: Initializing orderbook data via REST`);
-      const initialOrderBook = await initializeOrderBookData(exchange, symbol, market);
-      
+      await initializeOrderBookData(exchange, symbol, market);
+
       // Start WebSocket subscription
       const subscriberId = `${dashboardId}-${widgetId}`;
       const subscriptionResult = await subscribe(subscriberId, exchange, symbol, 'orderbook', undefined, market);
-      
+
       if (subscriptionResult.success) {
-        updateWidget(widgetId, { 
-          isSubscribed: true, 
-          isLoading: false, 
-          error: null 
+        updateWidget(widgetId, {
+          isSubscribed: true,
+          isLoading: false,
+          error: null
         });
-        console.log(`✅ [OrderBook-${widgetId}] Manual subscription successful`);
       } else {
-        updateWidget(widgetId, { 
-          isSubscribed: false, 
-          isLoading: false, 
-          error: subscriptionResult.error || 'Subscription failed' 
+        updateWidget(widgetId, {
+          isSubscribed: false,
+          isLoading: false,
+          error: subscriptionResult.error || 'Subscription failed'
         });
       }
     } catch (error) {
-      console.error('❌ Error in manual orderbook subscription:', error);
-      updateWidget(widgetId, { 
+      updateWidget(widgetId, {
         error: error instanceof Error ? error.message : 'Subscription failed',
         isLoading: false,
         isSubscribed: false
@@ -398,7 +292,6 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
     const subscriberId = `${dashboardId}-${widgetId}`;
     unsubscribe(subscriberId, exchange, symbol, 'orderbook', undefined, market);
     updateWidget(widgetId, { isSubscribed: false });
-    console.log(`🛑 [OrderBook-${widgetId}] Manual unsubscription`);
   };
 
   const formatPrice = (price: number): string => {
@@ -449,7 +342,7 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
                   top: 0,
                   left: 0,
                   width: '100%',
-                  height: '24px !important',
+                  height: `${virtualRow.size}px`,
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
                 className="grid grid-cols-3 gap-2 text-xs px-2 py-1 bg-red-50/20 hover:bg-red-50/30 dark:bg-red-900/20 dark:hover:bg-red-900/30 border-l-2 border-red-500 dark:border-red-400"
@@ -497,7 +390,7 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
                   top: 0,
                   left: 0,
                   width: '100%',
-                  height: '24px !important',
+                  height: `${virtualRow.size}px`,
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
                 className="grid grid-cols-3 gap-2 text-xs px-2 py-1 bg-green-50/20 hover:bg-green-50/30 dark:bg-green-900/20 dark:hover:bg-green-900/30 border-l-2 border-green-500 dark:border-green-400"
@@ -519,31 +412,25 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
 
   return (
     <div className="w-full h-full flex flex-col">
+      {/* Error display */}
+      {error && (
+        <div className="text-red-500 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg border border-red-200 dark:border-red-800 text-sm flex-shrink-0">
+          {error}
+        </div>
+      )}
+
       {!processedOrderBook ? (
         <div className="flex-1 flex items-center justify-center text-terminal-muted">
           <div className="text-center">
-            {(() => {
-              console.log(`🎨 [OrderBook-${widgetId}] Render: No processed data`, {
-                isSubscribed,
-                hasRawData: !!rawOrderBook,
-                processedOrderBook
-              });
-              return isSubscribed ? 'Waiting for data...' : 'Subscribe to receive orderbook data';
-            })()}
+            {isLoading
+              ? 'Loading orderbook data...'
+              : isSubscribed
+                ? 'Waiting for data...'
+                : 'Subscribe to receive orderbook data'}
           </div>
         </div>
       ) : (
         <div className="flex-1 flex flex-col space-y-1">
-          {(() => {
-            console.log(`🎨 [OrderBook-${widgetId}] Render: Displaying orderbook data`, {
-              bidsCount: processedOrderBook.bids.length,
-              asksCount: processedOrderBook.asks.length,
-              spread: processedOrderBook.spread,
-              timestamp: processedOrderBook.timestamp
-            });
-            return null;
-          })()}
-          
           {/* Headers */}
           <div className="grid grid-cols-3 gap-2 text-xs font-medium text-terminal-muted px-2 py-1 border-b border-terminal-border">
             <div>Price</div>

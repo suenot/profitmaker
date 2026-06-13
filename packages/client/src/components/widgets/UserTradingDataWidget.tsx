@@ -1,10 +1,9 @@
-import React, { useMemo, useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { TrendingUp, BarChart3, ShoppingCart, User, RefreshCw } from 'lucide-react';
 import { useUserStore } from '../../store/userStore';
 import { useUserTradingDataWidgetStore, TradingDataTab } from '../../store/userTradingDataWidgetStore';
-import { useDataProviderStore } from '../../store/dataProviderStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import UserTradesTab from './UserTradesTab';
+import UserTradesTab, { TabRefreshHandle } from './UserTradesTab';
 import UserPositionsTab from './UserPositionsTab';
 import UserOrdersTab from './UserOrdersTab';
 
@@ -13,77 +12,39 @@ interface UserTradingDataWidgetProps {
   widgetId?: string;
 }
 
-// Interface for tab refresh methods
-interface TabRefreshMethods {
-  refresh: () => Promise<void>;
-}
-
 // Header actions component for the widget
-export const UserTradingDataHeaderActions: React.FC<{ 
+export const UserTradingDataHeaderActions: React.FC<{
   widgetId: string;
 }> = ({ widgetId }) => {
-  const { getWidget } = useUserTradingDataWidgetStore();
+  const { getWidget, triggerRefresh } = useUserTradingDataWidgetStore();
   const { users, activeUserId } = useUserStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  const widgetSettings = getWidget(widgetId).settings;
+
   const activeUser = users.find(u => u.id === activeUserId);
-  
+
   const accountsWithKeys = useMemo(() => {
     if (!activeUser?.accounts || !Array.isArray(activeUser.accounts)) {
       return [];
     }
     return activeUser.accounts.filter(acc => acc.key && acc.privateKey);
   }, [activeUser?.accounts]);
-  
+
   const hasValidAccounts = accountsWithKeys.length > 0;
-  
-  const selectedAccounts = useMemo(() => {
-    if (!hasValidAccounts) return [];
-    
-    if (widgetSettings.selectedAccountId === 'all') {
-      return accountsWithKeys;
-    }
-    
-    const account = accountsWithKeys.find(acc => acc.id === widgetSettings.selectedAccountId);
-    return account ? [account] : accountsWithKeys;
-  }, [widgetSettings.selectedAccountId, accountsWithKeys, hasValidAccounts]);
 
   const handleRefresh = async () => {
     if (!hasValidAccounts || isRefreshing) return;
-    
+
     setIsRefreshing(true);
-    console.log(`🔄 Refreshing ${widgetSettings.activeTab} for ${selectedAccounts.length} account(s)`);
-    
     try {
-      // Force reload data for current active tab by triggering a re-fetch
-      // This will work by simulating a change that triggers useEffect in tabs
-      const currentTab = widgetSettings.activeTab;
-      const { updateWidget } = useUserTradingDataWidgetStore.getState();
-      
-      // Temporarily change tab to trigger cleanup, then switch back
-      updateWidget(widgetId, { activeTab: currentTab === 'trades' ? 'positions' : 'trades' });
-      
-      // Wait for tab switch to complete, then switch back and stop loading
-      await new Promise(resolve => {
-        setTimeout(() => {
-          updateWidget(widgetId, { activeTab: currentTab });
-          // Wait a bit more for the new tab to start loading
-          setTimeout(() => {
-            resolve(undefined);
-          }, 200);
-        }, 50);
-      });
-      
-      console.log(`✅ Refresh completed for ${widgetSettings.activeTab}`);
+      // Delegate to the widget's registered handler, which calls refresh() on the
+      // active tab's imperative handle (no remount / tab-toggle hack).
+      await triggerRefresh(widgetId);
     } catch (error) {
-      console.error(`❌ Refresh failed:`, error);
+      console.error('Refresh failed:', error);
     } finally {
       setIsRefreshing(false);
     }
   };
-
-
 
   return (
     <div className="flex items-center gap-1">
@@ -109,89 +70,40 @@ const UserTradingDataWidget: React.FC<UserTradingDataWidgetProps> = ({
   widgetId = 'user-trading-data-widget'
 }) => {
   // Store integration
-  const { getWidget, updateWidget } = useUserTradingDataWidgetStore();
+  const { getWidget, updateWidget, registerRefreshHandler, unregisterRefreshHandler } = useUserTradingDataWidgetStore();
   const widgetSettings = getWidget(widgetId).settings;
-  
+
   // User store integration
   const { users, activeUserId } = useUserStore();
   const activeUser = users.find(u => u.id === activeUserId);
-  
-  // Data provider integration
-  const dataProvider = useDataProviderStore();
-  
+
   // Refs for tab components to call their refresh methods
-  const tradesTabRef = useRef<TabRefreshMethods>(null);
-  const positionsTabRef = useRef<TabRefreshMethods>(null);
-  const ordersTabRef = useRef<TabRefreshMethods>(null);
-  
+  const tradesTabRef = useRef<TabRefreshHandle>(null);
+  const positionsTabRef = useRef<TabRefreshHandle>(null);
+  const ordersTabRef = useRef<TabRefreshHandle>(null);
+
   // Get all user accounts with API keys
   const accountsWithKeys = useMemo(() => {
-    console.log(`🔍 [UserTradingDataWidget] Computing accountsWithKeys:`, {
-      activeUser: activeUser ? {
-        id: activeUser.id,
-        email: activeUser.email,
-        accountsLength: activeUser.accounts?.length || 0
-      } : null,
-      allAccounts: activeUser?.accounts?.map(acc => ({
-        id: acc.id,
-        exchange: acc.exchange,
-        email: acc.email,
-        hasKey: !!acc.key,
-        hasPrivateKey: !!acc.privateKey,
-        keyLength: acc.key?.length || 0,
-        privateKeyLength: acc.privateKey?.length || 0
-      })) || []
-    });
-    
     if (!activeUser?.accounts || !Array.isArray(activeUser.accounts)) {
-      console.log(`⚠️ [UserTradingDataWidget] No accounts found or not array`);
       return [];
     }
-    
-    const filtered = activeUser.accounts.filter(acc => acc.key && acc.privateKey);
-    console.log(`✅ [UserTradingDataWidget] Filtered accounts with keys: ${filtered.length}`, filtered.map(acc => ({
-      id: acc.id,
-      exchange: acc.exchange,
-      email: acc.email
-    })));
-    
-    return filtered;
+    return activeUser.accounts.filter(acc => acc.key && acc.privateKey);
   }, [activeUser?.accounts]);
-  
+
   const hasValidAccounts = accountsWithKeys.length > 0;
-  
+
   // Get selected accounts based on settings
   const selectedAccounts = useMemo(() => {
-    console.log(`🔍 [UserTradingDataWidget] Computing selectedAccounts:`, {
-      hasValidAccounts,
-      accountsWithKeysLength: accountsWithKeys.length,
-      selectedAccountId: widgetSettings.selectedAccountId,
-      accountsWithKeys: accountsWithKeys.map(acc => ({
-        id: acc.id,
-        exchange: acc.exchange,
-        email: acc.email,
-        hasKey: !!acc.key,
-        hasPrivateKey: !!acc.privateKey
-      }))
-    });
-    
     if (!hasValidAccounts) return [];
-    
+
     // If 'all' selected, return all accounts
     if (widgetSettings.selectedAccountId === 'all') {
-      console.log(`✅ [UserTradingDataWidget] Returning all accounts: ${accountsWithKeys.length}`);
       return accountsWithKeys;
     }
-    
-    // Return specific account
+
+    // Return specific account (fall back to all if it can't be found)
     const account = accountsWithKeys.find(acc => acc.id === widgetSettings.selectedAccountId);
-    const result = account ? [account] : accountsWithKeys; // Fallback to all if account not found
-    console.log(`✅ [UserTradingDataWidget] Returning selected accounts: ${result.length}`, result.map(acc => ({
-      id: acc.id,
-      exchange: acc.exchange,
-      email: acc.email
-    })));
-    return result;
+    return account ? [account] : accountsWithKeys;
   }, [widgetSettings.selectedAccountId, accountsWithKeys, hasValidAccounts]);
 
   // Handle tab change
@@ -199,30 +111,29 @@ const UserTradingDataWidget: React.FC<UserTradingDataWidgetProps> = ({
     updateWidget(widgetId, { activeTab: tab });
   };
 
-  // Handle refresh for current active tab
+  // Refresh the currently active tab by calling its imperative refresh() handle.
   const handleRefreshData = async () => {
-    console.log(`🔄 [UserTradingDataWidget] Refreshing ${widgetSettings.activeTab} tab`);
-    
     switch (widgetSettings.activeTab) {
       case 'trades':
-        if (tradesTabRef.current) {
-          await tradesTabRef.current.refresh();
-        }
+        await tradesTabRef.current?.refresh();
         break;
       case 'positions':
-        if (positionsTabRef.current) {
-          await positionsTabRef.current.refresh();
-        }
+        await positionsTabRef.current?.refresh();
         break;
       case 'orders':
-        if (ordersTabRef.current) {
-          await ordersTabRef.current.refresh();
-        }
+        await ordersTabRef.current?.refresh();
         break;
-      default:
-        console.warn(`Unknown tab: ${widgetSettings.activeTab}`);
     }
   };
+
+  // Register the refresh handler so the header refresh button (a separate
+  // component) can trigger it via the store. Re-register when the active tab
+  // changes so the closure always targets the visible tab.
+  useEffect(() => {
+    registerRefreshHandler(widgetId, handleRefreshData);
+    return () => unregisterRefreshHandler(widgetId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [widgetId, widgetSettings.activeTab, registerRefreshHandler, unregisterRefreshHandler]);
 
   if (!activeUser) {
     return (
@@ -286,23 +197,26 @@ const UserTradingDataWidget: React.FC<UserTradingDataWidgetProps> = ({
         </TabsList>
         
         <TabsContent value="trades" className="flex-1 overflow-hidden m-0">
-          <UserTradesTab 
+          <UserTradesTab
+            ref={tradesTabRef}
             widgetId={widgetId}
             accounts={selectedAccounts}
             settings={widgetSettings}
           />
         </TabsContent>
-        
+
         <TabsContent value="positions" className="flex-1 overflow-hidden m-0">
-          <UserPositionsTab 
+          <UserPositionsTab
+            ref={positionsTabRef}
             widgetId={widgetId}
             accounts={selectedAccounts}
             settings={widgetSettings}
           />
         </TabsContent>
-        
+
         <TabsContent value="orders" className="flex-1 overflow-hidden m-0">
-          <UserOrdersTab 
+          <UserOrdersTab
+            ref={ordersTabRef}
             widgetId={widgetId}
             accounts={selectedAccounts}
             settings={widgetSettings}

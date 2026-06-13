@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { BarChart3, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { ExchangeAccount } from '../../store/userStore';
 import { UserTradingDataWidgetSettings } from '../../store/userTradingDataWidgetStore';
+import { TabRefreshHandle } from './UserTradesTab';
 
 interface Position {
   id: string;
@@ -28,12 +29,12 @@ interface UserPositionsTabProps {
   settings: UserTradingDataWidgetSettings;
 }
 
-const UserPositionsTab: React.FC<UserPositionsTabProps> = ({
+const UserPositionsTab = forwardRef<TabRefreshHandle, UserPositionsTabProps>(({
   widgetId,
   accounts,
   settings
-}) => {
-  const [positions, setPositions] = useState<Array<Position & { 
+}, ref) => {
+  const [positions, setPositions] = useState<Array<Position & {
     accountId: string;
     exchange: string;
     email: string;
@@ -50,17 +51,13 @@ const UserPositionsTab: React.FC<UserPositionsTabProps> = ({
     
     setLoading(true);
     setError(null);
-    
+
     try {
-      console.log(`📊 Loading positions for ${accounts.length} account(s)`);
-      
       const allPositions: (Position & { accountId: string; exchange: string; email: string; })[] = [];
-      
+
       // Load positions from each account
       for (const account of accounts) {
         try {
-          console.log(`🔄 Fetching positions for account ${account.id} (${account.exchange})`);
-          
           const positions = await dataProvider.fetchPositions(
             account.id,
             undefined // symbols - get all symbols
@@ -80,22 +77,18 @@ const UserPositionsTab: React.FC<UserPositionsTabProps> = ({
             });
           
           allPositions.push(...positionsWithAccount);
-          
-          console.log(`✅ Loaded ${positions.length} positions for account ${account.id}`);
         } catch (error) {
-          console.error(`❌ Failed to load positions for account ${account.id}:`, error);
+          console.error(`Failed to load positions for account ${account.id}:`, error);
           // Continue with other accounts even if one fails
         }
       }
-      
+
       // Sort positions by notional value (largest first)
       allPositions.sort((a, b) => Math.abs(b.notional) - Math.abs(a.notional));
-      
+
       setPositions(allPositions);
-      console.log(`✅ Total positions loaded: ${allPositions.length}`);
-      
     } catch (error) {
-      console.error('❌ Failed to load positions:', error);
+      console.error('Failed to load positions:', error);
       setError(error instanceof Error ? error.message : 'Failed to load positions');
     } finally {
       setLoading(false);
@@ -109,6 +102,11 @@ const UserPositionsTab: React.FC<UserPositionsTabProps> = ({
       loadPositions();
     }
   }, [loadPositions, settings.activeTab]);
+
+  // Expose refresh() to the parent widget's header refresh button.
+  useImperativeHandle(ref, () => ({
+    refresh: loadPositions
+  }), [loadPositions]);
 
   // Format currency value
   const formatCurrency = useCallback((value: number, currency?: string) => {
@@ -302,6 +300,8 @@ const UserPositionsTab: React.FC<UserPositionsTabProps> = ({
       </div>
     </div>
   );
-};
+});
+
+UserPositionsTab.displayName = 'UserPositionsTab';
 
 export default UserPositionsTab; 
