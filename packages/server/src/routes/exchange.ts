@@ -16,7 +16,7 @@ const configSchema = t.Object({
 // Optional explicit provider selection; omitted ⇒ registry picks by priority.
 const providerIdField = { providerId: t.Optional(t.String()) };
 
-function requireCreds(config: ProviderRequestConfig, set: { status?: number }): string | null {
+function requireCreds(config: ProviderRequestConfig, set: { status?: number | string }): string | null {
   if (!config.apiKey || !config.secret) {
     set.status = 400;
     return 'API credentials required for this operation';
