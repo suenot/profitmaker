@@ -2,6 +2,7 @@ import type { StateCreator } from 'zustand';
 import type { DataProviderStore } from '../types';
 import type { DataProvider, DataType, Timeframe, MarketType, WalletType } from '../../types/dataProviders';
 import { useUserStore } from '../userStore';
+import type { AccountRef } from '@profitmaker/types';
 import { getOHLCVLimit, getTradesLimit, logExchangeLimits } from '../../utils/exchangeLimits';
 
 /**
@@ -26,27 +27,18 @@ const getServerInstance = async (
 };
 
 /**
- * Resolve decrypted API credentials for an account so authenticated operations
- * can be forwarded to the server provider's trading block.
+ * Resolve a central-accounts auth reference for an account so authenticated
+ * operations can be forwarded to the server provider's trading block. The
+ * browser holds no secrets — only the credential id + access level travel; the
+ * server resolves the decrypted keys under the caller's SSO identity. `want`
+ * defaults to 'read' (private reads); orders pass 'trade'.
  */
-const resolveCredentials = async (
+const resolveCredentials = (
   accountId: string,
-): Promise<{ apiKey: string; secret: string; password?: string; sandbox?: boolean } | null> => {
-  const userStore = useUserStore.getState();
-  const user = userStore.users.find((u) => u.accounts.some((acc) => acc.id === accountId));
-  if (!user) return null;
-  if (userStore.isLocked) {
-    console.warn('[credentials] store is locked; cannot decrypt account');
-    return null;
-  }
-  const account = await userStore.getDecryptedAccount(user.id, accountId);
-  if (!account || !account.key || !account.privateKey) return null;
-  return {
-    apiKey: account.key,
-    secret: account.privateKey,
-    password: account.password || undefined,
-    sandbox: false,
-  };
+  want: AccountRef['want'] = 'read',
+): AccountRef | null => {
+  if (!accountId) return null;
+  return { accountId, want };
 };
 
 export interface FetchingActions {
@@ -615,8 +607,9 @@ export const createFetchingActions: StateCreator<
         return;
       }
 
-      // Resolve decrypted credentials and fetch through the server provider.
-      const creds = await resolveCredentials(accountId);
+      // Resolve the central-accounts ref (no secrets) and fetch through the
+      // server provider — private read, so want='read'.
+      const creds = resolveCredentials(accountId, 'read');
       if (!creds) {
         console.warn(`⚠️ [Balance] No credentials available for account ${accountId}`);
         return;

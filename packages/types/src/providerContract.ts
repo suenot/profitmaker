@@ -45,6 +45,30 @@ export const providerCredentialsSchema = z.object({
 });
 export type ProviderCredentials = z.infer<typeof providerCredentialsSchema>;
 
+/**
+ * Central-accounts reference for an authenticated operation. The browser holds
+ * NO secrets: it sends only the credential id and the desired access level, and
+ * the server resolves the decrypted keys (server↔auth) under the caller's SSO
+ * identity. Orders require `want:'trade'`; private reads use `want:'read'`.
+ */
+export const accountRefSchema = z.object({
+  accountId: z.string().min(1),
+  want: z.enum(['read', 'trade']),
+});
+export type AccountRef = z.infer<typeof accountRefSchema>;
+
+/**
+ * Credential argument for trading ops. The END STATE is {@link AccountRef}
+ * (server-side key resolution); inline {@link ProviderCredentials} remains a
+ * transitional shape so the migration can be incremental.
+ */
+export type TradeAuth = ProviderCredentials | AccountRef;
+
+/** Type guard: is this trade-auth an account reference (no inline secrets)? */
+export function isAccountRef(auth: TradeAuth): auth is AccountRef {
+  return (auth as AccountRef).accountId !== undefined;
+}
+
 export const fetchCandlesParamsSchema = z.object({
   exchange: exchangeIdSchema,
   symbol: symbolSchema,
@@ -175,18 +199,20 @@ export interface MarketDataProvider {
 }
 
 /**
- * Authenticated operations. Credentials travel with each call (the store
- * resolves the decrypted account and passes them in); the provider forwards
- * them to the server, which stays stateless about user accounts.
+ * Authenticated operations. The first argument is a {@link TradeAuth}: in the
+ * central-accounts model it's an {@link AccountRef} ({accountId, want}) and the
+ * server resolves the keys; inline {@link ProviderCredentials} stays accepted
+ * transitionally. The provider forwards the right body to the server, which
+ * owns access enforcement (read-level → 403 on trade ops).
  */
 export interface ProviderTrading {
-  createOrder(creds: ProviderCredentials, params: CreateOrderParams): Promise<any>;
-  cancelOrder(creds: ProviderCredentials, exchange: string, orderId: string, symbol: string, market?: MarketType): Promise<any>;
-  fetchBalance(creds: ProviderCredentials, exchange: string, walletType?: string): Promise<ExchangeBalances>;
-  fetchMyTrades(creds: ProviderCredentials, exchange: string, symbol?: string, since?: number, limit?: number): Promise<any[]>;
-  fetchOrders(creds: ProviderCredentials, exchange: string, symbol?: string, since?: number, limit?: number): Promise<any[]>;
-  fetchOpenOrders(creds: ProviderCredentials, exchange: string, symbol?: string): Promise<any[]>;
-  fetchPositions(creds: ProviderCredentials, exchange: string, symbols?: string[]): Promise<any[]>;
+  createOrder(auth: TradeAuth, params: CreateOrderParams): Promise<any>;
+  cancelOrder(auth: TradeAuth, exchange: string, orderId: string, symbol: string, market?: MarketType): Promise<any>;
+  fetchBalance(auth: TradeAuth, exchange: string, walletType?: string): Promise<ExchangeBalances>;
+  fetchMyTrades(auth: TradeAuth, exchange: string, symbol?: string, since?: number, limit?: number): Promise<any[]>;
+  fetchOrders(auth: TradeAuth, exchange: string, symbol?: string, since?: number, limit?: number): Promise<any[]>;
+  fetchOpenOrders(auth: TradeAuth, exchange: string, symbol?: string): Promise<any[]>;
+  fetchPositions(auth: TradeAuth, exchange: string, symbols?: string[]): Promise<any[]>;
 }
 
 // --- tiny provider registry (module-system seam) ---------------------------

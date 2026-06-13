@@ -1,4 +1,16 @@
-import { create } from 'zustand';
+import {
+  useSessionStore,
+  getActiveSession,
+  getActiveUser,
+  getSsoToken as getSessionToken,
+  upsertSession,
+  setActiveSession,
+  removeSession,
+  clearAllSessions,
+  isSessionStale,
+  type SsoUser,
+  type SsoSession,
+} from './sessionManager';
 
 /**
  * SSO client for the MarketMaker ecosystem (auth.marketmaker.cc).
@@ -6,23 +18,23 @@ import { create } from 'zustand';
  * profitmaker runs at app.marketmaker.cc, a *.marketmaker.cc subdomain, so it
  * shares the `mm_session` cookie. On load we silently bootstrap a session by
  * calling `/api/v1/auth/session` with credentials — if the cookie is valid the
- * auth service returns a fresh JWT, which we hold in memory + localStorage and
- * present as the Bearer token to our own server. Login is a top-level redirect
- * to the auth service (the cookie comes back); logout clears both sides.
+ * auth service returns a fresh JWT, which we capture as a session (held in the
+ * multi-login sessionManager + localStorage) and present as the Bearer token to
+ * our own server. Login is a top-level redirect to the auth service (the cookie
+ * comes back); logout clears the active identity.
+ *
+ * Multi-login: the terminal holds N ecosystem-user sessions, one active. This
+ * module is a thin façade over `sessionManager` — `getSsoToken()` returns the
+ * ACTIVE session's token, and `bootstrap()` upserts the cookie's session
+ * (append-if-new, refresh-if-existing) so "Add login" never clobbers others.
  *
  * Everything degrades gracefully: with no auth service reachable or no cookie,
  * the terminal stays in its existing API_TOKEN / dev-token modes.
  */
 
 const AUTH_URL = ((import.meta.env.VITE_AUTH_URL as string | undefined) || 'https://auth.marketmaker.cc').replace(/\/$/, '');
-const TOKEN_KEY = 'profitmaker.sso.token';
 
-export interface SsoUser {
-  userId: string;
-  email: string;
-  username: string | null;
-  roles: Record<string, string>;
-}
+export type { SsoUser, SsoSession };
 
 interface SsoSessionResponse {
   token: string;
@@ -33,44 +45,75 @@ interface SsoSessionResponse {
   roles?: Record<string, string>;
 }
 
-interface SsoState {
+/**
+ * Derived SSO view for existing single-session consumers (SsoUserChip's compact
+ * mode, etc.). `status` reflects the ACTIVE identity: 'authenticated' when a
+ * non-stale active session exists, 'unauthenticated' once an explicit logout /
+ * 401 cleared it, else 'unknown' (e.g. auth service unreachable on first load).
+ */
+interface SsoView {
   status: 'unknown' | 'authenticated' | 'unauthenticated';
   user: SsoUser | null;
   token: string | null;
+  sessions: SsoSession[];
+  activeSessionId: string | null;
 }
 
-export const useSsoStore = create<SsoState>(() => ({
-  status: 'unknown',
-  user: null,
-  token: typeof localStorage !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null,
-}));
+// Tracks whether we've ever resolved the cookie (to distinguish 'unknown' from
+// a real 'unauthenticated'). Not persisted — resets each page load.
+let resolvedOnce = false;
+
+function deriveStatus(hasActive: boolean): SsoView['status'] {
+  if (hasActive) return 'authenticated';
+  return resolvedOnce ? 'unauthenticated' : 'unknown';
+}
+
+/**
+ * SSO store hook. Subscribes to sessionManager and projects the active-session
+ * view that legacy components expect, plus the full sessions list for the
+ * multi-login switcher.
+ */
+export function useSsoStore(): SsoView {
+  // `useSessionStore()` with no selector subscribes to the whole state — the
+  // component re-renders on any session change (add/switch/remove).
+  const sessionState = useSessionStore();
+  const active = getActiveSession();
+  const live = active && !isSessionStale(active) ? active : null;
+  return {
+    status: deriveStatus(!!live),
+    user: live?.user ?? null,
+    token: live?.token ?? null,
+    sessions: sessionState.sessions,
+    activeSessionId: sessionState.activeSessionId,
+  };
+}
 
 /** The current SSO bearer token, if authenticated. Read synchronously by token resolvers. */
 export function getSsoToken(): string | undefined {
-  return useSsoStore.getState().token || undefined;
+  return getSessionToken();
 }
 
-function setSession(resp: SsoSessionResponse): void {
-  const user: SsoUser = {
+/** The active SSO user, or null. */
+export function getCurrentUser(): SsoUser | null {
+  return getActiveUser();
+}
+
+function toUser(resp: SsoSessionResponse): SsoUser {
+  return {
     userId: resp.user_id,
     email: resp.email,
     username: resp.username ?? null,
     roles: resp.roles || resp.services || {},
   };
-  if (typeof localStorage !== 'undefined') localStorage.setItem(TOKEN_KEY, resp.token);
-  useSsoStore.setState({ status: 'authenticated', user, token: resp.token });
-}
-
-function clearSession(): void {
-  if (typeof localStorage !== 'undefined') localStorage.removeItem(TOKEN_KEY);
-  useSsoStore.setState({ status: 'unauthenticated', user: null, token: null });
 }
 
 /**
  * Silent bootstrap: ask the auth service for a session using the shared cookie.
- * 200 → store the fresh JWT and mark authenticated; 401 → unauthenticated.
- * Network failure leaves status 'unknown' (so we don't wrongly show a login
- * button when the auth service is merely unreachable) but keeps any cached token.
+ * 200 → upsert the fresh JWT as a session (append-if-new identity, refresh if it
+ * already exists) and make it active; 401 → mark unauthenticated (but keep other
+ * cached sessions — only the cookie-bound identity is gone). Network failure
+ * leaves status 'unknown' (so we don't wrongly show a login button when the auth
+ * service is merely unreachable) and keeps any cached sessions.
  */
 export async function bootstrap(): Promise<void> {
   try {
@@ -81,31 +124,74 @@ export async function bootstrap(): Promise<void> {
     if (res.ok) {
       const data = (await res.json()) as SsoSessionResponse;
       if (data?.token) {
-        setSession(data);
+        resolvedOnce = true;
+        upsertSession(data.token, toUser(data));
         return;
       }
     }
     if (res.status === 401) {
-      clearSession();
+      resolvedOnce = true;
       return;
     }
   } catch {
-    // Auth service unreachable — keep any cached token, stay 'unknown'.
+    // Auth service unreachable — keep any cached sessions, stay 'unknown'.
   }
 }
 
-/** Redirect the top-level window to the auth login page, returning here after. */
+/**
+ * Redirect the top-level window to the auth login page, returning here after.
+ * Used both for the first login and for "Add login" — on return, `bootstrap()`
+ * upserts whichever identity the cookie now represents, so adding a second
+ * account is just: log out of auth's side / sign in as the other user, land back
+ * here, and the new identity is appended without clobbering existing sessions.
+ */
 export function login(): void {
   const ret = encodeURIComponent(window.location.href);
   window.location.href = `${AUTH_URL}/login?return=${ret}`;
 }
 
-/** Clear the shared cookie and local session, then reset to unauthenticated. */
+/** Alias for `login()` with intent-revealing name for the session switcher. */
+export function addLogin(): void {
+  login();
+}
+
+/** Quick-switch the active identity. */
+export function switchSession(id: string): void {
+  setActiveSession(id);
+}
+
+/** Remove a single identity from the terminal (local only). */
+export function dropSession(id: string): void {
+  removeSession(id);
+}
+
+/**
+ * Clear the shared cookie and the ACTIVE local session, then fall back to the
+ * next session if any remain. With one session this is a full logout; with
+ * several it signs out just the active identity.
+ */
 export async function logout(): Promise<void> {
   try {
     await fetch(`${AUTH_URL}/api/v1/auth/logout`, { method: 'POST', credentials: 'include' });
   } catch {
     // best-effort; clear locally regardless
   }
-  clearSession();
+  const active = getActiveSession();
+  resolvedOnce = true;
+  if (active) {
+    removeSession(active.id);
+  } else {
+    clearAllSessions();
+  }
+}
+
+/** Sign out of every identity at once. */
+export async function logoutAll(): Promise<void> {
+  try {
+    await fetch(`${AUTH_URL}/api/v1/auth/logout`, { method: 'POST', credentials: 'include' });
+  } catch {
+    // best-effort
+  }
+  resolvedOnce = true;
+  clearAllSessions();
 }

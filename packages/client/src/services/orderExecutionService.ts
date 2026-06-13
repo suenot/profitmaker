@@ -4,10 +4,9 @@ import type {
   AdvancedOrderOptions
 } from '../types/orders';
 import type { CCXTServerProvider } from '../types/dataProviders';
-import type { ProviderCredentials } from '@profitmaker/types';
+import type { AccountRef } from '@profitmaker/types';
 import { createCCXTServerProvider } from '../store/providers/ccxtServerProvider';
 import { useDataProviderStore } from '../store/dataProviderStore';
-import { useUserStore } from '../store/userStore';
 
 /**
  * Executes a trading order through CCXT
@@ -19,26 +18,14 @@ export async function executeOrder(
   try {
     console.log(`🚀 [OrderExecution] Executing order:`, orderRequest);
 
-    // Get user account credentials (decrypted)
-    const userStore = useUserStore.getState();
-    const user = userStore.users.find(u =>
-      u.accounts.some(acc => acc.id === orderRequest.accountId)
-    );
-
-    if (!user) {
-      throw new Error(`User not found for account ${orderRequest.accountId}`);
+    if (!orderRequest.accountId) {
+      throw new Error('No account selected for order');
     }
 
-    // Check if store is locked
-    if (userStore.isLocked) {
-      throw new Error('Store is locked. Please unlock with master password first.');
-    }
-
-    // Get decrypted account
-    const account = await userStore.getDecryptedAccount(user.id, orderRequest.accountId);
-    if (!account || !account.key || !account.privateKey) {
-      throw new Error(`Account ${orderRequest.accountId} not found or missing API keys`);
-    }
+    // Central accounts: the browser sends only an account reference; the server
+    // resolves the decrypted keys under the caller's SSO identity. Orders are
+    // trade-level, so the server rejects read-only accounts/grants with a 403.
+    const creds: AccountRef = { accountId: orderRequest.accountId, want: 'trade' };
 
     // Get data provider for the exchange
     const dataProviderStore = useDataProviderStore.getState();
@@ -49,12 +36,6 @@ export async function executeOrder(
     }
 
     const serverProvider = createCCXTServerProvider(provider as CCXTServerProvider);
-    const creds: ProviderCredentials = {
-      apiKey: account.key,
-      secret: account.privateKey,
-      password: account.password || undefined,
-      sandbox: false,
-    };
 
     // Prepare order parameters
     const { symbol, side, type, amount, price, stopPrice } = orderRequest;
@@ -294,26 +275,13 @@ export async function cancelOrder(
   try {
     console.log(`🗑️ [OrderExecution] Cancelling order ${orderId} on ${exchange}`);
 
-    // Get user account credentials (decrypted)
-    const userStore = useUserStore.getState();
-    const user = userStore.users.find(u =>
-      u.accounts.some(acc => acc.id === accountId)
-    );
-
-    if (!user) {
-      throw new Error(`User not found for account ${accountId}`);
+    if (!accountId) {
+      throw new Error('No account selected for cancel');
     }
 
-    // Check if store is locked
-    if (userStore.isLocked) {
-      throw new Error('Store is locked. Please unlock with master password first.');
-    }
-
-    // Get decrypted account
-    const account = await userStore.getDecryptedAccount(user.id, accountId);
-    if (!account || !account.key || !account.privateKey) {
-      throw new Error(`Account ${accountId} not found or missing API keys`);
-    }
+    // Central accounts: send only the account reference (trade-level — cancelling
+    // is a trading op); the server resolves keys and enforces access.
+    const creds: AccountRef = { accountId, want: 'trade' };
 
     // Get CCXT provider
     const dataProviderStore = useDataProviderStore.getState();
@@ -324,12 +292,6 @@ export async function cancelOrder(
     }
 
     const serverProvider = createCCXTServerProvider(provider as CCXTServerProvider);
-    const creds: ProviderCredentials = {
-      apiKey: account.key,
-      secret: account.privateKey,
-      password: account.password || undefined,
-      sandbox: false,
-    };
 
     const result = await serverProvider.trading.cancelOrder(creds, exchange, orderId, symbol, market as any);
     console.log(`✅ [OrderExecution] Order cancelled successfully:`, result);
