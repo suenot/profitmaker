@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { DataProviderStore } from '../types';
 import type { DataType, DataFetchMethod, Candle, Trade, OrderBook, Ticker, ExchangeBalances, ActiveSubscription, Timeframe, MarketType, WalletType, DataProvider } from '../../types/dataProviders';
+import type { AccountRef } from '@profitmaker/types';
 import { getOHLCVLimit, getTradesLimit, logExchangeLimits } from '../../utils/exchangeLimits';
 
 // Create a server-side market-data instance (proxy) for public market data.
@@ -20,28 +21,17 @@ const createExchangeInstanceForProvider = async (
 };
 
 /**
- * Resolve decrypted credentials for an account, for forwarding authenticated
- * operations to the server provider's trading block.
+ * Resolve a central-accounts auth reference for an account. No secrets cross to
+ * the browser — only the credential id + access level travel; the server
+ * resolves the decrypted keys under the caller's SSO identity. These are all
+ * private reads, so callers pass want='read'.
  */
-const resolveCredentials = async (
+const resolveCredentials = (
   accountId: string,
-): Promise<{ apiKey: string; secret: string; password?: string; sandbox?: boolean } | null> => {
-  const { useUserStore } = await import('../userStore');
-  const userStore = useUserStore.getState();
-  const user = userStore.users.find((u) => u.accounts.some((acc) => acc.id === accountId));
-  if (!user) return null;
-  if (userStore.isLocked) {
-    console.warn('[credentials] store is locked; cannot decrypt account');
-    return null;
-  }
-  const account = await userStore.getDecryptedAccount(user.id, accountId);
-  if (!account || !account.key || !account.privateKey) return null;
-  return {
-    apiKey: account.key,
-    secret: account.privateKey,
-    password: account.password || undefined,
-    sandbox: false,
-  };
+  want: AccountRef['want'] = 'read',
+): AccountRef | null => {
+  if (!accountId) return null;
+  return { accountId, want };
 };
 
 /** Get the server trading provider for an exchange, or null if unavailable. */
@@ -683,7 +673,7 @@ export const createDataActions: StateCreator<
       if (!serverProvider) {
         throw new Error(`No CCXT server provider found for exchange: ${exchange}`);
       }
-      const creds = await resolveCredentials(accountId);
+      const creds = resolveCredentials(accountId, 'read');
       if (!creds) {
         throw new Error(`No credentials available for account ${accountId}`);
       }
@@ -878,7 +868,7 @@ export const createDataActions: StateCreator<
     if (!serverProvider) {
       throw new Error(`No CCXT server provider found for exchange: ${account.exchange}`);
     }
-    const creds = await resolveCredentials(accountId);
+    const creds = resolveCredentials(accountId, 'read');
     if (!creds) {
       throw new Error(`No credentials available for account ${accountId}`);
     }
@@ -912,7 +902,7 @@ export const createDataActions: StateCreator<
     if (!serverProvider) {
       throw new Error(`No CCXT server provider found for exchange: ${account.exchange}`);
     }
-    const creds = await resolveCredentials(accountId);
+    const creds = resolveCredentials(accountId, 'read');
     if (!creds) {
       throw new Error(`No credentials available for account ${accountId}`);
     }
@@ -935,7 +925,7 @@ export const createDataActions: StateCreator<
     if (!serverProvider) {
       throw new Error(`No CCXT server provider found for exchange: ${account.exchange}`);
     }
-    const creds = await resolveCredentials(accountId);
+    const creds = resolveCredentials(accountId, 'read');
     if (!creds) {
       throw new Error(`No credentials available for account ${accountId}`);
     }
@@ -958,7 +948,7 @@ export const createDataActions: StateCreator<
     if (!serverProvider) {
       throw new Error(`No CCXT server provider found for exchange: ${account.exchange}`);
     }
-    const creds = await resolveCredentials(accountId);
+    const creds = resolveCredentials(accountId, 'read');
     if (!creds) {
       throw new Error(`No credentials available for account ${accountId}`);
     }

@@ -22,7 +22,9 @@ import type {
   WatchParams,
   CreateOrderParams,
   ProviderCredentials,
+  TradeAuth,
 } from '@profitmaker/types';
+import { isAccountRef } from '@profitmaker/types';
 import { io, Socket } from 'socket.io-client';
 import { getSsoToken } from '../../services/ssoClient';
 
@@ -817,7 +819,7 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
     return this.disconnectWebSocket();
   }
 
-  /** Build a credentialed server config for an authenticated operation. */
+  /** Build a credentialed server config for a legacy (inline-secrets) operation. */
   private credsConfig(
     creds: ProviderCredentials,
     exchange: string,
@@ -839,13 +841,30 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
     );
   }
 
+  /**
+   * Build the auth portion of an authenticated request body. Central-accounts
+   * path sends `{ accountId, want, exchange, market }` (NO secrets — the server
+   * resolves keys via auth under the caller's SSO identity); the legacy path
+   * sends `{ config }` with inline credentials. Op-specific fields are merged by
+   * the caller.
+   */
+  private authBody(
+    auth: TradeAuth,
+    exchange: string,
+    market: string = 'spot',
+  ): Record<string, any> {
+    if (isAccountRef(auth)) {
+      return { accountId: auth.accountId, want: auth.want, exchange, market };
+    }
+    return { config: this.credsConfig(auth, exchange, market) };
+  }
+
   get trading(): ProviderTrading {
     const self = this;
     return {
-      async createOrder(creds: ProviderCredentials, params: CreateOrderParams) {
-        const config = self.credsConfig(creds, params.exchange, params.market ?? 'spot');
+      async createOrder(auth: TradeAuth, params: CreateOrderParams) {
         return self.makeRequest('/api/exchange/createOrder', {
-          config,
+          ...self.authBody(auth, params.exchange, params.market ?? 'spot'),
           symbol: params.symbol,
           type: params.type,
           side: params.side,
@@ -854,29 +873,43 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
           params: params.params ?? {},
         });
       },
-      async cancelOrder(creds: ProviderCredentials, exchange: string, orderId: string, symbol: string, market: MarketType = 'spot') {
-        const config = self.credsConfig(creds, exchange, market);
-        return self.makeRequest('/api/exchange/cancelOrder', { config, orderId, symbol });
+      async cancelOrder(auth: TradeAuth, exchange: string, orderId: string, symbol: string, market: MarketType = 'spot') {
+        return self.makeRequest('/api/exchange/cancelOrder', {
+          ...self.authBody(auth, exchange, market),
+          orderId,
+          symbol,
+        });
       },
-      async fetchBalance(creds: ProviderCredentials, exchange: string, walletType: string = 'spot') {
-        const config = self.credsConfig(creds, exchange, walletType);
-        return self.makeRequest('/api/exchange/fetchBalance', { config });
+      async fetchBalance(auth: TradeAuth, exchange: string, walletType: string = 'spot') {
+        return self.makeRequest('/api/exchange/fetchBalance', self.authBody(auth, exchange, walletType));
       },
-      async fetchMyTrades(creds: ProviderCredentials, exchange: string, symbol?: string, since?: number, limit?: number) {
-        const config = self.credsConfig(creds, exchange);
-        return self.makeRequest('/api/exchange/fetchMyTrades', { config, symbol, since, limit });
+      async fetchMyTrades(auth: TradeAuth, exchange: string, symbol?: string, since?: number, limit?: number) {
+        return self.makeRequest('/api/exchange/fetchMyTrades', {
+          ...self.authBody(auth, exchange),
+          symbol,
+          since,
+          limit,
+        });
       },
-      async fetchOrders(creds: ProviderCredentials, exchange: string, symbol?: string, since?: number, limit?: number) {
-        const config = self.credsConfig(creds, exchange);
-        return self.makeRequest('/api/exchange/fetchOrders', { config, symbol, since, limit });
+      async fetchOrders(auth: TradeAuth, exchange: string, symbol?: string, since?: number, limit?: number) {
+        return self.makeRequest('/api/exchange/fetchOrders', {
+          ...self.authBody(auth, exchange),
+          symbol,
+          since,
+          limit,
+        });
       },
-      async fetchOpenOrders(creds: ProviderCredentials, exchange: string, symbol?: string) {
-        const config = self.credsConfig(creds, exchange);
-        return self.makeRequest('/api/exchange/fetchOpenOrders', { config, symbol });
+      async fetchOpenOrders(auth: TradeAuth, exchange: string, symbol?: string) {
+        return self.makeRequest('/api/exchange/fetchOpenOrders', {
+          ...self.authBody(auth, exchange),
+          symbol,
+        });
       },
-      async fetchPositions(creds: ProviderCredentials, exchange: string, symbols?: string[]) {
-        const config = self.credsConfig(creds, exchange, 'futures');
-        return self.makeRequest('/api/exchange/fetchPositions', { config, symbols });
+      async fetchPositions(auth: TradeAuth, exchange: string, symbols?: string[]) {
+        return self.makeRequest('/api/exchange/fetchPositions', {
+          ...self.authBody(auth, exchange, 'futures'),
+          symbols,
+        });
       },
     };
   }

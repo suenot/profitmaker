@@ -37,30 +37,12 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
   const activeUser = users.find(u => u.id === activeUserId);
   const firstAccount = activeUser?.accounts[0];
 
-  // Initialize groups and user on first render
+  // Initialize default groups on first render. Identities and accounts now come
+  // from the central-accounts model (SSO sessions + GET /api/accounts), so there
+  // is no demo-user seed here anymore.
   React.useEffect(() => {
     initializeDefaultGroups();
-    
-    // Initialize test user if no active user
-    if (!activeUser && users.length === 0) {
-      // Use hook inside component - add user through store
-      const { addUser, addAccount } = useUserStore.getState();
-      addUser({ 
-        email: 'suenot@gmail.com',
-        name: 'Test User'
-      });
-      
-      // Find created user
-      const newUser = useUserStore.getState().users.find(u => u.email === 'suenot@gmail.com');
-      if (newUser) {
-        addAccount(newUser.id, {
-          exchange: 'binance',
-          email: 'suenot@gmail.com',
-          // API keys are optional - not providing them for test user
-        });
-      }
-    }
-  }, [initializeDefaultGroups, activeUser, users.length]);
+  }, [initializeDefaultGroups]);
 
   const selectedGroup = selectedGroupId ? getGroupById(selectedGroupId) : undefined;
 
@@ -87,9 +69,10 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
         return prev;
       });
     } else if (!selectedGroup && firstAccount && !selectedInstrument) {
-      // If no group selected and no instrument set yet, set default from first account
+      // If no group selected and no instrument set yet, set default from first
+      // account. `account` binds to the central credential id (group.account).
       setSelectedInstrument({
-        account: firstAccount.email,
+        account: firstAccount.id,
         exchange: firstAccount.exchange,
         market: 'spot',
         pair: 'BTC/USDT'

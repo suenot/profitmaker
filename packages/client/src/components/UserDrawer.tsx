@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { useUserStore, User, ExchangeAccount } from '@/store/userStore';
+import React, { useEffect, useState } from 'react';
+import { useUserStore } from '@/store/userStore';
+import { useAccountStore, type ExchangeAccount, type AccountGrant } from '@/store/accountStore';
+import { useSsoStore, login, addLogin, switchSession, dropSession } from '@/services/ssoClient';
 import { useExchangesList } from '@/hooks/useExchangesList';
 import {
   Sheet,
@@ -12,379 +14,461 @@ import {
 } from './ui/sheet';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Avatar, AvatarFallback } from './ui/avatar';
 import { SearchableSelect } from './ui/SearchableSelect';
-import { Plus, Trash2, Check, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Check, Loader2, LogIn, Share2, ShieldAlert, ShieldCheck, Eye } from 'lucide-react';
 
 interface UserDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+/**
+ * Identity + accounts panel over the central-accounts model.
+ *
+ * "Identities" are the connected ecosystem SSO sessions (multi-login): switch,
+ * add, or remove them. Under the ACTIVE identity we list exchange accounts from
+ * the server proxy (GET /api/accounts) — own + shared — with badges. Adding an
+ * account POSTs the keys to the server (→ auth); nothing sensitive is stored in
+ * the browser. Owned accounts can be shared by email + access level.
+ */
 const UserDrawer: React.FC<UserDrawerProps> = ({ open, onOpenChange }) => {
+  const { sessions, activeSessionId, status } = useSsoStore();
+  const loadAccounts = useAccountStore((s) => s.loadAccounts);
+  const loading = useAccountStore((s) => s.loading);
+  const error = useAccountStore((s) => s.error);
   const users = useUserStore((s) => s.users);
-  const activeUserId = useUserStore((s) => s.activeUserId);
-  const addUser = useUserStore((s) => s.addUser);
-  const removeUser = useUserStore((s) => s.removeUser);
-  const setActiveUser = useUserStore((s) => s.setActiveUser);
 
-  // For adding user
-  const [showAddUser, setShowAddUser] = useState(false);
-  // For editing user
-  const [editUserId, setEditUserId] = useState<string | null>(null);
-  // For editing account
-  const [editAccount, setEditAccount] = useState<{ userId: string; account: ExchangeAccount } | null>(null);
-  // For adding account
-  const [addAccountUserId, setAddAccountUserId] = useState<string | null>(null);
+  const activeUser = users.find((u) => u.id === (activeSessionId ?? sessions[0]?.id));
 
-  // Empty state
-  if (users.length === 0) {
-    return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-[400px] bg-terminal-widget border-l border-terminal-border flex flex-col">
-          <SheetHeader>
-            <SheetTitle>Users</SheetTitle>
-            <SheetDescription>Manage users and accounts</SheetDescription>
-          </SheetHeader>
-          <div className="flex-1 flex flex-col items-center justify-center gap-4">
-            <div className="rounded-full bg-terminal-accent/40 w-20 h-20 flex items-center justify-center">
-              <svg width="48" height="48" fill="none" stroke="#A0AEC0" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <div className="text-lg font-semibold">No users</div>
-            <div className="text-terminal-muted text-center">Start by adding users to manage their exchange accounts</div>
-            <Button onClick={() => setShowAddUser(true)} className="w-full max-w-xs" variant="outline">
-              <Plus className="mr-2" size={16} /> Add first user
-            </Button>
-          </div>
-          <SheetFooter>
-            <SheetClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </SheetClose>
-          </SheetFooter>
-        </SheetContent>
-        {showAddUser && (
-          <EditUserSheet
-            onClose={() => setShowAddUser(false)}
-          />
-        )}
-      </Sheet>
-    );
-  }
+  const [addingAccount, setAddingAccount] = useState(false);
+  const [shareFor, setShareFor] = useState<ExchangeAccount | null>(null);
+
+  // Load the active identity's accounts whenever the drawer opens / identity changes.
+  useEffect(() => {
+    if (open && activeSessionId) void loadAccounts();
+  }, [open, activeSessionId, loadAccounts]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[400px] bg-terminal-widget border-l border-terminal-border flex flex-col">
         <SheetHeader>
-          <SheetTitle>Users</SheetTitle>
-          <SheetDescription>Manage users and accounts</SheetDescription>
+          <SheetTitle>Accounts</SheetTitle>
+          <SheetDescription>Connected identities and their exchange accounts</SheetDescription>
         </SheetHeader>
+
         <div className="flex flex-col gap-4 px-4 py-2 flex-1 overflow-auto">
-          <div className="flex flex-col gap-2">
-            {users.map(user => (
-              <div
-                key={user.id}
-                className={`flex items-center gap-3 p-2 rounded-lg border border-terminal-border/50 ${user.id === activeUserId ? 'bg-terminal-accent/30' : ''}`}
-              >
-                <Avatar className="w-10 h-10">
-                  {user.avatarUrl ? (
-                    <AvatarImage src={user.avatarUrl} alt={user.email} />
-                  ) : (
-                    <AvatarFallback>{user.email.slice(0, 2).toUpperCase()}</AvatarFallback>
-                  )}
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{user.email}</div>
-                  <div className="text-xs text-terminal-muted truncate">{user.accounts.length} account(s)</div>
-                </div>
-                <Button
-                  size="icon"
-                  variant={user.id === activeUserId ? 'default' : 'outline'}
-                  onClick={() => setActiveUser(user.id)}
-                  title="Make active"
-                >
-                  {user.id === activeUserId ? <Check size={16} /> : <span className="w-4 h-4 rounded-full border border-terminal-border" />}
-                </Button>
-                <Button size="icon" variant="outline" onClick={() => setEditUserId(user.id)} title="Edit">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536M9 11l6 6M3 21h6l11.293-11.293a1 1 0 0 0 0-1.414l-3.586-3.586a1 1 0 0 0-1.414 0L3 15v6z" /></svg>
+          {/* Identities (SSO sessions) */}
+          {sessions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+              <div className="text-lg font-semibold">No identity connected</div>
+              <div className="text-terminal-muted text-sm">
+                Sign in with your MarketMaker account to manage exchange accounts.
+              </div>
+              <Button onClick={login} className="w-full max-w-xs" variant="outline">
+                <LogIn className="mr-2" size={16} /> Login with MarketMaker
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2">
+                <div className="text-xs font-semibold text-terminal-muted uppercase tracking-wide">Identities</div>
+                {sessions.map((s) => {
+                  const isActive = s.id === activeSessionId;
+                  return (
+                    <div
+                      key={s.id}
+                      className={`flex items-center gap-3 p-2 rounded-lg border border-terminal-border/50 ${isActive ? 'bg-terminal-accent/30' : ''}`}
+                    >
+                      <Avatar className="w-9 h-9">
+                        <AvatarFallback>{(s.user.email || '?').slice(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{s.user.username || s.user.email}</div>
+                        <div className="text-xs text-terminal-muted truncate">{s.user.email}</div>
+                      </div>
+                      {s.expiresAt !== undefined && s.expiresAt <= Date.now() && (
+                        <button
+                          onClick={login}
+                          className="text-[10px] px-1.5 py-0.5 rounded bg-terminal-negative/20 text-terminal-negative border border-terminal-negative/40"
+                          title="Session expired — click to re-login"
+                        >
+                          stale · re-login
+                        </button>
+                      )}
+                      <Button
+                        size="icon"
+                        variant={isActive ? 'default' : 'outline'}
+                        onClick={() => switchSession(s.id)}
+                        title="Make active"
+                      >
+                        {isActive ? <Check size={16} /> : <span className="w-4 h-4 rounded-full border border-terminal-border" />}
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => dropSession(s.id)}
+                        title="Remove identity"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  );
+                })}
+                <Button onClick={addLogin} className="w-full" variant="outline">
+                  <Plus className="mr-2" size={16} /> Add login
                 </Button>
               </div>
-            ))}
-          </div>
-          <Button onClick={() => setShowAddUser(true)} className="w-full" variant="outline">
-            <Plus className="mr-2" size={16} /> Add user
-          </Button>
-          {/* Active user accounts */}
-          {activeUserId && (
-            <UserAccountsBlock
-              user={users.find(u => u.id === activeUserId)!}
-              onEditAccount={acc => setEditAccount({ userId: activeUserId, account: acc })}
-              onAddAccount={() => setAddAccountUserId(activeUserId)}
-            />
+
+              {/* Active identity's central accounts */}
+              {activeUser && (
+                <AccountsBlock
+                  accounts={activeUser.accounts}
+                  loading={loading}
+                  error={error}
+                  status={status}
+                  onAddAccount={() => setAddingAccount(true)}
+                  onShare={(acc) => setShareFor(acc)}
+                />
+              )}
+
+              <LegacyMigrationBanner />
+            </>
           )}
         </div>
+
         <SheetFooter>
           <SheetClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">Close</Button>
           </SheetClose>
         </SheetFooter>
       </SheetContent>
-      {/* Sheet for adding user */}
-      {showAddUser && (
-        <EditUserSheet
-          onClose={() => setShowAddUser(false)}
-        />
-      )}
-      {/* Sheet for editing user */}
-      {editUserId && (
-        <EditUserSheet
-          user={users.find(u => u.id === editUserId)!}
-          onClose={() => setEditUserId(null)}
-        />
-      )}
-      {/* Sheet for editing account */}
-      {editAccount && (
-        <EditAccountSheet
-          userId={editAccount.userId}
-          account={editAccount.account}
-          onClose={() => setEditAccount(null)}
-        />
-      )}
-      {/* Sheet for adding account */}
-      {addAccountUserId && (
-        <EditAccountSheet
-          userId={addAccountUserId}
-          onClose={() => setAddAccountUserId(null)}
-        />
-      )}
+
+      {addingAccount && <AddAccountSheet onClose={() => setAddingAccount(false)} />}
+      {shareFor && <ShareAccountSheet account={shareFor} onClose={() => setShareFor(null)} />}
     </Sheet>
   );
 };
 
-// User accounts block
-const UserAccountsBlock: React.FC<{
-  user: User;
-  onEditAccount: (acc: ExchangeAccount) => void;
-  onAddAccount: () => void;
-}> = ({ user, onEditAccount, onAddAccount }) => {
+// --- central accounts list -------------------------------------------------
+
+const AccountBadges: React.FC<{ account: ExchangeAccount }> = ({ account }) => {
+  const shared = !!account.shared;
+  const readOnly = account.read_only || account.access_level === 'read';
   return (
-    <div className="mt-4">
-      <div className="font-semibold mb-2">Accounts</div>
-      {user.accounts.length === 0 && <div className="text-sm text-terminal-muted mb-2">No accounts</div>}
-      {user.accounts.map(acc => (
-        <div key={acc.id} className="flex items-center gap-2 p-1 rounded border border-terminal-border/30 bg-terminal-accent/10 mb-1">
-          <span className="text-xs font-mono px-1 py-0.5 rounded bg-terminal-widget/80 border border-terminal-border/30">{acc.exchange}</span>
-          <span className="truncate text-xs">{acc.email}</span>
-          <Button size="icon" variant="outline" onClick={() => onEditAccount(acc)} title="Edit account">
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536M9 11l6 6M3 21h6l11.293-11.293a1 1 0 0 0 0-1.414l-3.586-3.586a1 1 0 0 0-1.414 0L3 15v6z" /></svg>
-          </Button>
+    <div className="flex items-center gap-1">
+      {shared ? (
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 border border-blue-500/30" title="Shared with you">
+          shared
+        </span>
+      ) : (
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-terminal-accent/40 text-terminal-text border border-terminal-border/40" title="You own this account">
+          owner
+        </span>
+      )}
+      {readOnly ? (
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/15 text-yellow-500 border border-yellow-500/30 inline-flex items-center gap-0.5" title="Read-only access">
+          <Eye size={10} /> read
+        </span>
+      ) : (
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/15 text-green-500 border border-green-500/30 inline-flex items-center gap-0.5" title="Trade access">
+          <ShieldCheck size={10} /> trade
+        </span>
+      )}
+    </div>
+  );
+};
+
+const AccountsBlock: React.FC<{
+  accounts: ExchangeAccount[];
+  loading: boolean;
+  error: string | null;
+  status: 'unknown' | 'authenticated' | 'unauthenticated';
+  onAddAccount: () => void;
+  onShare: (acc: ExchangeAccount) => void;
+}> = ({ accounts, loading, error, status, onAddAccount, onShare }) => {
+  const removeAccount = useAccountStore((s) => s.removeAccount);
+
+  return (
+    <div className="mt-2">
+      <div className="flex items-center justify-between mb-2">
+        <div className="font-semibold">Exchange accounts</div>
+        {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-terminal-muted" />}
+      </div>
+
+      {error && (
+        <div className="text-xs text-terminal-negative bg-terminal-negative/10 border border-terminal-negative/30 rounded px-2 py-1 mb-2">
+          {error}
         </div>
-      ))}
-      <Button onClick={onAddAccount} className="w-full mt-2" variant="outline">
+      )}
+
+      {!loading && accounts.length === 0 && (
+        <div className="text-sm text-terminal-muted mb-2">No accounts yet for this identity.</div>
+      )}
+
+      {accounts.map((acc) => {
+        const owner = !acc.shared;
+        return (
+          <div key={acc.id} className="flex items-center gap-2 p-1.5 rounded border border-terminal-border/30 bg-terminal-accent/10 mb-1">
+            <span className="text-xs font-mono px-1 py-0.5 rounded bg-terminal-widget/80 border border-terminal-border/30">{acc.exchange}</span>
+            <span className="truncate text-xs flex-1">{acc.label || acc.id.slice(0, 8)}</span>
+            <AccountBadges account={acc} />
+            {owner && (
+              <Button size="icon" variant="outline" onClick={() => onShare(acc)} title="Share account">
+                <Share2 size={14} />
+              </Button>
+            )}
+            {owner && (
+              <Button size="icon" variant="outline" onClick={() => void removeAccount(acc.id)} title="Remove account">
+                <Trash2 size={14} />
+              </Button>
+            )}
+          </div>
+        );
+      })}
+
+      <Button
+        onClick={onAddAccount}
+        className="w-full mt-2"
+        variant="outline"
+        disabled={status !== 'authenticated'}
+      >
         <Plus className="mr-2" size={16} /> Add account
       </Button>
     </div>
   );
 };
 
-// Sheet for editing user
-const EditUserSheet: React.FC<{ user?: User; onClose: () => void; }> = ({ user, onClose }) => {
-  const addUser = useUserStore(s => s.addUser);
-  const updateUser = useUserStore(s => s.updateUser);
-  const removeUser = useUserStore(s => s.removeUser);
-  const users = useUserStore(s => s.users);
-  const [email, setEmail] = useState(user?.email || '');
-  const [name, setName] = useState(user?.name || '');
-  const [avatar, setAvatar] = useState(user?.avatarUrl || '');
-  const [notes, setNotes] = useState(user?.notes || '');
-  const [error, setError] = useState('');
-  const [confirmDelete, setConfirmDelete] = useState(false);
+// --- add account (POST keys to server proxy; no client-side storage) -------
 
-  function validateEmail(email: string) {
-    return /^\S+@\S+\.\S+$/.test(email);
-  }
-
-  const handleSave = () => {
-    if (!email.trim()) {
-      setError('Email is required');
-      return;
-    }
-    if (!validateEmail(email.trim())) {
-      setError('Enter a valid email');
-      return;
-    }
-    if (!user && users.some(u => u.email === email.trim())) {
-      setError('A user with this email already exists');
-      return;
-    }
-    if (user) {
-      updateUser(user.id, { email: email.trim(), name: name.trim(), avatarUrl: avatar.trim() || undefined, notes: notes.trim() });
-    } else {
-      addUser({ email: email.trim(), name: name.trim(), avatarUrl: avatar.trim() || undefined, notes: notes.trim() });
-    }
-    onClose();
-  };
-
-  const handleDelete = () => {
-    if (!confirmDelete) {
-      setConfirmDelete(true);
-      return;
-    }
-    if (user) {
-      removeUser(user.id);
-    }
-    onClose();
-  };
-
-  return (
-    <Sheet open onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[400px] bg-terminal-widget border-l border-terminal-border flex flex-col">
-        <SheetHeader>
-          <SheetTitle>{user ? 'Edit user' : 'Add user'}</SheetTitle>
-        </SheetHeader>
-        <form className="flex flex-col gap-3 mt-3 flex-1" onSubmit={e => { e.preventDefault(); handleSave(); }}>
-          <Input type="email" placeholder="Email *" value={email} onChange={e => setEmail(e.target.value)} className="w-full" />
-          <Input placeholder="Name (optional)" value={name} onChange={e => setName(e.target.value)} className="w-full" />
-          <Input placeholder="Avatar URL (optional)" value={avatar} onChange={e => setAvatar(e.target.value)} className="w-full" />
-          <textarea placeholder="Notes (optional)" value={notes} onChange={e => setNotes(e.target.value)} className="w-full min-h-[60px] border rounded px-2 py-1" />
-          {error && <div className="text-red-500 text-xs">{error}</div>}
-          <div className="flex gap-2 mt-2">
-            <Button type="submit" className="flex-1">{user ? 'Save' : 'Add'}</Button>
-            <Button type="button" className="flex-1" variant="outline" onClick={onClose}>Cancel</Button>
-          </div>
-          {user && (
-            <div className="mt-8 border-t pt-4">
-              <Button type="button" variant="destructive" className="w-full" onClick={handleDelete}>
-                {confirmDelete ? 'Are you sure you want to delete?' : 'Delete user'}
-              </Button>
-            </div>
-          )}
-        </form>
-      </SheetContent>
-    </Sheet>
-  );
-};
-
-// Sheet for editing/adding account
-const EditAccountSheet: React.FC<{
-  userId: string;
-  account?: ExchangeAccount;
-  onClose: () => void;
-}> = ({ userId, account, onClose }) => {
-  const addAccount = useUserStore(s => s.addAccount);
-  const updateAccount = useUserStore(s => s.updateAccount);
-  const removeAccount = useUserStore(s => s.removeAccount);
+const AddAccountSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const addAccount = useAccountStore((s) => s.addAccount);
   const { exchanges, loading: loadingExchanges } = useExchangesList();
-  const [exchange, setExchange] = useState(account?.exchange || '');
-  const [email, setEmail] = useState(account?.email || '');
-  const [key, setKey] = useState(account?.key || '');
-  const [secret, setSecret] = useState(account?.privateKey || '');
-  const [password, setPassword] = useState(account?.password || '');
-  const [avatar, setAvatar] = useState(account?.avatarUrl || '');
-  const [notes, setNotes] = useState(account?.notes || '');
+  const [exchange, setExchange] = useState('');
+  const [label, setLabel] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [apiSecret, setApiSecret] = useState('');
+  const [passphrase, setPassphrase] = useState('');
+  const [readOnly, setReadOnly] = useState(false);
   const [error, setError] = useState('');
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  function validateEmail(email: string) {
-    return /^\S+@\S+\.\S+$/.test(email);
-  }
-
-  const handleSave = () => {
-    if (!exchange || !email) {
-      setError('Exchange and email are required');
+  const handleSave = async () => {
+    if (!exchange) {
+      setError('Exchange is required');
       return;
     }
-    if (!validateEmail(email)) {
-      setError('Enter a valid email');
+    if (!apiKey.trim() || !apiSecret.trim()) {
+      setError('API key and secret are required');
       return;
     }
-    if (account) {
-      updateAccount(userId, { 
-        ...account, 
-        exchange, 
-        email, 
-        key: key.trim() || undefined, 
-        privateKey: secret.trim() || undefined, 
-        password: password.trim() || undefined,
-        avatarUrl: avatar || undefined, 
-        notes 
-      });
+    setSaving(true);
+    setError('');
+    const created = await addAccount({
+      exchange,
+      label: label.trim() || undefined,
+      api_key: apiKey.trim(),
+      api_secret: apiSecret.trim(),
+      passphrase: passphrase.trim() || undefined,
+      read_only: readOnly,
+    });
+    setSaving(false);
+    if (created) {
+      onClose();
     } else {
-      addAccount(userId, { 
-        exchange, 
-        email, 
-        key: key.trim() || undefined, 
-        privateKey: secret.trim() || undefined, 
-        password: password.trim() || undefined,
-        avatarUrl: avatar || undefined, 
-        notes 
-      });
+      setError(useAccountStore.getState().error || 'Failed to add account');
     }
-    onClose();
-  };
-
-  const handleDelete = () => {
-    if (!account) return;
-    if (!confirmDelete) {
-      setConfirmDelete(true);
-      return;
-    }
-    removeAccount(userId, account.id);
-    onClose();
   };
 
   return (
     <Sheet open onOpenChange={onClose}>
       <SheetContent side="right" className="w-[400px] bg-terminal-widget border-l border-terminal-border flex flex-col">
         <SheetHeader>
-          <SheetTitle>{account ? 'Edit account' : 'Add account'}</SheetTitle>
+          <SheetTitle>Add account</SheetTitle>
+          <SheetDescription>
+            Keys are sent to your terminal server and stored encrypted in the central account service — never in this browser.
+          </SheetDescription>
         </SheetHeader>
-        <form className="flex flex-col gap-3 mt-3 flex-1" onSubmit={e => { e.preventDefault(); handleSave(); }}>
+        <form className="flex flex-col gap-3 mt-3 flex-1" onSubmit={(e) => { e.preventDefault(); void handleSave(); }}>
           <div className="space-y-2">
             <label className="text-xs font-medium">Exchange *</label>
             <SearchableSelect
               value={exchange}
               onValueChange={setExchange}
-              options={exchanges.map(ex => ex.id)}
-              optionLabels={exchanges.reduce((labels, ex) => ({
-                ...labels,
-                [ex.id]: ex.name
-              }), {})}
+              options={exchanges.map((ex) => ex.id)}
+              optionLabels={exchanges.reduce((labels, ex) => ({ ...labels, [ex.id]: ex.name }), {})}
               placeholder={loadingExchanges ? 'Loading exchanges...' : 'Select exchange'}
               searchPlaceholder="Search exchanges (e.g., binance, bybit, okx)..."
               loading={loadingExchanges}
               disabled={loadingExchanges}
               className="w-full"
             />
-            {loadingExchanges && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Loading exchanges from CCXT...
-              </div>
-            )}
           </div>
-          <Input type="email" placeholder="Email *" value={email} onChange={e => setEmail(e.target.value)} className="w-full" />
-          <Input placeholder="API Key (optional)" value={key} onChange={e => setKey(e.target.value)} className="w-full" />
-          <Input placeholder="Secret (optional)" value={secret} onChange={e => setSecret(e.target.value)} className="w-full" />
-          <Input placeholder="Password/Passphrase (optional, required for some exchanges like BitGet)" value={password} onChange={e => setPassword(e.target.value)} className="w-full" />
-          <Input placeholder="Avatar URL (optional)" value={avatar} onChange={e => setAvatar(e.target.value)} className="w-full" />
-          <textarea placeholder="Notes (optional)" value={notes} onChange={e => setNotes(e.target.value)} className="w-full min-h-[60px] border rounded px-2 py-1" />
+          <Input placeholder="Label (optional, e.g. 'Main spot')" value={label} onChange={(e) => setLabel(e.target.value)} className="w-full" />
+          <Input placeholder="API Key *" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full" autoComplete="off" />
+          <Input placeholder="Secret *" type="password" value={apiSecret} onChange={(e) => setApiSecret(e.target.value)} className="w-full" autoComplete="off" />
+          <Input placeholder="Passphrase (optional, required for some exchanges like BitGet)" type="password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} className="w-full" autoComplete="off" />
+          <label className="flex items-center gap-2 text-xs text-terminal-muted">
+            <input type="checkbox" checked={readOnly} onChange={(e) => setReadOnly(e.target.checked)} />
+            Read-only account (server will never trade with it)
+          </label>
           {error && <div className="text-red-500 text-xs">{error}</div>}
           <div className="flex gap-2 mt-2">
-            <Button type="submit" className="flex-1">{account ? 'Save' : 'Add'}</Button>
-            <Button type="button" className="flex-1" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" className="flex-1" disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}
+            </Button>
+            <Button type="button" className="flex-1" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
           </div>
-          {account && (
-            <div className="mt-8 border-t pt-4">
-              <Button type="button" variant="destructive" className="w-full" onClick={handleDelete}>
-                {confirmDelete ? 'Are you sure you want to delete?' : 'Delete account'}
-              </Button>
-            </div>
-          )}
         </form>
       </SheetContent>
     </Sheet>
   );
 };
 
-export default UserDrawer; 
+// --- share account (grants) ------------------------------------------------
+
+const ShareAccountSheet: React.FC<{ account: ExchangeAccount; onClose: () => void }> = ({ account, onClose }) => {
+  const listGrants = useAccountStore((s) => s.listGrants);
+  const shareAccount = useAccountStore((s) => s.shareAccount);
+  const revokeGrant = useAccountStore((s) => s.revokeGrant);
+
+  const [grants, setGrants] = useState<AccountGrant[]>([]);
+  const [email, setEmail] = useState('');
+  const [level, setLevel] = useState<'read' | 'trade'>('read');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const refresh = React.useCallback(async () => {
+    setGrants(await listGrants(account.id));
+  }, [listGrants, account.id]);
+
+  useEffect(() => { void refresh(); }, [refresh]);
+
+  const handleShare = async () => {
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setError('Enter a valid email');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    const grant = await shareAccount(account.id, email.trim(), level);
+    setBusy(false);
+    if (grant) {
+      setEmail('');
+      await refresh();
+    } else {
+      setError(useAccountStore.getState().error || 'Failed to share');
+    }
+  };
+
+  return (
+    <Sheet open onOpenChange={onClose}>
+      <SheetContent side="right" className="w-[400px] bg-terminal-widget border-l border-terminal-border flex flex-col">
+        <SheetHeader>
+          <SheetTitle>Share {account.exchange} account</SheetTitle>
+          <SheetDescription>{account.label || account.id}</SheetDescription>
+        </SheetHeader>
+
+        <div className="flex flex-col gap-3 mt-3 flex-1 overflow-auto">
+          <Input placeholder="Grantee email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full" />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setLevel('read')}
+              className={`flex-1 text-xs px-2 py-1.5 rounded border inline-flex items-center justify-center gap-1 ${level === 'read' ? 'bg-yellow-500/15 text-yellow-500 border-yellow-500/40' : 'border-terminal-border/40 text-terminal-muted'}`}
+            >
+              <Eye size={12} /> read
+            </button>
+            <button
+              type="button"
+              onClick={() => setLevel('trade')}
+              className={`flex-1 text-xs px-2 py-1.5 rounded border inline-flex items-center justify-center gap-1 ${level === 'trade' ? 'bg-green-500/15 text-green-500 border-green-500/40' : 'border-terminal-border/40 text-terminal-muted'}`}
+            >
+              <ShieldCheck size={12} /> trade
+            </button>
+          </div>
+          {error && <div className="text-red-500 text-xs">{error}</div>}
+          <Button onClick={() => void handleShare()} disabled={busy}>
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (<><Share2 className="mr-2" size={14} /> Share</>)}
+          </Button>
+
+          <div className="mt-2">
+            <div className="text-xs font-semibold text-terminal-muted uppercase tracking-wide mb-1">Current grants</div>
+            {grants.length === 0 && <div className="text-sm text-terminal-muted">Not shared with anyone.</div>}
+            {grants.map((g) => (
+              <div key={g.id} className="flex items-center gap-2 p-1.5 rounded border border-terminal-border/30 mb-1">
+                <span className="truncate text-xs flex-1">{g.grantee_email || g.grantee_user_id}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded border ${g.access_level === 'trade' ? 'bg-green-500/15 text-green-500 border-green-500/30' : 'bg-yellow-500/15 text-yellow-500 border-yellow-500/30'}`}>
+                  {g.access_level}
+                </span>
+                <Button size="icon" variant="outline" onClick={async () => { await revokeGrant(account.id, g.id); await refresh(); }} title="Revoke">
+                  <Trash2 size={14} />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <SheetFooter>
+          <Button variant="outline" onClick={onClose}>Done</Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+// --- one-time legacy localStorage migration --------------------------------
+
+const LegacyMigrationBanner: React.FC = () => {
+  const hasLegacy = useAccountStore((s) => s.hasLegacyLocalAccounts);
+  const migrate = useAccountStore((s) => s.migrateLegacyLocalAccounts);
+  const purge = useAccountStore((s) => s.purgeLegacyLocalAccounts);
+  const loadAccounts = useAccountStore((s) => s.loadAccounts);
+
+  const [show, setShow] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  useEffect(() => { setShow(hasLegacy()); }, [hasLegacy]);
+
+  if (!show) return null;
+
+  const handleMigrate = async () => {
+    setBusy(true);
+    const { migrated, failed } = await migrate();
+    purge();
+    await loadAccounts();
+    setBusy(false);
+    setResult(`Migrated ${migrated} account(s)${failed ? `, ${failed} failed` : ''}. Local secrets purged.`);
+    setShow(false);
+  };
+
+  const handleDismiss = () => {
+    // Purge without uploading — removes plaintext secrets from this browser.
+    purge();
+    setShow(false);
+  };
+
+  return (
+    <div className="rounded border border-yellow-500/40 bg-yellow-500/10 p-3 text-xs space-y-2">
+      <div className="flex items-center gap-1.5 font-semibold text-yellow-500">
+        <ShieldAlert size={14} /> Legacy local accounts found
+      </div>
+      <p className="text-terminal-muted">
+        This browser has exchange keys stored locally. Push them to the central account service (encrypted, server-side)
+        and remove them from this browser.
+      </p>
+      {result && <p className="text-green-500">{result}</p>}
+      <div className="flex gap-2">
+        <Button size="sm" onClick={() => void handleMigrate()} disabled={busy}>
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Migrate & purge'}
+        </Button>
+        <Button size="sm" variant="outline" onClick={handleDismiss} disabled={busy}>
+          Discard local
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default UserDrawer;

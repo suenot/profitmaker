@@ -5,7 +5,10 @@ import { useUserStore } from '../../store/userStore';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 
 export interface Instrument {
+  /** Central credential id — bound to group.account. */
   account: string;
+  /** Human-readable account label for display/search (not the bound value). */
+  accountLabel?: string;
   exchange: string;
   market: string;
   pair: string;
@@ -99,7 +102,8 @@ const InstrumentSearch: React.FC<InstrumentSearchProps> = ({
       markets.forEach(market => {
         symbols.forEach(pair => {
           const instrument: Instrument = {
-            account: account.email,
+            account: account.id,
+            accountLabel: account.label || account.email || account.exchange,
             exchange: account.exchange,
             market,
             pair
@@ -130,8 +134,8 @@ const InstrumentSearch: React.FC<InstrumentSearchProps> = ({
     const allMatches = allInstruments
       .filter(instrument => {
         // Every search word must match at least one field
-        return searchWords.every(word => 
-          instrument.account.toLowerCase().includes(word) ||
+        return searchWords.every(word =>
+          (instrument.accountLabel || instrument.account).toLowerCase().includes(word) ||
           instrument.exchange.toLowerCase().includes(word) ||
           instrument.market.toLowerCase().includes(word) ||
           instrument.pair.toLowerCase().includes(word)
@@ -212,8 +216,8 @@ const InstrumentSearch: React.FC<InstrumentSearchProps> = ({
     if (!isOpen) setIsOpen(true);
   };
 
-  const displayValue = value 
-    ? `${value.account} | ${value.exchange} | ${value.market} | ${value.pair}`
+  const displayValue = value
+    ? `${value.accountLabel || value.account} | ${value.exchange} | ${value.market} | ${value.pair}`
     : '';
 
   return (
@@ -336,7 +340,7 @@ const VirtualizedInstrumentsList: React.FC<{
                 >
                   <div className="grid grid-cols-1 gap-1 text-xs">
                     <div className="text-terminal-text font-medium">
-                      <span className="text-terminal-muted">Account:</span> {instrument.account}
+                      <span className="text-terminal-muted">Account:</span> {instrument.accountLabel || instrument.account}
                     </div>
                     <div className="text-terminal-text">
                       <span className="text-terminal-muted">Exchange:</span> {instrument.exchange}

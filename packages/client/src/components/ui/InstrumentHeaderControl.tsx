@@ -91,7 +91,8 @@ const InstrumentHeaderControl: React.FC<InstrumentHeaderControlProps> = ({
       markets.forEach(market => {
         symbols.forEach(pair => {
           const instrument: Instrument = {
-            account: account.email,
+            account: account.id,
+            accountLabel: account.label || account.email || account.exchange,
             exchange: account.exchange,
             market,
             pair
@@ -114,8 +115,8 @@ const InstrumentHeaderControl: React.FC<InstrumentHeaderControlProps> = ({
       
       if (searchWords.length > 0) {
         baseInstruments = allInstruments.filter(instrument => 
-          searchWords.every(word => 
-            instrument.account.toLowerCase().includes(word) ||
+          searchWords.every(word =>
+            (instrument.accountLabel || instrument.account).toLowerCase().includes(word) ||
             instrument.exchange.toLowerCase().includes(word) ||
             instrument.market.toLowerCase().includes(word) ||
             instrument.pair.toLowerCase().includes(word)
@@ -412,7 +413,7 @@ const VirtualizedInstrumentsList: React.FC<{
                       </div>
                     )}
                     <div className="text-terminal-text font-medium">
-                      <span className="text-terminal-muted">Account:</span> {instrument.account}
+                      <span className="text-terminal-muted">Account:</span> {instrument.accountLabel || instrument.account}
                     </div>
                     <div className="text-terminal-text">
                       <span className="text-terminal-muted">Exchange:</span> {instrument.exchange}
