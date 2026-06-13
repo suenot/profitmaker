@@ -139,20 +139,36 @@ export async function bootstrap(): Promise<void> {
 }
 
 /**
- * Redirect the top-level window to the auth login page, returning here after.
- * Used both for the first login and for "Add login" — on return, `bootstrap()`
- * upserts whichever identity the cookie now represents, so adding a second
- * account is just: log out of auth's side / sign in as the other user, land back
- * here, and the new identity is appended without clobbering existing sessions.
+ * Build the auth login URL with the return param, optionally forcing a fresh
+ * credential prompt via `?prompt=login`. Without it, auth auto-returns an
+ * already-signed-in user with their CURRENT identity (which is what the first
+ * login wants); with it, auth re-prompts so a DIFFERENT identity can be added.
  */
-export function login(): void {
+function authLoginUrl(forcePrompt: boolean): string {
   const ret = encodeURIComponent(window.location.href);
-  window.location.href = `${AUTH_URL}/login?return=${ret}`;
+  const prompt = forcePrompt ? 'prompt=login&' : '';
+  return `${AUTH_URL}/login?${prompt}return=${ret}`;
 }
 
-/** Alias for `login()` with intent-revealing name for the session switcher. */
+/**
+ * Redirect the top-level window to the auth login page (normal flow), returning
+ * here after. On return, `bootstrap()` upserts whichever identity the cookie now
+ * represents. Used for the FIRST login — no `prompt=login`, so an already-valid
+ * cookie signs the user straight back in.
+ */
+export function login(): void {
+  window.location.href = authLoginUrl(false);
+}
+
+/**
+ * "Add login" for multi-login: redirect to auth WITH `?prompt=login` so an
+ * already-signed-in user is forced to enter credentials for a DIFFERENT
+ * identity instead of being auto-returned with the current one. On return,
+ * `bootstrap()` appends the new identity as a session without clobbering the
+ * existing ones. (Requires auth's force-relogin support at /login?prompt=login.)
+ */
 export function addLogin(): void {
-  login();
+  window.location.href = authLoginUrl(true);
 }
 
 /** Quick-switch the active identity. */
