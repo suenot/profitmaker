@@ -28,6 +28,7 @@ const PERMISSION_LABEL: Record<ModulePermission, string> = {
   network: 'network',
   storage: 'storage',
   jobs: 'jobs',
+  provider: 'data provider',
 };
 
 function PermissionBadges({ permissions }: { permissions: string[] }) {
