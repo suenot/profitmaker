@@ -82,8 +82,8 @@ service. A bearer token resolves in this order: `API_TOKEN` (→ bootstrap user)
 local session token → **SSO JWT**. SSO JWTs are RS256, verified against the
 service's **public JWKS** (`https://auth.marketmaker.cc/.well-known/jwks.json`) —
 no shared secret is needed or stored. On first SSO login a local user row is
-auto-provisioned (keyed by the token's email), so each ecosystem user gets their
-own dashboards/widgets/groups.
+auto-provisioned and **explicitly bound** to the token's `sub` (the auth-service
+user id), so each ecosystem user gets their own dashboards/widgets/groups.
 
 ```bash
 # A valid SSO JWT works on every user-scoped route, just like a session token.
@@ -97,6 +97,7 @@ cookie — see the client SSO flow and [docs/remote-control.md](remote-control.m
 |---------|---------|---------|
 | `AUTH_URL` | `https://auth.marketmaker.cc` | Auth service base (JWKS lives at `/.well-known/jwks.json`). Override for dev/staging. |
 | `AUTH_REQUIRED_SERVICE` | _(unset)_ | When set (e.g. `profitmaker`), the JWT must carry a role for that service in its `roles`/`services` claim. Default: any authenticated ecosystem user is allowed. |
+| `AUTH_VERIFY_ISSUER` | _(unset)_ | Set to `1` to also require the JWT `iss` to equal `AUTH_URL`. Off by default because the auth service currently issues ecosystem-wide tokens without `iss`. |
 
 The client exposes the same env knob as `VITE_AUTH_URL` (defaults to the public
 auth URL).
@@ -117,6 +118,26 @@ ecosystem account):
 Locally this path is verified with a generated RS256 keypair + a mock JWKS
 (`AUTH_URL`/`VITE_AUTH_URL` pointed at the mock): a crafted JWT passes the gate,
 auto-provisions a user, and a forged-key token is rejected with `403`.
+
+#### Trust model
+
+What the server trusts and how, stated plainly:
+
+- **Signature + freshness.** A token is accepted only if it is signed by a key in
+  the auth service's JWKS, the algorithm is **RS256** (pinned — an `alg` of
+  anything else, e.g. `HS256`, is rejected), and it is unexpired.
+- **Shape.** The token must carry `sub`, `email`, and a `roles`/`services` object.
+  A token lacking the role map is not an ecosystem session token and is rejected,
+  so the accepted set is narrower than "any RS256 token the auth service signed".
+- **No issuer/audience binding yet.** The auth service issues ecosystem-wide
+  tokens without `iss`/`aud`, so we cannot bind to them today. If it starts
+  setting `iss`, set `AUTH_VERIFY_ISSUER=1` to also require `iss == AUTH_URL`.
+- **Identity binding (no email takeover).** A local account is bound to **one**
+  SSO identity via `users.sso_user_id` (the JWT `sub`). Login keys on that
+  binding, never silently on email: an unbound local account adopts the SSO
+  identity on first login, but a *different* SSO identity presenting an
+  already-bound email is **refused with `403`** — it can never take over another
+  user's account.
 
 ---
 

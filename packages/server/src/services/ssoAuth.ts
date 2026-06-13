@@ -1,5 +1,5 @@
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../db';
 import { users } from '../db/schema/users';
 import { hashPassword } from './auth';
@@ -21,6 +21,11 @@ const JWKS_URL = new URL(`${AUTH_URL}/.well-known/jwks.json`);
 // Optional role gate (off by default). When set, the JWT must carry a role for
 // this service in its roles/services claim.
 const REQUIRED_SERVICE = process.env.AUTH_REQUIRED_SERVICE || '';
+
+// The auth service does not currently set an `iss` claim (its JWTs are shared
+// across the whole ecosystem). If it ever does, set AUTH_VERIFY_ISSUER=1 to bind
+// tokens to AUTH_URL as well.
+const VERIFY_ISSUER = process.env.AUTH_VERIFY_ISSUER === '1';
 
 /**
  * Remote JWKS resolver. jose fetches the key set lazily, caches it, applies a
@@ -45,26 +50,36 @@ export interface SsoUser {
   name: string | null;
 }
 
+/**
+ * Extract and strictly validate the claims of an SSO JWT. Requires `sub`,
+ * `email`, and a roles/services map to be present — a token missing the role
+ * map is not a session token from this service and is rejected. This narrows the
+ * set of accepted tokens beyond "any RS256 token the auth service ever signed".
+ */
 function extractClaims(payload: JWTPayload): SsoClaims | null {
   const userId = typeof payload.sub === 'string' ? payload.sub : null;
   const email = typeof payload.email === 'string' ? payload.email : null;
   if (!userId || !email) return null;
-  const roles =
-    (payload.roles as Record<string, string> | undefined) ||
-    (payload.services as Record<string, string> | undefined) ||
-    {};
+
+  const roleClaim =
+    (payload.roles as unknown) ?? (payload.services as unknown);
+  // The roles/services claim MUST be present and be an object. A session JWT
+  // from this auth service always carries it; other token classes do not.
+  if (!roleClaim || typeof roleClaim !== 'object' || Array.isArray(roleClaim)) return null;
+
   return {
     userId,
     email,
     username: typeof payload.username === 'string' ? payload.username : null,
-    roles: roles && typeof roles === 'object' ? roles : {},
+    roles: roleClaim as Record<string, string>,
   };
 }
 
 /**
  * Verify an SSO JWT against the remote JWKS. Returns the claims, or null if the
- * token is invalid/expired or (when AUTH_REQUIRED_SERVICE is set) the user lacks
- * a role for the required service.
+ * token is invalid/expired, signed with the wrong algorithm, missing required
+ * claims, or (when AUTH_REQUIRED_SERVICE is set) the user lacks a role for the
+ * required service.
  */
 export async function verifySsoToken(token: string): Promise<SsoClaims | null> {
   // A JWT has three dot-separated segments. Cheaply skip non-JWTs (e.g. the
@@ -72,9 +87,12 @@ export async function verifySsoToken(token: string): Promise<SsoClaims | null> {
   if (token.split('.').length !== 3) return null;
   try {
     const { payload } = await jwtVerify(token, JWKS, {
-      // Accept tokens issued by this auth service. issuer/audience are not
-      // currently set by the auth service; verifying the signature + expiry via
-      // the trusted JWKS is the security boundary.
+      // PIN the algorithm: only accept RS256 (the JWKS keys' alg). Without this
+      // a token could assert a different alg and bypass the intended check.
+      algorithms: ['RS256'],
+      // Bind to the issuer only if the auth service starts setting `iss` and the
+      // operator opts in — it currently issues ecosystem-wide tokens with no iss.
+      ...(VERIFY_ISSUER ? { issuer: AUTH_URL } : {}),
     });
     const claims = extractClaims(payload);
     if (!claims) return null;
@@ -85,34 +103,72 @@ export async function verifySsoToken(token: string): Promise<SsoClaims | null> {
   }
 }
 
-const ssoUserCache = new Map<string, string>(); // auth userId -> local user id
+const ssoUserCache = new Map<string, string>(); // sso userId -> local user id
 
 /**
- * Map a verified SSO identity to a local user row, auto-provisioning on first
- * login (so each ecosystem user gets their own dashboards/widgets/groups). We
- * key by email — the stable identity shared across the ecosystem — and store the
- * auth user_id in `notes` for traceability.
+ * Map a verified SSO identity to a local user row by its EXPLICIT binding
+ * (`users.sso_user_id`), never silently by email. Resolution order:
+ *
+ *   (a) a user already bound to this `sso_user_id` → use it;
+ *   (b) a user with this email but NO sso binding yet → first-time bind (record
+ *       sso_user_id on that row and adopt it);
+ *   (c) a user with this email but bound to a DIFFERENT sso_user_id → REJECT
+ *       (return null → 403). No silent takeover of someone else's account;
+ *   (d) no such user → provision a fresh one bound to this sso_user_id.
+ *
+ * Returns null when the identity cannot be safely resolved (case c). This closes
+ * the email-based account-takeover vector: a local account is only ever attached
+ * to one SSO identity, and a second SSO identity can never claim it.
  */
-export async function resolveSsoUser(claims: SsoClaims): Promise<SsoUser> {
+export async function resolveSsoUser(claims: SsoClaims): Promise<SsoUser | null> {
   const cachedId = ssoUserCache.get(claims.userId);
   if (cachedId) {
     return { id: cachedId, email: claims.email, name: claims.username };
   }
 
-  const [existing] = await db
+  // (a) Canonical lookup: already bound to this SSO identity.
+  const [bound] = await db
     .select({ id: users.id, email: users.email, name: users.name })
+    .from(users)
+    .where(eq(users.ssoUserId, claims.userId))
+    .limit(1);
+  if (bound) {
+    ssoUserCache.set(claims.userId, bound.id);
+    return { id: bound.id, email: bound.email, name: bound.name };
+  }
+
+  // Is there a local account holding this email?
+  const [byEmail] = await db
+    .select({ id: users.id, email: users.email, name: users.name, ssoUserId: users.ssoUserId })
     .from(users)
     .where(eq(users.email, claims.email))
     .limit(1);
 
-  if (existing) {
-    ssoUserCache.set(claims.userId, existing.id);
-    return { id: existing.id, email: existing.email, name: existing.name };
+  if (byEmail) {
+    if (byEmail.ssoUserId && byEmail.ssoUserId !== claims.userId) {
+      // (c) Email belongs to a DIFFERENT SSO identity — refuse, do not attach.
+      console.warn(`[sso] refusing login: email ${claims.email} is bound to a different SSO identity`);
+      return null;
+    }
+    // (b) First-time bind of an existing, unbound local account. Guard the
+    // UPDATE with sso_user_id IS NULL so a concurrent bind can't race us into
+    // overwriting a binding that just landed.
+    const [adopted] = await db
+      .update(users)
+      .set({ ssoUserId: claims.userId, updatedAt: new Date() })
+      .where(and(eq(users.id, byEmail.id), isNull(users.ssoUserId)))
+      .returning({ id: users.id, email: users.email, name: users.name });
+    if (adopted) {
+      ssoUserCache.set(claims.userId, adopted.id);
+      return { id: adopted.id, email: adopted.email, name: adopted.name };
+    }
+    // Lost the race — someone bound this row first. Re-resolve from the top.
+    return resolveSsoUser(claims);
   }
 
-  // First SSO login for this email — provision a local user. The password hash
-  // is never used to log in (auth is delegated to the SSO service); the column
-  // is NOT NULL, so we store a hash of a random secret.
+  // (d) No local account — provision one bound to this SSO identity. The
+  // password hash is never used to log in (auth is delegated to SSO) but the
+  // column is NOT NULL, so we store a hash of a random secret.
   const passwordHash = await hashPassword(crypto.randomUUID());
   const [created] = await db
     .insert(users)
@@ -120,7 +176,7 @@ export async function resolveSsoUser(claims: SsoClaims): Promise<SsoUser> {
       email: claims.email,
       passwordHash,
       name: claims.username,
-      notes: `sso:${claims.userId}`,
+      ssoUserId: claims.userId,
     })
     .onConflictDoNothing()
     .returning({ id: users.id, email: users.email, name: users.name });
@@ -130,14 +186,9 @@ export async function resolveSsoUser(claims: SsoClaims): Promise<SsoUser> {
     return { id: created.id, email: created.email, name: created.name };
   }
 
-  // Lost an insert race — read the winner back.
-  const [winner] = await db
-    .select({ id: users.id, email: users.email, name: users.name })
-    .from(users)
-    .where(eq(users.email, claims.email))
-    .limit(1);
-  ssoUserCache.set(claims.userId, winner.id);
-  return { id: winner.id, email: winner.email, name: winner.name };
+  // Lost an insert race (email or sso_user_id unique conflict) — re-resolve so
+  // the winning row goes through the same safe (a)/(b)/(c) checks.
+  return resolveSsoUser(claims);
 }
 
 /** Verify a token and resolve it to a local user in one step. */
