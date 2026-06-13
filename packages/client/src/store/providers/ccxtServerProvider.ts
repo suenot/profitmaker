@@ -24,6 +24,7 @@ import type {
   ProviderCredentials,
 } from '@profitmaker/types';
 import { io, Socket } from 'socket.io-client';
+import { getSsoToken } from '../../services/ssoClient';
 
 // Config describing a server-side CCXT instance. Kept here (rather than the
 // deleted ccxtProviderUtils) since the server provider is its only consumer.
@@ -104,6 +105,17 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
     this.timeout = provider.config.timeout || 30000;
   }
 
+  /**
+   * Live Bearer token for terminal-server calls: the SSO session token (preferred,
+   * when an ecosystem user is logged in at app.marketmaker.cc) else the static
+   * token configured on this provider. Resolved per request — NOT cached in the
+   * constructor — so an SSO login that lands after the provider was created still
+   * authenticates market-data requests. Mirrors modules/api.ts#resolveServerToken.
+   */
+  private authToken(): string | undefined {
+    return getSsoToken() || this.token;
+  }
+
   get info(): ProviderInfo {
     return {
       id: this.provider.id,
@@ -122,9 +134,10 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+
+    const token = this.authToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
     console.log(`🌐 [CCXTServer] Making request to ${url}`);
@@ -208,9 +221,10 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
       this.socket.on('connect', () => {
         console.log(`✅ [CCXTServer] WebSocket connected`);
 
-        // Authenticate
-        if (this.token) {
-          this.socket!.emit('authenticate', { token: this.token });
+        // Authenticate with the live token (SSO session preferred).
+        const token = this.authToken();
+        if (token) {
+          this.socket!.emit('authenticate', { token });
         } else {
           resolve(this.socket!);
         }
@@ -680,7 +694,8 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
   async listExchanges(): Promise<string[]> {
     const url = `${this.baseUrl}/api/exchange/list`;
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const token = this.authToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
     const response = await fetch(url, { method: 'GET', headers });
     if (!response.ok) {
       throw new Error(`Failed to list exchanges: ${response.status}`);
