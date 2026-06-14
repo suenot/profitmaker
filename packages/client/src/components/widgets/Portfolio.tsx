@@ -3,7 +3,14 @@ import { Loader2, RefreshCw, Wallet, User } from 'lucide-react';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { useUserStore } from '../../store/userStore';
 import { Balance, WalletType } from '../../types/dataProviders';
-import UserBalancesPieChart from './UserBalancesPieChart';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+
+// Allocation palette — shared by the donut slices and the table color dots so
+// the two read as one legend.
+const PIE_COLORS = [
+  '#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4',
+  '#F97316', '#EC4899', '#84CC16', '#6366F1', '#14B8A6', '#F43F5E',
+];
 
 /**
  * Portfolio — real cross-account allocation overview. Loads every central
@@ -145,7 +152,10 @@ const PortfolioWidget: React.FC = () => {
   });
   const holdings = Array.from(holdingsMap.values())
     .map(h => ({ ...h, percentage: totalUsd > 0 ? (h.usdValue / totalUsd) * 100 : 0 }))
-    .sort((a, b) => b.usdValue - a.usdValue);
+    .sort((a, b) => b.usdValue - a.usdValue)
+    .map((h, i) => ({ ...h, color: PIE_COLORS[i % PIE_COLORS.length] }));
+  // One slice per asset (aggregated across accounts/wallets), priced only.
+  const pieData = holdings.filter(h => h.usdValue > 0);
 
   const anyLoading = flat.some(b => b.priceLoading);
 
@@ -221,10 +231,38 @@ const PortfolioWidget: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Allocation pie */}
-          <div className="h-44 mb-2 shrink-0">
-            <UserBalancesPieChart balances={flat} formatCurrency={(v) => fmtAmount(v)} />
-          </div>
+          {/* Allocation donut — one slice per asset; the table below is the legend */}
+          {pieData.length > 0 && (
+            <div className="h-40 mb-3 shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    dataKey="usdValue"
+                    nameKey="currency"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={42}
+                    outerRadius={72}
+                    paddingAngle={1}
+                    stroke="none"
+                  >
+                    {pieData.map((h) => (
+                      <Cell key={h.currency} fill={h.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ background: 'rgba(24,24,23,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                    itemStyle={{ color: '#ece8e1' }}
+                    formatter={(value: any, _n: any, p: any) => [
+                      `$${fmtUsd(Number(value))} · ${(p?.payload?.percentage ?? 0).toFixed(1)}%`,
+                      p?.payload?.currency,
+                    ]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
           {/* Per-asset breakdown */}
           <div className="flex-grow overflow-auto">
@@ -240,6 +278,7 @@ const PortfolioWidget: React.FC = () => {
                 className="flex items-center py-2 px-2 text-sm border-b border-terminal-border/20 hover:bg-terminal-accent/10"
               >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: h.color }} />
                   <div className="w-6 h-6 rounded-full bg-terminal-accent/40 flex items-center justify-center text-[10px] font-medium shrink-0">
                     {h.currency.slice(0, 3)}
                   </div>
@@ -252,7 +291,7 @@ const PortfolioWidget: React.FC = () => {
                 <div className="w-28 pl-3">
                   <div className="flex items-center gap-2">
                     <div className="flex-grow h-1.5 rounded-full bg-terminal-border/40 overflow-hidden">
-                      <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.min(100, h.percentage)}%` }} />
+                      <div className="h-full rounded-full" style={{ width: `${Math.min(100, h.percentage)}%`, backgroundColor: h.color }} />
                     </div>
                     <span className="text-xs text-terminal-muted w-10 text-right">{h.percentage.toFixed(1)}%</span>
                   </div>
