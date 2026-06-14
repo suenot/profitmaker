@@ -47,7 +47,9 @@ const DealDetails: React.FC<DealDetailsProps> = ({
   const addTradesToDeal = (selectedTrades: any[]) => {
     const newTrades = selectedTrades.map(trade => ({
       uuid: trade.id,
-      order: `ORD${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+      // Use the real exchange order id; fall back to the trade id (deterministic,
+      // not a random label).
+      order: trade.order ?? trade.id,
       datetime: trade.datetime,
       stock: trade.stock,
       symbol: trade.symbol,

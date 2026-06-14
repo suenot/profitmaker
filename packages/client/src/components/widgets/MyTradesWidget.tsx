@@ -107,7 +107,6 @@ const MyTradesWidget: React.FC<MyTradesWidgetProps> = ({
     loadTrades();
   }, [loadTrades]);
 
-  // Mock data for trades
   // Stats computed from the loaded trades (P&L isn't available from fetchMyTrades,
   // so it's omitted rather than faked).
   const stats = {
