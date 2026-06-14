@@ -20,6 +20,46 @@ export interface CCXTInstanceConfig {
 const instanceCache = new Map<string, { instance: any; timestamp: number }>();
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 1 day
 
+interface KucoinPartnerLeg {
+  id: string;
+  key: string;
+  name?: string;
+}
+
+/** Read one KuCoin Broker Pro partner leg (spot or futures) from env. */
+const kucoinPartnerLeg = (prefix: 'SPOT' | 'FUTURES'): KucoinPartnerLeg | undefined => {
+  const id = process.env[`KUCOIN_BROKER_${prefix}_PARTNER`];
+  const key = process.env[`KUCOIN_BROKER_${prefix}_KEY`];
+  const name = process.env[`KUCOIN_BROKER_${prefix}_NAME`];
+  if (!id || !key) return undefined;
+  return { id, key, name };
+};
+
+/**
+ * KuCoin Broker Pro attribution. ccxt's kucoin/kucoinfutures `sign()` reads
+ * `options.partner.{spot,future} = { id, key, name }` and, on every
+ * AUTHENTICATED request, emits `KC-API-PARTNER` + `KC-API-PARTNER-SIGN`
+ * (= base64(HMAC-SHA256(timestamp+partnerId+apiKey, brokerKey))) +
+ * `KC-API-PARTNER-VERIFY` — this is what attributes the trade's rebate to the
+ * "marketmaker" broker. The broker-key is an HMAC secret and stays server-side.
+ * No-op when the env creds are absent (open-source / self-host installs are
+ * unaffected). ccxt 4.5.45 only emits `KC-BROKER-NAME` on broker-management
+ * endpoints (not order calls), so we also set it as a persistent header.
+ */
+const applyKucoinBroker = (exchangeId: string, instanceConfig: any): void => {
+  const spot = kucoinPartnerLeg('SPOT');
+  const future = kucoinPartnerLeg('FUTURES');
+  if (!spot && !future) return; // broker not configured
+
+  const partner: Record<string, KucoinPartnerLeg> = {};
+  if (spot) partner.spot = spot;
+  if (future) partner.future = future;
+  instanceConfig.options = { ...(instanceConfig.options || {}), partner };
+
+  const leg = exchangeId === 'kucoinfutures' ? future : spot;
+  if (leg?.name) instanceConfig.headers['KC-BROKER-NAME'] = leg.name;
+};
+
 export const createCacheKey = (config: CCXTInstanceConfig): string => {
   const parts = [
     config.exchangeId,
@@ -75,6 +115,12 @@ export const getCCXTInstance = async (config: CCXTInstanceConfig): Promise<any> 
     instanceConfig.defaultType = 'future';
   } else if (marketType === 'spot') {
     instanceConfig.defaultType = 'spot';
+  }
+
+  // KuCoin Broker Pro: attribute trades placed through this terminal to the
+  // marketmaker broker (kucoin = spot, kucoinfutures = futures).
+  if (config.exchangeId.startsWith('kucoin')) {
+    applyKucoinBroker(config.exchangeId, instanceConfig);
   }
 
   const exchangeInstance = new ExchangeClass(instanceConfig);

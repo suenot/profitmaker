@@ -36,6 +36,14 @@ services:
       - AUTH_URL=https://auth.marketmaker.cc
       - AUTH_INTERNAL_URL=https://auth.marketmaker.cc
       - AUTH_INTERNAL_SECRET=${AUTH_INTERNAL_SECRET}
+      # KuCoin Broker Pro: attribute KuCoin trades to the marketmaker broker.
+      # broker-key is an HMAC secret (server-side only); absent ⇒ no-op.
+      - KUCOIN_BROKER_SPOT_PARTNER=${KUCOIN_BROKER_SPOT_PARTNER}
+      - KUCOIN_BROKER_SPOT_KEY=${KUCOIN_BROKER_SPOT_KEY}
+      - KUCOIN_BROKER_SPOT_NAME=${KUCOIN_BROKER_SPOT_NAME}
+      - KUCOIN_BROKER_FUTURES_PARTNER=${KUCOIN_BROKER_FUTURES_PARTNER}
+      - KUCOIN_BROKER_FUTURES_KEY=${KUCOIN_BROKER_FUTURES_KEY}
+      - KUCOIN_BROKER_FUTURES_NAME=${KUCOIN_BROKER_FUTURES_NAME}
     volumes:
       # installed modules survive container rebuilds
       - modules-data:/app/packages/server/.modules
