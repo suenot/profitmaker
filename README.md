@@ -7,7 +7,9 @@
 
 Modular, widget-based trading terminal with support for **100+ crypto exchanges** via [CCXT](https://github.com/ccxt/ccxt). All user state is managed through a REST API backed by PostgreSQL -- every dashboard, widget, group, and setting is persisted per-user.
 
-**[Live Demo](https://v3-demo.profitmaker.cc/)** | **[Docs](https://www.profitmaker.cc/docs/)** | **[Discord](https://discord.gg/2PtuMAg)** | **[Telegram](https://t.me/suenot)**
+**[Launch Terminal](https://terminal.marketmaker.cc)** | **[Docs](https://www.profitmaker.cc/docs/)** | **[Discord](https://discord.gg/2PtuMAg)** | **[Telegram](https://t.me/suenot)**
+
+> The hosted terminal runs at **[terminal.marketmaker.cc](https://terminal.marketmaker.cc)** (single sign-on via `auth.marketmaker.cc`). Self-host it anywhere with the steps below.
 
 ---
 
@@ -58,8 +60,8 @@ AI agents drive the terminal over **MCP**, and humans/scripts over a
 | Exchange API | CCXT 4.4 (100+ exchanges, REST + WebSocket) |
 | Backend | **Bun + Elysia** (HTTP API) + Socket.IO (WebSocket streaming) |
 | Database | **PostgreSQL** via Drizzle ORM |
-| Auth | Session tokens (bcrypt + per-user sessions) |
-| Encryption | Web Crypto API -- AES-256-GCM for exchange API keys |
+| Auth | Local sessions (bcrypt) **or** ecosystem SSO via `auth.marketmaker.cc` (RS256 JWT, verified through public JWKS) |
+| Exchange keys | **SSO/central accounts:** kept server-side in the `auth.marketmaker.cc` vault (AES-256-GCM) — the browser never holds secrets. **Self-host:** passed inline per request, held in memory for the call (not persisted) |
 | Testing | Vitest + JSDOM |
 | Monorepo | Bun workspaces (4 packages) |
 
@@ -81,23 +83,30 @@ AI agents drive the terminal over **MCP**, and humans/scripts over a
 | **Chart** | OHLCV candlestick (Night Vision), 13 timeframes, infinite scroll |
 | **Order Book** | Real-time bid/ask depth, spread display |
 | **Trades** | Live trade feed with filtering, aggregated mode |
-| **Order Form** | Market, limit, stop-loss, take-profit, trailing stop, iceberg |
-| **Portfolio** | Balance overview across all connected accounts |
-| **User Balances** | Detailed balance with pie chart breakdown |
+| **Order Form** | Market, limit, stop-loss, take-profit, trailing stop, iceberg; live ticker + real balance |
+| **Portfolio** | Cross-account allocation — total value, per-asset breakdown, allocation donut (USD-valued) |
+| **User Balances** | Detailed balances across all accounts with pie-chart breakdown |
 | **User Trading Data** | My trades, open orders, positions (futures) |
-| **Deals** | Deal tracking with entry/exit analysis |
+| **Transaction History** | Deposits / withdrawals / transfers / fees from the exchange ledger |
+| **Deals** | Deal tracking with entry/exit analysis, built from real trade history |
+
+All widgets render **live data** — the demo/placeholder ("not ready") widgets were replaced with real exchange data wired through the data-provider layer.
 
 ### Data Provider System
 - **CCXT Server** -- all market data + trading run through the Elysia backend (CORS-free, WebSocket via CCXT Pro); the browser has no CCXT
 - **Pluggable server registry** -- the built-in `ccxt` provider plus module-supplied providers (incl. native napi bindings); priority-based resolution, `providerId` override
 - **Automatic fallback** -- WebSocket to REST when an exchange lacks Pro support
 - **Subscription deduplication** -- one connection per data stream, shared across widgets
+- **Authenticated calls** -- balances, trades, orders, positions and the ledger resolve per account via `{ accountId }` (central accounts) or inline credentials; the server attaches the keys before calling CCXT
+- **KuCoin Broker Pro** (hosted only) -- KuCoin trades routed through the hosted terminal are attributed to the MarketMaker broker for rebate; self-host installs are unaffected (no-op unless broker env vars are set)
 
-### Security
-- **User authentication** -- register/login with bcrypt-hashed passwords
-- **Session tokens** -- 30-day sessions, stored in PostgreSQL
-- **Exchange API keys encrypted** with AES-256-GCM
-- **Dual auth** -- API_TOKEN for server-to-server + session tokens for users
+### Security & Accounts
+- **Authentication** -- local register/login (bcrypt, 30-day sessions in PostgreSQL), **or** ecosystem **single sign-on** via `auth.marketmaker.cc` (RS256 JWT verified through the public JWKS — no shared secret in this repo).
+- **Central accounts (SSO mode)** -- exchange API keys live **server-side** in the `auth.marketmaker.cc` vault (AES-256-GCM). The terminal sends only `{ accountId, want: 'read' | 'trade' }` + the user's JWT; the backend fetches decrypted keys server-to-server. **The browser never holds secrets.**
+- **Multiple simultaneous logins** -- hold several ecosystem identities at once and quick-switch the active one.
+- **Per-account access levels** -- accounts can be shared read-only; trade operations on a read-grant are rejected server-side (403).
+- **Self-host mode** -- without SSO, exchange keys are passed inline per request and held in memory for the call only (never persisted). Legacy browser-stored keys are migrated into the vault and purged; a persistent encrypted self-host store is on the roadmap.
+- **Dual server auth** -- `API_TOKEN` for server-to-server + the user's JWT/session for browser calls (every `/api/*` requires a bearer token).
 
 ## Quick Start
 
@@ -186,7 +195,7 @@ users
 ├── dashboards
 │   └── widgets           (position, config, per-dashboard)
 ├── groups                (instrument linking)
-├── exchange_accounts     (encrypted API keys)
+├── exchange_accounts     (schema reserved; SSO keys live in the auth.marketmaker.cc vault)
 ├── data_providers        (ccxt-server provider configs)
 ├── user_settings         (key-value: theme, activeDashboardId, etc.)
 └── widget_settings       (per-widget, per-user configs)

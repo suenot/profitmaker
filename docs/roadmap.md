@@ -9,6 +9,23 @@ Profitmaker v3 is a working trading terminal with:
 - AES-256-GCM encryption for API keys
 - 20+ trading widgets (chart, orderbook, trades, order form, portfolio, deals, etc.)
 
+### Recently shipped
+- **Central accounts** — exchange API keys live server-side in the `auth.marketmaker.cc`
+  vault; the terminal sends `{ accountId, want }` + the user's JWT and the backend
+  fetches decrypted keys server-to-server. The browser never holds secrets.
+- **Multiple simultaneous logins** — hold several ecosystem identities at once and
+  quick-switch the active one.
+- **Per-account read-only access levels** — accounts can be shared read-only; trade
+  operations on a read grant are rejected server-side (403).
+- **All trading widgets on real data** — Portfolio (cross-account allocation),
+  Transaction History (via `fetchLedger`), Order Form (live balance + ticker), and
+  Deals / My Trades / User Balances / User Trading Data (via central accounts). The
+  old "not ready" placeholders are gone.
+- **Design-system status bar** — MarketMaker `TimezoneToggle` clock and a real
+  server connection indicator.
+- **KuCoin Broker Pro attribution** — hosted KuCoin trades carry the MarketMaker
+  broker partner id for rebates (no-op for self-host unless broker env vars are set).
+
 ## Production Hardening
 
 ### Server Security
@@ -90,15 +107,9 @@ Profitmaker v3 is a working trading terminal with:
 ## Known Issues / Improvements
 
 ### UserBalancesWidget
-- USD value cache uses `exchange:currency:amount` key — should use `exchange:currency` for stability
-- No rate-limiting on ticker requests — 50+ concurrent calls on load
-- `getAllBalances()` runs in render without memoization
-
-### UserTradingDataWidget
-- Refresh uses tab-switch hack with setTimeout (50ms+200ms) — unreliable
-- `useDataProviderStore()` without selector — subscribes to ALL store changes
-- `accounts` in deps array creates new reference each render — causes infinite refetches
-- Debug console.log statements should be removed for production
+- No rate-limiting on ticker requests — many concurrent calls on load
+- `getAllBalances()` runs in render to keep Zustand auto-subscription (intentional, but should be revisited)
+- Debug `console.log` statements should be removed for production
 
 ### General
 - Main bundle is 1.7MB — needs code splitting and lazy loading

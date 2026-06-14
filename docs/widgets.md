@@ -10,30 +10,96 @@ Widgets are resolved at runtime through the **WidgetRegistry**
 (`src/modules/registry.ts`), keyed by a `type` string. Built-ins are registered
 in `src/modules/builtinWidgets.tsx`; modules register theirs at load time. The
 `type` is a free-form string (`WidgetSchema.type` = `z.string().min(1)`); the
-former enum is kept as `BUILTIN_WIDGET_TYPES` for reference. Built-in types:
+former enum is kept as `BUILTIN_WIDGET_TYPES` for reference.
 
-| Type | Component | Description |
-|------|-----------|-------------|
-| `chart` | `Chart.tsx` | OHLCV candlestick chart (Night Vision library) |
-| `portfolio` | `Portfolio.tsx` | Account portfolio overview |
-| `userBalances` | `UserBalancesWidget.tsx` | Exchange balances with pie chart (Recharts) |
-| `userTradingData` | `UserTradingDataWidget.tsx` | Tabs: orders, trades, positions |
-| `orderForm` | `OrderForm.tsx` | Place buy/sell orders |
-| `transactionHistory` | `TransactionHistory.tsx` | Recent transaction log |
-| `orderbook` | `OrderBookWidget.tsx` | Live order book (bid/ask depth) |
-| `trades` | `TradesWidget.tsx` | Live trade feed |
-| `deals` | `DealsWidget.tsx` | Aggregated deals/positions tracking |
-| `dataProviderSettings` | `DataProviderSettingsWidget.tsx` | Configure data providers |
-| `dataProviderSetup` | `DataProviderSetupWidget.tsx` | Initial provider setup wizard |
-| `dataProviderDebug` | `DataProviderDebugWidget.tsx` | Debug provider state |
-| `dataProviderDemo` | `DataProviderDemoWidget.tsx` | Demo of provider capabilities |
-| `exchanges` | `ExchangesWidget.tsx` | Exchange browser/selector |
-| `markets` | `MarketsWidget.tsx` | Market type selector (spot/futures) |
-| `pairs` | `PairsWidget.tsx` | Trading pair browser |
-| `notificationTest` | `NotificationTestWidget.tsx` | Test notification system |
-| `debugUserData` | `DebugUserData.tsx` | Debug user store |
-| `debugCCXTCache` | `DebugCCXTCache.tsx` | Debug CCXT instance cache |
-| `debugBingX` | `DebugBingXWidget.tsx` | Debug BingX exchange API |
+Every data widget renders **live exchange data**, never mock or placeholder
+fixtures. Public market data (chart, order book, trades) streams through the
+data-provider layer; private widgets (balances, trading data, deals, transaction
+history, portfolio, order form) resolve per account via the central-accounts
+`{ accountId }` flow (`want: 'read'` for reads, `'trade'` for orders) — the
+server attaches the vault keys before calling CCXT, so the browser never holds
+secrets. Each private widget gates on `acc => !!acc.id` (any listed account, own
+or shared-with-read) rather than client-side key presence.
+
+`category` controls where a widget appears: `public` → Public Data menu,
+`private` → Private Data menu, `diagnostics` → Diagnostics submenu, `module`
+widgets → Modules. `system` widgets are registered (renderable from saved
+dashboards) but not offered in the add-widget menu.
+
+Built-in types:
+
+| Type | Component | Category | Description |
+|------|-----------|----------|-------------|
+| `chart` | `Chart.tsx` | public | Live OHLCV candlestick chart (Night Vision) |
+| `orderbook` | `OrderBookWidget.tsx` | public | Live order book (bid/ask depth, spread) |
+| `trades` | `TradesWidget.tsx` | public | Live trade feed (filtering, aggregated mode) |
+| `userBalances` | `UserBalancesWidget.tsx` | private | Real balances across all accounts, table or pie view (Recharts), USD-valued |
+| `userTradingData` | `UserTradingDataWidget.tsx` | private | Tabs: trades, positions, open orders (real, per account) |
+| `deals` | `DealsWidget.tsx` | private | Deal tracking aggregated from real trade history |
+| `orderForm` | `OrderForm.tsx` | private | Place buy/sell orders — live ticker + real balance |
+| `dataProviderSettings` | `DataProviderSettingsWidget.tsx` | diagnostics | Configure data providers |
+| `dataProviderSetup` | `DataProviderSetupWidget.tsx` | diagnostics | Initial provider setup wizard |
+| `portfolio` | `Portfolio.tsx` | system | Cross-account allocation overview (USD-valued) |
+| `transactionHistory` | `TransactionHistory.tsx` | system | Real exchange ledger, grouped by date |
+| `custom` | `Portfolio.tsx` | system | Legacy alias, rendered as Portfolio |
+| `system.moduleStore` | `ModuleStoreWidget` | system | Browse / install / enable modules |
+| `system.docs` | `DocsWidget` | system | In-app API / CLI / MCP reference |
+
+Dev-only diagnostic widgets (registered only when `import.meta.env.DEV`) expose
+raw provider/exchange internals: `exchanges`, `markets`, `pairs`, and
+`dataProviderDebug`.
+
+## Trading Widgets in Detail
+
+All of the widgets below render **live exchange data**. Reads route through the
+data-provider store; private reads (balances, trades, orders, positions, ledger)
+go via the central-accounts `{ accountId }` flow.
+
+- **Chart / Order Book / Trades** (`Chart.tsx`, `OrderBookWidget.tsx`,
+  `TradesWidget.tsx`) — public market data. Each carries a group selector and
+  uses a transparent group, so picking exchange / market / pair flows to linked
+  widgets. Streams over WebSocket (CCXT Pro) with REST fallback.
+
+- **User Balances** (`UserBalancesWidget.tsx`) — real balances across every
+  account, both `trading` and `funding` wallets, fetched with
+  `initializeBalanceData(accountId, walletType)`. Filter / sort, hide-small-amounts,
+  USD valuation (stablecoins 1:1, otherwise `CURRENCY/USDT` ticker bid), a total
+  portfolio line, and a table-or-pie view (`UserBalancesPieChart`, Recharts).
+  Header refresh button clears then re-fetches.
+
+- **User Trading Data** (`UserTradingDataWidget.tsx`) — three tabs backed by real
+  per-account calls: **Trades** (`UserTradesTab` → `fetchMyTrades`), **Positions**
+  (`UserPositionsTab` → `fetchPositions`), **Orders** (`UserOrdersTab` →
+  `fetchOpenOrders`). An account selector (all / one) drives every tab; the header
+  refresh button re-fetches the active tab via an imperative handle. Long lists are
+  virtualized.
+
+- **Deals** (`DealsWidget.tsx`) — deal tracking built from real trade history.
+  "Sync from account" pulls `fetchMyTrades` for each account and aggregates trades
+  into deals (grouped by symbol) in the persisted `dealsStore`; the per-deal "Add
+  Trades" picker (`MyTradesWidget`, also `fetchMyTrades`-backed) is the other live
+  entry point. P&L is computed in deal details, not faked at the source.
+
+- **Order Form** (`OrderForm.tsx`) — places real orders. Reads the instrument from
+  the selected group (account / exchange / market / pair), subscribes to the live
+  **ticker** for the last price, and loads the real account **balance** to drive
+  available / holdings / max-amount and cost estimation. Market / limit / stop
+  order types, optional stop-loss & take-profit, persisted defaults (order type,
+  TIF, post/reduce-only), and an optional confirm-before-submit gate. Submit calls
+  `placeOrder` (trade write via the `accountId` flow).
+
+- **Transaction History** (`TransactionHistory.tsx`) — real account ledger via
+  `fetchLedger(accountId)` (deposits / withdrawals / transfers / trades / fees),
+  merged across accounts, grouped by date (Today / Yesterday / full date), with
+  in/out direction coloring and a client-side search. Empty when the account has
+  no ledger movements.
+
+- **Portfolio** (`Portfolio.tsx`) — cross-account allocation. Loads every
+  account's balances, values them in USD (stablecoin 1:1, else `CURRENCY/USDT`
+  ticker bid), and shows total value, Assets / Accounts KPIs, an allocation
+  **donut** (one slice per asset, color-matched to the per-asset table below it),
+  and a per-asset breakdown with allocation bars. No cost basis is available from
+  balances, so P&L columns are intentionally omitted rather than faked.
 
 ## Widget Container: WidgetSimple
 
@@ -169,7 +235,9 @@ Some complex widgets have their own dedicated Zustand stores:
 | `tradesWidgetStore` | `store/tradesWidgetStore.ts` | Trades feed settings |
 | `userBalancesWidgetStore` | `store/userBalancesWidgetStore.ts` | Balance display preferences |
 | `userTradingDataWidgetStore` | `store/userTradingDataWidgetStore.ts` | Trading data tab state |
-| `placeOrderStore` | `store/placeOrderStore.ts` | Order form state |
+| `placeOrderStore` | `store/placeOrderStore.ts` | Order form live state (form data, validation, estimate) |
+| `orderFormWidgetStore` | `store/orderFormWidgetStore.ts` | Persisted Order Form defaults (order type, TIF, post/reduce-only, confirm) |
+| `dealsStore` | `store/dealsStore.ts` | Persisted deals, aggregated from real trades |
 
 ## Performance Notes
 

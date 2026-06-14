@@ -9,14 +9,17 @@ Profitmaker uses **Zustand 5** for global state management. Each domain has its 
 ```
 src/store/
 ├── dashboardStore.ts          # Dashboards and widgets
-├── userStore.ts               # Users and exchange accounts
+├── accountStore.ts            # Central (SSO-vault) exchange accounts
+├── userStore.ts               # Back-compat projection of accountStore + sessions
 ├── dataProviderStore.ts       # Data providers, subscriptions, market data
 ├── groupStore.ts              # Widget groups (shared context)
 ├── chartWidgetStore.ts        # Per-widget chart settings
 ├── orderBookWidgetStore.ts    # Per-widget orderbook settings
 ├── tradesWidgetStore.ts       # Per-widget trades settings
+├── orderFormWidgetStore.ts    # Per-widget order form settings
 ├── userBalancesWidgetStore.ts # Per-widget balance settings
 ├── userTradingDataWidgetStore.ts # Per-widget trading data settings
+├── dealsStore.ts              # Deals (grouped fills) per widget
 ├── placeOrderStore.ts         # Order form state
 ├── notificationStore.ts       # Toast/notification queue
 ├── settingsDrawerStore.ts     # Settings panel open/close state
@@ -30,6 +33,12 @@ src/store/
 │   └── eventActions.ts
 ├── providers/                 # Provider implementation helpers
 └── utils/                     # Store utility functions
+
+src/services/
+├── sessionManager.ts          # Multi-login SSO session state (localStorage)
+├── ssoClient.ts               # SSO bootstrap / login / logout façade
+├── syncBridge.ts              # Server <-> store sync over Socket.IO
+└── orderExecutionService.ts   # Order placement helper
 ```
 
 ## Core Stores
@@ -61,31 +70,65 @@ Manages dashboards and their widgets. Persisted to `dashboard-store` in localSto
 
 On first load, `initializeWithDefault()` creates a default dashboard with Chart, Portfolio, Order Form, and Transaction History widgets.
 
-### userStore
+### Multi-login & SSO (services)
 
-Manages users and their exchange accounts. API keys are encrypted at rest.
+Authentication and identity live in `src/services`, not the stores:
+
+- **`sessionManager.ts`** — holds N simultaneous ecosystem SSO sessions (one
+  active) in a Zustand store persisted to localStorage under
+  `profitmaker.sso.sessions`. Each session is `{ id, token, user, addedAt,
+  expiresAt }`. `getSsoToken()` returns the **active** session's token, so every
+  downstream consumer (accountStore, syncBridge, the data providers) follows the
+  active identity automatically. Helpers: `getActiveSession()`,
+  `upsertSession()`, `setActiveSession()` (quick-switch), `removeSession()`,
+  `clearAllSessions()`, `isSessionStale()` (JWT past `exp`). The legacy single
+  token at `profitmaker.sso.token` is migrated into a session on first load.
+- **`ssoClient.ts`** — a thin façade over `sessionManager` for the SSO lifecycle:
+  `bootstrap()` (silently exchanges the shared `*.marketmaker.cc` cookie for a
+  JWT at startup), `login()` / `addLogin()` (the latter forces a fresh credential
+  prompt to add a second identity), `switchSession()`, `logout()` /
+  `logoutAll()`. `useSsoStore()` projects the active-session view for components.
+
+### accountStore
+
+Loads **central exchange accounts** for the active SSO identity from the server
+proxy `GET /api/accounts` (which forwards to the auth vault). **No secrets ever
+live in the browser** — only metadata (id, exchange, label, read_only,
+access_level, shared, …).
 
 **State:**
 ```typescript
 {
-  users: User[];
-  activeUserId?: string;
-  isLocked: boolean;              // Whether encryption is locked
-  needsMasterPassword: boolean;   // Whether master password needs setup
+  accountsBySession: Record<string, ExchangeAccount[]>;  // keyed by session id
+  loading: boolean;
+  error: string | null;
 }
 ```
 
 **Key actions:**
-- `addUser(data)` / `removeUser(id)` / `updateUser(id, data)`
-- `addAccount(userId, account)` / `removeAccount(userId, accountId)`
-- `setupMasterPassword(password)` -- first-time encryption setup
-- `unlockStore(password)` / `lockStore()` -- encryption lock/unlock
-- `getDecryptedAccount(userId, accountId)` -- returns decrypted credentials
-- `encryptAllAccounts()` / `migrateUnencryptedData()`
+- `loadAccounts()` -- GET `/api/accounts` for the active identity
+- `addAccount(input)` -- POST keys to the vault, then reloads the list
+- `removeAccount(accountId)` -- DELETE `/api/accounts/:id`
+- `listGrants()` / `shareAccount()` / `revokeGrant()` -- account sharing
+- `migrateLegacyLocalAccounts()` -- one-time push of any old localStorage keys up to auth
 
-**Middleware:** `persist` + `immer`
+`initAccounts()` is called once on startup (`main.tsx`) to load the active
+identity's accounts and refresh them on every session add/switch/remove. The
+account `id` (credential id) is what links a group to a credential
+(`group.account = id`); widgets gate on `acc => !!acc.id`.
 
-Persisted data includes users and accounts (with encrypted API keys). The `isLocked` flag is reset to `true` on page reload -- the user must re-enter the master password.
+### userStore (back-compat shim)
+
+`userStore` no longer owns any data. It is a **reactive projection** of
+`sessionManager` (identities) + `accountStore` (their accounts) onto the historic
+`{ users, activeUserId, ExchangeAccount }` shape that existing widgets and
+selectors still program against. It subscribes to both and recomputes
+`users` / `activeUserId` whenever either changes.
+
+The old in-browser AES path and master-password flow are **gone** — there are no
+secrets in the browser to lock. The legacy encryption fields (`isLocked`,
+`needsMasterPassword`, `unlockStore`, …) remain as inert shims so old callers
+still compile; the store reports itself permanently unlocked.
 
 ### dataProviderStore
 

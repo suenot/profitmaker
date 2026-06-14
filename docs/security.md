@@ -2,59 +2,170 @@
 
 ## Overview
 
-Profitmaker stores exchange API keys locally in the browser's localStorage, encrypted with AES-256-GCM using a master password. For authenticated operations they are decrypted in the browser and sent to the **terminal server** (which forwards them to the exchange and never persists them — see *Server* below); they are never sent to any other third party.
+Profitmaker is backend-required: all trading and private data go through the
+**terminal server**, which talks to exchanges via CCXT. There are two ways to
+authenticate and two places exchange API keys can live, depending on how you run
+the terminal:
 
-## Architecture
+- **Self-host** — register/login locally (bcrypt, 30-day sessions in
+  PostgreSQL). You supply exchange credentials per request; the server forwards
+  them to the exchange and never persists them.
+- **Ecosystem SSO** — single sign-on via `auth.marketmaker.cc`. Exchange API
+  keys are stored **server-side** in the auth vault; the browser never holds
+  secrets. This is how the hosted terminal at `terminal.marketmaker.cc` runs.
+
+Both modes share one rule: **every `/api/*` request requires a bearer token**,
+and exchange secrets are never sent to any third party other than the exchange
+itself.
+
+## Authentication
+
+The server accepts three kinds of bearer token, checked in order on every
+`/api/*` and `/ws` request (`packages/server/src/index.ts` `onBeforeHandle`):
+
+1. **`API_TOKEN`** — a server-to-server secret (env `API_TOKEN`). Maps to the
+   single bootstrap user. Intended for agents, scripts, and `curl`.
+2. **Local session token** — a random UUID issued by `POST /api/auth/login`,
+   validated against the `sessions` table.
+3. **SSO JWT** — an RS256 token from `auth.marketmaker.cc`, verified against the
+   auth service's **public JWKS** (`packages/server/src/services/ssoAuth.ts`).
+
+If none match, the request is rejected (401 with no token, 403 with an invalid
+one). The Socket.IO handshake (`authenticate`) uses the same resolution order.
+
+### Local auth (self-host)
+
+`packages/server/src/services/auth.ts`:
+
+- Passwords hashed with **bcrypt** (12 rounds, `@node-rs/bcrypt`).
+- Sessions are random UUID tokens stored in PostgreSQL with a **30-day**
+  expiry; expired sessions are swept hourly.
+- `POST /api/auth/register | login | logout`, `GET /api/auth/me`.
+
+### Ecosystem SSO
+
+`packages/server/src/services/ssoAuth.ts`:
+
+- Tokens are **RS256 JWTs**. The server verifies them with the auth service's
+  **public JWKS** (`/.well-known/jwks.json`) — **no shared secret for token
+  verification ever lives in this (public) repo**. The algorithm is pinned to
+  `RS256` so a token can't assert a weaker alg.
+- A verified SSO identity is bound to a local user row **explicitly** by
+  `sso_user_id` (never silently by email). An email already bound to a different
+  SSO identity is refused (returns null → 403), closing the account-takeover
+  vector. Unbound existing emails are adopted once; unknown users are
+  auto-provisioned.
+- `auth.marketmaker.cc` is overridable for dev/staging via `AUTH_URL`.
+
+On the client (`packages/client/src/services/ssoClient.ts`), the terminal runs on
+a `*.marketmaker.cc` subdomain and shares the ecosystem **`mm_session` cookie**.
+On load it silently bootstraps a session by calling auth's
+`/api/v1/auth/session` with `credentials: 'include'`; a valid cookie returns a
+fresh JWT, which becomes the bearer the terminal presents to its own server.
+
+#### Multiple simultaneous logins
+
+`packages/client/src/services/sessionManager.ts` holds **N ecosystem sessions at
+once, one active**, in `localStorage` (`profitmaker.sso.sessions`).
+
+- Quick-switch the active identity; "Add login" appends a new identity
+  (`/login?prompt=login`) without clobbering the others.
+- `getSsoToken()` returns the **active** session's token, so every downstream
+  consumer follows the active identity automatically.
+- A JWT past its `exp` is flagged `stale` and its token is withheld until
+  re-login (there is no refresh flow today).
+
+## Central Accounts (SSO mode)
+
+In SSO mode, exchange API keys are **not** stored in this server or the browser.
+They live in the `auth.marketmaker.cc` vault, encrypted there, and are fetched
+server-to-server only when a call needs them.
+
+### How a private call resolves keys
+
+When the browser makes an authenticated call (balance, trades, orders,
+positions, ledger, create/cancel order), it sends only:
 
 ```
-User enters master password
-  -> PBKDF2 derives encryption key (100,000 iterations, SHA-256)
-  -> Key held in memory (CryptoKey object)
-  -> API keys encrypted/decrypted with AES-256-GCM
-  -> Encrypted keys stored in localStorage (user-store)
-  -> On page reload: key cleared from memory, user must re-enter password
+{ accountId, want: 'read' | 'trade' }   + the user's SSO JWT
 ```
 
-## Master Password
+The server (`packages/server/src/routes/exchange.ts`,
+`resolveAuthedConfig`) then:
 
-### First-time setup
+1. Verifies the SSO context from the bearer JWT
+   (`getSsoContextFromRequest`). No JWT → 401.
+2. Calls the auth **internal** endpoint
+   `POST /api/v1/internal/exchange-credentials` with the server-only header
+   `X-Internal-Secret` (env `AUTH_INTERNAL_SECRET`) to fetch the decrypted keys
+   for `{ accountId, want }`
+   (`packages/server/src/services/authAccounts.ts`, `fetchCredentials`).
+3. Attaches the keys to the CCXT config in-process and makes the exchange call.
 
-1. User calls `setupMasterPassword(password)` (via the MasterPasswordDialog)
-2. A random 16-byte salt is generated
-3. Password is hashed with PBKDF2 for verification
-4. Salt and hash are stored in localStorage (`encryption-salt`, `encryption-hash`)
-5. Encryption key is derived and held in memory
-6. All existing unencrypted accounts are encrypted
+**The browser never holds exchange secrets, and never sees `AUTH_INTERNAL_SECRET`.**
+Resolved keys are cached in server memory only, for ≤60s, keyed by
+`(ssoUserId|credentialId|want)`; they are never persisted and never logged.
 
-### Unlocking
+If `AUTH_INTERNAL_SECRET` is unset, the `accountId` flow returns 503 but the rest
+of the server still boots.
 
-On each page load, the store is "locked" (`isLocked: true`). The user must enter their master password:
+### Per-account access levels
 
-1. `unlockStore(password)` is called
-2. Salt is loaded from localStorage
-3. Password is hashed and compared to stored hash
-4. If match: encryption key is derived and held in memory
-5. `isLocked` set to `false`
+Accounts can be shared with other ecosystem users at **read** or **trade**
+level, managed through `/api/accounts/*`
+(`packages/server/src/routes/accounts.ts`), a thin proxy that forwards the
+caller's own JWT to auth's `/api/v1/me/exchanges*`.
 
-### Locking
+Access is enforced server-side, with defense in depth:
 
-`lockStore()` clears the encryption key from memory and sets `isLocked: true`. This can be triggered manually or happens automatically on page reload.
+- `createOrder` / `cancelOrder` always request `want: 'trade'`; a body can never
+  downgrade a trade op.
+- Private reads (balance, trades, orders, positions, ledger) request
+  `want: 'read'`.
+- If `want: 'trade'` is requested against a read-only grant, auth refuses, and
+  `fetchCredentials` **also** refuses locally — a trade on a read grant is
+  rejected with **403**.
 
-### Changing password
+### Account management is metadata-only in the browser
 
-`changeMasterPassword(oldPassword, newPassword)`:
-1. Verifies old password
-2. Generates new salt and hash
-3. Stores new salt/hash
-4. Derives new encryption key
+`packages/client/src/store/accountStore.ts` adds an account by POSTing the keys
+to `/api/accounts` (which forwards to the auth vault) and then keeps only the
+returned **metadata** (`id`, `exchange`, `label`, `read_only`, `access_level`,
+`shared`, …). The credential `id` is what later flows as `accountId`.
 
-**Important:** After changing the password, all accounts must be re-encrypted with the new key. The current implementation updates the key material but existing encrypted data would need to be decrypted with the old key and re-encrypted with the new one.
+The legacy in-browser AES path (below) is retained **only** as a one-time
+migration source: `migrateLegacyLocalAccounts()` reads any old `user-store`
+localStorage accounts that still carry plaintext keys, pushes them up to the
+auth vault, then `purgeLegacyLocalAccounts()` deletes the local copy.
 
-## Encryption Details
+## Self-Host Key Handling
+
+Without SSO, there is no central vault. The terminal sends exchange credentials
+to the server **inline per request**, inside the `config` object of an
+`/api/exchange/*` call (`apiKey`, `secret`, `password`). The server:
+
+- Holds keys in memory only for the lifetime of the cached CCXT instance.
+- Does **not** persist them to disk.
+- Requires inline `apiKey` + `secret` for any private operation when no
+  `accountId` is present (`requireCreds`).
+
+> **Note on at-rest storage.** A `exchange_accounts` table exists in the schema
+> (`packages/server/src/db/schema/exchange_accounts.ts`) with
+> `key_encrypted` / `secret_encrypted` / `password_encrypted` columns for a
+> future server-side encrypted store, but **no route or service currently reads
+> or writes it** — there is no server-side encryption helper yet. Until that
+> lands, self-host credentials are supplied inline at call time (and held only in
+> memory), not persisted in the DB.
+
+### Legacy browser-side encryption (being phased out)
+
+Earlier versions encrypted keys in the browser and stored them in localStorage.
+That code still exists at `packages/client/src/utils/encryption.ts` but is now
+used only by the migration importer described above.
 
 | Parameter | Value |
 |-----------|-------|
-| Algorithm | AES-GCM |
+| Algorithm | AES-256-GCM (Web Crypto) |
 | Key length | 256 bits |
 | Salt length | 16 bytes |
 | IV length | 12 bytes (random per encryption) |
@@ -62,84 +173,72 @@ On each page load, the store is "locked" (`isLocked: true`). The user must enter
 | KDF iterations | 100,000 |
 | KDF hash | SHA-256 |
 
-**Implementation:** `src/utils/encryption.ts` (uses Web Crypto API, no external dependencies)
+The derived key was held in memory only (cleared on reload), and the encrypted
+value was `Base64(IV ‖ ciphertext)`. New self-host installs do not need a master
+password; ecosystem users never used this path at all.
 
-### Encrypted format
+## KuCoin Broker Pro (hosted only)
 
-Each encrypted value is stored as a Base64 string containing: `IV (12 bytes) + ciphertext (variable)`
-
-The `isEncrypted` flag on each account indicates whether its sensitive fields are encrypted.
-
-### What gets encrypted
-
-| Field | Encrypted |
-|-------|-----------|
-| `account.key` (API key) | Yes |
-| `account.privateKey` (secret) | Yes |
-| `account.password` (passphrase) | Yes |
-| `account.exchange` | No |
-| `account.email` | No |
-| `account.uid` | No |
+When the hosted terminal routes KuCoin trades, it attributes them to the
+MarketMaker broker for rebate (`packages/server/src/services/ccxtCache.ts`). The
+broker partner leg is read from server-side env vars
+(`KUCOIN_BROKER_{SPOT,FUTURES}_{PARTNER,KEY,NAME}`); the **broker key is an HMAC
+secret kept server-side only** — it is never exposed to the browser and never
+prefixed `VITE_`. Self-host installs are unaffected: with no broker env vars set,
+the attribution is a no-op.
 
 ## API Key Tiers
 
-Following the original Kupi terminal philosophy, Profitmaker recommends creating separate API keys with different permission levels:
+Following the original Kupi terminal philosophy, create separate exchange API
+keys with the minimum permissions for each use:
 
 | Tier | Permissions | Use Case |
 |------|------------|----------|
-| **Safe key** (`safe_apiKey`) | Read-only: balances, orders, trades, positions | Market data, portfolio display |
-| **Trading key** (`notSafe_apiKey`) | Buy/sell orders | Placing and managing orders |
-| **Danger key** (`danger_apiKey`) | Withdrawals | Not implemented -- reserved for future use |
+| **Read-only** | balances, orders, trades, positions | Market data, portfolio display |
+| **Trading** | place / cancel orders | Order management |
+| **Withdrawals** | withdrawals | Reserved — not used by the terminal |
+
+In SSO mode, a read-only account (or a read-only **grant**) is enforced
+server-side: trade operations are rejected with 403, so a read-only key can't be
+misused.
 
 **Best practices:**
-- Create 3 separate API keys on each exchange
-- Bind keys to your IP address
-- The safe key handles most requests, reducing exposure of the trading key
-- If you suspect compromise, rotate keys immediately
 
-## Where Keys Are Stored
-
-### Browser (client-side)
-
-- **localStorage** (`user-store`): User accounts with encrypted API keys
-- **localStorage** (`encryption-salt`): Salt for key derivation
-- **localStorage** (`encryption-hash`): Password verification hash
-- **Memory**: Derived CryptoKey (cleared on page reload or lock)
-
-### Server
-
-All trading goes through the server (the terminal is backend-required). For
-authenticated operations, API keys are sent in POST request bodies to the server.
-The server:
-- Holds keys in memory only for the duration of the CCXT instance
-- Caches instances (with keys) for 24 hours
-- Does NOT persist keys to disk
-- Uses Bearer token / session / SSO auth to protect endpoints
-
-**Recommendation:** Run the server only on localhost or a trusted network (or
-behind TLS). Set a strong `API_TOKEN`.
+- Bind keys to your IP address on the exchange.
+- Use read-only keys/accounts when you only need market data.
+- Rotate keys immediately if you suspect compromise.
 
 ## Security Considerations
 
-### Threats mitigated
+### Mitigations
 
-- **Keys at rest**: Encrypted with AES-256-GCM in localStorage
-- **Keys in transit to server**: Protected by Bearer token auth (use HTTPS in production)
-- **Brute-force password**: PBKDF2 with 100K iterations makes offline attacks expensive
+- **No secrets in the browser (SSO mode)** — keys live in the auth vault and are
+  fetched server-to-server; the browser only ever sends `{ accountId, want }`.
+- **Every endpoint authenticated** — `/api/*` and `/ws` require a bearer token
+  (API_TOKEN, local session, or SSO JWT via public JWKS).
+- **RS256 + JWKS** — SSO tokens are verified with the auth service's public key;
+  the alg is pinned, and no token-signing secret is in this repo.
+- **Server-side access enforcement** — read-only grants can't trade (403),
+  enforced by both auth and the terminal server.
+- **Short credential cache** — fetched keys live in server memory for ≤60s and
+  are never logged or persisted.
 
 ### Remaining risks
 
-- **Malicious browser extensions**: Could intercept decrypted keys in memory
-- **XSS attacks**: Could access localStorage and potentially the decrypted key in memory
-- **Malicious npm packages**: Supply chain attacks could exfiltrate keys
-- **Localhost server without HTTPS**: Keys sent in plaintext over HTTP on local network
-- **No key rotation mechanism**: Changing the master password doesn't automatically re-encrypt all data
+- **Inline self-host credentials over plain HTTP** — without TLS, inline keys
+  travel in the clear on the local network. Run the server on localhost or
+  behind TLS.
+- **Server compromise** — the terminal server briefly holds plaintext keys in
+  memory while a call is in flight (both modes); protect the host.
+- **`AUTH_INTERNAL_SECRET` / `API_TOKEN` leakage** — these are server-to-server
+  secrets; keep them out of the browser, logs, and the repo.
+- **XSS / malicious browser extensions** — could read the SSO JWT from
+  localStorage and act as the user (but cannot read exchange secrets, which are
+  never in the browser in SSO mode).
 
 ### Recommendations
 
-1. Always bind API keys to your IP on the exchange
-2. Use read-only keys when you only need market data
-3. Set a strong, unique master password
-4. Don't install untrusted browser extensions
-5. If running the server remotely, use HTTPS and a strong API_TOKEN
-6. Regularly rotate your exchange API keys
+1. Bind API keys to your IP on the exchange and prefer read-only where possible.
+2. Run the server behind TLS; set a strong `API_TOKEN`.
+3. Keep `AUTH_INTERNAL_SECRET` and `API_TOKEN` server-side only — never `VITE_`.
+4. Rotate exchange API keys regularly.

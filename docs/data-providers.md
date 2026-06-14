@@ -10,6 +10,23 @@ in Stage 2. The client provider implements the `MarketDataProvider` contract
 pluggable **provider registry** (the built-in `ccxt`, or a module-supplied
 provider). See [architecture.md](./architecture.md#server-provider-registry).
 
+## Two provider contracts
+
+The provider contract is **two separate interfaces** that meet across the HTTP
+boundary — deliberately not unified, because they are genuinely asymmetric:
+
+| | Client (`@profitmaker/types/providerContract.ts`) | Server (`@profitmaker/types/serverProviderContract.ts`) |
+|---|---|---|
+| Interfaces | `MarketDataProvider`, `ProviderTrading` | `ServerProviderInstance`, `ServerProviderTrading`, `ServerProviderFactory` |
+| Binding | one instance per provider; exchange + auth are **per-call** args | constructed **per request-config** (`create(config)`); exchange/market/keys baked in, methods take a bare `symbol` |
+| Return types | normalized domain types (`Candle`/`Trade`/`OrderBook`/`Ticker`) | raw exchange-native payloads (`unknown`), serialized straight through; the client normalizes on receipt |
+| Streaming | `watch(params, onData, onError)` → `SubscriptionId` (callback + handle) | `watch(dataType, symbol, timeframe?)` → the next payload as a `Promise`, looped by the host |
+
+They share only the leaf data types and `ExchangeCapabilities`. A module that
+supplies a backend implements the **server** factory (`ServerProviderFactory` →
+`create(config)` → `ServerProviderInstance`); the **client** always uses the one
+built-in `ccxt-server` provider.
+
 ## Client provider types
 
 The client data-provider store (`dataProviderStore`) tracks these provider types:
@@ -60,8 +77,10 @@ drops.
 4. The response (with a `provider` field naming the source) returns to the client,
    which normalizes and stores it.
 
-Credentials for authenticated calls travel in the request `config`; the server
-stays stateless about user accounts.
+For **public** market data (candles, trades, order book, ticker) no credentials
+are involved. For **authenticated** calls (balances, trades, orders, positions,
+ledger) see [Authenticated calls](#authenticated-calls) below — the browser sends
+no keys; the server attaches them.
 
 ## Provider Selection
 
@@ -84,7 +103,58 @@ You can control this by:
 | `trades` | `fetchTrades` | `watchTrades` | Recent trades feed |
 | `orderbook` | `fetchOrderBook` | `watchOrderBook` | Order book depth |
 | `ticker` | `fetchTicker` | `watchTicker` | 24h ticker summary |
-| `balance` | `fetchBalance` | `watchBalance` | Account balances (requires API key) |
+| `balance` | `fetchBalance` | `watchBalance` | Account balances (authenticated — see below) |
+
+## Authenticated calls
+
+Public market data needs no keys. Private data and trading flow through the
+**accountId path** (central accounts) — the browser never holds exchange secrets.
+
+**Store actions** (in `dataActions.ts`) take an `accountId`:
+
+```typescript
+fetchBalance / initializeBalanceData(accountId, walletType)
+fetchMyTrades(accountId, symbol?, since?, limit?)
+fetchOrders(accountId, symbol?, since?, limit?)
+fetchOpenOrders(accountId, symbol?)
+fetchPositions(accountId, symbols?)
+fetchLedger(accountId, code?, since?, limit?)
+```
+
+Each action resolves the account (exchange + credential id), builds an
+`AccountRef` — `{ accountId, want: 'read' | 'trade' }` — and calls the client
+provider's `trading.*` block. These reads pass `want: 'read'`; order placement
+and cancellation pass `want: 'trade'`.
+
+**Client provider** (`ccxtServerProvider.ts`, the `trading` object): `authBody()`
+turns the `AccountRef` into a request body of `{ config, accountId, want }` that
+carries **no secrets** (the inline-credentials path remains supported
+transitionally for self-host). It POSTs to `/api/exchange/*`.
+
+**Server** (`routes/exchange.ts`, `resolveAuthedConfig`): when `accountId` is
+present it requires an SSO context, fetches the decrypted keys server-side via
+`fetchCredentials({ ssoUserId, credentialId, want })`, and merges them into the
+CCXT request config **before** calling the provider. Trade endpoints force
+`want: 'trade'` (a read-only grant is rejected 403); read endpoints use `'read'`.
+
+### Trading methods
+
+The `ProviderTrading` block (client) / `ServerProviderTrading` (server) exposes:
+
+| Method | Route | Access (`want`) | Notes |
+|--------|-------|-----------------|-------|
+| `createOrder` | `POST /api/exchange/createOrder` | `trade` | Place an order |
+| `cancelOrder` | `POST /api/exchange/cancelOrder` | `trade` | Cancel by id + symbol |
+| `fetchBalance` | `POST /api/exchange/fetchBalance` | `read` | Account balances |
+| `fetchMyTrades` | `POST /api/exchange/fetchMyTrades` | `read` | Filled trades |
+| `fetchOrders` | `POST /api/exchange/fetchOrders` | `read` | All orders |
+| `fetchOpenOrders` | `POST /api/exchange/fetchOpenOrders` | `read` | Open orders |
+| `fetchPositions` | `POST /api/exchange/fetchPositions` | `read` | Futures positions |
+| `fetchLedger` | `POST /api/exchange/fetchLedger` | `read` | Transaction history — deposits, withdrawals, transfers, trades, fees |
+
+Server-side, the trading methods that may be unsupported by an exchange are
+guarded by CCXT's `has` flags (e.g. `ex.has?.fetchLedger`) and return `[]` when
+the exchange lacks the capability, rather than throwing.
 
 ## WebSocket vs REST
 

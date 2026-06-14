@@ -30,10 +30,14 @@ curl http://localhost:3001/health
 
 ## Authentication
 
-Two auth methods are supported:
+Every `/api/*` route (except `/api/auth/*`) and `/ws` requires a `Bearer` token.
+A token is resolved in this order: **`API_TOKEN`** → **local session token** →
+**SSO JWT** (verified against the auth service's public JWKS). The first match wins;
+none → `401` (missing) or `403` (present but invalid).
 
 1. **Session token** (for users) -- obtained via `/api/auth/login` or `/api/auth/register`
 2. **API token** (for server-to-server) -- set via `API_TOKEN` env var
+3. **SSO JWT** (ecosystem users) -- see [Ecosystem SSO](#ecosystem-sso-authmarketmakercc) below
 
 ```bash
 # Register a new user (creates default dashboard with 6 widgets)
@@ -281,29 +285,61 @@ DELETE /api/groups/:id
 
 Colors: `transparent`, `#00BCD4`, `#F44336`, `#9C27B0`, `#2196F3`, `#4CAF50`, `#FF9800`, `#E91E63`.
 
-### Exchange Accounts
+### Exchange Accounts (Central Accounts)
+
+`/api/accounts/*` is a thin **proxy** in front of the auth service's
+`/api/v1/me/exchanges*` endpoints — exchange keys live **server-side** in the
+`auth.marketmaker.cc` vault, never in this server's DB and never in the browser.
+The proxy forwards the **caller's own SSO JWT**, so these routes require a genuine
+**SSO identity** (an `API_TOKEN` or local-session bearer is rejected with `401`).
+The terminal stays a single API origin (the browser never calls auth cross-origin).
 
 ```bash
-# List accounts (API keys are NOT returned)
+# List own + shared accounts (metadata only — no key material is ever returned)
 GET /api/accounts
+# -> [{ id, exchange, label, read_only, has_ro_keys, owner_user_id,
+#       access_level, shared, created_at }]
 
-# Add exchange account
+# Add an account (keys go straight to the auth vault; nothing sensitive is stored here)
 POST /api/accounts
 Body: {
   "exchange": "binance",
-  "apiKey": "your-api-key",
-  "secret": "your-secret",
-  "password": "optional-passphrase",
   "label": "My Binance",
-  "isEncrypted": true
+  "api_key": "your-api-key",
+  "api_secret": "your-secret",
+  "passphrase": "optional",
+  "read_only": false,
+  "api_key_ro": "optional read-only key",
+  "api_secret_ro": "optional read-only secret",
+  "passphrase_ro": "optional"
 }
+# -> 201 { id, exchange, label, read_only }
 
-# Update account
-PUT /api/accounts/:id
-Body: { "label": "Binance Main", "apiKey": "new-key" }
-
-# Delete account
+# Delete an account by id
 DELETE /api/accounts/:id
+# -> { ok: true }
+```
+
+The `id` returned here is the **credential id** used as `accountId` on the
+`/api/exchange/*` trading endpoints (see [Market Data API](#market-data-api)).
+
+#### Sharing (grants)
+
+An owner can grant another ecosystem user `read` or `trade` access:
+
+```bash
+# List grants on an account you own
+GET /api/accounts/:id/grants
+# -> [{ id, grantee_user_id, grantee_email, access_level, created_at }]
+
+# Share at read|trade level (by email or user id)
+POST /api/accounts/:id/grants
+Body: { "grantee_email": "trader@example.com", "access_level": "read" }
+# -> 201
+
+# Revoke a grant
+DELETE /api/accounts/:id/grants/:grantId
+# -> { ok: true }
 ```
 
 ### User Settings (Key-Value)
@@ -378,7 +414,7 @@ Per-user provider types: `ccxt-server`, `marketmaker.cc`, `custom-server-with-ad
 
 ### REST Endpoints
 
-All require a `config` object specifying the exchange:
+Public market-data endpoints take a `config` object specifying the exchange:
 
 ```json
 { "exchangeId": "binance", "marketType": "spot", "ccxtType": "regular" }
@@ -389,20 +425,54 @@ a `provider` field naming the provider that served it (e.g. `"ccxt"`). Pass an
 optional top-level `providerId` to force a specific provider; omitted, the
 registry picks the lowest-`priority` provider supporting the exchange.
 
+#### Authenticated endpoints — central-accounts flow
+
+The private endpoints (`fetchBalance`, `createOrder`, `cancelOrder`,
+`fetchMyTrades`, `fetchOrders`, `fetchOpenOrders`, `fetchPositions`,
+`fetchLedger`) resolve exchange keys **server-side** from the auth vault. The
+preferred body shape carries **no secrets**:
+
+```json
+{
+  "accountId": "<credential-id from GET /api/accounts>",
+  "want": "read",
+  "exchange": "binance",
+  "market": "spot"
+}
+```
+
+- `accountId` is the credential id from `GET /api/accounts`. When present, the
+  server fetches decrypted keys for the caller's SSO identity at the required
+  access level (`want`) — any secrets sent inline are **ignored**. Requires a real
+  SSO bearer (`401` otherwise).
+- Routing fields (`exchange`/`market`/`sandbox`) may be sent flat **top-level** or
+  wrapped in a secret-free `config` (`config.exchangeId`/`marketType`/`sandbox`);
+  inner-`config` fields win per-field when both are present.
+- **`createOrder`/`cancelOrder` force `want: 'trade'`** regardless of the body — a
+  read-only credential/grant is refused with `403`. Reads honor an explicit
+  `want` but never need more than `read`.
+- **Legacy inline path** (still supported transitionally): omit `accountId` and
+  pass `config.apiKey`/`secret`/`password` inline. Without keys the call returns
+  `400` (`"API credentials required"`).
+
 | Endpoint | Body | Description |
 |----------|------|-------------|
 | `GET /api/exchange/list` | — | All exchange ids CCXT knows |
-| `POST /api/exchange/instance` | `{ config }` | Create/get cached provider instance |
+| `POST /api/exchange/instance` | `{ config }` (bare config as body) | Create/get cached provider instance |
 | `POST /api/exchange/fetchTicker` | `{ config, symbol, providerId? }` | Fetch ticker |
 | `POST /api/exchange/fetchOrderBook` | `{ config, symbol, limit?, providerId? }` | Fetch order book |
 | `POST /api/exchange/fetchTrades` | `{ config, symbol, limit?, providerId? }` | Fetch trades |
 | `POST /api/exchange/fetchOHLCV` | `{ config, symbol, timeframe?, limit?, providerId? }` | Fetch candles |
-| `POST /api/exchange/fetchBalance` | `{ config, providerId? }` | Fetch balance (requires API keys in `config`) |
 | `POST /api/exchange/capabilities` | `{ config, providerId? }` | Get exchange features |
 | `POST /api/exchange/market` | `{ config, symbol, providerId? }` | One market's metadata (limits/precision) |
-| `POST /api/exchange/createOrder` | `{ config, symbol, type, side, amount, price?, params?, providerId? }` | Place order (creds in `config`) |
-| `POST /api/exchange/cancelOrder` | `{ config, orderId, symbol, providerId? }` | Cancel order |
-| `POST /api/exchange/fetchMyTrades` / `fetchOrders` / `fetchOpenOrders` / `fetchPositions` | `{ config, ..., providerId? }` | Authenticated reads |
+| `POST /api/exchange/fetchBalance` | `{ accountId, want?, exchange, market?, providerId? }` | Fetch balance (auth) |
+| `POST /api/exchange/createOrder` | `{ accountId, exchange, market?, symbol, type, side, amount, price?, params?, providerId? }` | Place order (forces `want: 'trade'`) |
+| `POST /api/exchange/cancelOrder` | `{ accountId, exchange, market?, orderId, symbol, providerId? }` | Cancel order (forces `want: 'trade'`) |
+| `POST /api/exchange/fetchMyTrades` | `{ accountId, want?, exchange, market?, symbol?, since?, limit?, providerId? }` | Authenticated trade history |
+| `POST /api/exchange/fetchOrders` | `{ accountId, want?, exchange, market?, symbol?, since?, limit?, providerId? }` | All orders (open + closed) |
+| `POST /api/exchange/fetchOpenOrders` | `{ accountId, want?, exchange, market?, symbol?, providerId? }` | Open orders |
+| `POST /api/exchange/fetchPositions` | `{ accountId, want?, exchange, market?, symbols?, providerId? }` | Open positions |
+| `POST /api/exchange/fetchLedger` | `{ accountId, want?, exchange, market?, code?, since?, limit?, providerId? }` | Ledger entries (deposits/withdrawals/transfers/fees) |
 | `POST /api/proxy/request` | `{ url, method?, headers?, body?, timeout? }` | CORS proxy |
 
 ### WebSocket (Socket.IO)
@@ -438,7 +508,7 @@ socket.emit('unsubscribe', { subscriptionId: '...' });
 | `dashboards` | User dashboards (title, layout config) |
 | `widgets` | Widgets within dashboards (type, position, config) |
 | `groups` | Instrument linking groups (color, pair, exchange) |
-| `exchange_accounts` | Exchange API credentials (encrypted) |
+| `exchange_accounts` | Legacy local credential table (encrypted). Still in the schema, but `/api/accounts` now proxies to the auth vault — see [Exchange Accounts](#exchange-accounts-central-accounts) |
 | `data_providers` | CCXT provider configurations |
 | `user_settings` | Key-value settings per user |
 | `widget_settings` | Per-widget per-user settings |
@@ -478,15 +548,17 @@ bun db:studio    # Open Drizzle Studio GUI
 Complete workflow for an AI agent:
 
 ```
-1. POST /api/auth/register              -- create user account
+1. POST /api/auth/register              -- create user account (or use an SSO JWT / API_TOKEN)
 2. GET  /health                          -- verify server running
 3. GET  /api/dashboards                  -- list user's dashboards
 4. POST /api/widgets                     -- add a chart widget
 5. PUT  /api/widgets/batch               -- arrange widget positions
 6. POST /api/groups                      -- create instrument group (BTC/USDT on Binance)
 7. PUT  /api/widgets/:id                 -- link widget to group
-8. POST /api/accounts                    -- add exchange API keys
-9. POST /api/exchange/capabilities       -- discover exchange features
-10. POST /api/exchange/fetchTicker       -- get current price
-11. Socket.IO subscribe to trades        -- monitor real-time data
+8. POST /api/accounts                    -- register exchange keys in the auth vault (SSO only)
+9. GET  /api/accounts                    -- get the credential id (accountId)
+10. POST /api/exchange/capabilities      -- discover exchange features
+11. POST /api/exchange/fetchTicker       -- get current price
+12. POST /api/exchange/createOrder       -- place an order { accountId, exchange, symbol, ... }
+13. Socket.IO subscribe to trades        -- monitor real-time data
 ```

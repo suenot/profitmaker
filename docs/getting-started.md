@@ -1,5 +1,12 @@
 # Getting Started
 
+There are two ways to use Profitmaker:
+
+- **Hosted** — open **[terminal.marketmaker.cc](https://terminal.marketmaker.cc)** and sign in with the ecosystem single sign-on (`auth.marketmaker.cc`). Exchange API keys live server-side in the `auth.marketmaker.cc` vault (central accounts); the browser never holds secrets. Nothing to install.
+- **Self-host** — clone the repo and run it yourself (steps below). Without SSO, exchange API keys are passed **inline per request and held in memory for the call only** (not persisted); a persistent encrypted self-host store is on the roadmap.
+
+The rest of this page covers self-hosting.
+
 ## Prerequisites
 
 - **Bun** 1.0+ -- runtime and package manager ([bun.sh](https://bun.sh))
@@ -39,6 +46,16 @@ bun dev
 
 Opens at **http://localhost:8080**. Hot module replacement enabled.
 
+### Set up the database
+
+The server needs PostgreSQL 15+. Point `DATABASE_URL` at an empty database and
+push the schema once:
+
+```bash
+export DATABASE_URL="postgresql://user:password@localhost:5432/profitmaker"
+cd packages/server && bun db:push && cd ../..
+```
+
 ### Start the server (required)
 
 The terminal is **backend-required** — all market data and trading go through the
@@ -46,9 +63,9 @@ server, and the client gates rendering behind a reachable backend. Start it with
 a Postgres URL and an API token:
 
 ```bash
-DATABASE_URL=postgres://USER@localhost:5432/profitmaker \
+DATABASE_URL=postgresql://user:password@localhost:5432/profitmaker \
 API_TOKEN=test-token \
-bun --cwd packages/server dev
+bun server:dev
 ```
 
 Runs Elysia (HTTP) on **http://localhost:3001** and Socket.IO on **:3002**, with
@@ -62,7 +79,7 @@ Open two terminals — the server first, then the client:
 
 ```bash
 # Terminal 1 (server)
-DATABASE_URL=postgres://USER@localhost:5432/profitmaker API_TOKEN=test-token bun --cwd packages/server dev
+DATABASE_URL=postgresql://user:password@localhost:5432/profitmaker API_TOKEN=test-token bun server:dev
 
 # Terminal 2 (client)
 bun dev
@@ -112,10 +129,11 @@ The client defaults to a `ccxt-server` provider pointed at `VITE_SERVER_URL`
 ## First Run Checklist
 
 1. `bun install`
-2. Start the server (with `DATABASE_URL` + `API_TOKEN`) — see *Start the server* above
-3. `bun dev` -- open http://localhost:8080
-4. If the client can't reach the server you'll see the `ConnectionScreen` — enter the server URL + `API_TOKEN` and **Test connection**, or serve client and server same-origin
-5. Once connected you'll see the default dashboard with Chart, Portfolio, Order Form, and Transaction History widgets
-6. Right-click the canvas to add more widgets
-7. (Optional) Set up a master password to encrypt API keys -- see [Security](security.md)
-8. (Optional) Add exchange accounts in the user drawer to trade with real data
+2. Set up the database: `cd packages/server && bun db:push && cd ../..` (with `DATABASE_URL` exported)
+3. Start the server (with `DATABASE_URL` + `API_TOKEN`) — see *Start the server* above
+4. `bun dev` -- open http://localhost:8080
+5. If the client can't reach the server you'll see the `ConnectionScreen` — enter the server URL + `API_TOKEN` and **Test connection**, or serve client and server same-origin
+6. Once connected you'll see the default dashboard with Chart, Portfolio, Order Form, and Transaction History widgets
+7. Right-click the canvas to add more widgets
+8. (Optional) Set up a master password to encrypt API keys -- see [Security](security.md)
+9. (Optional) Add exchange accounts in the user drawer to trade with real data
