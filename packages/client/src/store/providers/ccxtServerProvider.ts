@@ -109,7 +109,7 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
 
   /**
    * Live Bearer token for terminal-server calls: the SSO session token (preferred,
-   * when an ecosystem user is logged in at app.marketmaker.cc) else the static
+   * when an ecosystem user is logged in at terminal.marketmaker.cc) else the static
    * token configured on this provider. Resolved per request — NOT cached in the
    * constructor — so an SSO login that lands after the provider was created still
    * authenticates market-data requests. Mirrors modules/api.ts#resolveServerToken.

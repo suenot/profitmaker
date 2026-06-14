@@ -15,7 +15,7 @@ import {
 /**
  * SSO client for the MarketMaker ecosystem (auth.marketmaker.cc).
  *
- * profitmaker runs at app.marketmaker.cc, a *.marketmaker.cc subdomain, so it
+ * profitmaker runs at terminal.marketmaker.cc, a *.marketmaker.cc subdomain, so it
  * shares the `mm_session` cookie. On load we silently bootstrap a session by
  * calling `/api/v1/auth/session` with credentials — if the cookie is valid the
  * auth service returns a fresh JWT, which we capture as a session (held in the

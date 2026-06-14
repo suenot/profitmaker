@@ -9,7 +9,7 @@ import { hashPassword } from './auth';
  * (https://auth.marketmaker.cc). Tokens are RS256 JWTs; we verify them with the
  * service's PUBLIC JWKS — no shared secret ever lives in this (public) repo.
  *
- * profitmaker runs at app.marketmaker.cc, a *.marketmaker.cc subdomain, so it
+ * profitmaker runs at terminal.marketmaker.cc, a *.marketmaker.cc subdomain, so it
  * shares the `mm_session` cookie and bootstraps silently via the client; the
  * server's job is only to verify the bearer JWT the client presents.
  */

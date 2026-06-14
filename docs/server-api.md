@@ -102,12 +102,12 @@ cookie — see the client SSO flow and [docs/remote-control.md](remote-control.m
 The client exposes the same env knob as `VITE_AUTH_URL` (defaults to the public
 auth URL).
 
-**Production smoke test** (run after deploy to app.marketmaker.cc — needs a real
+**Production smoke test** (run after deploy to terminal.marketmaker.cc — needs a real
 ecosystem account):
 
 1. Log in at any `*.marketmaker.cc` site (or directly at auth.marketmaker.cc) so
    the shared `mm_session` cookie is set.
-2. Open `https://app.marketmaker.cc`. The top bar should show your username +
+2. Open `https://terminal.marketmaker.cc`. The top bar should show your username +
    logout (not "Login with MarketMaker"); the browser console shows a
    `GET /api/v1/auth/session → 200`.
 3. Create a dashboard in the UI; confirm it persists per-user (a second
