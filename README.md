@@ -250,6 +250,26 @@ Socket.IO (port 3002): `subscribe`, `unsubscribe`, `data`, `error`
 
 - **Eugen Soloviov** -- maintainer -- [GitHub](https://github.com/suenot) | [Telegram](https://t.me/suenot)
 
+## StarMapper
+
+<a href="https://starmapper.bruniaux.com/suenot/profitmaker?utm_source=map-embed&utm_medium=readme&utm_campaign=stargazer-map">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://starmapper.bruniaux.com/api/map-image/suenot/profitmaker?theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://starmapper.bruniaux.com/api/map-image/suenot/profitmaker?theme=light" />
+    <img alt="StarMapper" src="https://starmapper.bruniaux.com/api/map-image/suenot/profitmaker" />
+  </picture>
+</a>
+
+## Star History
+
+<a href="https://www.star-history.com/?type=date&repos=suenot%2Fprofitmaker">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=suenot/profitmaker&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=suenot/profitmaker&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=suenot/profitmaker&type=date&legend=top-left" />
+ </picture>
+</a>
+
 ## License
 
 MIT License with Commons Clause.
