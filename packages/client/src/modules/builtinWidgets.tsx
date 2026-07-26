@@ -11,6 +11,9 @@ import PortfolioWidget from '@/components/widgets/Portfolio';
 import UserBalancesWidget, { UserBalancesHeaderActions } from '@/components/widgets/UserBalancesWidget';
 import UserTradingDataWidget, { UserTradingDataHeaderActions } from '@/components/widgets/UserTradingDataWidget';
 import LeveragesWidget from '@/components/widgets/LeveragesWidget';
+import HeatmapWidget from '@/components/widgets/HeatmapWidget';
+import FootprintWidget from '@/components/widgets/FootprintWidget';
+import DomLadderWidget from '@/components/widgets/DomLadderWidget';
 import OrderFormWidget from '@/components/widgets/OrderForm';
 import TransactionHistoryWidget from '@/components/widgets/TransactionHistory';
 import { OrderBookWidgetV2 } from '@/components/widgets/OrderBookWidget';
@@ -130,6 +133,29 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     Settings: adaptSettings(TradesSettingsWrapper),
   },
 
+  {
+    type: 'footprint',
+    title: 'Footprint',
+    description: 'Cluster chart: bid/ask volume per price, imbalances, POC',
+    icon: 'Grid3x3',
+    category: 'public',
+    defaultSize: { width: 820, height: 560 },
+    showGroupSelector: true,
+    needsTransparentGroup: true,
+    Component: adaptComponent(FootprintWidget),
+  },
+  {
+    type: 'heatmap',
+    title: 'Heatmap',
+    description: 'Order-book depth over time, with trades on top',
+    icon: 'Layers',
+    category: 'public',
+    defaultSize: { width: 760, height: 520 },
+    showGroupSelector: true,
+    needsTransparentGroup: true,
+    Component: adaptComponent(HeatmapWidget),
+  },
+
   // ---- Private Data ----
   {
     type: 'userBalances',
@@ -154,6 +180,17 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     Component: adaptComponent(UserTradingDataWidget),
     Settings: adaptSettings(UserTradingDataSettingsWrapper),
     HeaderActions: headerActionsUserTradingData,
+  },
+  {
+    type: 'dom',
+    title: 'DOM Ladder',
+    description: 'Price ladder with click-to-trade and scalper hotkeys',
+    icon: 'Rows3',
+    category: 'private',
+    defaultSize: { width: 560, height: 700 },
+    showGroupSelector: true,
+    needsTransparentGroup: true,
+    Component: adaptComponent(DomLadderWidget),
   },
   {
     type: 'leverages',

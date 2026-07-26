@@ -9,6 +9,18 @@ interface TradesWidgetState {
   error: string | null;
   showTableHeader: boolean;
   showStats: boolean;
+  /**
+   * Quote-currency value at or above which a print counts as "large". In quote
+   * terms rather than base, so one threshold reads the same on BTC and on a
+   * meme coin — what a scalper watches for is size in money, not in units.
+   */
+  largeTradeValue: number;
+  /** Emphasize large prints in the tape. */
+  highlightLarge: boolean;
+  /** Short blip when a large print arrives (off by default). */
+  soundOnLarge: boolean;
+  /** Merge consecutive prints at the same price and side into one row. */
+  mergeSamePrice: boolean;
 }
 
 interface TradesWidgetsStore {
@@ -26,6 +38,10 @@ const defaultTradesState: TradesWidgetState = {
   error: null,
   showTableHeader: false,   // По умолчанию заголовки выключены
   showStats: false,         // По умолчанию статистика выключена
+  largeTradeValue: 50000,   // $50k — a size worth looking up from the chart
+  highlightLarge: true,
+  soundOnLarge: false,
+  mergeSamePrice: false,
 };
 
 export const useTradesWidgetsStore = create<TradesWidgetsStore>((set, get) => ({

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from "sonner";
 
-export type WidgetType = 'chart' | 'portfolio' | 'orderForm' | 'transactions' | 'watchlist' | 'news' | 'calendar' | 'positions' | 'orderbook' | 'orderbookV2' | 'trades' | 'tradesV2' | 'dataProviderSettings' | 'dataProviderDemo' | 'dataProviderSetup' | 'dataProviderDebug' | 'userBalances' | 'userTradingData' | 'leverages';
+export type WidgetType = 'chart' | 'portfolio' | 'orderForm' | 'transactions' | 'watchlist' | 'news' | 'calendar' | 'positions' | 'orderbook' | 'orderbookV2' | 'trades' | 'tradesV2' | 'dataProviderSettings' | 'dataProviderDemo' | 'dataProviderSetup' | 'dataProviderDebug' | 'userBalances' | 'userTradingData' | 'leverages' | 'heatmap' | 'footprint' | 'dom';
 
 export interface WidgetGroup {
   id: string;
@@ -61,7 +61,10 @@ const defaultWidgetSizes: Record<WidgetType, { width: number; height: number }> 
   dataProviderDebug: { width: 700, height: 500 },
   userBalances: { width: 700, height: 600 },
   userTradingData: { width: 700, height: 600 },
-  leverages: { width: 780, height: 620 }
+  leverages: { width: 780, height: 620 },
+  heatmap: { width: 760, height: 520 },
+  footprint: { width: 820, height: 560 },
+  dom: { width: 560, height: 700 }
 };
 
 const widgetTitles: Record<WidgetType, string> = {
@@ -83,7 +86,10 @@ const widgetTitles: Record<WidgetType, string> = {
   dataProviderDebug: 'Data Provider Debug',
   userBalances: 'User Balances',
   userTradingData: 'User Trading Data',
-  leverages: 'Leverages'
+  leverages: 'Leverages',
+  heatmap: 'Heatmap',
+  footprint: 'Footprint',
+  dom: 'DOM Ladder'
 };
 
 // Group color palette - aligned with GroupSelector colors

@@ -182,6 +182,55 @@ const TradesSettingsWrapper: React.FC<TradesSettingsWrapperProps> = ({
             />
           </div>
 
+          {/* Large prints — highlight / sound / threshold */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-xs text-terminal-muted">Highlight Large Trades</Label>
+              <p className="text-xs text-terminal-muted/70">Emphasize prints at or above the threshold below</p>
+            </div>
+            <Switch
+              checked={widgetState.highlightLarge}
+              onCheckedChange={(checked) => updateWidget(widgetId, { highlightLarge: checked })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-terminal-muted">Large Trade Threshold (quote value)</Label>
+            <Input
+              value={String(widgetState.largeTradeValue)}
+              inputMode="numeric"
+              onChange={(e) => {
+                const value = Number(e.target.value.replace(/[^0-9.]/g, ''));
+                updateWidget(widgetId, { largeTradeValue: Number.isFinite(value) ? value : 0 });
+              }}
+            />
+            <p className="text-xs text-terminal-muted/70">
+              price × amount, so the same number means the same money on every instrument
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-xs text-terminal-muted">Sound on Large Trades</Label>
+              <p className="text-xs text-terminal-muted/70">Short blip; needs the highlight threshold above</p>
+            </div>
+            <Switch
+              checked={widgetState.soundOnLarge}
+              onCheckedChange={(checked) => updateWidget(widgetId, { soundOnLarge: checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-xs text-terminal-muted">Merge Same Price</Label>
+              <p className="text-xs text-terminal-muted/70">Collapse consecutive prints at one price and side into a single row</p>
+            </div>
+            <Switch
+              checked={widgetState.mergeSamePrice}
+              onCheckedChange={(checked) => updateWidget(widgetId, { mergeSamePrice: checked })}
+            />
+          </div>
+
           {/* Trades Limit */}
           <div className="space-y-2">
             <Label className="text-xs text-terminal-muted">Trades Limit</Label>

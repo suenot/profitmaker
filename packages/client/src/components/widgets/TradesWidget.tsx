@@ -323,6 +323,28 @@ const TradesWidgetV2Inner: React.FC<TradesWidgetV2Props> = ({
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
+    // Merge consecutive prints at one price and side. Exchanges split a single
+    // aggressive order into one print per resting order it consumed, so a 40-BTC
+    // sweep can arrive as thirty rows — merging restores the order the trader
+    // actually sent, which is what the tape is being read for.
+    if (widgetState.mergeSamePrice && filtered.length > 1) {
+      const merged: Trade[] = [];
+      for (const trade of filtered) {
+        const prev = merged[merged.length - 1];
+        if (prev && prev.price === trade.price && prev.side === trade.side) {
+          merged[merged.length - 1] = {
+            ...prev,
+            amount: prev.amount + trade.amount,
+            // Keep the newest timestamp so the row stays where the eye expects.
+            timestamp: Math.max(prev.timestamp, trade.timestamp),
+          };
+        } else {
+          merged.push({ ...trade });
+        }
+      }
+      filtered = merged;
+    }
+
     // Limit the number of displayed trades
     const limit = widgetState.tradesLimit;
     if (limit > 0) {
@@ -330,7 +352,37 @@ const TradesWidgetV2Inner: React.FC<TradesWidgetV2Props> = ({
     }
 
     return filtered;
-  }, [rawTrades, filters, sortBy, sortOrder, widgetState.tradesLimit]);
+  }, [rawTrades, filters, sortBy, sortOrder, widgetState.tradesLimit, widgetState.mergeSamePrice]);
+
+  // Blip on a large print. Tracks the newest trade seen rather than the list
+  // contents, so re-renders (scrolling, settings changes) stay silent and only a
+  // genuinely new print can make a sound.
+  const lastSoundedRef = useRef<number>(0);
+  useEffect(() => {
+    if (!widgetState.soundOnLarge || !widgetState.largeTradeValue) return;
+    const newest = processedTrades[0];
+    if (!newest || newest.timestamp <= lastSoundedRef.current) return;
+    lastSoundedRef.current = newest.timestamp;
+    if (newest.price * newest.amount < widgetState.largeTradeValue) return;
+
+    try {
+      const AudioCtor = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtor) return;
+      const ctx = new AudioCtor();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      // Buys ring higher than sells — side is audible without looking.
+      osc.frequency.value = newest.side === 'buy' ? 880 : 440;
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.12);
+      osc.onended = () => void ctx.close();
+    } catch {
+      // Autoplay policy or no audio device — a missing blip is not worth an error.
+    }
+  }, [processedTrades, widgetState.soundOnLarge, widgetState.largeTradeValue]);
 
   // Statistics for filtered data
   const stats = useMemo(() => {
@@ -394,6 +446,7 @@ const TradesWidgetV2Inner: React.FC<TradesWidgetV2Props> = ({
           trades={processedTrades}
           currentSubscription={currentSubscription}
           showTableHeader={widgetState.showTableHeader}
+          largeTradeValue={widgetState.highlightLarge ? widgetState.largeTradeValue : 0}
         />
       </div>
 
@@ -439,7 +492,9 @@ const VirtualizedTradesList: React.FC<{
   trades: Trade[];
   currentSubscription: any;
   showTableHeader: boolean;
-}> = ({ trades, currentSubscription, showTableHeader }) => {
+  /** Quote value at or above which a row is emphasized; 0 disables it. */
+  largeTradeValue?: number;
+}> = ({ trades, currentSubscription, showTableHeader, largeTradeValue = 0 }) => {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -518,6 +573,12 @@ const VirtualizedTradesList: React.FC<{
             const trade = trades[virtualRow.index];
             const isBuy = trade.side === 'buy';
             const isSell = trade.side === 'sell';
+            // Large prints get a stronger tint, scaled by how far past the
+            // threshold they are, so a 10× print still stands out from a 1× one.
+            const value = trade.price * trade.amount;
+            const isLarge = largeTradeValue > 0 && value >= largeTradeValue;
+            const overshoot = isLarge ? Math.min(1, value / (largeTradeValue * 5)) : 0;
+            const alpha = isLarge ? 0.28 + 0.45 * overshoot : 0.1;
             return (
               <div
                 key={virtualRow.index}
@@ -531,13 +592,14 @@ const VirtualizedTradesList: React.FC<{
                 }}
               >
                 <div
-                  className="grid grid-cols-4 text-xs font-mono px-2 hover:bg-gray-50 dark:hover:bg-white/5"
-                  style={{ 
-                    height: '20px !important', 
-                    lineHeight: '20px !important', 
-                    minHeight: '20px !important', 
+                  className={`grid grid-cols-4 text-xs font-mono px-2 hover:bg-gray-50 dark:hover:bg-white/5 ${isLarge ? 'font-semibold' : ''}`}
+                  style={{
+                    height: '20px !important',
+                    lineHeight: '20px !important',
+                    minHeight: '20px !important',
                     maxHeight: '20px !important',
-                    backgroundColor: isBuy ? 'hsla(134, 61%, 41%, 0.1)' : isSell ? 'hsla(0, 84%, 60%, 0.1)' : 'transparent'
+                    backgroundColor: isBuy ? `hsla(134, 61%, 41%, ${alpha})` : isSell ? `hsla(0, 84%, 60%, ${alpha})` : 'transparent',
+                    boxShadow: isLarge ? `inset 2px 0 0 ${isBuy ? 'hsl(134, 61%, 55%)' : 'hsl(0, 84%, 65%)'}` : undefined,
                   }}
                 >
                   <div className="text-gray-600 dark:text-gray-400 flex items-center">
