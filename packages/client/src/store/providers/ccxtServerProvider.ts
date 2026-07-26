@@ -23,6 +23,8 @@ import type {
   CreateOrderParams,
   ProviderCredentials,
   TradeAuth,
+  LeverageMarketType,
+  LeverageTarget,
 } from '@profitmaker/types';
 import { isAccountRef } from '@profitmaker/types';
 import { io, Socket } from 'socket.io-client';
@@ -922,6 +924,32 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
           code,
           since,
           limit,
+        });
+      },
+      async leverageMarkets(auth: TradeAuth, exchange: string, marketType?: LeverageMarketType) {
+        return self.makeRequest('/api/exchange/leverageMarkets', {
+          ...self.authBody(auth, exchange, 'futures'),
+          marketType,
+        });
+      },
+      async fetchLeverages(auth: TradeAuth, exchange: string, symbols?: string[], _marketType?: LeverageMarketType) {
+        return self.makeRequest('/api/exchange/fetchLeverages', {
+          ...self.authBody(auth, exchange, 'futures'),
+          symbols,
+        });
+      },
+      async setLeverages(
+        auth: TradeAuth,
+        exchange: string,
+        symbols: string[],
+        target: LeverageTarget,
+        opts?: { marketType?: LeverageMarketType; dryRun?: boolean },
+      ) {
+        return self.makeRequest('/api/exchange/setLeverages', {
+          ...self.authBody(auth, exchange, 'futures'),
+          symbols,
+          leverage: target,
+          dryRun: opts?.dryRun,
         });
       },
     };

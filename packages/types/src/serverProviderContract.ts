@@ -1,4 +1,10 @@
 import type { ExchangeCapabilities } from './providerContract';
+import type {
+  LeverageMarket,
+  LeverageMarketType,
+  LeverageSetting,
+  SetLeverageResult,
+} from './leverage';
 
 /**
  * Server-side market-data provider contract.
@@ -93,6 +99,21 @@ export interface ServerProviderTrading {
   fetchPositions(symbols?: string[]): Promise<unknown[]>;
   /** Account balance-movement history (deposits/withdrawals/trades/fees/transfers). */
   fetchLedger(code?: string, since?: number, limit?: number): Promise<unknown[]>;
+
+  /**
+   * Derivative pairs with the leverage bounds the exchange publishes. Read from
+   * loaded market metadata, so it covers every pair in one shot and needs no
+   * private call. `marketType` filters swap vs dated futures.
+   */
+  leverageMarkets(marketType?: LeverageMarketType): Promise<LeverageMarket[]>;
+  /**
+   * Leverage currently configured on the account. Implementations should try the
+   * cheapest route first (unified batch call), then per-symbol, then derive from
+   * open positions — `symbols` is required for the per-symbol path.
+   */
+  fetchLeverages(symbols?: string[]): Promise<LeverageSetting[]>;
+  /** Set leverage for one pair. */
+  setLeverage(leverage: number, symbol: string, params?: Record<string, unknown>): Promise<SetLeverageResult>;
 }
 
 /**

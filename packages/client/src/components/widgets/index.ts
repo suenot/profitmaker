@@ -12,6 +12,7 @@ export { default as Portfolio } from './Portfolio';
 export { default as OrderForm } from './OrderForm';
 export { default as UserBalancesWidget } from './UserBalancesWidget';
 export { default as UserTradingDataWidget } from './UserTradingDataWidget';
+export { default as LeveragesWidget } from './LeveragesWidget';
 
 // New Deals Widget System
 export { default as DealsWidget } from './DealsWidget';

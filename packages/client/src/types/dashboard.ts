@@ -16,7 +16,7 @@ export type WidgetConfig = z.infer<typeof WidgetConfigSchema>;
 
 // Built-in widget types. Kept for reference/defaults; the schema no longer
 // restricts `type` to this list so module-provided widget types validate too.
-export const BUILTIN_WIDGET_TYPES = ['chart', 'portfolio', 'orderForm', 'transactionHistory', 'custom', 'orderbook', 'trades', 'deals', 'tradesV2', 'dataProviderSettings', 'dataProviderDemo', 'dataProviderSetup', 'dataProviderDebug', 'notificationTest', 'debugUserData', 'debugCCXTCache', 'debugBingX', 'exchanges', 'markets', 'pairs', 'userBalances', 'userTradingData'] as const;
+export const BUILTIN_WIDGET_TYPES = ['chart', 'portfolio', 'orderForm', 'transactionHistory', 'custom', 'orderbook', 'trades', 'deals', 'tradesV2', 'dataProviderSettings', 'dataProviderDemo', 'dataProviderSetup', 'dataProviderDebug', 'notificationTest', 'debugUserData', 'debugCCXTCache', 'debugBingX', 'exchanges', 'markets', 'pairs', 'userBalances', 'userTradingData', 'leverages'] as const;
 
 // Widget schema
 export const WidgetSchema = z.object({

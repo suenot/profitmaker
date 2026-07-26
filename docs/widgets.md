@@ -35,6 +35,7 @@ Built-in types:
 | `trades` | `TradesWidget.tsx` | public | Live trade feed (filtering, aggregated mode) |
 | `userBalances` | `UserBalancesWidget.tsx` | private | Real balances across all accounts, table or pie view (Recharts), USD-valued |
 | `userTradingData` | `UserTradingDataWidget.tsx` | private | Tabs: trades, positions, open orders (real, per account) |
+| `leverages` | `LeveragesWidget.tsx` | private | Leverage per pair on one account (swap/futures), with single and bulk set |
 | `deals` | `DealsWidget.tsx` | private | Deal tracking aggregated from real trade history |
 | `orderForm` | `OrderForm.tsx` | private | Place buy/sell orders — live ticker + real balance |
 | `dataProviderSettings` | `DataProviderSettingsWidget.tsx` | diagnostics | Configure data providers |
@@ -73,6 +74,19 @@ go via the central-accounts `{ accountId }` flow.
   `fetchOpenOrders`). An account selector (all / one) drives every tab; the header
   refresh button re-fetches the active tab via an imperative handle. Long lists are
   virtualized.
+
+- **Leverages** (`LeveragesWidget.tsx`) — leverage settings for one account's
+  derivative pairs. Two sources kept apart: `leverageMarkets(accountId, marketType)`
+  gives every pair plus the cap the exchange publishes (from market metadata, so
+  it is immediate and complete), while `fetchLeverages(accountId, symbols?)` gives
+  what the account actually has set — some exchanges answer for everything at
+  once, others only per symbol, so the rest is filled in by "Load all" in chunks
+  of 50 with progress. Writing goes through `setLeverages(accountId, symbols,
+  target)` in chunks of 20: per-row set, "set all shown to X", and "set all to
+  max" (each pair's own published maximum). Bulk runs are confirmed in a dialog
+  first and report per-symbol failures — an open position makes the exchange
+  refuse the change. A donut summarizes how many pairs sit in each leverage
+  bucket (1x, 2-5x, 6-10x, 11-20x, 21-50x, 50x+).
 
 - **Deals** (`DealsWidget.tsx`) — deal tracking built from real trade history.
   "Sync from account" pulls `fetchMyTrades` for each account and aggregates trades

@@ -473,6 +473,9 @@ preferred body shape carries **no secrets**:
 | `POST /api/exchange/fetchOpenOrders` | `{ accountId, want?, exchange, market?, symbol?, providerId? }` | Open orders |
 | `POST /api/exchange/fetchPositions` | `{ accountId, want?, exchange, market?, symbols?, providerId? }` | Open positions |
 | `POST /api/exchange/fetchLedger` | `{ accountId, want?, exchange, market?, code?, since?, limit?, providerId? }` | Ledger entries (deposits/withdrawals/transfers/fees) |
+| `POST /api/exchange/leverageMarkets` | `{ accountId, want?, exchange, market?, marketType?, providerId? }` | Derivative pairs + the leverage cap the exchange publishes |
+| `POST /api/exchange/fetchLeverages` | `{ accountId, want?, exchange, market?, symbols?, providerId? }` | Leverage currently set on the account (max 50 symbols per call) |
+| `POST /api/exchange/setLeverages` | `{ accountId, exchange, market?, symbols, leverage \| 'max', dryRun?, providerId? }` | Bulk-set leverage (forces `want: 'trade'`; max 20 symbols per call) |
 | `POST /api/proxy/request` | `{ url, method?, headers?, body?, timeout? }` | CORS proxy |
 
 ### WebSocket (Socket.IO)

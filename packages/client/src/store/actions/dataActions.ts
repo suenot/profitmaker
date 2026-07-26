@@ -1,7 +1,14 @@
 import type { StateCreator } from 'zustand';
 import type { DataProviderStore } from '../types';
 import type { DataType, DataFetchMethod, Candle, Trade, OrderBook, Ticker, ExchangeBalances, ActiveSubscription, Timeframe, MarketType, WalletType, DataProvider } from '../../types/dataProviders';
-import type { AccountRef } from '@profitmaker/types';
+import type {
+  AccountRef,
+  LeverageMarket,
+  LeverageMarketType,
+  LeverageSetting,
+  LeverageTarget,
+  SetLeverageResult,
+} from '@profitmaker/types';
 import { getOHLCVLimit, getTradesLimit, logExchangeLimits } from '../../utils/exchangeLimits';
 
 // Create a server-side market-data instance (proxy) for public market data.
@@ -42,6 +49,31 @@ const getServerTradingProvider = async (exchange: string, get: () => DataProvide
   return createCCXTServerProvider(provider);
 };
 
+/**
+ * Common preamble for the leverage calls: find the account, get its server
+ * provider and an auth ref at the required access level. Throws with the same
+ * messages the older per-method copies used, so failures stay recognizable.
+ */
+const resolveLeverageContext = async (
+  accountId: string,
+  want: AccountRef['want'],
+  get: () => DataProviderStore,
+) => {
+  const { useUserStore } = await import('../userStore');
+  const { users } = useUserStore.getState();
+  const user = users.find(u => u.accounts.some(acc => acc.id === accountId));
+  const account = user?.accounts.find(acc => acc.id === accountId);
+  if (!account) throw new Error(`Account ${accountId} not found`);
+
+  const serverProvider = await getServerTradingProvider(account.exchange, get);
+  if (!serverProvider) throw new Error(`No CCXT server provider found for exchange: ${account.exchange}`);
+
+  const creds = resolveCredentials(accountId, want);
+  if (!creds) throw new Error(`No credentials available for account ${accountId}`);
+
+  return { account, serverProvider, creds };
+};
+
 export interface DataActions {
   // Data fetch settings management
   setDataFetchMethod: (method: DataFetchMethod) => Promise<void>;
@@ -79,6 +111,16 @@ export interface DataActions {
   fetchOpenOrders: (accountId: string, symbol?: string) => Promise<any[]>;
   fetchPositions: (accountId: string, symbols?: string[]) => Promise<any[]>;
   fetchLedger: (accountId: string, code?: string, since?: number, limit?: number) => Promise<any[]>;
+
+  // Leverage (read caps + current settings, write new values)
+  leverageMarkets: (accountId: string, marketType?: LeverageMarketType) => Promise<LeverageMarket[]>;
+  fetchLeverages: (accountId: string, symbols?: string[]) => Promise<LeverageSetting[]>;
+  setLeverages: (
+    accountId: string,
+    symbols: string[],
+    target: LeverageTarget,
+    opts?: { dryRun?: boolean },
+  ) => Promise<SetLeverageResult[]>;
 
   // Central store data updates
   updateCandles: (exchange: string, symbol: string, candles: Candle[], timeframe?: Timeframe, market?: MarketType) => void;
@@ -980,5 +1022,32 @@ export const createDataActions: StateCreator<
     console.log(`🔄 [fetchPositions] Loading positions for account ${accountId} (${account.exchange}) via server`);
     const positions = await serverProvider.trading.fetchPositions(creds, account.exchange, symbols);
     return positions || [];
+  },
+
+  leverageMarkets: async (accountId: string, marketType: LeverageMarketType = 'swap'): Promise<LeverageMarket[]> => {
+    const { account, serverProvider, creds } = await resolveLeverageContext(accountId, 'read', get);
+    const markets = await serverProvider.trading.leverageMarkets(creds, account.exchange, marketType);
+    return markets || [];
+  },
+
+  fetchLeverages: async (accountId: string, symbols?: string[]): Promise<LeverageSetting[]> => {
+    const { account, serverProvider, creds } = await resolveLeverageContext(accountId, 'read', get);
+    const leverages = await serverProvider.trading.fetchLeverages(creds, account.exchange, symbols);
+    return leverages || [];
+  },
+
+  setLeverages: async (
+    accountId: string,
+    symbols: string[],
+    target: LeverageTarget,
+    opts?: { dryRun?: boolean },
+  ): Promise<SetLeverageResult[]> => {
+    // Writing leverage is a trading action — anything less than a 'trade' grant
+    // is refused server-side, so ask for it here rather than failing mid-batch.
+    const { account, serverProvider, creds } = await resolveLeverageContext(accountId, 'trade', get);
+    const results = await serverProvider.trading.setLeverages(creds, account.exchange, symbols, target, {
+      dryRun: opts?.dryRun,
+    });
+    return results || [];
   }
  });

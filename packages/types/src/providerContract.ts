@@ -9,6 +9,13 @@ import type {
   Timeframe,
   MarketType,
 } from './dataProviders';
+import type {
+  LeverageMarket,
+  LeverageMarketType,
+  LeverageSetting,
+  LeverageTarget,
+  SetLeverageResult,
+} from './leverage';
 
 /**
  * Formal market-data provider contract.
@@ -214,6 +221,24 @@ export interface ProviderTrading {
   fetchOpenOrders(auth: TradeAuth, exchange: string, symbol?: string): Promise<any[]>;
   fetchPositions(auth: TradeAuth, exchange: string, symbols?: string[]): Promise<any[]>;
   fetchLedger(auth: TradeAuth, exchange: string, code?: string, since?: number, limit?: number): Promise<any[]>;
+
+  /** Derivative pairs plus the leverage caps the exchange publishes. */
+  leverageMarkets(auth: TradeAuth, exchange: string, marketType?: LeverageMarketType): Promise<LeverageMarket[]>;
+  /** Leverage the account currently has set (batch where the exchange allows it). */
+  fetchLeverages(auth: TradeAuth, exchange: string, symbols?: string[], marketType?: LeverageMarketType): Promise<LeverageSetting[]>;
+  /**
+   * Set leverage on a batch of pairs. `target` is either a fixed number or
+   * 'max', in which case the server uses each pair's own published maximum.
+   * Keep batches modest (the server caps them) so one call stays well inside
+   * the HTTP timeout; callers chunk and report progress.
+   */
+  setLeverages(
+    auth: TradeAuth,
+    exchange: string,
+    symbols: string[],
+    target: LeverageTarget,
+    opts?: { marketType?: LeverageMarketType; dryRun?: boolean },
+  ): Promise<SetLeverageResult[]>;
 }
 
 // --- tiny provider registry (module-system seam) ---------------------------

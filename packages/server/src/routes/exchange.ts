@@ -1,6 +1,10 @@
 import { Elysia, t } from 'elysia';
 import ccxt from 'ccxt';
-import type { ProviderRequestConfig } from '@profitmaker/types';
+import type {
+  ProviderRequestConfig,
+  LeverageMarketType,
+  SetLeverageResult,
+} from '@profitmaker/types';
 import { providerRegistry } from '../providers';
 import { getSsoContextFromRequest } from '../middleware/requireUser';
 import {
@@ -8,6 +12,14 @@ import {
   AuthAccountsError,
   type AccessWant,
 } from '../services/authAccounts';
+
+// Leverage batch limits. Both directions are capped per request so a call can't
+// run past the client's 30s HTTP timeout. Writes get a much smaller cap: each
+// one is a round-trip to the exchange plus the pacing delay below, which keeps
+// bulk runs under exchange rate limits (the cadence the standalone tooling uses).
+const MAX_LEVERAGE_READ_BATCH = 50;
+const MAX_LEVERAGE_WRITE_BATCH = 20;
+const LEVERAGE_WRITE_DELAY_MS = 100;
 
 const configSchema = t.Object({
   exchangeId: t.String(),
@@ -395,6 +407,103 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
       code: t.Optional(t.String()),
       since: t.Optional(t.Number()),
       limit: t.Optional(t.Number()),
+      ...providerIdField,
+      ...accountIdField,
+    }),
+  })
+
+  .post('/leverageMarkets', async ({ body, request, set }) => {
+    const { marketType, providerId } = body;
+    const resolved = await resolveAuthedConfig(request, body, 'read', set);
+    if ('error' in resolved) return resolved;
+    const { config } = resolved;
+    const { instance, providerId: served } = await resolve(config, providerId);
+    const markets = instance.trading
+      ? await instance.trading.leverageMarkets(marketType as LeverageMarketType | undefined)
+      : [];
+    return { success: true, provider: served, data: markets };
+  }, {
+    body: t.Object({
+      config: t.Optional(configSchema),
+      marketType: t.Optional(t.Union([t.Literal('swap'), t.Literal('future')])),
+      ...providerIdField,
+      ...accountIdField,
+    }),
+  })
+
+  .post('/fetchLeverages', async ({ body, request, set }) => {
+    const { symbols, providerId } = body;
+    const resolved = await resolveAuthedConfig(request, body, 'read', set);
+    if ('error' in resolved) return resolved;
+    const { config } = resolved;
+    if (!body.accountId) { const credErr = requireCreds(config, set); if (credErr) return { error: credErr }; }
+    if (symbols && symbols.length > MAX_LEVERAGE_READ_BATCH) {
+      set.status = 400;
+      return { error: `at most ${MAX_LEVERAGE_READ_BATCH} symbols per request` };
+    }
+    const { instance, providerId: served } = await resolve(config, providerId);
+    const leverages = instance.trading ? await instance.trading.fetchLeverages(symbols) : [];
+    return { success: true, provider: served, data: leverages };
+  }, {
+    body: t.Object({
+      config: t.Optional(configSchema),
+      symbols: t.Optional(t.Array(t.String())),
+      ...providerIdField,
+      ...accountIdField,
+    }),
+  })
+
+  // Bulk leverage write. Capped per request so a call stays inside the HTTP
+  // timeout — the client chunks a full-exchange run and shows progress. Symbols
+  // are processed sequentially with a small delay: exchanges rate-limit this
+  // endpoint hard, and a burst gets the whole batch rejected.
+  .post('/setLeverages', async ({ body, request, set }) => {
+    const { symbols, leverage, dryRun, providerId } = body;
+    const resolved = await resolveAuthedConfig(request, body, 'trade', set);
+    if ('error' in resolved) return resolved;
+    const { config } = resolved;
+    if (!body.accountId) { const credErr = requireCreds(config, set); if (credErr) return { error: credErr }; }
+    if (!symbols.length) return { success: true, provider: null, data: [] };
+    if (symbols.length > MAX_LEVERAGE_WRITE_BATCH) {
+      set.status = 400;
+      return { error: `at most ${MAX_LEVERAGE_WRITE_BATCH} symbols per request` };
+    }
+    if (leverage !== 'max' && !(leverage >= 1)) {
+      set.status = 400;
+      return { error: 'leverage must be a number >= 1 or "max"' };
+    }
+
+    const { instance, providerId: served } = await resolve(config, providerId);
+    if (!instance.trading) return { error: 'provider does not support trading' };
+
+    // 'max' resolves per symbol against the exchange's own published cap.
+    let caps: Map<string, number> | null = null;
+    if (leverage === 'max') {
+      const markets = await instance.trading.leverageMarkets();
+      caps = new Map(markets.filter(m => m.maxLeverage).map(m => [m.symbol, Math.floor(m.maxLeverage!)]));
+    }
+
+    const results: SetLeverageResult[] = [];
+    for (const symbol of symbols) {
+      const target = leverage === 'max' ? caps?.get(symbol) : leverage;
+      if (!target || target < 1) {
+        results.push({ symbol, leverage: 0, success: false, message: 'No max leverage published for this pair' });
+        continue;
+      }
+      if (dryRun) {
+        results.push({ symbol, leverage: target, success: true, message: `Would set to ${target}x` });
+        continue;
+      }
+      results.push(await instance.trading.setLeverage(target, symbol));
+      await new Promise(r => setTimeout(r, LEVERAGE_WRITE_DELAY_MS));
+    }
+    return { success: true, provider: served, data: results };
+  }, {
+    body: t.Object({
+      config: t.Optional(configSchema),
+      symbols: t.Array(t.String()),
+      leverage: t.Union([t.Number(), t.Literal('max')]),
+      dryRun: t.Optional(t.Boolean()),
       ...providerIdField,
       ...accountIdField,
     }),

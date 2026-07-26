@@ -9,6 +9,7 @@ import ChartWidget from '@/components/widgets/Chart';
 import PortfolioWidget from '@/components/widgets/Portfolio';
 import UserBalancesWidget, { UserBalancesHeaderActions } from '@/components/widgets/UserBalancesWidget';
 import UserTradingDataWidget, { UserTradingDataHeaderActions } from '@/components/widgets/UserTradingDataWidget';
+import LeveragesWidget from '@/components/widgets/LeveragesWidget';
 import OrderFormWidget from '@/components/widgets/OrderForm';
 import TransactionHistoryWidget from '@/components/widgets/TransactionHistory';
 import { OrderBookWidgetV2 } from '@/components/widgets/OrderBookWidget';
@@ -152,6 +153,15 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     Component: adaptComponent(UserTradingDataWidget),
     Settings: adaptSettings(UserTradingDataSettingsWrapper),
     HeaderActions: headerActionsUserTradingData,
+  },
+  {
+    type: 'leverages',
+    title: 'Leverages',
+    icon: 'Gauge',
+    category: 'private',
+    defaultSize: { width: 780, height: 620 },
+    showGroupSelector: false,
+    Component: adaptComponent(LeveragesWidget),
   },
   {
     type: 'deals',

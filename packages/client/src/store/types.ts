@@ -18,7 +18,12 @@ import type {
   ChartUpdateListener,
   ChartUpdateEvent,
   ProviderExchangeMapping,
-  SubscriptionConfig
+  SubscriptionConfig,
+  LeverageMarket,
+  LeverageMarketType,
+  LeverageSetting,
+  LeverageTarget,
+  SetLeverageResult
 } from '../types/dataProviders';
 import type { User } from './userStore';
 
@@ -124,6 +129,17 @@ export interface DataProviderActions {
   fetchOpenOrders: (accountId: string, symbol?: string) => Promise<any[]>;
   fetchPositions: (accountId: string, symbols?: string[]) => Promise<any[]>;
   fetchLedger: (accountId: string, code?: string, since?: number, limit?: number) => Promise<any[]>;
+
+  // Leverage: read the exchange's caps, read what the account has set, write new
+  // values. Reads use 'read' access, the write path requires 'trade'.
+  leverageMarkets: (accountId: string, marketType?: LeverageMarketType) => Promise<LeverageMarket[]>;
+  fetchLeverages: (accountId: string, symbols?: string[]) => Promise<LeverageSetting[]>;
+  setLeverages: (
+    accountId: string,
+    symbols: string[],
+    target: LeverageTarget,
+    opts?: { dryRun?: boolean },
+  ) => Promise<SetLeverageResult[]>;
 
   // Central store data updates
   updateCandles: (exchange: string, symbol: string, candles: Candle[], timeframe?: Timeframe, market?: MarketType) => void;
