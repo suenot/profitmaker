@@ -1,6 +1,7 @@
 import React from 'react';
-import type { WidgetDefinition, WidgetProps, WidgetSettingsProps } from '@profitmaker/module-sdk';
+import type { WidgetProps, WidgetSettingsProps } from '@profitmaker/module-sdk';
 import { useWidgetRegistry } from './registry';
+import { addToBuiltinCatalog, type BuiltinWidgetDefinition } from './builtinCatalog';
 import ModuleStoreWidget from './ModuleStoreWidget';
 import DocsWidget from './DocsWidget';
 
@@ -30,16 +31,11 @@ import UserBalancesSettingsWrapper from '@/components/widgets/UserBalancesSettin
 import UserTradingDataSettingsWrapper from '@/components/widgets/UserTradingDataSettingsWrapper';
 import OrderFormSettingsWrapper from '@/components/widgets/OrderFormSettingsWrapper';
 
-/**
- * Built-in widget definition. Extends the SDK contract with `menuLabel`, a
- * presentation-only override for the add-widget menu (the SDK `title` drives the
- * widget *header*, which intentionally differs from the menu text for built-ins
- * such as "Order Book" vs "Order Book (not ready)").
- */
-export type BuiltinWidgetDefinition = WidgetDefinition & {
-  /** Menu text override; falls back to `title` when omitted. */
-  menuLabel?: string;
-};
+// The definition type and the catalog live in builtinCatalog.ts so the Module
+// Store can read them without importing this file (which imports the store
+// widget itself — that cycle left ModuleStoreWidget uninitialised at runtime).
+export type { BuiltinWidgetDefinition, BuiltinModuleInfo } from './builtinCatalog';
+export { getBuiltinDefinition, listBuiltinModules } from './builtinCatalog';
 
 /**
  * Adapt a legacy built-in component (props `{ widgetId, selectedGroupId }`) to
@@ -100,6 +96,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'chart',
     title: 'Chart',
+    description: 'Live OHLCV candlestick chart',
     icon: 'LineChart',
     category: 'public',
     defaultSize: { width: 650, height: 330 },
@@ -111,6 +108,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'orderbook',
     title: 'Order Book',
+    description: 'Live order book — depth and spread',
     icon: 'BookOpen',
     category: 'public',
     defaultSize: { width: 500, height: 650 },
@@ -122,6 +120,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'trades',
     title: 'Trades',
+    description: 'Live trade feed',
     icon: 'ArrowUpDown',
     category: 'public',
     defaultSize: { width: 600, height: 550 },
@@ -135,6 +134,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'userBalances',
     title: 'User Balances',
+    description: 'Balances across every account, table or pie',
     icon: 'Wallet',
     category: 'private',
     defaultSize: { width: 700, height: 600 },
@@ -146,6 +146,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'userTradingData',
     title: 'User Trading Data',
+    description: 'Trades, positions and open orders per account',
     icon: 'BarChart3',
     category: 'private',
     defaultSize: { width: 800, height: 650 },
@@ -157,6 +158,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'leverages',
     title: 'Leverages',
+    description: 'Leverage per pair, with single and bulk set',
     icon: 'Gauge',
     category: 'private',
     defaultSize: { width: 780, height: 620 },
@@ -166,6 +168,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'deals',
     title: 'Deals',
+    description: 'Deal tracking built from real trade history',
     icon: 'Handshake',
     category: 'private',
     defaultSize: { width: 900, height: 600 },
@@ -175,6 +178,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'orderForm',
     title: 'Place Order',
+    description: 'Place buy/sell orders',
     icon: 'FileText',
     category: 'private',
     defaultSize: { width: 350, height: 550 },
@@ -188,6 +192,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'dataProviderSettings',
     title: 'Data Provider Settings',
+    description: 'Configure data providers',
     icon: 'Settings',
     category: 'diagnostics',
     defaultSize: { width: 500, height: 450 },
@@ -197,6 +202,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'dataProviderSetup',
     title: 'Data Provider Setup',
+    description: 'Initial data-provider setup',
     icon: 'Settings',
     category: 'diagnostics',
     defaultSize: { width: 500, height: 400 },
@@ -208,6 +214,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'portfolio',
     title: 'Balance',
+    description: 'Cross-account allocation overview',
     icon: 'PieChart',
     category: 'system',
     defaultSize: { width: 800, height: 350 },
@@ -218,6 +225,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'transactionHistory',
     title: 'Transaction History',
+    description: 'Exchange ledger grouped by date',
     icon: 'FileText',
     category: 'system',
     defaultSize: { width: 400, height: 330 },
@@ -228,6 +236,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     // Legacy placeholder type kept for backward compatibility (rendered as Portfolio).
     type: 'custom',
     title: 'Custom',
+    hiddenFromStore: true,
     icon: 'PieChart',
     category: 'system',
     defaultSize: { width: 800, height: 350 },
@@ -238,6 +247,8 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     // Module Store — browse/install/enable/disable terminal modules.
     type: 'system.moduleStore',
     title: 'Module Store',
+    description: 'Browse, install and toggle modules',
+    locked: true,
     icon: 'Package',
     category: 'system',
     defaultSize: { width: 700, height: 550 },
@@ -248,6 +259,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     // API & Agents — in-app reference for driving the terminal via REST/CLI/MCP.
     type: 'system.docs',
     title: 'API & Agents',
+    description: 'Driving the terminal via REST, CLI and MCP',
     icon: 'BookOpen',
     category: 'system',
     defaultSize: { width: 760, height: 600 },
@@ -262,6 +274,7 @@ const DEV_ONLY_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'exchanges',
     title: 'Exchanges Diagnostic',
+    description: 'Exchange diagnostics',
     icon: 'Globe',
     category: 'diagnostics',
     defaultSize: { width: 600, height: 500 },
@@ -271,6 +284,7 @@ const DEV_ONLY_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'markets',
     title: 'Markets Diagnostic',
+    description: 'Market diagnostics',
     icon: 'Server',
     category: 'diagnostics',
     defaultSize: { width: 500, height: 450 },
@@ -280,6 +294,7 @@ const DEV_ONLY_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'pairs',
     title: 'Pairs Diagnostic',
+    description: 'Trading-pair diagnostics',
     icon: 'TrendingUp',
     category: 'diagnostics',
     defaultSize: { width: 650, height: 550 },
@@ -289,6 +304,7 @@ const DEV_ONLY_DEFINITIONS: BuiltinWidgetDefinition[] = [
   {
     type: 'dataProviderDebug',
     title: 'Data Provider Debug',
+    description: 'Raw provider internals',
     icon: 'Bug',
     category: 'diagnostics',
     defaultSize: { width: 700, height: 500 },
@@ -310,10 +326,12 @@ export function registerBuiltinWidgets(): void {
 
   const registerMany = useWidgetRegistry.getState().registerMany;
   registerMany(BUILTIN_DEFINITIONS);
+  addToBuiltinCatalog(BUILTIN_DEFINITIONS);
 
   // Dev-only diagnostic widgets (raw provider/exchange internals).
   if (import.meta.env.DEV) {
     registerMany(DEV_ONLY_DEFINITIONS);
+    addToBuiltinCatalog(DEV_ONLY_DEFINITIONS, { dev: true });
   }
 
   // 'orderbook' was historically also referenced as 'orderBook' (camelCase) in

@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { registerBuiltinWidgets } from './modules/builtinWidgets'
+import { useBuiltinModulesStore } from './modules/builtinModules'
 import { initRuntime } from './modules/runtime'
 import { start as startSyncBridge } from './services/syncBridge'
 import { bootstrap as bootstrapSso, getSsoToken } from './services/ssoClient'
@@ -14,6 +15,13 @@ import { initAccounts } from './store/accountStore'
 // before any module bundle is imported. loadModules() runs post-mount in App.
 registerBuiltinWidgets();
 initRuntime();
+
+// Built-ins can be switched off in the Module Store; the off-list lives in the
+// user's server-side settings. Read it as soon as a session is available — on a
+// reload that is right now (cached session), on a fresh login it is the token
+// transition handled below. Until it resolves every built-in stays registered,
+// so the worst case is a widget briefly offered that the user had hidden.
+void useBuiltinModulesStore.getState().hydrate();
 
 // SSO race recovery: market-data widgets mount and start fetching as soon as App
 // renders — which can BEAT the async bootstrap on a fresh login (no cached
@@ -28,6 +36,9 @@ useSessionStore.subscribe(() => {
   const hasToken = !!getSsoToken();
   if (hasToken && !hadToken) {
     void useDataProviderStore.getState().restartInactiveSubscriptions();
+    // Same transition: the built-in off-list is a per-user setting, so it only
+    // becomes readable once a token exists.
+    void useBuiltinModulesStore.getState().hydrate();
   }
   hadToken = hasToken;
 });

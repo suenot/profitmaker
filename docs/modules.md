@@ -573,3 +573,30 @@ managing modules without leaving the UI. It has two tabs:
 Disabling/uninstalling here unregisters the module's widget types client-side,
 so open widgets switch to the placeholder. Operations that need a server restart
 (`upgrade`, `uninstall`) surface a restart-pending badge.
+
+### Built-in widgets are modules too
+
+The **Installed** tab lists every built-in widget above the npm modules — one
+entry per widget (Chart, Order Book, Leverages, …), each with a switch. Off means
+the widget type is unregistered: it leaves the add-widget menu and open instances
+fall back to the placeholder, exactly as for a disabled module. There is no
+uninstall — built-ins ship with the terminal, so the switch is the only control.
+
+The **Module Store itself is locked on** (`locked: true` in its definition, shown
+as a padlock instead of a switch): switching it off would remove the only UI that
+can switch anything back on.
+
+Two implementation notes worth knowing before changing this:
+
+- **The toggle does not use `/api/modules/*`.** Those routes are operator-gated
+  (`MODULES_ADMIN_TOKEN`) because installing a module runs third-party code with
+  the server's privileges. Toggling a built-in runs nothing, so it is a per-user
+  preference: it lives in user settings under `builtinWidgets.disabled` (a string
+  array of widget types) via `GET/PUT /api/settings/:key`, and needs only a normal
+  session. Client side that is `modules/builtinModules.ts`.
+- **The catalog lives in `modules/builtinCatalog.ts`, not `builtinWidgets.tsx`.**
+  `builtinWidgets` imports the Module Store widget (it is one of the built-ins),
+  so having the store import the catalog back from there is an import cycle — one
+  that fails at runtime with "Cannot access 'ModuleStoreWidget' before
+  initialization". The catalog also keeps the definitions a disabled widget is
+  restored from, since unregistering drops them from the widget registry.

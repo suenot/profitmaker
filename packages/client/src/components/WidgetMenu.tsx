@@ -394,15 +394,19 @@ const WidgetMenu: React.FC<WidgetMenuProps> = ({ position, onClose }) => {
               </span>
               <span className="transition-colors duration-200">Module Store</span>
             </button>
-            <button
-              className="group flex items-center w-full space-x-3 px-3 py-2 rounded-md transition-all duration-200 text-left text-sm text-terminal-text hover:text-terminal-text hover:bg-terminal-accent/60 active:bg-terminal-accent/80 hover:shadow-sm"
-              onClick={handleOpenDocs}
-            >
-              <span className="text-terminal-muted group-hover:text-terminal-text transition-colors duration-200">
-                <BookOpen size={16} />
-              </span>
-              <span className="transition-colors duration-200">API &amp; Agents</span>
-            </button>
+            {/* Docs is switchable in the Module Store; hide the entry when it's
+                off. Module Store itself is locked on, so it needs no such check. */}
+            {getDefinition(DOCS_TYPE) && (
+              <button
+                className="group flex items-center w-full space-x-3 px-3 py-2 rounded-md transition-all duration-200 text-left text-sm text-terminal-text hover:text-terminal-text hover:bg-terminal-accent/60 active:bg-terminal-accent/80 hover:shadow-sm"
+                onClick={handleOpenDocs}
+              >
+                <span className="text-terminal-muted group-hover:text-terminal-text transition-colors duration-200">
+                  <BookOpen size={16} />
+                </span>
+                <span className="transition-colors duration-200">API &amp; Agents</span>
+              </button>
+            )}
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import type { InstalledModule, ModulePermission } from '@profitmaker/module-sdk';
-import { Search, RefreshCw, Trash2, AlertTriangle, Package, Download } from 'lucide-react';
+import { Search, RefreshCw, Trash2, AlertTriangle, Package, Download, Lock } from 'lucide-react';
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { moduleFetch } from './api';
 import { loadModules, unloadModule } from './loader';
 import { useModuleLoadStore } from './loaderState';
+import { useBuiltinModulesStore } from './builtinModules';
+import { listBuiltinModules } from './builtinCatalog';
+import { resolveIcon } from './resolveIcon';
 import { useNotificationStore } from '@/store/notificationStore';
 
 interface SearchResult {
@@ -48,12 +51,82 @@ function PermissionBadges({ permissions }: { permissions: string[] }) {
 // Installed tab
 // ---------------------------------------------------------------------------
 
+/**
+ * Built-in widgets, listed as modules. They ship with the terminal, so there is
+ * no version, no uninstall and no npm package behind them — only a switch. The
+ * Module Store row is locked on (see builtinModules.ts).
+ */
+function BuiltinSection() {
+  const modules = listBuiltinModules();
+  const { disabled, busyType, hydrate, setEnabled } = useBuiltinModulesStore();
+  // Select the actions, not the whole store: subscribing to the store object
+  // makes every new notification a re-render + a fresh `notify` identity, which
+  // re-runs the effects below — one failed request then loops forever.
+  const showError = useNotificationStore((s) => s.showError);
+
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
+
+  const toggle = async (type: string, title: string, enabled: boolean) => {
+    try {
+      await setEnabled(type, enabled);
+    } catch (err) {
+      showError(`Failed to ${enabled ? 'enable' : 'disable'} "${title}"`, err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="text-xs uppercase tracking-wide text-terminal-muted pt-1">Built-in</div>
+      {modules.map((m) => {
+        const enabled = !disabled.includes(m.type);
+        return (
+          <div key={m.type} className="rounded-md border border-terminal-border bg-terminal-widget/40 p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  {resolveIcon(m.icon, { size: 14, className: 'text-terminal-muted shrink-0' })}
+                  <span className="font-medium text-terminal-text truncate">{m.title}</span>
+                  <Badge variant="outline" className="text-[10px] text-terminal-muted border-terminal-border">
+                    {m.category}
+                  </Badge>
+                  {m.dev && <Badge variant="secondary" className="text-[10px]">dev</Badge>}
+                </div>
+                {m.description && <div className="text-xs text-terminal-muted mt-0.5 truncate">{m.description}</div>}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {m.locked ? (
+                  <span title="Required — this is the UI that manages modules" className="text-terminal-muted">
+                    <Lock size={14} />
+                  </span>
+                ) : (
+                  <Switch
+                    checked={enabled}
+                    disabled={busyType === m.type}
+                    onCheckedChange={() => void toggle(m.type, m.title, !enabled)}
+                    aria-label={enabled ? `Disable ${m.title}` : `Enable ${m.title}`}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function InstalledTab() {
   const [modules, setModules] = useState<InstalledModule[]>([]);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const loadErrors = useModuleLoadStore((s) => s.errors);
-  const notify = useNotificationStore();
+  // Select the actions, not the whole store: subscribing to the store object
+  // makes every new notification a re-render + a fresh `notify` identity, which
+  // re-runs the effects below — one failed request then loops forever.
+  const showError = useNotificationStore((s) => s.showError);
+  const showSuccess = useNotificationStore((s) => s.showSuccess);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -63,11 +136,11 @@ function InstalledTab() {
       const data = (await res.json()) as { modules?: InstalledModule[] };
       setModules(data.modules ?? []);
     } catch (err) {
-      notify.showError('Failed to load installed modules', err instanceof Error ? err.message : String(err));
+      showError('Failed to load installed modules', err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
-  }, [notify]);
+  }, [showError]);
 
   useEffect(() => {
     void refresh();
@@ -89,7 +162,7 @@ function InstalledTab() {
       }
       await refresh();
     } catch (err) {
-      notify.showError(`Failed to ${m.enabled ? 'disable' : 'enable'} "${m.id}"`, err instanceof Error ? err.message : String(err));
+      showError(`Failed to ${m.enabled ? 'disable' : 'enable'} "${m.id}"`, err instanceof Error ? err.message : String(err));
     } finally {
       setBusyId(null);
     }
@@ -103,24 +176,14 @@ function InstalledTab() {
       const data = (await res.json()) as { pendingRestart?: boolean };
       // Unregister its widget types so open widgets fall back to the placeholder.
       unloadModule(m);
-      notify.showSuccess(`Uninstalled "${m.id}"`, data.pendingRestart ? 'Restart the server to fully remove it.' : undefined);
+      showSuccess(`Uninstalled "${m.id}"`, data.pendingRestart ? 'Restart the server to fully remove it.' : undefined);
       await refresh();
     } catch (err) {
-      notify.showError(`Failed to uninstall "${m.id}"`, err instanceof Error ? err.message : String(err));
+      showError(`Failed to uninstall "${m.id}"`, err instanceof Error ? err.message : String(err));
     } finally {
       setBusyId(null);
     }
   };
-
-  if (!loading && modules.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-2 text-terminal-muted text-sm">
-        <Package size={28} />
-        <div>No modules installed</div>
-        <div className="text-xs">Find modules in the Browse tab.</div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-2">
@@ -130,6 +193,17 @@ function InstalledTab() {
           Refresh
         </Button>
       </div>
+
+      <BuiltinSection />
+
+      <div className="text-xs uppercase tracking-wide text-terminal-muted pt-3">Installed</div>
+      {!loading && modules.length === 0 && (
+        <div className="flex flex-col items-center justify-center gap-2 py-6 text-terminal-muted text-sm">
+          <Package size={24} />
+          <div>No modules installed</div>
+          <div className="text-xs">Find modules in the Browse tab.</div>
+        </div>
+      )}
 
       {modules.map((m) => {
         const clientError = loadErrors[m.id];
@@ -195,7 +269,11 @@ function BrowseTab() {
   const [loading, setLoading] = useState(false);
   const [installing, setInstalling] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
-  const notify = useNotificationStore();
+  // Select the actions, not the whole store: subscribing to the store object
+  // makes every new notification a re-render + a fresh `notify` identity, which
+  // re-runs the effects below — one failed request then loops forever.
+  const showError = useNotificationStore((s) => s.showError);
+  const showSuccess = useNotificationStore((s) => s.showSuccess);
 
   const search = useCallback(async (q: string) => {
     setLoading(true);
@@ -207,12 +285,12 @@ function BrowseTab() {
       if (data.error) throw new Error(data.error);
       setResults(data.results ?? []);
     } catch (err) {
-      notify.showError('Module search failed', err instanceof Error ? err.message : String(err));
+      showError('Module search failed', err instanceof Error ? err.message : String(err));
       setResults([]);
     } finally {
       setLoading(false);
     }
-  }, [notify]);
+  }, [showError]);
 
   // Initial unfiltered listing of available modules.
   useEffect(() => {
@@ -229,11 +307,11 @@ function BrowseTab() {
       });
       const data = (await res.json()) as { module?: InstalledModule; error?: string; details?: string };
       if (!res.ok || data.error) throw new Error(data.details || data.error || `install -> ${res.status}`);
-      notify.showSuccess(`Installed "${pkg.name}"`);
+      showSuccess(`Installed "${pkg.name}"`);
       // Load the newly installed module's frontend without a page reload.
       await loadModules();
     } catch (err) {
-      notify.showError(`Failed to install "${pkg.name}"`, err instanceof Error ? err.message : String(err));
+      showError(`Failed to install "${pkg.name}"`, err instanceof Error ? err.message : String(err));
     } finally {
       setInstalling(null);
     }
