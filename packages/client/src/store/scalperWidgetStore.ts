@@ -45,6 +45,17 @@ const defaultState = (): ScalperWidgetState => ({
   showHeader: true,
 });
 
+/**
+ * One shared instance for widgets that have not been touched yet.
+ *
+ * `getWidget` is used as a zustand selector, so it IS the snapshot React reads
+ * during render: handing back a freshly built object every call means the
+ * snapshot never compares equal, React re-renders to catch up, and the widget
+ * loops until it throws "Maximum update depth exceeded". Frozen because the
+ * reference is shared — a mutation here would leak into every untouched widget.
+ */
+const DEFAULT_STATE: ScalperWidgetState = Object.freeze(defaultState());
+
 interface ScalperWidgetsStore {
   widgets: Record<string, ScalperWidgetState>;
   getWidget: (widgetId: string) => ScalperWidgetState;
@@ -57,19 +68,19 @@ interface ScalperWidgetsStore {
 export const useScalperWidgetsStore = create<ScalperWidgetsStore>((set, get) => ({
   widgets: {},
 
-  getWidget: (widgetId) => get().widgets[widgetId] ?? defaultState(),
+  getWidget: (widgetId) => get().widgets[widgetId] ?? DEFAULT_STATE,
 
   updateWidget: (widgetId, updates) =>
     set(state => ({
       widgets: {
         ...state.widgets,
-        [widgetId]: { ...(state.widgets[widgetId] ?? defaultState()), ...updates },
+        [widgetId]: { ...(state.widgets[widgetId] ?? DEFAULT_STATE), ...updates },
       },
     })),
 
   togglePane: (widgetId, pane) =>
     set(state => {
-      const current = state.widgets[widgetId] ?? defaultState();
+      const current = state.widgets[widgetId] ?? DEFAULT_STATE;
       return {
         widgets: {
           ...state.widgets,
@@ -86,7 +97,7 @@ export const useScalperWidgetsStore = create<ScalperWidgetsStore>((set, get) => 
 
   toggleBottomSection: (widgetId, section) =>
     set(state => {
-      const current = state.widgets[widgetId] ?? defaultState();
+      const current = state.widgets[widgetId] ?? DEFAULT_STATE;
       return {
         widgets: {
           ...state.widgets,
