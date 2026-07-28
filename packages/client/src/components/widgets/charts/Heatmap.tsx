@@ -49,6 +49,13 @@ interface Sized {
 }
 
 const PRICE_GUTTER = 56
+/**
+ * Smallest row a price bucket may occupy. Drawing at the raw tick size means
+ * thousands of sub-pixel rows that each get painted as a 2px rect and overwrite
+ * each other; bucketing to at least this height keeps a row one row.
+ */
+const MIN_ROW_PX = 2
+const MAX_ROWS = 600
 
 function cssVar(el: HTMLElement, name: string, fallback: string): string {
   const v = getComputedStyle(el).getPropertyValue(name).trim()
@@ -147,11 +154,20 @@ export function Heatmap({
 
     if (slices.length === 0) return
 
-    const allPrices = slices.flatMap((s) => s.levels.map((l) => l.price))
-    for (const tr of trades) allPrices.push(tr.price)
-    const minPrice = Math.min(...allPrices)
-    const maxPrice = Math.max(...allPrices)
-    const step =
+    // Vertical range comes from the book alone. Including trade prices let a
+    // single off-book print stretch the scale and shove the whole history
+    // sideways; prints outside the book's range are clamped into the edge row.
+    let minPrice = Infinity
+    let maxPrice = -Infinity
+    for (const s of slices) {
+      for (const l of s.levels) {
+        if (l.price < minPrice) minPrice = l.price
+        if (l.price > maxPrice) maxPrice = l.price
+      }
+    }
+    if (!Number.isFinite(minPrice) || !Number.isFinite(maxPrice)) return
+
+    const rawStep =
       tickSize ??
       (() => {
         const sorted = Array.from(
@@ -164,40 +180,62 @@ export function Heatmap({
 
     const plotW = size.width - PRICE_GUTTER
     const cw = plotW / slices.length
+
+    // Bucket the raw ticks up until a row is at least MIN_ROW_PX tall, so one
+    // price row is one drawn row instead of a dozen overlapping rects.
+    const targetRows = Math.max(8, Math.min(MAX_ROWS, Math.floor(size.height / MIN_ROW_PX)))
+    const rowsAtRawStep = Math.round((maxPrice - minPrice) / rawStep) + 1
+    const step = rawStep * Math.max(1, Math.ceil(rowsAtRawStep / targetRows))
     const rowCount = Math.max(1, Math.round((maxPrice - minPrice) / step) + 1)
     const rh = size.height / rowCount
-    const yForPrice = (price: number) => ((maxPrice - price) / step) * rh
+    const rowOf = (price: number) =>
+      Math.min(rowCount - 1, Math.max(0, Math.round((maxPrice - price) / step)))
+    const yForPrice = (price: number) => rowOf(price) * rh
 
     const sliceMid = (s: HeatmapSlice) =>
       s.mid ?? (s.levels.length ? (Math.min(...s.levels.map((l) => l.price)) + Math.max(...s.levels.map((l) => l.price))) / 2 : 0)
 
+    // Fold each slice's levels into the bucketed rows once, before drawing:
+    // sizes add up inside a bucket, and the bucket's side follows the mid.
+    type Cell = { row: number; size: number; isAsk: boolean }
+    const columns: Cell[][] = slices.map((slice) => {
+      const mid = sliceMid(slice)
+      const byRow = new Map<number, Cell>()
+      for (const l of slice.levels) {
+        const row = rowOf(l.price)
+        const isAsk = l.side ? l.side === 'ask' : l.price >= mid
+        const cell = byRow.get(row)
+        if (cell) cell.size += l.size
+        else byRow.set(row, { row, size: l.size, isAsk })
+      }
+      return Array.from(byRow.values())
+    })
+
     let maxSize = 0
-    for (const s of slices) for (const l of s.levels) maxSize = Math.max(maxSize, l.size)
+    for (const column of columns) for (const cell of column) maxSize = Math.max(maxSize, cell.size)
     maxSize = maxSize || 1
 
     // Near-black background.
     ctx.fillStyle = '#08090c'
     ctx.fillRect(0, 0, plotW, size.height)
 
-    const cellColor = (l: HeatmapLevel, mid: number, t: number): string => {
+    const cellColor = (isAsk: boolean, t: number): string => {
       if (colorScale === 'heat') {
         const [r, g, b] = heatColor(t)
         return `rgb(${r},${g},${b})`
       }
       if (colorScale === 'mono') return `rgba(74,222,128,${0.08 + 0.9 * t})`
-      const isAsk = l.side ? l.side === 'ask' : l.price >= mid
       const [r, g, b] = rampColor(isAsk ? ASK_RAMP : BID_RAMP, Math.pow(t, 0.72))
       return `rgb(${r},${g},${b})`
     }
 
-    slices.forEach((slice, si) => {
+    columns.forEach((column, si) => {
       const x = si * cw
-      const mid = sliceMid(slice)
-      for (const l of slice.levels) {
-        const t = Math.min(1, l.size / maxSize)
+      for (const cell of column) {
+        const t = Math.min(1, cell.size / maxSize)
         if (t <= 0) continue
-        ctx.fillStyle = cellColor(l, mid, t)
-        ctx.fillRect(Math.floor(x), Math.floor(yForPrice(l.price)), Math.ceil(cw) + 1, Math.ceil(rh) + 1)
+        ctx.fillStyle = cellColor(cell.isAsk, t)
+        ctx.fillRect(Math.floor(x), Math.floor(cell.row * rh), Math.ceil(cw), Math.max(1, Math.ceil(rh)))
       }
     })
 
@@ -228,16 +266,29 @@ export function Heatmap({
       }
     }
 
-    // Trade dots.
+    // Trade dots. Columns are laid out by slice index, so trades are placed by
+    // the slice they belong to rather than by a linear time scale — otherwise a
+    // stalled book (no column pushed) or an exchange timestamp that jumps puts
+    // a print in a column it did not happen in.
     if (showTrades && trades.length) {
-      const tMin = slices[0].time
-      const tMax = slices[slices.length - 1].time
-      const span = tMax - tMin || 1
+      const times = slices.map((s) => s.time)
+      const columnFor = (time: number) => {
+        let lo = 0
+        let hi = times.length - 1
+        while (lo < hi) {
+          const midIdx = (lo + hi) >> 1
+          if (times[midIdx] < time) lo = midIdx + 1
+          else hi = midIdx
+        }
+        // `lo` is the first slice at or after the trade; the print belongs to
+        // the interval that ends there.
+        return lo
+      }
       let maxTrade = 0
       for (const tr of trades) maxTrade = Math.max(maxTrade, tr.size)
       maxTrade = maxTrade || 1
       for (const tr of trades) {
-        const x = ((tr.time - tMin) / span) * plotW
+        const x = (columnFor(tr.time) + 0.5) * cw
         const y = yForPrice(tr.price) + rh / 2
         const radius = 2 + 9 * Math.sqrt(Math.min(1, tr.size / maxTrade))
         ctx.beginPath()
@@ -267,8 +318,11 @@ export function Heatmap({
     ctx.fillStyle = muted
     const labelEvery = Math.max(1, Math.ceil(16 / rh))
     for (let i = 0; i < rowCount; i += labelEvery) {
+      const y = i * rh + rh / 2
+      // A label centred on the very first row is half outside the canvas.
+      if (y < 6 || y > size.height - 4) continue
       const price = maxPrice - i * step
-      ctx.fillText(price.toFixed(priceDecimals), plotW + 6, i * rh + rh / 2)
+      ctx.fillText(price.toFixed(priceDecimals), plotW + 6, y)
     }
 
     ctx.strokeStyle = border

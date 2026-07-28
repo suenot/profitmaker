@@ -21,8 +21,17 @@ const SAMPLE_OPTIONS = [250, 500, 1000, 2000];
 const MAX_SLICES = 240;
 /** Levels kept per side in a slice — deeper is noise at heatmap resolution. */
 const DEPTH_PER_SIDE = 40;
+/**
+ * The shared tape keeps only the last ~1000 prints for the whole app, which on a
+ * busy instrument is a fraction of the drawn window — so the overlay keeps its
+ * own history, trimmed to what is actually on screen.
+ */
+const MAX_TRADES = 4000;
 
 type Entry = OrderBookEntry | [number, number];
+
+/** A print plus the key it is deduped on (ids are not always present). */
+type TapeEntry = HeatmapTrade & { key: string };
 
 function toLevel(entry: Entry): { price: number; amount: number } | null {
   if (Array.isArray(entry)) {
@@ -50,8 +59,13 @@ const HeatmapWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
   const [sampleMs, setSampleMs] = useState(500);
   const [colorScale, setColorScale] = useState<'side' | 'heat' | 'mono'>('side');
   const [showTrades, setShowTrades] = useState(true);
+  const [showDepth, setShowDepth] = useState(false);
   const [slices, setSlices] = useState<HeatmapSlice[]>([]);
+  const [tape, setTape] = useState<TapeEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  /** Keys already folded into `tape`, so a poll only takes what is new. */
+  const seenRef = useRef<Set<string>>(new Set());
 
   // The instrument the buffer belongs to. Switching symbol must throw the
   // history away — mixing two instruments' prices in one heatmap is nonsense.
@@ -61,6 +75,8 @@ const HeatmapWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
   useEffect(() => {
     bufferKeyRef.current = bufferKey;
     setSlices([]);
+    setTape([]);
+    seenRef.current = new Set();
   }, [bufferKey]);
 
   // Subscribe to both streams: depth for the slices, trades for the overlay.
@@ -93,6 +109,36 @@ const HeatmapWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
   // at wildly different rates per exchange, and a fixed cadence is what makes
   // the x axis mean "time" instead of "however many messages arrived".
   const sample = useCallback(() => {
+    const now = Date.now();
+
+    // Drain whatever is new in the shared tape into our own buffer first — it
+    // has to happen even when the book is missing, or prints are lost for good.
+    const fresh: TapeEntry[] = [];
+    for (const t of getTrades(exchange, symbol, market) as any[]) {
+      if (typeof t?.price !== 'number' || typeof t?.timestamp !== 'number') continue;
+      const key = String(t.id ?? `${t.timestamp}:${t.price}:${t.amount}:${t.side}`);
+      if (seenRef.current.has(key)) continue;
+      seenRef.current.add(key);
+      fresh.push({
+        key,
+        time: t.timestamp,
+        price: t.price,
+        size: t.amount ?? 0,
+        side: t.side === 'sell' ? 'sell' : 'buy',
+      });
+    }
+    if (fresh.length) {
+      setTape((prev) => {
+        const next = prev.concat(fresh).sort((a, b) => a.time - b.time);
+        if (next.length <= MAX_TRADES) return next;
+        const trimmed = next.slice(next.length - MAX_TRADES);
+        // The dedupe set must forget what the buffer forgot, otherwise it grows
+        // without bound and an id that comes round again is dropped.
+        seenRef.current = new Set(trimmed.map((e) => e.key));
+        return trimmed;
+      });
+    }
+
     const book = getOrderBook(exchange, symbol, market as any);
     if (!book?.bids || !book?.asks) return;
 
@@ -108,7 +154,10 @@ const HeatmapWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
 
     const mid = (bids[0].price + asks[0].price) / 2;
     const slice: HeatmapSlice = {
-      time: book.timestamp || Date.now(),
+      // Our own clock, not the exchange's: columns are laid out on this axis
+      // and trades are matched to a column by it. An exchange timestamp can be
+      // stale, absent, or non-monotonic, none of which the layout survives.
+      time: now,
       mid,
       levels: [
         ...bids.map((l) => ({ price: l.price, size: l.amount, side: 'bid' as const })),
@@ -121,7 +170,7 @@ const HeatmapWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
       next.push(slice);
       return next;
     });
-  }, [exchange, symbol, market, getOrderBook]);
+  }, [exchange, symbol, market, getOrderBook, getTrades]);
 
   useEffect(() => {
     const id = window.setInterval(sample, sampleMs);
@@ -132,15 +181,8 @@ const HeatmapWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
   const trades: HeatmapTrade[] = useMemo(() => {
     if (!showTrades || !slices.length) return [];
     const from = slices[0].time;
-    return getTrades(exchange, symbol, market)
-      .filter((t: any) => t.timestamp >= from && typeof t.price === 'number')
-      .map((t: any) => ({
-        time: t.timestamp,
-        price: t.price,
-        size: t.amount ?? 0,
-        side: t.side === 'sell' ? ('sell' as const) : ('buy' as const),
-      }));
-  }, [showTrades, slices, getTrades, exchange, symbol, market]);
+    return tape.filter((t) => t.time >= from);
+  }, [showTrades, slices, tape]);
 
   const priceDecimals = useMemo(() => {
     const last = slices[slices.length - 1];
@@ -151,7 +193,11 @@ const HeatmapWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
     return 6;
   }, [slices]);
 
-  const spanSeconds = Math.round((slices.length * sampleMs) / 1000);
+  // Measured, not assumed: a stalled book pushes no column, so slices × interval
+  // overstates the window whenever the feed hiccups.
+  const spanSeconds = slices.length > 1
+    ? Math.round((slices[slices.length - 1].time - slices[0].time) / 1000)
+    : 0;
 
   return (
     <div className="h-full flex flex-col">
@@ -189,6 +235,18 @@ const HeatmapWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
         >
           trades
         </button>
+
+        {/* Off by default: the histogram covers the newest columns, which is
+            exactly where the interesting part of a heatmap is. */}
+        <button
+          onClick={() => setShowDepth((v) => !v)}
+          title="Live depth histogram over the newest columns"
+          className={`px-1.5 py-0.5 rounded border border-terminal-border ${
+            showDepth ? 'bg-terminal-accent text-terminal-text' : 'text-terminal-muted hover:bg-terminal-accent/30'
+          }`}
+        >
+          depth
+        </button>
       </div>
 
       {error && <div className="mb-2 text-xs text-red-400 truncate" title={error}>{error}</div>}
@@ -205,6 +263,7 @@ const HeatmapWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
             trades={trades}
             colorScale={colorScale}
             showTrades={showTrades}
+            showDepth={showDepth}
             priceDecimals={priceDecimals}
           />
         )}
