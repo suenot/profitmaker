@@ -5,6 +5,7 @@ import TabNavigation from '@/components/TabNavigation';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useWidgetRegistry } from '@/modules/registry';
 import UnknownWidgetPlaceholder from '@/modules/UnknownWidgetPlaceholder';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import AlignmentGuides from '@/components/AlignmentGuides';
 import { GuideLineType } from '@/types/alignmentGuides';
 import CollapsedWidgetsZone from '@/components/CollapsedWidgetsZone';
@@ -143,16 +144,26 @@ const TradingTerminal: React.FC = () => {
               onRemove={onRemove}
             >
               {WidgetComponent ? (
-                <WidgetComponent
-                  widgetId={widget.id}
-                  groupId={widget.groupId}
-                  config={widget.config ?? {}}
-                  updateConfig={(patch) =>
-                    activeDashboard && updateWidget(activeDashboard.id, widget.id, {
-                      config: { ...(widget.config ?? {}), ...patch },
-                    })
-                  }
-                />
+                // Per-widget boundary: a throw inside one widget must not take
+                // the dashboard with it. The app-level boundary in App.tsx is
+                // the backstop for everything this lets through — until this
+                // existed, a single broken widget blanked the whole terminal.
+                <ErrorBoundary
+                  key={`${widget.id}-boundary`}
+                  fallbackTitle={`${widget.defaultTitle || widget.type} stopped working`}
+                  showDetails
+                >
+                  <WidgetComponent
+                    widgetId={widget.id}
+                    groupId={widget.groupId}
+                    config={widget.config ?? {}}
+                    updateConfig={(patch) =>
+                      activeDashboard && updateWidget(activeDashboard.id, widget.id, {
+                        config: { ...(widget.config ?? {}), ...patch },
+                      })
+                    }
+                  />
+                </ErrorBoundary>
               ) : (
                 <UnknownWidgetPlaceholder type={widget.type} onRemove={onRemove} />
               )}
