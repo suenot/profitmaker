@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from "sonner";
 
-export type WidgetType = 'chart' | 'portfolio' | 'orderForm' | 'transactions' | 'watchlist' | 'news' | 'calendar' | 'positions' | 'orderbook' | 'orderbookV2' | 'trades' | 'tradesV2' | 'dataProviderSettings' | 'dataProviderDemo' | 'dataProviderSetup' | 'dataProviderDebug' | 'userBalances' | 'userTradingData' | 'leverages' | 'heatmap' | 'footprint' | 'dom';
+export type WidgetType = 'chart' | 'portfolio' | 'orderForm' | 'transactions' | 'watchlist' | 'news' | 'calendar' | 'positions' | 'orderbook' | 'orderbookV2' | 'trades' | 'tradesV2' | 'dataProviderSettings' | 'dataProviderDemo' | 'dataProviderSetup' | 'dataProviderDebug' | 'userBalances' | 'userTradingData' | 'leverages' | 'heatmap' | 'footprint' | 'dom' | 'scalper';
 
 export interface WidgetGroup {
   id: string;
@@ -64,7 +64,8 @@ const defaultWidgetSizes: Record<WidgetType, { width: number; height: number }> 
   leverages: { width: 780, height: 620 },
   heatmap: { width: 760, height: 520 },
   footprint: { width: 820, height: 560 },
-  dom: { width: 560, height: 700 }
+  dom: { width: 560, height: 700 },
+  scalper: { width: 1200, height: 760 }
 };
 
 const widgetTitles: Record<WidgetType, string> = {
@@ -89,7 +90,8 @@ const widgetTitles: Record<WidgetType, string> = {
   leverages: 'Leverages',
   heatmap: 'Heatmap',
   footprint: 'Footprint',
-  dom: 'DOM Ladder'
+  dom: 'DOM Ladder',
+  scalper: 'Scalper'
 };
 
 // Group color palette - aligned with GroupSelector colors

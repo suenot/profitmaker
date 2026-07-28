@@ -14,6 +14,7 @@ import LeveragesWidget from '@/components/widgets/LeveragesWidget';
 import HeatmapWidget from '@/components/widgets/HeatmapWidget';
 import FootprintWidget from '@/components/widgets/FootprintWidget';
 import DomLadderWidget from '@/components/widgets/DomLadderWidget';
+import ScalperWidget from '@/components/widgets/ScalperWidget';
 import OrderFormWidget from '@/components/widgets/OrderForm';
 import TransactionHistoryWidget from '@/components/widgets/TransactionHistory';
 import { OrderBookWidgetV2 } from '@/components/widgets/OrderBookWidget';
@@ -191,6 +192,17 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     showGroupSelector: true,
     needsTransparentGroup: true,
     Component: adaptComponent(DomLadderWidget),
+  },
+  {
+    type: 'scalper',
+    title: 'Scalper',
+    description: 'Cluster, bubbles and DOM on one shared price axis, with click-trading',
+    icon: 'Columns3',
+    category: 'private',
+    defaultSize: { width: 1200, height: 760 },
+    showGroupSelector: true,
+    needsTransparentGroup: true,
+    Component: adaptComponent(ScalperWidget),
   },
   {
     type: 'leverages',

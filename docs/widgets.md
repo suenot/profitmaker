@@ -33,7 +33,11 @@ Built-in types:
 | `chart` | `Chart.tsx` | public | Live OHLCV candlestick chart (Night Vision) |
 | `orderbook` | `OrderBookWidget.tsx` | public | Live order book (bid/ask depth, spread) |
 | `trades` | `TradesWidget.tsx` | public | Live trade feed (filtering, aggregated mode) |
+| `footprint` | `FootprintWidget.tsx` | public | Cluster chart: bid/ask volume per price, imbalances, POC |
+| `heatmap` | `HeatmapWidget.tsx` | public | Order-book depth over time, with trades on top |
 | `userBalances` | `UserBalancesWidget.tsx` | private | Real balances across all accounts, table or pie view (Recharts), USD-valued |
+| `dom` | `DomLadderWidget.tsx` | private | Price ladder with click-to-trade and scalper hotkeys |
+| `scalper` | `ScalperWidget.tsx` | private | Cluster + bubbles + DOM on one shared price axis, with click-trading |
 | `userTradingData` | `UserTradingDataWidget.tsx` | private | Tabs: trades, positions, open orders (real, per account) |
 | `leverages` | `LeveragesWidget.tsx` | private | Leverage per pair on one account (swap/futures), with single and bulk set |
 | `deals` | `DealsWidget.tsx` | private | Deal tracking aggregated from real trade history |
@@ -95,6 +99,27 @@ go via the central-accounts `{ accountId }` flow.
   first and report per-symbol failures — an open position makes the exchange
   refuse the change. A donut summarizes how many pairs sit in each leverage
   bucket (1x, 2-5x, 6-10x, 11-20x, 21-50x, 50x+).
+
+- **Scalper** (`ScalperWidget.tsx`, helpers under `widgets/scalper/`) — the
+  scalper.marketmaker panel, ported from `scalper-iced` (Unlicense). Several
+  views of one instrument share a single price axis (`scalper/priceAxis.ts`), so
+  a price sits at the same height in all of them: cluster chart, bubbles and the
+  DOM ladder are on by default, the tick chart and tape are a click or Ctrl+2/5
+  away. Panes are reorderable by dragging their header chip and resizable by the
+  dividers between them (`scalper/panelLayout.ts`).
+
+  The Rust app read `{orderbook, clusters, ticks}` from a Go aggregator; here the
+  same three shapes are built in the browser from the terminal's own order-book
+  and trade streams (`scalper/scalperFeed.ts`) — tick candles group a fixed
+  number of prints rather than a fixed duration, and clusters are restated from
+  the footprint aggregator so the aggressor rule has one implementation.
+
+  On the axis: wheel pans, Shift+wheel zooms, Ctrl+wheel walks the grouping
+  ladder, `r` toggles follow (auto/locked/manual), Shift re-centres. Trading
+  mirrors the DOM ladder — clicking a ladder row places a limit order there,
+  `t`/`y` buy/sell at market, `d` flattens, Space cancels everything, Escape does
+  both. All of it needs an account on the widget's group; without one the panes
+  still render, the buttons do not.
 
 - **Deals** (`DealsWidget.tsx`) — deal tracking built from real trade history.
   "Sync from account" pulls `fetchMyTrades` for each account and aggregates trades
