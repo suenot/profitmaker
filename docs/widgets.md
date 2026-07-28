@@ -121,6 +121,18 @@ go via the central-accounts `{ accountId }` flow.
   both. All of it needs an account on the widget's group; without one the panes
   still render, the buttons do not.
 
+  The bottom bar (`scalper/panes/BottomPanes.tsx`) ports the Rust panel's three
+  sections — position, order entry, session P&L. In `scalper-iced` all three read
+  from stubs because it had no private feed; here they are backed by the account
+  being polled, and P&L is computed from its own fills since local midnight
+  (`scalper/scalperPnl.ts`: average-cost, sign-aware, flips realize only the
+  closing part, symbols kept apart).
+
+  Every pane, every bottom section, the header strip and both aggregation knobs
+  are switchable from the widget's settings drawer, which writes to the same
+  per-widget store (`store/scalperWidgetStore.ts`) the widget reads — so the
+  header chips and the settings switches are two views of one state.
+
 - **Deals** (`DealsWidget.tsx`) — deal tracking built from real trade history.
   "Sync from account" pulls `fetchMyTrades` for each account and aggregates trades
   into deals (grouped by symbol) in the persisted `dealsStore`; the per-deal "Add

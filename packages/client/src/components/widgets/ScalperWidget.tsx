@@ -23,21 +23,22 @@ import {
 } from './scalper/scalperFeed';
 import { midPrice } from './scalper/scalperModel';
 import {
-  defaultLayout,
   PANE_LABELS,
   PANE_ORDER_DEFAULT,
   reorderPanes,
   resizePanes,
   visiblePanes,
   type PaneId,
-  type PaneLayout,
 } from './scalper/panelLayout';
+import { startOfToday, summarizePnl, unrealizedOf, type PnlSummary } from './scalper/scalperPnl';
 import * as t from './scalper/scalperTheme';
 import OrderBookPane from './scalper/panes/OrderBookPane';
 import ClusterPane from './scalper/panes/ClusterPane';
 import BubblePane from './scalper/panes/BubblePane';
 import TickChartPane from './scalper/panes/TickChartPane';
 import TapePane from './scalper/panes/TapePane';
+import { OrderPane, PnlPane, PositionPane } from './scalper/panes/BottomPanes';
+import { useScalperWidgetsStore } from '../../store/scalperWidgetStore';
 
 /**
  * Scalper — the ported scalper.marketmaker panel: several views of the same
@@ -79,6 +80,7 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
     initializeTradesData,
     fetchOpenOrders,
     fetchPositions,
+    fetchMyTrades,
   } = useDataProviderStore();
   const { getGroupById, selectedGroupId: globalSelectedGroupId, getTransparentGroup } = useGroupStore();
   const showError = useNotificationStore(s => s.showError);
@@ -92,15 +94,18 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
   const accountId = group?.account || '';
   const canTrade = !!accountId;
 
-  const [layout, setLayout] = useState<PaneLayout>(defaultLayout);
+  // Everything the settings drawer can change lives in the store, so both edit
+  // the same state and a pane turned off stays off across re-mounts.
+  const settings = useScalperWidgetsStore(s => s.getWidget(widgetId));
+  const updateWidget = useScalperWidgetsStore(s => s.updateWidget);
+  const togglePaneInStore = useScalperWidgetsStore(s => s.togglePane);
+  const { layout, clusterTimeframe, ticksPerCandle, quantity, volumeFilter } = settings;
+
   const [axis, setAxis] = useState<PriceAxis>(() => createPriceAxis(0.01));
   const [tape, setTape] = useState<TapeEntry[]>([]);
-  const [clusterTimeframe, setClusterTimeframe] = useState(5_000);
-  const [ticksPerCandle, setTicksPerCandle] = useState(25);
-  const [volumeFilter, setVolumeFilter] = useState(0);
-  const [quantity, setQuantity] = useState('0.001');
   const [openOrders, setOpenOrders] = useState<any[]>([]);
   const [position, setPosition] = useState<any | null>(null);
+  const [pnl, setPnl] = useState<PnlSummary>({ realized: 0, fees: 0, trades: 0, closedTrades: 0, winRate: 0 });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -221,6 +226,7 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
     if (!accountId) {
       setOpenOrders([]);
       setPosition(null);
+      setPnl({ realized: 0, fees: 0, trades: 0, closedTrades: 0, winRate: 0 });
       return;
     }
     try {
@@ -240,7 +246,16 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
         setPosition(null);
       }
     }
-  }, [accountId, symbol, market, fetchOpenOrders, fetchPositions]);
+    // Session P&L from this account's own fills since local midnight. The
+    // exchange is asked for the window, not the whole history.
+    try {
+      const since = startOfToday();
+      const fills = await fetchMyTrades(accountId, symbol, since, 500);
+      setPnl(summarizePnl((fills as any[]) ?? [], since));
+    } catch {
+      // Leave the last good summary rather than blanking the panel on a hiccup.
+    }
+  }, [accountId, symbol, market, fetchOpenOrders, fetchPositions, fetchMyTrades]);
 
   useEffect(() => {
     void refreshPrivate();
@@ -336,9 +351,7 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
     else setAxis(prev => withScroll(prev, delta));
   }, []);
 
-  const togglePane = useCallback((id: PaneId) => {
-    setLayout(prev => ({ ...prev, visible: { ...prev.visible, [id]: !prev.visible[id] } }));
-  }, []);
+  const togglePane = useCallback((id: PaneId) => togglePaneInStore(widgetId, id), [togglePaneInStore, widgetId]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -394,7 +407,7 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
   const onDragOver = (id: PaneId) => {
     const dragged = draggingRef.current;
     if (!dragged || dragged === id) return;
-    setLayout(prev => ({ ...prev, order: reorderPanes(prev.order, dragged, id) }));
+    updateWidget(widgetId, { layout: { ...layout, order: reorderPanes(layout.order, dragged, id) } });
   };
   const onDragEnd = () => {
     draggingRef.current = null;
@@ -422,7 +435,13 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
       if (Math.abs(delta) < 0.5) return;
       const step = Math.round(delta);
       state.startX += step * state.pxPerPortion;
-      setLayout(prev => ({ ...prev, widths: resizePanes(prev.widths, state.left, state.right, step) }));
+      // The listener is bound once, so the current layout is read from the store
+      // rather than captured — a stale closure here would undo every drag.
+      const store = useScalperWidgetsStore.getState();
+      const current = store.getWidget(widgetId).layout;
+      store.updateWidget(widgetId, {
+        layout: { ...current, widths: resizePanes(current.widths, state.left, state.right, step) },
+      });
     };
     const up = () => {
       resizeRef.current = null;
@@ -434,11 +453,13 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
       window.removeEventListener('mousemove', move);
       window.removeEventListener('mouseup', up);
     };
-  }, []);
+  }, [widgetId]);
 
   // --- render --------------------------------------------------------------
 
   const panes = visiblePanes(layout);
+  const bottomSections = (['position', 'order', 'pnl'] as const).filter(id => settings.bottomVisible[id]);
+  const unrealized = unrealizedOf(position);
   const modeColor =
     axis.followMode === 'auto' ? t.BID_GREEN : axis.followMode === 'locked' ? t.SPREAD_YELLOW : t.ASK_RED;
 
@@ -461,7 +482,7 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
       case 'tick':
         return <TickChartPane candles={ticks} axis={axis} onWheel={handleWheel} />;
       case 'tape':
-        return <TapePane candles={ticks} volumeFilter={volumeFilter} onVolumeFilterChange={setVolumeFilter} />;
+        return <TapePane candles={ticks} volumeFilter={volumeFilter} onVolumeFilterChange={value => updateWidget(widgetId, { volumeFilter: value })} />;
     }
   };
 
@@ -473,10 +494,11 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
       className="h-full flex flex-col outline-none text-xs"
       style={{ background: t.BACKGROUND, color: t.TEXT_PRIMARY }}
     >
-      {/* Header: instrument, axis state, pane toggles, order size */}
+      {/* Header: instrument, axis state, pane toggles, order size. Can be hidden
+          from the settings drawer for a chart-only layout. */}
       <div
         className="flex items-center gap-2 px-2 py-1 flex-wrap shrink-0"
-        style={{ background: t.HEADER_BG }}
+        style={{ background: t.HEADER_BG, display: settings.showHeader ? undefined : 'none' }}
       >
         <span style={{ color: t.TEXT_BRIGHT }}>{symbol}</span>
         <span style={{ color: t.TEXT_DIM }}>{exchange} · {market}</span>
@@ -523,7 +545,7 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
 
         <select
           value={clusterTimeframe}
-          onChange={e => setClusterTimeframe(Number(e.target.value))}
+          onChange={e => updateWidget(widgetId, { clusterTimeframe: Number(e.target.value) })}
           title="Cluster candle duration"
           className="bg-black/30 rounded px-1 py-0.5 border border-white/10"
           style={{ color: t.TEXT_PRIMARY }}
@@ -534,7 +556,7 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
         </select>
         <select
           value={ticksPerCandle}
-          onChange={e => setTicksPerCandle(Number(e.target.value))}
+          onChange={e => updateWidget(widgetId, { ticksPerCandle: Number(e.target.value) })}
           title="Prints per tick candle"
           className="bg-black/30 rounded px-1 py-0.5 border border-white/10"
           style={{ color: t.TEXT_PRIMARY }}
@@ -546,7 +568,7 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
 
         <input
           value={quantity}
-          onChange={e => setQuantity(e.target.value)}
+          onChange={e => updateWidget(widgetId, { quantity: e.target.value })}
           title="Order size"
           inputMode="decimal"
           className="w-16 bg-black/30 rounded px-1 py-0.5 border border-white/10"
@@ -612,10 +634,38 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
         ))}
         {!panes.length && (
           <div className="flex-1 flex items-center justify-center" style={{ color: t.TEXT_DIM }}>
-            Every pane is hidden — turn one back on in the header
+            Every pane is hidden — turn one back on in the header or the settings
           </div>
         )}
       </div>
+
+      {/* Bottom bar: position, order entry, session P&L. Each section is
+          independently switchable from the settings drawer. */}
+      {settings.showBottomBar && bottomSections.length > 0 && (
+        <div className="shrink-0 flex gap-0.5 mt-0.5">
+          {bottomSections.includes('position') && (
+            <PositionPane
+              position={position}
+              unrealized={unrealized}
+              openOrderCount={openOrders.length}
+              busy={busy}
+              onClose={() => void closePosition()}
+              onCancelAll={() => void cancelAll()}
+            />
+          )}
+          {bottomSections.includes('order') && (
+            <OrderPane
+              quantity={quantity}
+              onQuantityChange={value => updateWidget(widgetId, { quantity: value })}
+              busy={busy}
+              canTrade={canTrade}
+              onBuy={() => void place('buy', 'market')}
+              onSell={() => void place('sell', 'market')}
+            />
+          )}
+          {bottomSections.includes('pnl') && <PnlPane summary={pnl} unrealized={unrealized} />}
+        </div>
+      )}
     </div>
   );
 };

@@ -15,6 +15,7 @@ import HeatmapWidget from '@/components/widgets/HeatmapWidget';
 import FootprintWidget from '@/components/widgets/FootprintWidget';
 import DomLadderWidget from '@/components/widgets/DomLadderWidget';
 import ScalperWidget from '@/components/widgets/ScalperWidget';
+import ScalperSettingsWrapper from '@/components/widgets/ScalperSettingsWrapper';
 import OrderFormWidget from '@/components/widgets/OrderForm';
 import TransactionHistoryWidget from '@/components/widgets/TransactionHistory';
 import { OrderBookWidgetV2 } from '@/components/widgets/OrderBookWidget';
@@ -203,6 +204,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     showGroupSelector: true,
     needsTransparentGroup: true,
     Component: adaptComponent(ScalperWidget),
+    Settings: adaptSettings(ScalperSettingsWrapper),
   },
   {
     type: 'leverages',
