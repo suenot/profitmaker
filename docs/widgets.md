@@ -79,9 +79,14 @@ go via the central-accounts `{ accountId }` flow.
   derivative pairs. Two sources kept apart: `leverageMarkets(accountId, marketType)`
   gives every pair plus the cap the exchange publishes (from market metadata, so
   it is immediate and complete), while `fetchLeverages(accountId, symbols?)` gives
-  what the account actually has set — some exchanges answer for everything at
-  once, others only per symbol, so the rest is filled in by "Load all" in chunks
-  of 50 with progress. Writing goes through `setLeverages(accountId, symbols,
+  what the account actually has set. Only some exchanges answer for everything at
+  once: bybit has no batch call, and the no-symbol fallback (open positions) says
+  nothing about the pairs an account is flat on. So the table is virtualized and
+  reads leverage for the rows on screen as you scroll or filter (debounced, one
+  request per visible batch, each symbol asked at most once per reload); "Load
+  all" walks whatever is left in chunks of 50 with progress. Per-symbol reads run
+  5-at-a-time server side, which is what keeps a 50-pair chunk from being 50
+  round-trips end to end. Writing goes through `setLeverages(accountId, symbols,
   target)` in chunks of 20: per-row set, "set all shown to X", and "set all to
   max" (each pair's own published maximum). Bulk runs are confirmed in a dialog
   first and report per-symbol failures — an open position makes the exchange

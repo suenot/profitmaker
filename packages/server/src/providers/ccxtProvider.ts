@@ -35,6 +35,33 @@ function maxLeverageOf(market: any): number | undefined {
   return undefined;
 }
 
+/**
+ * Exchanges without a batch leverage call (bybit is the common one: it has
+ * `fetchLeverage` but no `fetchLeverages`) need one request per symbol. Running
+ * those strictly one after another makes a 50-pair chunk a 50×RTT wait, so they
+ * go out with a small window open. The cap stays low on purpose — reading a
+ * position is one of the tighter per-endpoint rate limits on every exchange.
+ */
+const LEVERAGE_READ_CONCURRENCY = 5;
+
+/** Run `fn` over `items` with at most `limit` in flight, preserving input order. */
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R | undefined>,
+): Promise<R[]> {
+  const slots: (R | undefined)[] = new Array(items.length);
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < items.length) {
+      const index = cursor++;
+      slots[index] = await fn(items[index]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return slots.filter((row): row is R => row !== undefined);
+}
+
 /** Normalize a ccxt Leverage into our flat setting row. */
 function toSetting(lev: any, source: LeverageSetting['source']): LeverageSetting {
   const long = Number(lev?.longLeverage);
@@ -134,14 +161,17 @@ function makeCcxtInstance(config: ProviderRequestConfig): ServerProviderInstance
       // 2) Per-symbol, only for what was explicitly asked for (this is the path
       //    the widget's lazy loading drives, in modest chunks).
       if (ex.has?.fetchLeverage && symbols?.length) {
-        const rows: LeverageSetting[] = [];
-        for (const symbol of symbols) {
+        const rows = await mapWithConcurrency(symbols, LEVERAGE_READ_CONCURRENCY, async (symbol) => {
           try {
-            rows.push(toSetting(await ex.fetchLeverage(symbol), 'fetchLeverage'));
-          } catch {
-            // A symbol the account can't query is simply absent from the result.
+            return toSetting(await ex.fetchLeverage(symbol), 'fetchLeverage');
+          } catch (err) {
+            // A symbol the account can't query is simply absent from the result,
+            // but log it: a rate-limited batch fails this way too, and a silent
+            // gap is indistinguishable from "this pair has no leverage".
+            console.warn(`[leverage] ${ex.id} fetchLeverage(${symbol}) failed:`, err instanceof Error ? err.message : err);
+            return undefined;
           }
-        }
+        });
         if (rows.length) return rows;
       }
 
@@ -158,7 +188,8 @@ function makeCcxtInstance(config: ProviderRequestConfig): ServerProviderInstance
               marginMode: p.marginMode,
               source: 'position' as const,
             }));
-        } catch {
+        } catch (err) {
+          console.warn(`[leverage] ${ex.id} fetchPositions fallback failed:`, err instanceof Error ? err.message : err);
           return [];
         }
       }

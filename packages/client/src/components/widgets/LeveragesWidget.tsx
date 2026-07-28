@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, RefreshCw, User, Search, AlertTriangle, Check, X } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { useUserStore } from '../../store/userStore';
+import { chunk, pickMissing } from './leverageLoad';
 import type { LeverageMarket, LeverageMarketType, LeverageSetting, SetLeverageResult } from '@profitmaker/types';
 import {
   AlertDialog,
@@ -23,8 +25,13 @@ import {
  * (cheap, comes with market metadata, covers everything) and the account's own
  * current setting (private; some exchanges hand over the whole set in one call,
  * others only answer per symbol). So the table shows caps immediately and fills
- * in current values as they arrive — batch first, then "Load all" walks the rest
- * in chunks.
+ * in current values as they arrive: one batch call first, then the rows actually
+ * on screen are read automatically as you scroll or filter, and "Load all" walks
+ * whatever is left.
+ *
+ * The per-viewport read is what makes this usable on bybit, where there is no
+ * batch call at all and the only no-symbol source (open positions) says nothing
+ * about the hundreds of pairs the account is flat on.
  */
 
 // Buckets for the distribution donut. Ranges are inclusive on both ends.
@@ -42,16 +49,16 @@ const BUCKETS: { label: string; min: number; max: number; color: string }[] = [
 const READ_CHUNK = 50;
 const WRITE_CHUNK = 20;
 
+// Row geometry for the virtualizer, and how long scrolling has to settle before
+// the visible rows are read (flicking through 700 pairs must not fire a request
+// per frame).
+const ROW_HEIGHT = 34;
+const AUTO_READ_DEBOUNCE_MS = 250;
+
 type Row = LeverageMarket & { current?: LeverageSetting };
 
 function bucketOf(leverage: number) {
   return BUCKETS.find(b => leverage >= b.min && leverage <= b.max) ?? BUCKETS[BUCKETS.length - 1];
-}
-
-function chunk<T>(items: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
-  return out;
 }
 
 const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = () => {
@@ -77,6 +84,13 @@ const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
   const [bulkValue, setBulkValue] = useState('10');
   const [rowValues, setRowValues] = useState<Record<string, string>>({});
 
+  // Every symbol a read was already issued for, answered or not. Kept out of
+  // state on purpose: it must not re-render, and it must not make a pair the
+  // exchange stays silent about get re-requested on every scroll tick.
+  const attemptedRef = useRef<Set<string>>(new Set());
+  const [autoReading, setAutoReading] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+
   const account = accounts.find(a => a.id === accountId);
 
   useEffect(() => {
@@ -88,6 +102,7 @@ const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
     setLoading(true);
     setError(null);
     setResults([]);
+    attemptedRef.current = new Set();
     try {
       const list = await leverageMarkets(accountId, marketType);
       setMarkets(list);
@@ -121,6 +136,55 @@ const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
     return q ? rows.filter(r => r.symbol.toUpperCase().includes(q)) : rows;
   }, [rows, search]);
 
+  const virtualizer = useVirtualizer({
+    count: filtered.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 8,
+  });
+  const virtualRows = virtualizer.getVirtualItems();
+
+  // Rows on screen (plus overscan). The join is the effect's trigger: it only
+  // changes when the window itself moves, not on every render.
+  const visibleSymbols = virtualRows.map(v => filtered[v.index]?.symbol).filter(Boolean) as string[];
+  const visibleKey = visibleSymbols.join(',');
+
+  /**
+   * Read leverage for whatever is on screen. This is the widget's main data
+   * path: exchanges without a batch call answer per symbol, and asking for the
+   * ~30 rows a user is looking at costs a fraction of a full sweep.
+   */
+  useEffect(() => {
+    if (!accountId || loading || progress) return;
+    const wanted = pickMissing(visibleSymbols, current, attemptedRef.current, READ_CHUNK);
+    if (!wanted.length) return;
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      wanted.forEach(s => attemptedRef.current.add(s));
+      setAutoReading(true);
+      try {
+        const batch = await fetchLeverages(accountId, wanted);
+        if (cancelled) return;
+        setCurrent(prev => {
+          const next = new Map(prev);
+          batch.forEach(l => l.symbol && next.set(l.symbol, l));
+          return next;
+        });
+      } catch (e) {
+        // Keep the symbols marked as attempted — a failing read that retried on
+        // every scroll tick would hammer the exchange. Reload clears the set.
+        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        if (!cancelled) setAutoReading(false);
+      }
+    }, AUTO_READ_DEBOUNCE_MS);
+
+    return () => { cancelled = true; clearTimeout(timer); };
+    // visibleKey stands in for visibleSymbols (recreated every render).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleKey, accountId, current, loading, progress, fetchLeverages]);
+
   const known = filtered.filter(r => r.current?.leverage);
   const pieData = useMemo(() => {
     const counts = new Map<string, number>();
@@ -146,6 +210,7 @@ const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
       let done = 0;
       for (const part of chunks) {
         if (cancelRef.current) break;
+        part.forEach(s => attemptedRef.current.add(s));
         const batch = await fetchLeverages(accountId, part);
         setCurrent(prev => {
           const next = new Map(prev);
@@ -275,7 +340,8 @@ const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
 
       {/* Bulk actions */}
       <div className="flex items-center gap-2 mb-2 flex-wrap text-xs">
-        <span className="text-terminal-muted">
+        <span className="text-terminal-muted flex items-center gap-1">
+          {autoReading && <Loader2 className="h-3 w-3 animate-spin" />}
           {filtered.length} pair{filtered.length === 1 ? '' : 's'} · {known.length} with a known leverage
         </span>
         {missingCount > 0 && (
@@ -375,9 +441,10 @@ const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
         </div>
       )}
 
-      {/* Pair table */}
-      <div className="flex-grow overflow-auto">
-        <div className="flex items-center py-2 px-2 text-xs font-medium text-terminal-muted border-b border-terminal-border bg-terminal-background/50 sticky top-0">
+      {/* Pair table — virtualized, both to keep 700+ rows cheap and because the
+          rendered window is what drives the leverage reads. */}
+      <div ref={listRef} className="flex-grow overflow-auto">
+        <div className="flex items-center py-2 px-2 text-xs font-medium text-terminal-muted border-b border-terminal-border bg-terminal-background/50 sticky top-0 z-10">
           <div className="flex-1">Pair</div>
           <div className="w-20 text-right">Leverage</div>
           <div className="w-16 text-right">Max</div>
@@ -394,43 +461,52 @@ const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
             {account ? `No ${marketType} pairs on ${account.exchange}` : 'No pairs'}
           </div>
         ) : (
-          filtered.map(row => {
-            const lev = row.current?.leverage;
-            const atMax = !!(lev && row.maxLeverage && lev >= Math.floor(row.maxLeverage));
-            return (
-              <div key={row.symbol} className="flex items-center py-1.5 px-2 border-b border-terminal-border/20 hover:bg-terminal-accent/10">
-                <div className="flex-1 truncate text-terminal-text">{row.symbol}</div>
-                <div className={`w-20 text-right ${lev ? (atMax ? 'text-amber-400' : 'text-terminal-text') : 'text-terminal-muted'}`}>
-                  {lev ? `${lev}x` : '—'}
+          <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+            {virtualRows.map(virtualRow => {
+              const row = filtered[virtualRow.index];
+              if (!row) return null;
+              const lev = row.current?.leverage;
+              const atMax = !!(lev && row.maxLeverage && lev >= Math.floor(row.maxLeverage));
+              const pending = !row.current && attemptedRef.current.has(row.symbol);
+              return (
+                <div
+                  key={row.symbol}
+                  className="flex items-center px-2 border-b border-terminal-border/20 hover:bg-terminal-accent/10 absolute top-0 left-0 w-full"
+                  style={{ height: virtualRow.size, transform: `translateY(${virtualRow.start}px)` }}
+                >
+                  <div className="flex-1 truncate text-terminal-text">{row.symbol}</div>
+                  <div className={`w-20 text-right ${lev ? (atMax ? 'text-amber-400' : 'text-terminal-text') : 'text-terminal-muted'}`}>
+                    {lev ? `${lev}x` : pending ? '·' : '—'}
+                  </div>
+                  <div className="w-16 text-right text-terminal-muted">
+                    {row.maxLeverage ? `${Math.floor(row.maxLeverage)}x` : '—'}
+                  </div>
+                  <div className="w-20 text-right text-terminal-muted truncate">{row.current?.marginMode || '—'}</div>
+                  <div className="w-28 flex items-center justify-end gap-1">
+                    <input
+                      value={rowValues[row.symbol] ?? ''}
+                      onChange={e => setRowValues(v => ({ ...v, [row.symbol]: e.target.value }))}
+                      placeholder={row.maxLeverage ? String(Math.floor(row.maxLeverage)) : '10'}
+                      inputMode="numeric"
+                      disabled={busy}
+                      className="w-12 bg-terminal-accent/30 rounded px-1 py-0.5 text-xs text-terminal-text outline-none border border-terminal-border disabled:opacity-50"
+                    />
+                    <button
+                      onClick={() => {
+                        const value = Number(rowValues[row.symbol] ?? row.maxLeverage ?? 0);
+                        if (!(value >= 1)) return;
+                        runSet([row.symbol], value);
+                      }}
+                      disabled={busy}
+                      className="px-1.5 py-0.5 rounded bg-terminal-accent/40 text-xs text-terminal-text hover:bg-terminal-accent/60 disabled:opacity-50"
+                    >
+                      Set
+                    </button>
+                  </div>
                 </div>
-                <div className="w-16 text-right text-terminal-muted">
-                  {row.maxLeverage ? `${Math.floor(row.maxLeverage)}x` : '—'}
-                </div>
-                <div className="w-20 text-right text-terminal-muted truncate">{row.current?.marginMode || '—'}</div>
-                <div className="w-28 flex items-center justify-end gap-1">
-                  <input
-                    value={rowValues[row.symbol] ?? ''}
-                    onChange={e => setRowValues(v => ({ ...v, [row.symbol]: e.target.value }))}
-                    placeholder={row.maxLeverage ? String(Math.floor(row.maxLeverage)) : '10'}
-                    inputMode="numeric"
-                    disabled={busy}
-                    className="w-12 bg-terminal-accent/30 rounded px-1 py-0.5 text-xs text-terminal-text outline-none border border-terminal-border disabled:opacity-50"
-                  />
-                  <button
-                    onClick={() => {
-                      const value = Number(rowValues[row.symbol] ?? row.maxLeverage ?? 0);
-                      if (!(value >= 1)) return;
-                      runSet([row.symbol], value);
-                    }}
-                    disabled={busy}
-                    className="px-1.5 py-0.5 rounded bg-terminal-accent/40 text-xs text-terminal-text hover:bg-terminal-accent/60 disabled:opacity-50"
-                  >
-                    Set
-                  </button>
-                </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </div>
 
