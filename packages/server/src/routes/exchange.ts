@@ -432,7 +432,7 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
   })
 
   .post('/fetchLeverages', async ({ body, request, set }) => {
-    const { symbols, providerId } = body;
+    const { symbols, providerId, refresh } = body;
     const resolved = await resolveAuthedConfig(request, body, 'read', set);
     if ('error' in resolved) return resolved;
     const { config } = resolved;
@@ -442,12 +442,13 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
       return { error: `at most ${MAX_LEVERAGE_READ_BATCH} symbols per request` };
     }
     const { instance, providerId: served } = await resolve(config, providerId);
-    const leverages = instance.trading ? await instance.trading.fetchLeverages(symbols) : [];
+    const leverages = instance.trading ? await instance.trading.fetchLeverages(symbols, { refresh }) : [];
     return { success: true, provider: served, data: leverages };
   }, {
     body: t.Object({
       config: t.Optional(configSchema),
       symbols: t.Optional(t.Array(t.String())),
+      refresh: t.Optional(t.Boolean()),
       ...providerIdField,
       ...accountIdField,
     }),

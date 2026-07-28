@@ -99,8 +99,16 @@ describe('/fetchLeverages', () => {
     });
     expect(status).toBe(200);
     expect(json.data[0]).toMatchObject({ symbol: 'BTC/USDT:USDT', leverage: 10 });
-    expect(fetchLeveragesMock).toHaveBeenCalledWith(['BTC/USDT:USDT']);
+    expect(fetchLeveragesMock).toHaveBeenCalledWith(['BTC/USDT:USDT'], { refresh: undefined });
     expect(fetchCredsMock).toHaveBeenCalledWith({ ssoUserId: 'sso-user-1', credentialId: 'cred-1', want: 'read' });
+  });
+
+  it('passes refresh through so a reload bypasses the provider cache', async () => {
+    const { status } = await post('/api/exchange/fetchLeverages', {
+      accountId: 'cred-1', exchange: 'bybit', symbols: ['BTC/USDT:USDT'], refresh: true,
+    });
+    expect(status).toBe(200);
+    expect(fetchLeveragesMock).toHaveBeenCalledWith(['BTC/USDT:USDT'], { refresh: true });
   });
 
   it('refuses a batch over the read cap', async () => {

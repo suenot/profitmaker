@@ -81,6 +81,62 @@ describe('fetchLeverages', () => {
     expect(rows.map((r: any) => r.symbol)).toEqual(['A/USDT:USDT', 'B/USDT:USDT']);
   });
 
+  it('serves a repeat read from cache and only asks for the pairs it lacks', async () => {
+    const asked: string[] = [];
+    ccxtInstance.current = {
+      id: 'bybit',
+      has: { fetchLeverage: true },
+      fetchLeverage: async (symbol: string) => {
+        asked.push(symbol);
+        return { symbol, longLeverage: 10, shortLeverage: 10 };
+      },
+    };
+    // The cache hangs off the ccxt instance, so both providers share it exactly
+    // as two requests for the same account do.
+    const first = await makeProvider();
+    await first.fetchLeverages(['A', 'B']);
+    const second = await makeProvider();
+    const rows = await second.fetchLeverages(['A', 'B', 'C']);
+
+    expect(asked).toEqual(['A', 'B', 'C']);
+    expect(rows.map((r: any) => r.symbol)).toEqual(['A', 'B', 'C']);
+  });
+
+  it('re-reads everything when refresh is set', async () => {
+    const asked: string[] = [];
+    ccxtInstance.current = {
+      id: 'bybit',
+      has: { fetchLeverage: true },
+      fetchLeverage: async (symbol: string) => {
+        asked.push(symbol);
+        return { symbol, longLeverage: 10, shortLeverage: 10 };
+      },
+    };
+    const provider = await makeProvider();
+    await provider.fetchLeverages(['A']);
+    await provider.fetchLeverages(['A'], { refresh: true });
+    expect(asked).toEqual(['A', 'A']);
+  });
+
+  it('drops a pair from the cache when its leverage is written', async () => {
+    const asked: string[] = [];
+    ccxtInstance.current = {
+      id: 'bybit',
+      has: { fetchLeverage: true, setLeverage: true },
+      fetchLeverage: async (symbol: string) => {
+        asked.push(symbol);
+        return { symbol, longLeverage: 10, shortLeverage: 10 };
+      },
+      setLeverage: async () => ({}),
+    };
+    const provider = await makeProvider();
+    await provider.fetchLeverages(['A', 'B']);
+    await provider.setLeverage(20, 'A');
+    await provider.fetchLeverages(['A', 'B']);
+    // 'A' was written, so it is read again; 'B' still comes from the cache.
+    expect(asked).toEqual(['A', 'B', 'A']);
+  });
+
   it('falls back to open positions when asked without symbols', async () => {
     ccxtInstance.current = {
       id: 'bybit',

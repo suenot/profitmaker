@@ -88,6 +88,7 @@ const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
   // state on purpose: it must not re-render, and it must not make a pair the
   // exchange stays silent about get re-requested on every scroll tick.
   const attemptedRef = useRef<Set<string>>(new Set());
+  const refreshNextRef = useRef(false);
   const [autoReading, setAutoReading] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -97,19 +98,22 @@ const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
     if (!accountId && accounts.length) setAccountId(accounts[0].id);
   }, [accounts, accountId]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (refresh = false) => {
     if (!accountId) return;
     setLoading(true);
     setError(null);
     setResults([]);
     attemptedRef.current = new Set();
+    // A manual reload must not be answered from the server's leverage cache;
+    // the first per-viewport read after it carries the flag through.
+    refreshNextRef.current = refresh;
     try {
       const list = await leverageMarkets(accountId, marketType);
       setMarkets(list);
       // Whatever the exchange gives up in one call — often only pairs with a
-      // position or an explicitly changed leverage. The rest stays blank until
-      // "Load all".
-      const batch = await fetchLeverages(accountId);
+      // position or an explicitly changed leverage. The rest is read per
+      // viewport as the table scrolls, or in bulk via "Load all".
+      const batch = await fetchLeverages(accountId, undefined, refresh);
       setCurrent(new Map(batch.filter(l => l.symbol).map(l => [l.symbol, l])));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -162,9 +166,11 @@ const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
     let cancelled = false;
     const timer = setTimeout(async () => {
       wanted.forEach(s => attemptedRef.current.add(s));
+      const refresh = refreshNextRef.current;
+      refreshNextRef.current = false;
       setAutoReading(true);
       try {
-        const batch = await fetchLeverages(accountId, wanted);
+        const batch = await fetchLeverages(accountId, wanted, refresh);
         if (cancelled) return;
         setCurrent(prev => {
           const next = new Map(prev);
@@ -329,9 +335,9 @@ const LeveragesWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
         </div>
 
         <button
-          onClick={load}
+          onClick={() => load(true)}
           disabled={loading || busy}
-          title="Reload"
+          title="Reload from the exchange"
           className="p-1.5 rounded hover:bg-terminal-accent/50 disabled:opacity-50"
         >
           <RefreshCw size={14} className={`text-terminal-muted ${loading ? 'animate-spin' : ''}`} />

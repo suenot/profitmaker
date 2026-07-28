@@ -932,10 +932,17 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
           marketType,
         });
       },
-      async fetchLeverages(auth: TradeAuth, exchange: string, symbols?: string[], _marketType?: LeverageMarketType) {
+      async fetchLeverages(
+        auth: TradeAuth,
+        exchange: string,
+        symbols?: string[],
+        _marketType?: LeverageMarketType,
+        refresh?: boolean,
+      ) {
         return self.makeRequest('/api/exchange/fetchLeverages', {
           ...self.authBody(auth, exchange, 'futures'),
           symbols,
+          refresh,
         });
       },
       async setLeverages(

@@ -44,6 +44,39 @@ function maxLeverageOf(market: any): number | undefined {
  */
 const LEVERAGE_READ_CONCURRENCY = 5;
 
+/**
+ * Read-through cache for leverage settings.
+ *
+ * Keyed on the ccxt instance, which the instance cache already scopes to one
+ * account on one exchange, so entries cannot leak between accounts and die with
+ * the instance they belong to. Without this, reopening the widget re-reads every
+ * pair the account has — 700+ private calls for data that changes only when
+ * somebody sets a leverage, which is exactly what invalidates it below.
+ */
+const LEVERAGE_CACHE_TTL_MS = 5 * 60_000;
+const leverageCache = new WeakMap<object, Map<string, { row: LeverageSetting; at: number }>>();
+
+function cacheFor(ex: object): Map<string, { row: LeverageSetting; at: number }> {
+  let cache = leverageCache.get(ex);
+  if (!cache) {
+    cache = new Map();
+    leverageCache.set(ex, cache);
+  }
+  return cache;
+}
+
+function cachedLeverage(ex: object, symbol: string, now: number): LeverageSetting | undefined {
+  const hit = cacheFor(ex).get(symbol);
+  return hit && now - hit.at < LEVERAGE_CACHE_TTL_MS ? hit.row : undefined;
+}
+
+function rememberLeverages(ex: object, rows: LeverageSetting[], now: number): void {
+  const cache = cacheFor(ex);
+  for (const row of rows) {
+    if (row.symbol) cache.set(row.symbol, { row, at: now });
+  }
+}
+
 /** Run `fn` over `items` with at most `limit` in flight, preserving input order. */
 async function mapWithConcurrency<T, R>(
   items: T[],
@@ -144,15 +177,40 @@ function makeCcxtInstance(config: ProviderRequestConfig): ServerProviderInstance
       return out.sort((a, b) => a.symbol.localeCompare(b.symbol));
     },
 
-    async fetchLeverages(symbols) {
+    async fetchLeverages(symbols, options) {
       const ex = await instanceP;
+      const now = Date.now();
+
+      // 0) Serve what is still fresh, and only ask the exchange for the rest.
+      //    A reload from the widget passes refresh and skips this entirely.
+      let pending = symbols;
+      if (symbols?.length && !options?.refresh) {
+        const cached: LeverageSetting[] = [];
+        const missing: string[] = [];
+        for (const symbol of symbols) {
+          const hit = cachedLeverage(ex, symbol, now);
+          if (hit) cached.push(hit);
+          else missing.push(symbol);
+        }
+        if (!missing.length) return cached;
+        if (cached.length) {
+          const fetched = await this.fetchLeverages(missing, options);
+          // Cached rows first would reorder the result; keep the caller's order.
+          const bySymbol = new Map([...cached, ...fetched].map(row => [row.symbol, row]));
+          return symbols.map(s => bySymbol.get(s)).filter((row): row is LeverageSetting => !!row);
+        }
+        pending = missing;
+      }
 
       // 1) Unified batch — one call for every symbol the exchange reports.
       if (ex.has?.fetchLeverages) {
         try {
-          const all = await ex.fetchLeverages(symbols);
+          const all = await ex.fetchLeverages(pending);
           const rows = Object.values(all || {}).map((lev: any) => toSetting(lev, 'fetchLeverages'));
-          if (rows.length) return rows;
+          if (rows.length) {
+            rememberLeverages(ex, rows, now);
+            return rows;
+          }
         } catch {
           // Fall through — some exchanges advertise it but reject the call shape.
         }
@@ -160,8 +218,8 @@ function makeCcxtInstance(config: ProviderRequestConfig): ServerProviderInstance
 
       // 2) Per-symbol, only for what was explicitly asked for (this is the path
       //    the widget's lazy loading drives, in modest chunks).
-      if (ex.has?.fetchLeverage && symbols?.length) {
-        const rows = await mapWithConcurrency(symbols, LEVERAGE_READ_CONCURRENCY, async (symbol) => {
+      if (ex.has?.fetchLeverage && pending?.length) {
+        const rows = await mapWithConcurrency(pending, LEVERAGE_READ_CONCURRENCY, async (symbol) => {
           try {
             return toSetting(await ex.fetchLeverage(symbol), 'fetchLeverage');
           } catch (err) {
@@ -172,15 +230,18 @@ function makeCcxtInstance(config: ProviderRequestConfig): ServerProviderInstance
             return undefined;
           }
         });
-        if (rows.length) return rows;
+        if (rows.length) {
+          rememberLeverages(ex, rows, now);
+          return rows;
+        }
       }
 
       // 3) Positions carry the leverage in use — covers exchanges with neither
       //    unified call, but only for pairs that have a position/risk row.
       if (ex.has?.fetchPositions) {
         try {
-          const positions = await ex.fetchPositions(symbols);
-          return (positions || [])
+          const positions = await ex.fetchPositions(pending);
+          const rows: LeverageSetting[] = (positions || [])
             .filter((p: any) => p?.symbol && p?.leverage)
             .map((p: any) => ({
               symbol: p.symbol,
@@ -188,6 +249,8 @@ function makeCcxtInstance(config: ProviderRequestConfig): ServerProviderInstance
               marginMode: p.marginMode,
               source: 'position' as const,
             }));
+          rememberLeverages(ex, rows, now);
+          return rows;
         } catch (err) {
           console.warn(`[leverage] ${ex.id} fetchPositions fallback failed:`, err instanceof Error ? err.message : err);
           return [];
@@ -202,6 +265,10 @@ function makeCcxtInstance(config: ProviderRequestConfig): ServerProviderInstance
       if (!ex.has?.setLeverage) {
         return { symbol, leverage, success: false, message: `${ex.id} does not support setLeverage` };
       }
+      // Whatever the outcome, the cached value for this pair is no longer
+      // something to answer reads with — even a rejected write can land after a
+      // timeout on some exchanges.
+      cacheFor(ex).delete(symbol);
       try {
         await ex.setLeverage(leverage, symbol, params || {});
         return { symbol, leverage, success: true, message: `Set to ${leverage}x` };

@@ -86,7 +86,10 @@ go via the central-accounts `{ accountId }` flow.
   request per visible batch, each symbol asked at most once per reload); "Load
   all" walks whatever is left in chunks of 50 with progress. Per-symbol reads run
   5-at-a-time server side, which is what keeps a 50-pair chunk from being 50
-  round-trips end to end. Writing goes through `setLeverages(accountId, symbols,
+  round-trips end to end, and results are cached there for 5 minutes per account
+  (invalidated per pair on write), so reopening the widget does not re-read the
+  whole exchange. The reload button passes `refresh` and bypasses that cache.
+  Writing goes through `setLeverages(accountId, symbols,
   target)` in chunks of 20: per-row set, "set all shown to X", and "set all to
   max" (each pair's own published maximum). Bulk runs are confirmed in a dialog
   first and report per-symbol failures — an open position makes the exchange

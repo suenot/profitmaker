@@ -224,8 +224,17 @@ export interface ProviderTrading {
 
   /** Derivative pairs plus the leverage caps the exchange publishes. */
   leverageMarkets(auth: TradeAuth, exchange: string, marketType?: LeverageMarketType): Promise<LeverageMarket[]>;
-  /** Leverage the account currently has set (batch where the exchange allows it). */
-  fetchLeverages(auth: TradeAuth, exchange: string, symbols?: string[], marketType?: LeverageMarketType): Promise<LeverageSetting[]>;
+  /**
+   * Leverage the account currently has set (batch where the exchange allows it).
+   * `refresh` bypasses the server-side cache — for an explicit reload.
+   */
+  fetchLeverages(
+    auth: TradeAuth,
+    exchange: string,
+    symbols?: string[],
+    marketType?: LeverageMarketType,
+    refresh?: boolean,
+  ): Promise<LeverageSetting[]>;
   /**
    * Set leverage on a batch of pairs. `target` is either a fixed number or
    * 'max', in which case the server uses each pair's own published maximum.

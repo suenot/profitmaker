@@ -114,7 +114,8 @@ export interface DataActions {
 
   // Leverage (read caps + current settings, write new values)
   leverageMarkets: (accountId: string, marketType?: LeverageMarketType) => Promise<LeverageMarket[]>;
-  fetchLeverages: (accountId: string, symbols?: string[]) => Promise<LeverageSetting[]>;
+  /** `refresh` bypasses the server-side leverage cache (explicit reload). */
+  fetchLeverages: (accountId: string, symbols?: string[], refresh?: boolean) => Promise<LeverageSetting[]>;
   setLeverages: (
     accountId: string,
     symbols: string[],
@@ -1030,9 +1031,9 @@ export const createDataActions: StateCreator<
     return markets || [];
   },
 
-  fetchLeverages: async (accountId: string, symbols?: string[]): Promise<LeverageSetting[]> => {
+  fetchLeverages: async (accountId: string, symbols?: string[], refresh?: boolean): Promise<LeverageSetting[]> => {
     const { account, serverProvider, creds } = await resolveLeverageContext(accountId, 'read', get);
-    const leverages = await serverProvider.trading.fetchLeverages(creds, account.exchange, symbols);
+    const leverages = await serverProvider.trading.fetchLeverages(creds, account.exchange, symbols, undefined, refresh);
     return leverages || [];
   },
 

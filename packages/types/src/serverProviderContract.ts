@@ -110,8 +110,11 @@ export interface ServerProviderTrading {
    * Leverage currently configured on the account. Implementations should try the
    * cheapest route first (unified batch call), then per-symbol, then derive from
    * open positions — `symbols` is required for the per-symbol path.
+   *
+   * Values may be served from a provider-side cache; `refresh` forces a read
+   * from the exchange (a write through setLeverage invalidates the pair anyway).
    */
-  fetchLeverages(symbols?: string[]): Promise<LeverageSetting[]>;
+  fetchLeverages(symbols?: string[], options?: { refresh?: boolean }): Promise<LeverageSetting[]>;
   /** Set leverage for one pair. */
   setLeverage(leverage: number, symbol: string, params?: Record<string, unknown>): Promise<SetLeverageResult>;
 }
