@@ -199,14 +199,16 @@ export function buildBackendModuleContext(
         log.info(`registered server provider '${factory.id}'`);
         return {
           dispose: () => {
-            providerRegistry.unregister(factory.id);
+            providerRegistry.unregister(factory.id, id);
             registeredProviderIds.delete(factory.id);
           },
         };
       },
+      // Scoped to this module: passing `id` makes the registry refuse to remove
+      // the built-in 'ccxt' provider or any other module's provider.
       unregister: (providerId) => {
         registeredProviderIds.delete(providerId);
-        return providerRegistry.unregister(providerId);
+        return providerRegistry.unregister(providerId, id);
       },
     },
     storage,

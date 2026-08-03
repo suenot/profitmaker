@@ -133,7 +133,7 @@ export interface DataProviderActions {
   // Leverage: read the exchange's caps, read what the account has set, write new
   // values. Reads use 'read' access, the write path requires 'trade'.
   leverageMarkets: (accountId: string, marketType?: LeverageMarketType) => Promise<LeverageMarket[]>;
-  fetchLeverages: (accountId: string, symbols?: string[]) => Promise<LeverageSetting[]>;
+  fetchLeverages: (accountId: string, symbols?: string[], refresh?: boolean) => Promise<LeverageSetting[]>;
   setLeverages: (
     accountId: string,
     symbols: string[],
@@ -159,6 +159,7 @@ export interface DataProviderActions {
 
   // Internal data flow management functions
   startDataFetching: (subscriptionKey: string) => Promise<void>;
+  restartInactiveSubscriptions: () => Promise<void>;
   stopDataFetching: (subscriptionKey: string) => void;
   startWebSocketFetching: (exchange: string, symbol: string, dataType: DataType, provider: DataProvider, timeframe?: Timeframe, market?: MarketType) => Promise<void>;
   startRestFetching: (exchange: string, symbol: string, dataType: DataType, provider: DataProvider, timeframe?: Timeframe, market?: MarketType) => Promise<void>;

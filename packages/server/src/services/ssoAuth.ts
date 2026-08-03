@@ -27,6 +27,14 @@ const REQUIRED_SERVICE = process.env.AUTH_REQUIRED_SERVICE || '';
 // tokens to AUTH_URL as well.
 const VERIFY_ISSUER = process.env.AUTH_VERIFY_ISSUER === '1';
 
+// Optional audience binding. The auth service currently mints ecosystem-wide
+// tokens, so this stays off unless the operator sets AUTH_AUDIENCE. Once set, a
+// token minted for a SIBLING service — or a different token class entirely, e.g.
+// a refresh or email-verification token signed by the same key — no longer
+// verifies here, which is the only thing that makes "valid signature" mean
+// "meant for this terminal".
+const AUDIENCE = process.env.AUTH_AUDIENCE?.trim() || '';
+
 /**
  * Remote JWKS resolver. jose fetches the key set lazily, caches it, applies a
  * cooldown between refreshes, and re-fetches automatically when a token's `kid`
@@ -51,12 +59,17 @@ export interface SsoUser {
 }
 
 /**
- * Extract and strictly validate the claims of an SSO JWT. Requires `sub`,
+ * Extract and strictly validate the claims of an SSO JWT. Requires `exp`, `sub`,
  * `email`, and a roles/services map to be present — a token missing the role
  * map is not a session token from this service and is rejected. This narrows the
  * set of accepted tokens beyond "any RS256 token the auth service ever signed".
  */
 function extractClaims(payload: JWTPayload): SsoClaims | null {
+  // Require an expiry. jose enforces `exp` only WHEN IT IS PRESENT, so a token
+  // minted without one would otherwise be accepted for as long as the signing
+  // key lives — an effectively permanent credential.
+  if (typeof payload.exp !== 'number') return null;
+
   const userId = typeof payload.sub === 'string' ? payload.sub : null;
   const email = typeof payload.email === 'string' ? payload.email : null;
   if (!userId || !email) return null;
@@ -93,6 +106,9 @@ export async function verifySsoToken(token: string): Promise<SsoClaims | null> {
       // Bind to the issuer only if the auth service starts setting `iss` and the
       // operator opts in — it currently issues ecosystem-wide tokens with no iss.
       ...(VERIFY_ISSUER ? { issuer: AUTH_URL } : {}),
+      // Same opt-in shape for `aud`: bind the token to this service when the
+      // operator has configured an audience.
+      ...(AUDIENCE ? { audience: AUDIENCE } : {}),
     });
     const claims = extractClaims(payload);
     if (!claims) return null;

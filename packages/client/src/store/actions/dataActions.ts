@@ -215,20 +215,34 @@ export const createDataActions: StateCreator<
   },
 
   setRestInterval: (dataType: DataType, interval: number) => {
+    // Only collect the affected keys inside the recipe. stopDataFetching and
+    // startDataFetching call set() themselves, and a nested set is clobbered
+    // when this outer producer commits the draft it snapshotted beforehand —
+    // which left the subscription marked active with a cleared intervalId, so
+    // the restart never happened and polling stopped for good.
+    const affectedKeys: string[] = [];
+
     set(state => {
       const oldInterval = state.dataFetchSettings.restIntervals[dataType];
       state.dataFetchSettings.restIntervals[dataType] = interval;
       console.log(`⏱️ REST interval for ${dataType} changed from ${oldInterval}ms to ${interval}ms`);
-      
-      // Restart REST subscriptions for this data type
+
       Object.keys(state.activeSubscriptions).forEach(key => {
         const subscription = state.activeSubscriptions[key];
         if (subscription.key.dataType === dataType && subscription.method === 'rest' && subscription.isActive) {
-          get().stopDataFetching(key);
-          get().startDataFetching(key);
+          affectedKeys.push(key);
         }
       });
     });
+
+    // Restart REST subscriptions for this data type, now that the new interval
+    // is committed and startDataFetching will read it.
+    for (const key of affectedKeys) {
+      get().stopDataFetching(key);
+      void get().startDataFetching(key).catch(error => {
+        console.error(`❌ Failed to restart ${key} after ${dataType} interval change:`, error);
+      });
+    }
   },
 
   // Data retrieval from store
@@ -244,58 +258,29 @@ export const createDataActions: StateCreator<
 
   getOrderBook: (exchange: string, symbol: string, market: MarketType = 'spot'): OrderBook | null => {
     const state = get();
-    const result = state.marketData.orderbook[exchange]?.[market]?.[symbol] || null;
-    
-    console.log(`🔍 [OrderBook] Requesting data for ${exchange}:${market}:${symbol}:`, {
-      exchange,
-      market,
-      symbol,
-      hasExchange: !!state.marketData.orderbook[exchange],
-      hasMarket: !!state.marketData.orderbook[exchange]?.[market],
-      hasSymbol: !!state.marketData.orderbook[exchange]?.[market]?.[symbol],
-      result: result,
-      allExchanges: Object.keys(state.marketData.orderbook),
-      fullOrderbookData: state.marketData.orderbook
-    });
-    
-    return result;
+    return state.marketData.orderbook[exchange]?.[market]?.[symbol] || null;
   },
 
   getBalance: (accountId: string, walletType?: WalletType): ExchangeBalances | null => {
     const state = get();
     const effectiveWalletType = walletType || 'trading';
-    const result = state.marketData.balance[accountId]?.[effectiveWalletType] || null;
-    
-    console.log(`💰 [Balance] Requesting data for account ${accountId}:${effectiveWalletType}:`, {
-      accountId,
-      walletType: effectiveWalletType,
-      hasAccount: !!state.marketData.balance[accountId],
-      hasWalletType: !!state.marketData.balance[accountId]?.[effectiveWalletType],
-      result: result,
-      allAccounts: Object.keys(state.marketData.balance)
-    });
-    
-    return result;
+    return state.marketData.balance[accountId]?.[effectiveWalletType] || null;
   },
 
   getTicker: (exchange: string, symbol: string, market: MarketType = 'spot', maxAge = 600000): Ticker | null => {
     const state = get();
     const tickerData = state.marketData.ticker[exchange]?.[market]?.[symbol];
-    
+
     if (!tickerData) {
-      console.log(`🎯 [Ticker] No ticker data for ${exchange}:${market}:${symbol}`);
       return null;
     }
-    
-    const now = Date.now();
-    const age = now - tickerData.lastUpdate;
-    
+
+    const age = Date.now() - tickerData.lastUpdate;
+
     if (age > maxAge) {
-      console.log(`⏰ [Ticker] Data is too old for ${exchange}:${market}:${symbol}, age: ${age}ms, maxAge: ${maxAge}ms`);
       return null;
     }
-    
-    console.log(`✅ [Ticker] Returning cached data for ${exchange}:${market}:${symbol}, age: ${age}ms`);
+
     return {
       symbol: tickerData.symbol,
       timestamp: tickerData.timestamp,
@@ -440,16 +425,6 @@ export const createDataActions: StateCreator<
   },
 
   updateOrderBook: (exchange: string, symbol: string, orderbook: OrderBook, market: MarketType = 'spot') => {
-    console.log(`💾 [OrderBook] Saving data for ${exchange}:${market}:${symbol}:`, {
-      exchange,
-      market,
-      symbol,
-      orderbook,
-      hasBids: orderbook?.bids?.length || 0,
-      hasAsks: orderbook?.asks?.length || 0,
-      timestamp: orderbook?.timestamp
-    });
-    
     set(state => {
       if (!state.marketData.orderbook[exchange]) {
         state.marketData.orderbook[exchange] = {};
@@ -458,42 +433,20 @@ export const createDataActions: StateCreator<
         state.marketData.orderbook[exchange][market] = {};
       }
       state.marketData.orderbook[exchange][market][symbol] = orderbook;
-      
-      console.log(`✅ [OrderBook] Data saved to state:`, {
-        exchange,
-        market,
-        symbol,
-        savedSuccessfully: !!state.marketData.orderbook[exchange][market][symbol],
-        allExchanges: Object.keys(state.marketData.orderbook)
-      });
-      
+
       updateMatchingSubscriptionTimestamps(state.activeSubscriptions, exchange, symbol, 'orderbook', undefined, market);
     });
   },
 
   updateBalance: (accountId: string, balance: ExchangeBalances, walletType?: WalletType) => {
     const effectiveWalletType = walletType || 'trading';
-    console.log(`💰 [Balance] Saving data for account ${accountId}:${effectiveWalletType}:`, {
-      accountId,
-      walletType: effectiveWalletType,
-      balance,
-      balancesCount: balance.balances?.length || 0,
-      timestamp: balance.timestamp
-    });
-    
+
     set(state => {
       if (!state.marketData.balance[accountId]) {
         state.marketData.balance[accountId] = {};
       }
       state.marketData.balance[accountId][effectiveWalletType] = balance;
-      
-      console.log(`✅ [Balance] Data saved to state:`, {
-        accountId,
-        walletType: effectiveWalletType,
-        savedSuccessfully: !!state.marketData.balance[accountId][effectiveWalletType],
-        allAccounts: Object.keys(state.marketData.balance)
-      });
-      
+
       updateMatchingSubscriptionTimestamps(state.activeSubscriptions, '', accountId, 'balance', undefined, effectiveWalletType as MarketType);
     });
   },

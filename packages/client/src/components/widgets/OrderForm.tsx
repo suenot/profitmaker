@@ -1,12 +1,14 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
-import { ChevronDown, AlertCircle, CheckCircle, X } from 'lucide-react';
+import React, { useEffect, useMemo, useCallback, useRef } from 'react';
+import { ChevronDown, AlertCircle, AlertTriangle, CheckCircle, X } from 'lucide-react';
 import { usePlaceOrderStore } from '../../store/placeOrderStore';
+import type { ExtendedOrderValidationRules } from '../../store/placeOrderStore';
 import { useGroupStore } from '../../store/groupStore';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { useOrderFormWidgetStore } from '../../store/orderFormWidgetStore';
 import { getMarketConstraints } from '../../services/orderExecutionService';
-import { formatVolume } from '../../utils/formatters';
-import type { OrderType, OrderSide, OrderValidationRules } from '../../types/orders';
+import { formatPrice, formatVolume } from '../../utils/formatters';
+import { safeStep, generateClientOrderId } from '../../utils/orderMath';
+import type { OrderType, OrderSide } from '../../types/orders';
 import type { MarketType } from '../../types/dataProviders';
 
 interface OrderFormWidgetProps {
@@ -144,17 +146,23 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
 
         if (isCancelled) return;
 
-        const rules: OrderValidationRules = {
+        const rules: ExtendedOrderValidationRules = {
           symbol: constraints,
-          // Quote available (cost budget); kept fresh by the balance-sync effect.
+          // Both sides' budgets: a buy spends quote, a sell spends base. Kept
+          // fresh by the balance-sync effect below.
           balance: {
             available: quoteAvailable,
             currency: quoteCurrency || 'USDT',
+            baseAvailable,
+            baseCurrency: baseCurrency || undefined,
           },
           balanceLoaded: !!exchangeBalances,
           // Seed with the current live price if we already have a ticker; the
           // ticker effect keeps marketPrice fresh as updates stream in.
           marketPrice: livePrice,
+          // Real taker fee from the venue; the estimate falls back to a 0.1%
+          // guess only when the exchange does not report one.
+          takerFeeRate: typeof constraints?.fees?.taker === 'number' ? constraints.fees.taker : undefined,
           leverage: market === 'futures' ? 1 : undefined,
           marginMode: market === 'futures' ? 'isolated' : undefined,
         };
@@ -217,20 +225,28 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
     updateValidationRules(widgetId, { ...validationRules, marketPrice: livePrice });
   }, [livePrice, isInstrumentSelected, validationRules, updateValidationRules, widgetId]);
 
-  // Keep validationRules.balance in sync with the live quote available as balance
+  // Keep validationRules.balance in sync with the live available balances as
   // updates stream in (getBalance subscription) without refetching constraints.
+  // BOTH sides are carried: the sell-side check reads baseAvailable.
   const balanceLoaded = !!exchangeBalances;
   useEffect(() => {
     if (!isInstrumentSelected || !validationRules) return;
     if (validationRules.balance.available === quoteAvailable &&
         validationRules.balance.currency === (quoteCurrency || 'USDT') &&
+        validationRules.balance.baseAvailable === baseAvailable &&
+        validationRules.balance.baseCurrency === (baseCurrency || undefined) &&
         validationRules.balanceLoaded === balanceLoaded) return;
     updateValidationRules(widgetId, {
       ...validationRules,
-      balance: { available: quoteAvailable, currency: quoteCurrency || 'USDT' },
+      balance: {
+        available: quoteAvailable,
+        currency: quoteCurrency || 'USDT',
+        baseAvailable,
+        baseCurrency: baseCurrency || undefined,
+      },
       balanceLoaded,
     });
-  }, [quoteAvailable, quoteCurrency, balanceLoaded, isInstrumentSelected, validationRules, updateValidationRules, widgetId]);
+  }, [quoteAvailable, quoteCurrency, baseAvailable, baseCurrency, balanceLoaded, isInstrumentSelected, validationRules, updateValidationRules, widgetId]);
 
   // Form handlers
   const handleOrderTypeChange = useCallback((type: OrderType) => {
@@ -256,33 +272,46 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
     updateFormData(widgetId, { stopPrice: value });
   }, [updateFormData, widgetId]);
 
+  // Increment for the -/+ stepper. `safeStep` rejects values that are really
+  // digit counts rather than tick sizes (Bitfinex reports precision.amount = 8),
+  // which would otherwise make one click of "+" worth 8 BTC.
+  const quantityStep = safeStep(validationRules?.symbol?.stepSize) ?? 0.00000001;
+  const priceStep = safeStep(validationRules?.symbol?.tickSize) ?? 0.00000001;
+
   const handleQuantityAdjust = useCallback((delta: number) => {
-    const stepSize = validationRules?.symbol?.stepSize || 0.00000001;
-    const newAmount = Math.max(0, formData.amount + (delta * stepSize));
+    const newAmount = Math.max(0, formData.amount + (delta * quantityStep));
     updateFormData(widgetId, { amount: newAmount });
-  }, [formData.amount, validationRules, updateFormData, widgetId]);
+  }, [formData.amount, quantityStep, updateFormData, widgetId]);
+
+  // Guards a submit ATTEMPT. `isSubmitting` comes from rendered state and only
+  // flips after React re-renders, so it cannot stop a second click landing in
+  // the same tick; a ref flips synchronously and can.
+  const submitLockRef = useRef(false);
 
   const handleSubmit = useCallback(async (side: OrderSide) => {
-    if (isSubmitting) return;
+    if (submitLockRef.current || isSubmitting || isLoading || !validationRules) return;
+    submitLockRef.current = true;
 
-    // Optional confirmation gate (settings.confirmBeforeSubmit).
-    if (orderFormSettings.confirmBeforeSubmit) {
-      const priceLabel = formData.type === 'market'
-        ? (livePrice ? `~${formatVolume(livePrice)} ${quoteCurrency}` : 'market price')
-        : `${formData.price || 0} ${quoteCurrency}`;
-      const ok = window.confirm(
-        `Place ${side.toUpperCase()} ${formData.type} order: ${formData.amount} ${baseCurrency} @ ${priceLabel}?`
-      );
-      if (!ok) return;
+    try {
+      // Optional confirmation gate (settings.confirmBeforeSubmit).
+      if (orderFormSettings.confirmBeforeSubmit) {
+        const priceLabel = formData.type === 'market'
+          ? (livePrice ? `~${formatPrice(livePrice)} ${quoteCurrency}` : 'market price')
+          : `${formData.price || 0} ${quoteCurrency}`;
+        const ok = window.confirm(
+          `Place ${side.toUpperCase()} ${formData.type} order: ${formData.amount} ${baseCurrency} @ ${priceLabel}?`
+        );
+        if (!ok) return;
+      }
+
+      // The side travels as an argument and the idempotency key is minted once
+      // per attempt. Nothing about this submission is read back out of the store
+      // afterwards, so a second click cannot retarget or duplicate it.
+      await placeOrder(widgetId, side, generateClientOrderId());
+    } finally {
+      submitLockRef.current = false;
     }
-
-    updateFormData(widgetId, { side });
-
-    // Small delay to let the side update propagate
-    setTimeout(() => {
-      placeOrder(widgetId);
-    }, 100);
-  }, [isSubmitting, orderFormSettings.confirmBeforeSubmit, formData.type, formData.amount, formData.price, livePrice, quoteCurrency, baseCurrency, updateFormData, placeOrder, widgetId]);
+  }, [isSubmitting, isLoading, validationRules, orderFormSettings.confirmBeforeSubmit, formData.type, formData.amount, formData.price, livePrice, quoteCurrency, baseCurrency, placeOrder, widgetId]);
 
 
 
@@ -398,9 +427,9 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
               {formData.type === 'stop_loss' ? 'Stop Price' : 'Execution Price'}
             </label>
             <div className="relative">
-              <input 
-                type="number" 
-                step={validationRules?.symbol?.tickSize || 0.00000001}
+              <input
+                type="number"
+                step={priceStep}
                 className={`w-full bg-terminal-accent/30 border rounded-md py-2 px-3 text-sm ${
                   getFieldError(formData.type === 'stop_loss' ? 'stopPrice' : 'price')
                     ? 'border-red-500' 
@@ -433,14 +462,14 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
           <div className="flex justify-between mb-1">
             <label className="text-sm text-terminal-muted">Quantity</label>
             <div className="flex items-center">
-              <span className="text-xs mr-1">×{validationRules?.symbol?.stepSize || 1}</span>
+              <span className="text-xs mr-1">×{quantityStep}</span>
               <ChevronDown size={14} className="text-terminal-muted" />
             </div>
           </div>
           <div className="relative flex items-center">
-            <input 
-              type="number" 
-              step={validationRules?.symbol?.stepSize || 0.00000001}
+            <input
+              type="number"
+              step={quantityStep}
               className={`w-full bg-terminal-accent/30 border rounded-md py-2 px-3 pr-16 text-sm ${
                 getFieldError('amount') ? 'border-red-500' : 'border-terminal-border'
               }`}
@@ -592,57 +621,75 @@ const OrderFormWidget: React.FC<OrderFormWidgetProps> = ({
           </div>
         )}
         
-        {/* Order Response */}
-        {lastOrderResponse && (
-          <div className={`p-3 rounded-md mb-4 ${
-            lastOrderResponse.success 
-              ? 'bg-green-500/20 border border-green-500/30' 
-              : 'bg-red-500/20 border border-red-500/30'
-          }`}>
-            <div className="flex items-center">
-              {lastOrderResponse.success ? (
-                <CheckCircle size={16} className="text-green-400 mr-2" />
-              ) : (
-                <AlertCircle size={16} className="text-red-400 mr-2" />
+        {/* Order Response. A success carrying warnings (e.g. the attached
+            stop-loss never made it onto the book) must NOT read as a plain
+            green success — it is styled amber and states what is missing. */}
+        {lastOrderResponse && (() => {
+          const hasWarnings = !!lastOrderResponse.warnings?.length;
+          const tone = !lastOrderResponse.success
+            ? { box: 'bg-red-500/20 border border-red-500/30', text: 'text-red-400' }
+            : hasWarnings
+              ? { box: 'bg-amber-500/20 border border-amber-500/30', text: 'text-amber-400' }
+              : { box: 'bg-green-500/20 border border-green-500/30', text: 'text-green-400' };
+
+          return (
+            <div className={`p-3 rounded-md mb-4 ${tone.box}`}>
+              <div className="flex items-center">
+                {!lastOrderResponse.success ? (
+                  <AlertCircle size={16} className="text-red-400 mr-2" />
+                ) : hasWarnings ? (
+                  <AlertTriangle size={16} className="text-amber-400 mr-2" />
+                ) : (
+                  <CheckCircle size={16} className="text-green-400 mr-2" />
+                )}
+                <span className={`text-sm font-medium ${tone.text}`}>
+                  {!lastOrderResponse.success
+                    ? 'Order Failed'
+                    : hasWarnings
+                      ? 'Order Placed — Action Needed'
+                      : 'Order Placed Successfully'}
+                </span>
+                <button
+                  onClick={() => clearLastResponse(widgetId)}
+                  className="ml-auto p-1 rounded hover:bg-white/10"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              {lastOrderResponse.orderId && (
+                <p className="text-xs text-terminal-muted mt-1">
+                  Order ID: {lastOrderResponse.orderId}
+                </p>
               )}
-              <span className={`text-sm font-medium ${
-                lastOrderResponse.success ? 'text-green-400' : 'text-red-400'
-              }`}>
-                {lastOrderResponse.success ? 'Order Placed Successfully' : 'Order Failed'}
-              </span>
-              <button
-                onClick={() => clearLastResponse(widgetId)}
-                className="ml-auto p-1 rounded hover:bg-white/10"
-              >
-                <X size={14} />
-              </button>
+              {lastOrderResponse.error && (
+                <p className="text-xs text-red-300 mt-1">
+                  {lastOrderResponse.error}
+                </p>
+              )}
+              {lastOrderResponse.warnings?.map((warning, i) => (
+                <p key={i} className="text-xs text-amber-300 mt-1">
+                  {warning}
+                </p>
+              ))}
             </div>
-            {lastOrderResponse.orderId && (
-              <p className="text-xs text-terminal-muted mt-1">
-                Order ID: {lastOrderResponse.orderId}
-              </p>
-            )}
-            {lastOrderResponse.error && (
-              <p className="text-xs text-red-300 mt-1">
-                {lastOrderResponse.error}
-              </p>
-            )}
-          </div>
-        )}
+          );
+        })()}
         
-        {/* Action buttons */}
+        {/* Action buttons. Submission also requires validationRules — without
+            market constraints an order would be checked for nothing but
+            `amount > 0`, so the buttons stay disabled if the fetch failed. */}
         <div className="grid grid-cols-2 gap-3 mt-auto pt-4">
-          <button 
-            type="button" 
-            disabled={!isFormValid || isSubmitting || isLoading}
+          <button
+            type="button"
+            disabled={!isFormValid || isSubmitting || isLoading || !validationRules}
             className="w-full py-2.5 rounded-md font-medium bg-terminal-positive hover:bg-terminal-positive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white"
             onClick={() => handleSubmit('buy')}
           >
             {isSubmitting && formData.side === 'buy' ? 'Placing...' : `Buy ${baseCurrency}`}
           </button>
-          <button 
-            type="button" 
-            disabled={!isFormValid || isSubmitting || isLoading}
+          <button
+            type="button"
+            disabled={!isFormValid || isSubmitting || isLoading || !validationRules}
             className="w-full py-2.5 rounded-md font-medium bg-terminal-negative hover:bg-terminal-negative/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white"
             onClick={() => handleSubmit('sell')}
           >

@@ -21,6 +21,7 @@ import { moduleManager } from './modules/manager';
 import { registerBuiltinProviders } from './providers';
 import { cleanupCache } from './services/ccxtCache';
 import { validateSession, deleteExpiredSessions } from './services/auth';
+import { matchesApiToken } from './services/apiToken';
 import { getBootstrapUser } from './services/bootstrapUser';
 import { getSsoUserFromToken } from './services/ssoAuth';
 import { setStateEventsIO, userRoom } from './services/stateEvents';
@@ -37,8 +38,59 @@ import {
 } from './services/wsSubscriptions';
 
 const PORT = Number(process.env.PORT) || 3001;
-const API_TOKEN = process.env.API_TOKEN || 'your-secret-token';
 const STATIC_DIR = process.env.STATIC_DIR || join(import.meta.dir, '../../client/dist');
+
+// Browser origins allowed to reach the Socket.IO server (which always runs
+// cross-origin from the SPA — it listens on PORT + 1). Unset ⇒ local dev origins
+// only; a deployed terminal MUST set ALLOWED_ORIGINS to its own public origin.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const DEV_ORIGINS = [
+  `http://localhost:${PORT}`,
+  `http://127.0.0.1:${PORT}`,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+
+const SOCKET_ORIGINS = ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS : DEV_ORIGINS;
+
+// Subscriptions are backed by a live exchange websocket each, so an unbounded
+// count is a resource-exhaustion lever. Applies per socket.
+const MAX_SUBSCRIPTIONS_PER_SOCKET = 50;
+
+/**
+ * Replace the body of any 500 that escapes a route.
+ *
+ * Elysia renders an unhandled throw as status 500 with `error.message` as the
+ * body — which is how a Postgres unique-violation ("duplicate key value violates
+ * unique constraint ...") or a connection string reaches the client verbatim.
+ *
+ * This runs at the transport boundary rather than as a root `.onError` on
+ * purpose: an Elysia error hook registered on the root instance takes precedence
+ * over every per-route handler in the merged chain, so a root hook would
+ * silently disable domain error mapping (ccxt → 404/400) across the whole app.
+ * Here, anything a route mapped deliberately — 400, 404, 502 — passes through
+ * untouched, and only unhandled failures are flattened. Response headers are
+ * carried over so CORS still applies to the sanitized error.
+ */
+async function sanitizeServerError(res: Response, req: Request): Promise<Response> {
+  if (res.status !== 500) return res;
+
+  let detail = await res.clone().text();
+  // A failed drizzle query renders its BOUND PARAMS into the message, and for a
+  // session lookup that includes the caller's bearer token — so scrub the
+  // presented credential before it reaches the log, and cap the length.
+  const bearer = req.headers.get('authorization')?.replace(/^Bearer /, '').trim();
+  if (bearer) detail = detail.split(bearer).join('<redacted-token>');
+  console.error(`[error] ${req.method} ${new URL(req.url).pathname}: ${detail.slice(0, 2000)}`);
+  return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    status: 500,
+    headers: { ...Object.fromEntries(res.headers), 'content-type': 'application/json' },
+  });
+}
 
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html',
@@ -75,8 +127,8 @@ const app = new Elysia()
       return { error: 'Access token required' };
     }
 
-    // Allow server-to-server API_TOKEN
-    if (token === API_TOKEN) return;
+    // Allow server-to-server API_TOKEN (no-op when none is configured)
+    if (matchesApiToken(token)) return;
 
     // Allow valid local user session token
     const user = await validateSession(db, token);
@@ -133,7 +185,7 @@ Bun.serve({
     // API routes and module bundle/asset routes go to Elysia.
     // /modules/ is outside /api/ and intentionally bypasses Bearer auth.
     if (pathname.startsWith('/api/') || pathname === '/health' || pathname.startsWith('/modules/')) {
-      return app.handle(req);
+      return sanitizeServerError(await app.handle(req), req);
     }
 
     // Try static file first
@@ -147,8 +199,15 @@ Bun.serve({
 
 // Socket.IO attaches to the same Bun server via its underlying http handling
 const io = new SocketIOServer(PORT + 1, {
-  cors: { origin: '*', methods: ['GET', 'POST'] },
+  cors: { origin: SOCKET_ORIGINS, methods: ['GET', 'POST'] },
 });
+
+if (ALLOWED_ORIGINS.length === 0) {
+  console.warn(
+    '[cors] ALLOWED_ORIGINS is unset — Socket.IO accepts local dev origins only ' +
+      `(${DEV_ORIGINS.join(', ')}). Set ALLOWED_ORIGINS to this terminal's public origin before deploying.`,
+  );
+}
 
 // Wire the Socket.IO server into the state-change and ui:command services so
 // REST mutations can broadcast to a user's room and commands can round-trip.
@@ -168,6 +227,11 @@ moduleManager.init(io).catch((err) => {
 io.on('connection', (socket) => {
   console.log(`Client connected: ${socket.id}`);
 
+  // Subscription ids this socket actually created. Tracked here because the
+  // shared registry keys teardown by subscription id alone, so without an
+  // ownership set any socket could unsubscribe another socket's stream.
+  const ownedSubscriptions = new Set<string>();
+
   // Acks for ui:command round-trips (POST /api/ui/command).
   registerUiCommandSocket(socket);
 
@@ -178,7 +242,7 @@ io.on('connection', (socket) => {
     // user's room so it receives state:changed / ui:command events.
     let userId: string | null = null;
     try {
-      if (data?.token === API_TOKEN) {
+      if (typeof data?.token === 'string' && matchesApiToken(data.token)) {
         userId = (await getBootstrapUser()).id;
       } else if (typeof data?.token === 'string') {
         const session = await validateSession(db, data.token);
@@ -200,9 +264,23 @@ io.on('connection', (socket) => {
   });
 
   socket.on('subscribe', async (data) => {
+    // Each subscription opens a live exchange websocket, so it must cost an
+    // authenticated identity — never an anonymous connection.
+    if (!socket.data.userId) {
+      socket.emit('subscription_error', { error: 'Not authenticated' });
+      return;
+    }
+
     const { exchangeId, symbol, dataType, timeframe, config, providerId } = data;
     if (!exchangeId || !symbol || !dataType) {
       socket.emit('subscription_error', { error: 'Missing required parameters' });
+      return;
+    }
+
+    if (ownedSubscriptions.size >= MAX_SUBSCRIPTIONS_PER_SOCKET) {
+      socket.emit('subscription_error', {
+        error: `Subscription limit reached (max ${MAX_SUBSCRIPTIONS_PER_SOCKET} per connection)`,
+      });
       return;
     }
 
@@ -227,6 +305,7 @@ io.on('connection', (socket) => {
     };
 
     addSubscription(subscription);
+    ownedSubscriptions.add(subscriptionId);
 
     try {
       await startWebSocketSubscription(
@@ -237,6 +316,7 @@ io.on('connection', (socket) => {
       socket.emit('subscribed', { subscriptionId, exchangeId, symbol, dataType, timeframe });
     } catch (error) {
       // Clean up orphan subscription on failure
+      ownedSubscriptions.delete(subscriptionId);
       removeSubscriptionFromSocket(socket.id, subscriptionId);
       socket.emit('subscription_error', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -250,11 +330,19 @@ io.on('connection', (socket) => {
       socket.emit('unsubscribe_error', { error: 'Missing subscriptionId' });
       return;
     }
+    // Teardown is keyed by subscription id alone, so refuse ids this socket does
+    // not own — otherwise passing `${otherSocketId}:${key}` kills their stream.
+    if (!ownedSubscriptions.has(subscriptionId)) {
+      socket.emit('unsubscribe_error', { error: 'Unknown subscription' });
+      return;
+    }
+    ownedSubscriptions.delete(subscriptionId);
     removeSubscriptionFromSocket(socket.id, subscriptionId);
     socket.emit('unsubscribed', { subscriptionId });
   });
 
   socket.on('disconnect', () => {
+    ownedSubscriptions.clear();
     removeSocketSubscriptions(socket.id);
   });
 });

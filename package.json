@@ -8,7 +8,8 @@
     "build": "bun --filter '@profitmaker/client' build",
     "server": "bun --filter '@profitmaker/server' start",
     "server:dev": "bun --filter '@profitmaker/server' dev",
-    "test": "bun --filter '*' test",
+    "test": "bun run --filter '*' test",
+    "typecheck": "bun --filter '*' typecheck",
     "lint": "bun --filter '@profitmaker/client' lint"
   },
   "devDependencies": {

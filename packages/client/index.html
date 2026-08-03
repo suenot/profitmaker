@@ -7,11 +7,21 @@
     <meta name="description" content="Lovable Generated Project" />
     <meta name="author" content="Lovable" />
     <meta property="og:image" content="/og-image.png" />
+    <!--
+      Partial CSP. Only the directives that hold in every deployment live here;
+      the rest must be sent as a header by whatever serves this bundle.
+
+      `script-src`/`connect-src` are deliberately absent: the terminal talks to a
+      user-configured ccxt-server (ConnectionScreen), its socket on port+1, and
+      `import()`s module bundles from `<serverUrl>/modules/<id>/bundle.js` — none
+      of which are same-origin in dev or in a self-hosted setup, so a static
+      allowlist here would break the app rather than protect it.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'" />
   </head>
 
   <body>
     <div id="root"></div>
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

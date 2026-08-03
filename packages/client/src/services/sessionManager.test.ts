@@ -128,6 +128,55 @@ describe('getSsoToken', () => {
   });
 });
 
+describe('isSessionStale — tokens without a readable `exp`', () => {
+  /**
+   * Seed a persisted session directly so `addedAt`/`expiresAt` can be set to
+   * values `upsertSession` would never produce (it always stamps Date.now()).
+   */
+  const seedSession = (over: Record<string, unknown>) => {
+    store.setItem(
+      SESSIONS_KEY,
+      JSON.stringify({
+        sessions: [
+          { id: 'u1', token: 'tok', user: user({ userId: 'u1' }), addedAt: Date.now(), ...over },
+        ],
+        activeSessionId: 'u1',
+      }),
+    );
+  };
+
+  test('a token with no `exp` is clamped to addedAt + 24h, not rejected outright', async () => {
+    // Added just now, no exp → still inside the fallback window.
+    seedSession({ addedAt: Date.now() - HOUR, expiresAt: undefined });
+    const sm = await freshModule();
+    expect(sm.isSessionStale(sm.getActiveSession()!)).toBe(false);
+    expect(sm.getSsoToken()).toBe('tok');
+  });
+
+  test('a token with no `exp` goes stale once 24h have passed since addedAt', async () => {
+    seedSession({ addedAt: Date.now() - 25 * HOUR, expiresAt: undefined });
+    const sm = await freshModule();
+    expect(sm.isSessionStale(sm.getActiveSession()!)).toBe(true);
+    expect(sm.getSsoToken()).toBeUndefined();
+  });
+
+  test('a malformed `expiresAt` fails closed (corruption, not an auth-service variation)', async () => {
+    seedSession({ expiresAt: 'not-a-number' });
+    const sm = await freshModule();
+    expect(sm.isSessionStale(sm.getActiveSession()!)).toBe(true);
+    expect(sm.getSsoToken()).toBeUndefined();
+  });
+
+  test('a corrupt `addedAt` fails closed rather than clamping to NaN', async () => {
+    // NaN deadlines make every comparison false — that would resurrect the
+    // immortal-token bug the clamp exists to prevent.
+    seedSession({ addedAt: 'garbage', expiresAt: undefined });
+    const sm = await freshModule();
+    expect(sm.isSessionStale(sm.getActiveSession()!)).toBe(true);
+    expect(sm.getSsoToken()).toBeUndefined();
+  });
+});
+
 describe('setActiveSession', () => {
   test('switches the active identity; ignores unknown ids', async () => {
     const sm = await freshModule();

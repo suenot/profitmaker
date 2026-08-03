@@ -75,6 +75,20 @@ interface ServerResponse<T = any> {
   details?: string;
 }
 
+/**
+ * A live socket subscription. Stored under the id the SERVER assigned
+ * (`${socket.id}:${subscriptionKey}`), because that is the only id the server's
+ * `activeSubscriptions` map can resolve on `unsubscribe`. `subscriptionKey` is
+ * the local `exchange:symbol:dataType[:timeframe]` form, kept so callers holding
+ * either form can unsubscribe.
+ */
+interface SocketSubscription {
+  dataHandler: (data: any) => void;
+  errorHandler: (error: any) => void;
+  socket: Socket;
+  subscriptionKey: string;
+}
+
 export function deriveSocketUrl(serverUrl: string): string {
   try {
     const url = new URL(serverUrl);
@@ -99,7 +113,10 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
   private token?: string;
   private timeout: number;
   private socket?: Socket;
-  private subscriptions = new Map<string, any>();
+  /** Keyed by the server-assigned subscription id. */
+  private subscriptions = new Map<string, SocketSubscription>();
+  /** Local `exchange:symbol:dataType[:timeframe]` key -> server-assigned id. */
+  private subscriptionIdsByKey = new Map<string, string>();
 
   constructor(provider: CCXTServerProvider) {
     this.provider = provider;
@@ -273,15 +290,24 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
 
     const subscriptionKey = `${exchangeId}:${symbol}:${dataType}${timeframe ? `:${timeframe}` : ''}`;
 
+    // Filled in once the server acks with the id it assigned. Until then the
+    // handlers fall back to a suffix match on the local key, since the server's
+    // id is `${socket.id}:${subscriptionKey}`.
+    let serverSubscriptionId: string | undefined;
+    const matchesThisSubscription = (id: unknown): boolean => {
+      if (typeof id !== 'string') return false;
+      return serverSubscriptionId ? id === serverSubscriptionId : id.includes(subscriptionKey);
+    };
+
     // Set up data handler
     const dataHandler = (data: any) => {
-      if (data.subscriptionId && data.subscriptionId.includes(subscriptionKey)) {
+      if (matchesThisSubscription(data?.subscriptionId)) {
         onData(data);
       }
     };
 
     const errorHandler = (error: any) => {
-      if (error.subscriptionId && error.subscriptionId.includes(subscriptionKey)) {
+      if (matchesThisSubscription(error?.subscriptionId)) {
         onError(error);
       }
     };
@@ -289,12 +315,12 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
     socket.on('data', dataHandler);
     socket.on('error', errorHandler);
 
-    // Store handlers for cleanup
-    this.subscriptions.set(subscriptionKey, {
-      dataHandler,
-      errorHandler,
-      socket
-    });
+    // Register provisionally under the local key so an unsubscribe that races
+    // the ack can still find (and tear down) this subscription. Re-keyed to the
+    // server's id below once it arrives.
+    const record: SocketSubscription = { dataHandler, errorHandler, socket, subscriptionKey };
+    this.subscriptions.set(subscriptionKey, record);
+    this.subscriptionIdsByKey.set(subscriptionKey, subscriptionKey);
 
     // Send subscription request
     socket.emit('subscribe', {
@@ -305,20 +331,59 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
       config
     });
 
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
+      const detachAckListeners = () => {
+        clearTimeout(ackTimer);
+        socket.off('subscribed', subscriptionHandler);
+        socket.off('subscription_error', subscriptionErrorHandler);
+      };
+
+      // Roll back everything registered above: a subscription that never came
+      // up must not leave handlers attached or a provisional map entry behind.
+      const abortSubscription = (reason: string) => {
+        detachAckListeners();
+        socket.off('data', dataHandler);
+        socket.off('error', errorHandler);
+        this.subscriptions.delete(subscriptionKey);
+        this.subscriptionIdsByKey.delete(subscriptionKey);
+        reject(new Error(reason));
+      };
+
       const subscriptionHandler = (data: any) => {
         if (data.exchangeId === exchangeId && data.symbol === symbol && data.dataType === dataType) {
-          socket.off('subscribed', subscriptionHandler);
-          socket.off('subscription_error', errorHandler);
-          resolve(data.subscriptionId);
+          detachAckListeners();
+
+          // Keep the server's id — it is the ONLY thing `unsubscribe` can send
+          // that the server's activeSubscriptions map will resolve.
+          //
+          // COMPAT SHIM, not a default: falling back to the local key keeps a
+          // server that omits `subscriptionId` working, but such a server would
+          // reproduce the original leak (its unsubscribe lookup would miss and
+          // the watch loop would run forever). If that ever happens in practice,
+          // fix the server to return an id rather than relying on this branch.
+          const assignedId: string = data.subscriptionId ?? subscriptionKey;
+          serverSubscriptionId = assignedId;
+
+          if (assignedId !== subscriptionKey) {
+            this.subscriptions.delete(subscriptionKey);
+            this.subscriptions.set(assignedId, record);
+          }
+          this.subscriptionIdsByKey.set(subscriptionKey, assignedId);
+
+          resolve(assignedId);
         }
       };
 
       const subscriptionErrorHandler = (error: any) => {
-        socket.off('subscribed', subscriptionHandler);
-        socket.off('subscription_error', subscriptionErrorHandler);
-        reject(new Error(error.error));
+        abortSubscription(error?.error ?? 'Subscription failed');
       };
+
+      // Without this, a server that never acks leaves the promise pending
+      // forever with both handlers still attached. Mirrors makeRequest.
+      const ackTimer = setTimeout(
+        () => abortSubscription(`Subscription ack timeout after ${this.timeout}ms for ${subscriptionKey}`),
+        this.timeout,
+      );
 
       socket.on('subscribed', subscriptionHandler);
       socket.on('subscription_error', subscriptionErrorHandler);
@@ -326,27 +391,39 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
   }
 
   /**
-   * Отписывается от WebSocket данных
+   * Отписывается от WebSocket данных.
+   *
+   * Accepts EITHER the server-assigned subscription id or the local
+   * `exchange:symbol:dataType[:timeframe]` key — callers hold one or the other,
+   * and a miss here used to silently no-op, leaving the server's watch loop
+   * running forever on a live exchange stream.
    */
-  async unsubscribeWebSocket(subscriptionKey: string): Promise<void> {
-    const subscription = this.subscriptions.get(subscriptionKey);
-    if (!subscription) {
+  async unsubscribeWebSocket(subscriptionIdOrKey: string): Promise<void> {
+    const subscriptionId = this.subscriptions.has(subscriptionIdOrKey)
+      ? subscriptionIdOrKey
+      : this.subscriptionIdsByKey.get(subscriptionIdOrKey);
+
+    const subscription = subscriptionId ? this.subscriptions.get(subscriptionId) : undefined;
+    if (!subscriptionId || !subscription) {
+      console.warn(`⚠️ [CCXTServer] No subscription registered for ${subscriptionIdOrKey} — nothing to unsubscribe`);
       return;
     }
 
-    const { dataHandler, errorHandler, socket } = subscription;
+    const { dataHandler, errorHandler, socket, subscriptionKey } = subscription;
 
     // Remove event listeners
     socket.off('data', dataHandler);
     socket.off('error', errorHandler);
 
-    // Send unsubscribe request
-    socket.emit('unsubscribe', { subscriptionId: subscriptionKey });
+    // Send the id the SERVER assigned — anything else misses its
+    // activeSubscriptions lookup and leaves the watch loop running.
+    socket.emit('unsubscribe', { subscriptionId });
 
     // Remove from subscriptions
-    this.subscriptions.delete(subscriptionKey);
+    this.subscriptions.delete(subscriptionId);
+    this.subscriptionIdsByKey.delete(subscriptionKey);
 
-    console.log(`📡 [CCXTServer] Unsubscribed from ${subscriptionKey}`);
+    console.log(`📡 [CCXTServer] Unsubscribed from ${subscriptionId}`);
   }
 
   /**

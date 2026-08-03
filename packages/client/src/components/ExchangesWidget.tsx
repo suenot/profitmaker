@@ -1,15 +1,36 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useDataProviderStore } from '../store/dataProviderStore';
+import { useGroupStore } from '../store/groupStore';
 import { moduleFetch } from '../modules/api';
-import { ChevronDown, Server, Database } from 'lucide-react';
+import { ChevronDown, Server, Database, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export const ExchangesWidget: React.FC = () => {
   const { providers, getEnabledProviders } = useDataProviderStore();
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
   const [availableExchanges, setAvailableExchanges] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  // Distinct from "loaded but empty": a failed fetch must not look like an
+  // exchange list that legitimately has no entries.
+  const [error, setError] = useState<string | null>(null);
   const [isProviderDropdownOpen, setIsProviderDropdownOpen] = useState(false);
+
+  // Selecting a row writes into the active group (transparent group when none is
+  // explicitly selected) — the same target the widget-header instrument control
+  // writes to, so the chart and order book follow along.
+  const selectedGroupId = useGroupStore((s) => s.selectedGroupId);
+  const getTransparentGroup = useGroupStore((s) => s.getTransparentGroup);
+  const setInstrument = useGroupStore((s) => s.setInstrument);
+  const groups = useGroupStore((s) => s.groups);
+
+  const targetGroup = selectedGroupId
+    ? groups.find((g) => g.id === selectedGroupId) ?? getTransparentGroup()
+    : getTransparentGroup();
+
+  const handleSelectExchange = useCallback((exchange: string) => {
+    if (!targetGroup) return;
+    setInstrument(targetGroup.id, { exchange });
+  }, [targetGroup, setInstrument]);
 
   // Ref for handling clicks outside
   const widgetRef = useRef<HTMLDivElement>(null);
@@ -43,52 +64,55 @@ export const ExchangesWidget: React.FC = () => {
   }, [selectedProviderId, enabledProviders]);
 
   // Load exchanges when provider changes
-  useEffect(() => {
+  const loadExchanges = useCallback(async () => {
     if (!selectedProviderId) return;
 
-    const loadExchanges = async () => {
-      setLoading(true);
-      try {
-        const provider = providers[selectedProviderId];
-        if (!provider) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const provider = providers[selectedProviderId];
+      if (!provider) return;
 
-        let exchanges: string[] = [];
+      let exchanges: string[] = [];
 
-        switch (provider.type) {
-          case 'ccxt-server': {
-            // Get all CCXT exchanges from the server
-            const response = await moduleFetch('/api/exchange/list');
-            if (response.ok) {
-              const result = await response.json();
-              exchanges = ((result.data ?? result.exchanges ?? []) as string[]).sort();
-            }
-            break;
+      switch (provider.type) {
+        case 'ccxt-server': {
+          // Get all CCXT exchanges from the server
+          const response = await moduleFetch('/api/exchange/list');
+          if (!response.ok) {
+            throw new Error(`Server returned HTTP ${response.status}`);
           }
-          case 'custom':
-          case 'custom-server-with-adapter':
-          case 'marketmaker.cc':
-          default:
-            // Use provider's configured exchanges or default examples
-            if (provider.exchanges.includes('*')) {
-              // If universal provider, use common exchanges as example
-              exchanges = ['binance', 'bybit', 'okx', 'kucoin', 'moex', 'spbex'];
-            } else {
-              exchanges = provider.exchanges.filter(ex => ex !== '*');
-            }
-            break;
+          const result = await response.json();
+          exchanges = ((result.data ?? result.exchanges ?? []) as string[]).sort();
+          break;
         }
-
-        setAvailableExchanges(exchanges);
-      } catch (error) {
-        console.error('Failed to load exchanges:', error);
-        setAvailableExchanges([]);
-      } finally {
-        setLoading(false);
+        case 'custom':
+        case 'custom-server-with-adapter':
+        case 'marketmaker.cc':
+        default:
+          // Use provider's configured exchanges or default examples
+          if (provider.exchanges.includes('*')) {
+            // If universal provider, use common exchanges as example
+            exchanges = ['binance', 'bybit', 'okx', 'kucoin', 'moex', 'spbex'];
+          } else {
+            exchanges = provider.exchanges.filter(ex => ex !== '*');
+          }
+          break;
       }
-    };
 
-    loadExchanges();
+      setAvailableExchanges(exchanges);
+    } catch (err) {
+      console.error('Failed to load exchanges:', err);
+      setAvailableExchanges([]);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
   }, [selectedProviderId, providers]);
+
+  useEffect(() => {
+    void loadExchanges();
+  }, [loadExchanges]);
 
   const selectedProvider = selectedProviderId ? providers[selectedProviderId] : null;
 
@@ -164,8 +188,25 @@ export const ExchangesWidget: React.FC = () => {
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-terminal-accent"></div>
             <span className="ml-2 text-sm">Loading exchanges...</span>
           </div>
+        ) : error ? (
+          <div className="flex-1 bg-terminal-bg border border-terminal-negative/40 rounded p-4 text-sm">
+            <div className="flex items-center gap-2 text-terminal-negative font-medium mb-1">
+              <AlertTriangle size={16} /> Could not load exchanges
+            </div>
+            <p className="text-terminal-muted text-xs mb-3">{error}</p>
+            <button
+              onClick={() => void loadExchanges()}
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-terminal-border text-xs text-terminal-text hover:bg-terminal-accent/20 transition-colors"
+            >
+              <RefreshCw size={12} /> Retry
+            </button>
+          </div>
         ) : (
-          <VirtualizedExchangesList exchanges={availableExchanges} />
+          <VirtualizedExchangesList
+            exchanges={availableExchanges}
+            selectedExchange={targetGroup?.exchange}
+            onSelect={handleSelectExchange}
+          />
         )}
       </div>
 
@@ -192,7 +233,9 @@ export const ExchangesWidget: React.FC = () => {
 // Virtualized exchanges list component
 const VirtualizedExchangesList: React.FC<{
   exchanges: string[];
-}> = ({ exchanges }) => {
+  selectedExchange?: string;
+  onSelect: (exchange: string) => void;
+}> = ({ exchanges, selectedExchange, onSelect }) => {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -220,6 +263,8 @@ const VirtualizedExchangesList: React.FC<{
         style={{ contain: 'strict' }}
       >
         <div
+          role="listbox"
+          aria-label="Available exchanges"
           style={{
             height: virtualizer.getTotalSize(),
             width: '100%',
@@ -228,7 +273,8 @@ const VirtualizedExchangesList: React.FC<{
         >
           {virtualizer.getVirtualItems().map((virtualRow) => {
             const exchange = exchanges[virtualRow.index];
-            
+            const isSelected = exchange === selectedExchange;
+
             return (
               <div
                 key={virtualRow.key}
@@ -242,12 +288,23 @@ const VirtualizedExchangesList: React.FC<{
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                <div className="px-3 py-2 hover:bg-terminal-accent/10 transition-colors border-b border-terminal-border/50 last:border-b-0">
+                {/* A real <button> so Enter/Space activation and focus come from
+                    the platform rather than hand-rolled key handlers. */}
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => onSelect(exchange)}
+                  title={`Use ${exchange} for the active group`}
+                  className={`w-full text-left px-3 py-2 transition-colors border-b border-terminal-border/50 last:border-b-0 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-terminal-accent ${
+                    isSelected ? 'bg-terminal-accent/30' : 'hover:bg-terminal-accent/10'
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-terminal-text">{exchange}</span>
                     <span className="text-xs text-terminal-muted">#{virtualRow.index + 1}</span>
                   </div>
-                </div>
+                </button>
               </div>
             );
           })}

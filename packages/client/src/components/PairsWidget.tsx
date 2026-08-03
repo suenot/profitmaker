@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useDataProviderStore } from '../store/dataProviderStore';
 import { useUserStore } from '../store/userStore';
-import { ChevronDown, User, ArrowUpDown, TrendingUp, Search } from 'lucide-react';
+import { useGroupStore } from '../store/groupStore';
+import { ChevronDown, User, ArrowUpDown, TrendingUp, Search, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export const PairsWidget: React.FC = () => {
   const { getSymbolsForExchange, getMarketsForExchange, getAllSupportedExchanges } = useDataProviderStore();
@@ -17,9 +18,23 @@ export const PairsWidget: React.FC = () => {
   const [filteredPairs, setFilteredPairs] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  // Distinct from "loaded but empty" — a failed fetch must not render as an
+  // exchange/market pair that legitimately lists no symbols.
+  const [error, setError] = useState<string | null>(null);
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
   const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
   const [isMarketDropdownOpen, setIsMarketDropdownOpen] = useState(false);
+
+  // Row selection writes into the active group (transparent group when none is
+  // explicitly selected), so the chart and order book follow the choice.
+  const selectedGroupId = useGroupStore((s) => s.selectedGroupId);
+  const getTransparentGroup = useGroupStore((s) => s.getTransparentGroup);
+  const setInstrument = useGroupStore((s) => s.setInstrument);
+  const groups = useGroupStore((s) => s.groups);
+
+  const targetGroup = selectedGroupId
+    ? groups.find((g) => g.id === selectedGroupId) ?? getTransparentGroup()
+    : getTransparentGroup();
 
   // Ref for handling clicks outside
   const widgetRef = useRef<HTMLDivElement>(null);
@@ -91,24 +106,40 @@ export const PairsWidget: React.FC = () => {
   }, [selectedExchange, getMarketsForExchange, selectedMarket]);
 
   // Load pairs when exchange + market changes
-  useEffect(() => {
+  const loadPairs = useCallback(async () => {
     if (!selectedExchange || !selectedMarket) return;
 
-    const loadPairs = async () => {
-      setLoading(true);
-      try {
-        const pairs = await getSymbolsForExchange(selectedExchange, undefined, selectedMarket);
-        setAvailablePairs(pairs);
-      } catch (error) {
-        console.error('Failed to load pairs:', error);
-        setAvailablePairs([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPairs();
+    setLoading(true);
+    setError(null);
+    try {
+      const pairs = await getSymbolsForExchange(selectedExchange, undefined, selectedMarket);
+      setAvailablePairs(pairs);
+    } catch (err) {
+      console.error('Failed to load pairs:', err);
+      setAvailablePairs([]);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
   }, [selectedExchange, selectedMarket, getSymbolsForExchange]);
+
+  useEffect(() => {
+    void loadPairs();
+  }, [loadPairs]);
+
+  // A pair is the only row here that carries a full instrument, so selecting one
+  // writes the whole tuple the trading widgets read.
+  const handleSelectPair = useCallback((pair: string) => {
+    if (!targetGroup || !selectedExchange || !selectedMarket) return;
+    setInstrument(targetGroup.id, {
+      exchange: selectedExchange,
+      market: selectedMarket,
+      tradingPair: pair,
+      // Only set the account when the user picked one; leaving it undefined
+      // keeps public widgets working without claiming a private account.
+      ...(selectedAccountId ? { account: selectedAccountId } : {}),
+    });
+  }, [targetGroup, setInstrument, selectedExchange, selectedMarket, selectedAccountId]);
 
   // Filter pairs based on search query
   useEffect(() => {
@@ -308,12 +339,31 @@ export const PairsWidget: React.FC = () => {
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-terminal-accent"></div>
             <span className="ml-2 text-sm">Loading pairs...</span>
           </div>
+        ) : error ? (
+          <div className="bg-terminal-bg border border-terminal-negative/40 rounded p-4 text-sm">
+            <div className="flex items-center gap-2 text-terminal-negative font-medium mb-1">
+              <AlertTriangle size={16} /> Could not load pairs for {selectedExchange}/{selectedMarket}
+            </div>
+            <p className="text-terminal-muted text-xs mb-3">{error}</p>
+            <button
+              onClick={() => void loadPairs()}
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-terminal-border text-xs text-terminal-text hover:bg-terminal-accent/20 transition-colors"
+            >
+              <RefreshCw size={12} /> Retry
+            </button>
+          </div>
         ) : (
-          <VirtualizedPairsList 
-            pairs={filteredPairs} 
+          <VirtualizedPairsList
+            pairs={filteredPairs}
             searchQuery={searchQuery}
             selectedExchange={selectedExchange}
             selectedMarket={selectedMarket}
+            selectedPair={
+              targetGroup?.exchange === selectedExchange && targetGroup?.market === selectedMarket
+                ? targetGroup?.tradingPair
+                : undefined
+            }
+            onSelect={handleSelectPair}
           />
         )}
       </div>
@@ -341,7 +391,9 @@ const VirtualizedPairsList: React.FC<{
   searchQuery: string;
   selectedExchange: string | null;
   selectedMarket: string | null;
-}> = ({ pairs, searchQuery, selectedExchange, selectedMarket }) => {
+  selectedPair?: string;
+  onSelect: (pair: string) => void;
+}> = ({ pairs, searchQuery, selectedExchange, selectedMarket, selectedPair, onSelect }) => {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -369,6 +421,8 @@ const VirtualizedPairsList: React.FC<{
         style={{ contain: 'strict' }}
       >
         <div
+          role="listbox"
+          aria-label="Trading pairs"
           style={{
             height: virtualizer.getTotalSize(),
             width: '100%',
@@ -381,7 +435,8 @@ const VirtualizedPairsList: React.FC<{
             const parts = pair.split('/');
             const base = parts[0] || '';
             const quote = parts[1] || '';
-            
+            const isSelected = pair === selectedPair;
+
             return (
               <div
                 key={virtualRow.key}
@@ -395,7 +450,18 @@ const VirtualizedPairsList: React.FC<{
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                <div className="px-3 py-2 hover:bg-terminal-accent/10 transition-colors border-b border-terminal-border/50 last:border-b-0">
+                {/* A real <button> so Enter/Space activation and focus come from
+                    the platform rather than hand-rolled key handlers. */}
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => onSelect(pair)}
+                  title={`Use ${selectedExchange} ${selectedMarket} ${pair} for the active group`}
+                  className={`w-full text-left px-3 py-2 transition-colors border-b border-terminal-border/50 last:border-b-0 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-terminal-accent ${
+                    isSelected ? 'bg-terminal-accent/30' : 'hover:bg-terminal-accent/10'
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm text-terminal-text font-medium">{pair}</span>
@@ -405,7 +471,7 @@ const VirtualizedPairsList: React.FC<{
                     </div>
                     <span className="text-xs text-terminal-muted">#{virtualRow.index + 1}</span>
                   </div>
-                </div>
+                </button>
               </div>
             );
           })}

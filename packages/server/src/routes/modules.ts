@@ -1,11 +1,74 @@
 import { Elysia, t } from 'elysia';
 import { extname } from 'path';
 import { existsSync } from 'fs';
+import { createHash, timingSafeEqual } from 'node:crypto';
 
 import { moduleManager } from '../modules/manager';
 import { MODULE_KEYWORD } from '@profitmaker/module-sdk';
 
 const NPM_SEARCH = 'https://registry.npmjs.org/-/v1/search';
+
+/**
+ * Operator-only credential for the module lifecycle routes.
+ *
+ * Installing a module means downloading an arbitrary npm package and importing
+ * it into THIS process, where it runs unsandboxed with the server's full
+ * privileges (DB, process.env, filesystem, every user's exchange credentials).
+ * That is an operator action, not an end-user one, so it is deliberately NOT
+ * satisfied by a user session and NOT by the general-purpose API_TOKEN — those
+ * authenticate "some legitimate caller", which is a far larger set than "the
+ * person who administers this deployment". On a hosted install any SSO account
+ * is in the first set, which made this a remote-code-execution path.
+ *
+ * Presented as its OWN header (`X-Modules-Admin-Token`) rather than as the
+ * bearer token, because /api/* already spends the Authorization header on user
+ * auth in index.ts — a caller sends their normal bearer AND this header.
+ *
+ * FAIL CLOSED: when MODULES_ADMIN_TOKEN is unset, module management is
+ * disabled outright rather than falling back to user auth. Read-only routes
+ * (list/search) and dispatch are unaffected.
+ */
+const MODULES_ADMIN_TOKEN = process.env.MODULES_ADMIN_TOKEN || '';
+const ADMIN_HEADER = 'x-modules-admin-token';
+
+/**
+ * Length-independent constant-time comparison of two secrets.
+ *
+ * timingSafeEqual throws on a length mismatch, which would itself leak the
+ * secret's length, so both sides are hashed to a fixed 32 bytes first and the
+ * comparison is always over equal-length buffers. node:crypto (not
+ * Bun.CryptoHasher) so this behaves identically under Bun and under the Node
+ * runtime the unit tests use — a security guard must not depend on which
+ * runtime it happens to be loaded in.
+ */
+function secretsMatch(a: string, b: string): boolean {
+  const ah = createHash('sha256').update(a, 'utf8').digest();
+  const bh = createHash('sha256').update(b, 'utf8').digest();
+  return timingSafeEqual(ah, bh);
+}
+
+/**
+ * Guard for the lifecycle routes. Returns an error body to short-circuit with,
+ * or null when the caller proved operator rights.
+ */
+function operatorDenied(request: Request, set: { status?: number | string }): { error: string; details: string } | null {
+  if (!MODULES_ADMIN_TOKEN) {
+    set.status = 503;
+    return {
+      error: 'module management disabled',
+      details: 'MODULES_ADMIN_TOKEN is not configured on this server',
+    };
+  }
+  const presented = request.headers.get(ADMIN_HEADER) || '';
+  if (!presented || !secretsMatch(presented, MODULES_ADMIN_TOKEN)) {
+    set.status = 403;
+    return {
+      error: 'operator credential required',
+      details: `module install/upgrade/uninstall requires a valid ${ADMIN_HEADER} header`,
+    };
+  }
+  return null;
+}
 
 /**
  * Module management + dispatch routes, mounted under /api/modules.
@@ -58,10 +121,12 @@ export const moduleRoutes = new Elysia({ prefix: '/api/modules' })
     { query: t.Object({ q: t.Optional(t.String()) }) },
   )
 
-  // POST /api/modules/install { name, version? }
+  // POST /api/modules/install { name, version? } — OPERATOR ONLY
   .post(
     '/install',
-    async ({ body, set }) => {
+    async ({ body, set, request }) => {
+      const denied = operatorDenied(request, set);
+      if (denied) return denied;
       try {
         const mod = await moduleManager.install({ name: body.name, version: body.version });
         return { module: mod };
@@ -73,8 +138,10 @@ export const moduleRoutes = new Elysia({ prefix: '/api/modules' })
     { body: t.Object({ name: t.String(), version: t.Optional(t.String()) }) },
   )
 
-  // POST /api/modules/:id/enable
-  .post('/:id/enable', async ({ params, set }) => {
+  // POST /api/modules/:id/enable — OPERATOR ONLY (starts third-party code)
+  .post('/:id/enable', async ({ params, set, request }) => {
+    const denied = operatorDenied(request, set);
+    if (denied) return denied;
     try {
       return { module: await moduleManager.enable(params.id) };
     } catch (err) {
@@ -83,8 +150,10 @@ export const moduleRoutes = new Elysia({ prefix: '/api/modules' })
     }
   })
 
-  // POST /api/modules/:id/disable
-  .post('/:id/disable', async ({ params, set }) => {
+  // POST /api/modules/:id/disable — OPERATOR ONLY (paired with enable)
+  .post('/:id/disable', async ({ params, set, request }) => {
+    const denied = operatorDenied(request, set);
+    if (denied) return denied;
     try {
       return { module: await moduleManager.disable(params.id) };
     } catch (err) {
@@ -93,8 +162,10 @@ export const moduleRoutes = new Elysia({ prefix: '/api/modules' })
     }
   })
 
-  // POST /api/modules/:id/upgrade
-  .post('/:id/upgrade', async ({ params, set }) => {
+  // POST /api/modules/:id/upgrade — OPERATOR ONLY
+  .post('/:id/upgrade', async ({ params, set, request }) => {
+    const denied = operatorDenied(request, set);
+    if (denied) return denied;
     try {
       return { module: await moduleManager.upgrade(params.id) };
     } catch (err) {
@@ -103,8 +174,10 @@ export const moduleRoutes = new Elysia({ prefix: '/api/modules' })
     }
   })
 
-  // DELETE /api/modules/:id — uninstall
-  .delete('/:id', async ({ params, set }) => {
+  // DELETE /api/modules/:id — uninstall — OPERATOR ONLY
+  .delete('/:id', async ({ params, set, request }) => {
+    const denied = operatorDenied(request, set);
+    if (denied) return denied;
     try {
       return await moduleManager.uninstall(params.id);
     } catch (err) {

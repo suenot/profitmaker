@@ -54,14 +54,44 @@ export function resolveServerToken(): string | undefined {
 }
 
 /**
+ * Whether `url` targets the same origin as `base`. Fails closed: an unparseable
+ * url or base counts as cross-origin.
+ */
+function isSameOrigin(url: string, base: string): boolean {
+  try {
+    return new URL(url).origin === new URL(base).origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Authenticated fetch against the terminal server. `path` may be absolute
  * ('http(s)://...') or server-relative ('/api/modules/...'); relative paths are
  * resolved against {@link resolveServerBase}. Attaches the Bearer token the same
  * way ccxtServerProvider does.
+ *
+ * SECURITY: this is the fetch handed to third-party modules as
+ * `terminal.api.fetch`, and the Bearer token it attaches authorizes the ENTIRE
+ * /api/* surface (orders, accounts, dashboards). An absolute URL pointing
+ * anywhere other than the terminal server is therefore rejected outright rather
+ * than merely stripped of its Authorization header — a module that genuinely
+ * needs a third-party endpoint must use the global `fetch`, which carries no
+ * terminal credentials.
  */
 export function moduleFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const base = resolveServerBase();
   const url = /^https?:\/\//i.test(path) ? path : `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+
+  if (!isSameOrigin(url, base)) {
+    return Promise.reject(
+      new Error(
+        `[module-api] refusing to send an authenticated request to "${url}" — ` +
+          `terminal.api.fetch only targets the terminal server (${base}). ` +
+          'Use the global fetch() for third-party endpoints.',
+      ),
+    );
+  }
 
   const token = resolveServerToken();
   const headers = new Headers(init.headers);

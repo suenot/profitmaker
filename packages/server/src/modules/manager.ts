@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { join, isAbsolute, normalize } from 'path';
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'fs';
+import { join, isAbsolute, normalize, sep } from 'path';
 import { pathToFileURL } from 'url';
 import type { Server as SocketIOServer } from 'socket.io';
 
@@ -36,6 +36,13 @@ interface ModuleState {
 /** Live, in-memory handle to a started module (not persisted). */
 interface LoadedModule {
   state: ModuleState;
+  /**
+   * True between a successful start() and the matching stop(). This is the
+   * authoritative "is it running" flag — dispatchMap membership is NOT, because
+   * a services-only module (no routes) never enters it and would otherwise be
+   * started again on every enable(), duplicating its jobs and providers.
+   */
+  running: boolean;
   backend?: BackendModule;
   handles?: BackendModuleHandles;
   clearJobs?: () => void;
@@ -43,6 +50,12 @@ interface LoadedModule {
 }
 
 const MODULES_PKG = { name: 'profitmaker-installed-modules', private: true };
+
+/**
+ * Wall-clock ceiling for a `bun add/update/remove` subprocess. Without it an
+ * unreachable or slow registry hangs the HTTP request forever.
+ */
+const PKG_MANAGER_TIMEOUT_MS = 120_000;
 
 function readJson<T>(file: string): T | null {
   try {
@@ -90,6 +103,68 @@ class ModuleManager {
   /** id -> dispatch handler (an Elysia-like plugin's handle()). */
   private dispatchMap = new Map<string, (req: Request) => Response | Promise<Response>>();
   private initialized = false;
+  /**
+   * Tail of the mutation queue. install/upgrade/uninstall/enable/disable all run
+   * through `serialize()` so two concurrent calls can never interleave a
+   * `bun add` with a `bun remove` in the same cwd (lockfile corruption) or
+   * interleave start/stop against `this.loaded`.
+   */
+  private opChain: Promise<unknown> = Promise.resolve();
+
+  /** Queue `fn` behind every previously queued mutation, whatever their outcome. */
+  private serialize<T>(fn: () => Promise<T>): Promise<T> {
+    const run = this.opChain.then(fn, fn);
+    // Swallow on the chain itself so one failure doesn't reject every later op.
+    this.opChain = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
+
+  /**
+   * Run a `bun` package-manager subprocess in the modules dir.
+   *
+   * Both pipes are drained CONCURRENTLY with `exited`. Bun buffers a piped
+   * child's output generously, so awaiting `exited` first survives ordinary
+   * output, but it does hang once the child writes enough (measured: fine at
+   * ~10MB, hangs at ~100MB) — and the previous code never read stdout at all.
+   * The timeout below is the real backstop: it bounds the call whatever the
+   * cause (unreachable registry, a wedged child, a stuck postinstall).
+   */
+  private async runPackageManager(args: string[]): Promise<void> {
+    const proc = Bun.spawn(['bun', ...args], {
+      cwd: this.modulesDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      try {
+        proc.kill();
+      } catch {
+        /* already gone */
+      }
+    }, PKG_MANAGER_TIMEOUT_MS);
+
+    try {
+      const [stdout, stderr, exitCode] = await Promise.all([
+        new Response(proc.stdout).text(),
+        new Response(proc.stderr).text(),
+        proc.exited,
+      ]);
+      if (timedOut) {
+        throw new Error(`bun ${args.join(' ')} timed out after ${PKG_MANAGER_TIMEOUT_MS}ms`);
+      }
+      if (exitCode !== 0) {
+        const detail = stderr.trim() || stdout.trim();
+        throw new Error(`bun ${args.join(' ')} failed (${exitCode}): ${detail}`);
+      }
+    } finally {
+      clearTimeout(timer);
+    }
+  }
 
   /** Resolve MODULES_DIR (env override or <packages/server>/.modules). */
   private resolveModulesDir(): string {
@@ -144,7 +219,7 @@ class ModuleManager {
     for (const [id, raw] of Object.entries(persisted)) {
       const dir = join(this.modulesDir, 'node_modules', raw.npmName);
       const state: ModuleState = { ...raw, dir, dev: false };
-      this.loaded.set(id, { state });
+      this.loaded.set(id, { state, running: false });
     }
 
     // 2. Dev modules from PROFITMAKER_DEV_MODULES (colon-separated paths).
@@ -200,7 +275,7 @@ class ModuleManager {
       dir: abs,
       dev: true,
     };
-    this.loaded.set(id, { state });
+    this.loaded.set(id, { state, running: false });
     console.log(`[modules] registered dev module ${id} from ${abs}`);
   }
 
@@ -238,50 +313,73 @@ class ModuleManager {
     const m = this.loaded.get(id);
     if (!m) throw new Error(`unknown module ${id}`);
     if (!this.io) throw new Error('manager not initialized');
+    // Idempotent: starting an already-running module would register a second
+    // set of jobs/providers and orphan the first clearJobs closure.
+    if (m.running) return;
     const { manifest, dir, version } = m.state;
 
     // Backend is optional — a frontend-only module has nothing to start.
     if (!manifest.backend) {
       m.state.error = undefined;
+      m.running = true;
       return;
     }
 
-    const entryAbs = join(dir, manifest.backend.entry);
-    if (!existsSync(entryAbs)) {
-      throw new Error(`backend entry not found: ${entryAbs}`);
+    const entryAbs = this.safeJoin(dir, manifest.backend.entry);
+    if (!entryAbs || !existsSync(entryAbs)) {
+      throw new Error(`backend entry not found: ${manifest.backend.entry}`);
     }
 
     const { ctx, clearJobs, clearProviders } = buildBackendModuleContext(id, version, this.io, this.modulesDir);
-    const mod = (await import(pathToFileURL(entryAbs).href)) as {
-      default?: BackendModule;
-    } & Partial<BackendModule>;
-    const backend: BackendModule | undefined =
-      mod.default && typeof mod.default.start === 'function'
-        ? mod.default
-        : typeof mod.start === 'function'
-          ? (mod as unknown as BackendModule)
-          : undefined;
-    if (!backend) {
-      throw new Error(`backend entry ${manifest.backend.entry} has no start() export`);
-    }
-
-    const handles = (await backend.start(ctx)) || undefined;
-    m.backend = backend;
-    m.handles = handles ?? undefined;
-    m.clearJobs = clearJobs;
-    m.clearProviders = clearProviders;
-    m.state.error = undefined;
-
-    if (handles?.routes && typeof handles.routes.handle === 'function') {
-      const plugin = handles.routes;
-      // Elysia registers plugins/routes asynchronously; a freshly-constructed
-      // instance must settle its `modules` promise before handle() will match.
-      // The SDK type is structural, so this is best-effort and optional.
-      const maybeModules = (plugin as unknown as { modules?: Promise<unknown> }).modules;
-      if (maybeModules && typeof (maybeModules as Promise<unknown>).then === 'function') {
-        await maybeModules;
+    try {
+      const mod = (await import(pathToFileURL(entryAbs).href)) as {
+        default?: BackendModule;
+      } & Partial<BackendModule>;
+      const backend: BackendModule | undefined =
+        mod.default && typeof mod.default.start === 'function'
+          ? mod.default
+          : typeof mod.start === 'function'
+            ? (mod as unknown as BackendModule)
+            : undefined;
+      if (!backend) {
+        throw new Error(`backend entry ${manifest.backend.entry} has no start() export`);
       }
-      this.dispatchMap.set(id, (req) => plugin.handle(this.rewriteForModule(id, req)));
+
+      const handles = (await backend.start(ctx)) || undefined;
+      m.backend = backend;
+      m.handles = handles ?? undefined;
+      m.clearJobs = clearJobs;
+      m.clearProviders = clearProviders;
+      m.state.error = undefined;
+      m.running = true;
+
+      if (handles?.routes && typeof handles.routes.handle === 'function') {
+        const plugin = handles.routes;
+        // Elysia registers plugins/routes asynchronously; a freshly-constructed
+        // instance must settle its `modules` promise before handle() will match.
+        // The SDK type is structural, so this is best-effort and optional.
+        const maybeModules = (plugin as unknown as { modules?: Promise<unknown> }).modules;
+        if (maybeModules && typeof (maybeModules as Promise<unknown>).then === 'function') {
+          await maybeModules;
+        }
+        this.dispatchMap.set(id, (req) => plugin.handle(this.rewriteForModule(id, req)));
+      }
+    } catch (err) {
+      // A module that threw partway through start() may already have registered
+      // jobs or providers against the context. Tear those down before
+      // propagating, otherwise they outlive a module that never started.
+      try {
+        clearJobs();
+      } catch {
+        /* best effort */
+      }
+      try {
+        clearProviders();
+      } catch {
+        /* best effort */
+      }
+      m.running = false;
+      throw err;
     }
     console.log(`[modules] started ${id}`);
   }
@@ -310,32 +408,39 @@ class ModuleManager {
     m.handles = undefined;
     m.clearJobs = undefined;
     m.clearProviders = undefined;
+    m.running = false;
     console.log(`[modules] stopped ${id}`);
   }
 
   async enable(id: string): Promise<InstalledModule> {
-    const m = this.loaded.get(id);
-    if (!m) throw new Error(`unknown module ${id}`);
-    if (!m.state.enabled || !this.dispatchMap.has(id)) {
-      m.state.enabled = true;
-      try {
-        await this.start(id);
-        m.state.error = undefined;
-      } catch (err) {
-        m.state.error = err instanceof Error ? err.message : String(err);
+    return this.serialize(async () => {
+      const m = this.loaded.get(id);
+      if (!m) throw new Error(`unknown module ${id}`);
+      // `running` (not dispatchMap membership) decides whether a start is
+      // needed: a services-only module never enters dispatchMap.
+      if (!m.state.enabled || !m.running) {
+        m.state.enabled = true;
+        try {
+          await this.start(id);
+          m.state.error = undefined;
+        } catch (err) {
+          m.state.error = err instanceof Error ? err.message : String(err);
+        }
       }
-    }
-    this.persistSafe();
-    return this.toInstalled(m.state);
+      this.persistSafe();
+      return this.toInstalled(m.state);
+    });
   }
 
   async disable(id: string): Promise<InstalledModule> {
-    const m = this.loaded.get(id);
-    if (!m) throw new Error(`unknown module ${id}`);
-    await this.stop(id);
-    m.state.enabled = false;
-    this.persistSafe();
-    return this.toInstalled(m.state);
+    return this.serialize(async () => {
+      const m = this.loaded.get(id);
+      if (!m) throw new Error(`unknown module ${id}`);
+      await this.stop(id);
+      m.state.enabled = false;
+      this.persistSafe();
+      return this.toInstalled(m.state);
+    });
   }
 
   /**
@@ -350,52 +455,56 @@ class ModuleManager {
     assertValidPackageName(opts.name);
     if (opts.version !== undefined) assertValidVersion(opts.version);
 
-    this.ensureModulesDir();
-    const spec = opts.version ? `${opts.name}@${opts.version}` : opts.name;
-    // `--` marks the end of options so `spec` is always treated as a positional
-    // argument, never as a flag (defense-in-depth on top of the validation).
-    const proc = Bun.spawn(['bun', 'add', '--exact', '--', spec], {
-      cwd: this.modulesDir,
-      stdout: 'pipe',
-      stderr: 'pipe',
+    return this.serialize(async () => {
+      this.ensureModulesDir();
+      const spec = opts.version ? `${opts.name}@${opts.version}` : opts.name;
+      // `--` marks the end of options so `spec` is always treated as a positional
+      // argument, never as a flag (defense-in-depth on top of the validation).
+      await this.runPackageManager(['add', '--exact', '--', spec]);
+
+      const pkgDir = join(this.modulesDir, 'node_modules', opts.name);
+      const pkg = readJson<Record<string, unknown>>(join(pkgDir, 'package.json'));
+      if (!pkg) throw new Error(`installed package.json not found for ${opts.name}`);
+      const manifest = ModuleManifestSchema.parse(pkg.profitmaker);
+
+      if (!Bun.semver.satisfies(TERMINAL_API_VERSION, manifest.minTerminalApi)) {
+        throw new Error(
+          `module ${manifest.id} requires terminal API ${manifest.minTerminalApi}, host is ${TERMINAL_API_VERSION}`,
+        );
+      }
+
+      const id = manifest.id;
+      // A manifest id is owned by the package that first claimed it. Without
+      // this, any package could declare an incumbent's id and inherit its
+      // /api/modules/<id> routes, its /m/<id> socket namespace and its
+      // persisted state/<id>.json. Reinstalling the SAME package is still fine.
+      const incumbent = this.loaded.get(id);
+      if (incumbent && incumbent.state.npmName !== opts.name) {
+        throw new Error(
+          `module id "${id}" is already provided by package "${incumbent.state.npmName}"; uninstall it first`,
+        );
+      }
+
+      // Stop the previous instance of this same package before replacing it.
+      if (incumbent) await this.stop(id);
+
+      const state: ModuleState = {
+        npmName: opts.name,
+        version: typeof pkg.version === 'string' ? pkg.version : (opts.version ?? '0.0.0'),
+        enabled: true,
+        manifest,
+        dir: pkgDir,
+        dev: false,
+      };
+      this.loaded.set(id, { state, running: false });
+      try {
+        await this.start(id);
+      } catch (err) {
+        state.error = err instanceof Error ? err.message : String(err);
+      }
+      this.persistSafe();
+      return this.toInstalled(state);
     });
-    const exitCode = await proc.exited;
-    if (exitCode !== 0) {
-      const stderr = await new Response(proc.stderr).text();
-      throw new Error(`bun add ${spec} failed (${exitCode}): ${stderr.trim()}`);
-    }
-
-    const pkgDir = join(this.modulesDir, 'node_modules', opts.name);
-    const pkg = readJson<Record<string, unknown>>(join(pkgDir, 'package.json'));
-    if (!pkg) throw new Error(`installed package.json not found for ${opts.name}`);
-    const manifest = ModuleManifestSchema.parse(pkg.profitmaker);
-
-    if (!Bun.semver.satisfies(TERMINAL_API_VERSION, manifest.minTerminalApi)) {
-      throw new Error(
-        `module ${manifest.id} requires terminal API ${manifest.minTerminalApi}, host is ${TERMINAL_API_VERSION}`,
-      );
-    }
-
-    const id = manifest.id;
-    // Stop a previous instance with the same id before replacing it.
-    if (this.loaded.has(id)) await this.stop(id);
-
-    const state: ModuleState = {
-      npmName: opts.name,
-      version: typeof pkg.version === 'string' ? pkg.version : (opts.version ?? '0.0.0'),
-      enabled: true,
-      manifest,
-      dir: pkgDir,
-      dev: false,
-    };
-    this.loaded.set(id, { state });
-    try {
-      await this.start(id);
-    } catch (err) {
-      state.error = err instanceof Error ? err.message : String(err);
-    }
-    this.persistSafe();
-    return this.toInstalled(state);
   }
 
   /**
@@ -404,31 +513,30 @@ class ModuleManager {
    * restart — we mark pendingRestart and leave the running instance alone.
    */
   async upgrade(id: string): Promise<InstalledModule> {
-    const m = this.loaded.get(id);
-    if (!m) throw new Error(`unknown module ${id}`);
-    if (m.state.dev) throw new Error(`cannot upgrade dev module ${id}`);
+    return this.serialize(async () => {
+      const m = this.loaded.get(id);
+      if (!m) throw new Error(`unknown module ${id}`);
+      if (m.state.dev) throw new Error(`cannot upgrade dev module ${id}`);
 
-    // Re-validate the persisted name: modules.json could have been written by an
-    // earlier build (or tampered with) carrying a flag-like npmName.
-    assertValidPackageName(m.state.npmName);
-    const proc = Bun.spawn(['bun', 'update', '--', m.state.npmName], {
-      cwd: this.modulesDir,
-      stdout: 'pipe',
-      stderr: 'pipe',
+      // Re-validate the persisted name: modules.json could have been written by an
+      // earlier build (or tampered with) carrying a flag-like npmName.
+      assertValidPackageName(m.state.npmName);
+      const before = m.state.version;
+      // `--latest` is required: install() pins with `--exact`, so package.json
+      // holds a single-version range and a plain `bun update` can never move
+      // off it — the upgrade would silently no-op while reporting success.
+      await this.runPackageManager(['update', '--latest', '--', m.state.npmName]);
+
+      // Reflect the new on-disk version in state; runtime stays on old code.
+      const pkg = readJson<Record<string, unknown>>(
+        join(this.modulesDir, 'node_modules', m.state.npmName, 'package.json'),
+      );
+      if (pkg && typeof pkg.version === 'string') m.state.version = pkg.version;
+      // Only claim a restart is pending when the code on disk actually changed.
+      if (m.state.version !== before) m.state.pendingRestart = true;
+      this.persistSafe();
+      return this.toInstalled(m.state);
     });
-    const exitCode = await proc.exited;
-    if (exitCode !== 0) {
-      const stderr = await new Response(proc.stderr).text();
-      throw new Error(`bun update ${m.state.npmName} failed (${exitCode}): ${stderr.trim()}`);
-    }
-    // Reflect the new on-disk version in state; runtime stays on old code.
-    const pkg = readJson<Record<string, unknown>>(
-      join(this.modulesDir, 'node_modules', m.state.npmName, 'package.json'),
-    );
-    if (pkg && typeof pkg.version === 'string') m.state.version = pkg.version;
-    m.state.pendingRestart = true;
-    this.persistSafe();
-    return this.toInstalled(m.state);
   }
 
   /**
@@ -438,33 +546,26 @@ class ModuleManager {
    * list and its routes/jobs are torn down immediately.
    */
   async uninstall(id: string): Promise<{ id: string; pendingRestart: boolean }> {
-    const m = this.loaded.get(id);
-    if (!m) throw new Error(`unknown module ${id}`);
-    await this.stop(id);
+    return this.serialize(async () => {
+      const m = this.loaded.get(id);
+      if (!m) throw new Error(`unknown module ${id}`);
+      await this.stop(id);
 
-    if (m.state.dev) {
-      // Dev modules aren't npm-installed; just forget them for this run.
+      if (m.state.dev) {
+        // Dev modules aren't npm-installed; just forget them for this run.
+        this.loaded.delete(id);
+        this.persistSafe();
+        return { id, pendingRestart: false };
+      }
+
+      // Re-validate the persisted name before spawning (same rationale as upgrade).
+      assertValidPackageName(m.state.npmName);
+      await this.runPackageManager(['remove', '--', m.state.npmName]);
       this.loaded.delete(id);
       this.persistSafe();
-      return { id, pendingRestart: false };
-    }
-
-    // Re-validate the persisted name before spawning (same rationale as upgrade).
-    assertValidPackageName(m.state.npmName);
-    const proc = Bun.spawn(['bun', 'remove', '--', m.state.npmName], {
-      cwd: this.modulesDir,
-      stdout: 'pipe',
-      stderr: 'pipe',
+      // Already-imported code stays resident in this process until restart.
+      return { id, pendingRestart: true };
     });
-    const exitCode = await proc.exited;
-    if (exitCode !== 0) {
-      const stderr = await new Response(proc.stderr).text();
-      throw new Error(`bun remove ${m.state.npmName} failed (${exitCode}): ${stderr.trim()}`);
-    }
-    this.loaded.delete(id);
-    this.persistSafe();
-    // Already-imported code stays resident in this process until restart.
-    return { id, pendingRestart: true };
   }
 
   // ---- request dispatch ---------------------------------------------------
@@ -473,6 +574,13 @@ class ModuleManager {
    * Strip the `/api/modules/<id>` mount prefix so the module's Elysia plugin
    * sees root-relative paths (the SDK contract: "routes relative to root; host
    * mounts under /api/modules/<id>"). `/api/modules/hello/ping` -> `/ping`.
+   *
+   * Also strips the caller's credentials. Module code is third-party and
+   * in-process; forwarding the raw `Authorization` header would hand it the
+   * caller's session token / SSO JWT, letting it act as that user against the
+   * auth service and every other API — an escalation beyond this process.
+   * Modules authenticate via their own context, never by replaying the caller's
+   * bearer token.
    */
   private rewriteForModule(id: string, request: Request): Request {
     const url = new URL(request.url);
@@ -480,7 +588,15 @@ class ModuleManager {
     if (url.pathname === prefix || url.pathname.startsWith(prefix + '/')) {
       url.pathname = url.pathname.slice(prefix.length) || '/';
     }
-    return new Request(url, request);
+    // A standalone Headers has no guard, so `cookie` (a forbidden header name
+    // on a Request-guarded Headers) can actually be removed here.
+    const sanitized = new Headers(request.headers);
+    sanitized.delete('authorization');
+    sanitized.delete('proxy-authorization');
+    sanitized.delete('cookie');
+    // Two-step: the inner Request carries over method/body/url, the outer one
+    // replaces the header set without having to re-plumb the body stream.
+    return new Request(new Request(url, request), { headers: sanitized });
   }
 
   /**
@@ -529,12 +645,31 @@ class ModuleManager {
     return this.safeJoin(bundleDir, rest);
   }
 
-  /** Join base+rel, refusing any path that escapes base (path traversal). */
+  /**
+   * Join base+rel, refusing any path that escapes base (path traversal).
+   *
+   * The lexical check alone is not enough: a module's published tarball can
+   * contain a SYMLINK (e.g. `dist/frontend/assets/x -> /etc/passwd`) whose
+   * joined path looks contained but resolves outside. `/modules/:id/assets/*`
+   * is served without auth, so that would be an anonymous arbitrary-file read.
+   * Both ends are resolved through realpath and re-checked.
+   *
+   * Returns null when the target does not exist — callers already treat null as
+   * a 404.
+   */
   private safeJoin(base: string, rel: string): string | null {
     const target = normalize(join(base, rel));
     const baseNorm = normalize(base);
-    if (target !== baseNorm && !target.startsWith(baseNorm + '/')) return null;
-    return target;
+    if (target !== baseNorm && !target.startsWith(baseNorm + sep)) return null;
+    try {
+      const realBase = realpathSync(baseNorm);
+      const realTarget = realpathSync(target);
+      if (realTarget !== realBase && !realTarget.startsWith(realBase + sep)) return null;
+      return realTarget;
+    } catch {
+      // ENOENT (or an unreadable path) — nothing safe to serve.
+      return null;
+    }
   }
 }
 

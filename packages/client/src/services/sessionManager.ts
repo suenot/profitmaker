@@ -24,6 +24,8 @@ export interface SsoUser {
   userId: string;
   email: string;
   username: string | null;
+  /** Optional profile image supplied by the ecosystem SSO service. */
+  avatarUrl?: string | null;
   roles: Record<string, string>;
 }
 
@@ -67,9 +69,34 @@ function jwtExpiresAt(token: string): number | undefined {
   return undefined;
 }
 
-/** A session is stale once its JWT `exp` has passed (no refresh flow today). */
+/** Fallback lifetime for a token that carries no `exp`, measured from `addedAt`. */
+const DEFAULT_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * A session is stale once its deadline has passed (no refresh flow today).
+ *
+ * The two failure cases below are deliberately kept apart — do NOT collapse them
+ * back into a single `typeof expiresAt !== 'number'` check:
+ *
+ *  - `expiresAt` ABSENT: the auth service issued a token with no `exp` claim.
+ *    That's a legitimate variation we can't rule out from this repo, so we clamp
+ *    the lifetime to `addedAt + 24h` instead of rejecting it. Bounding the
+ *    lifetime is the actual fix here; the bug was that such a token was trusted
+ *    forever. Failing closed instead would lock out every user at once if the
+ *    assumption about `exp` were wrong.
+ *  - `expiresAt` PRESENT but not a number (string/NaN/null): the persisted blob
+ *    is corrupt, which no auth-service variation produces. Fail closed. Same for
+ *    a corrupt `addedAt` — without that guard the clamp evaluates to NaN, every
+ *    comparison is false, and we'd hand back an immortal token through the back
+ *    door we just closed.
+ */
 export function isSessionStale(session: SsoSession): boolean {
-  return typeof session.expiresAt === 'number' && session.expiresAt <= Date.now();
+  if (session.expiresAt === undefined) {
+    if (typeof session.addedAt !== 'number' || Number.isNaN(session.addedAt)) return true;
+    return session.addedAt + DEFAULT_SESSION_TTL_MS <= Date.now();
+  }
+  if (typeof session.expiresAt !== 'number' || Number.isNaN(session.expiresAt)) return true;
+  return session.expiresAt <= Date.now();
 }
 
 function readPersisted(): PersistedShape | null {

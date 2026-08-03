@@ -88,11 +88,14 @@ const Chart: React.FC<ChartProps> = ({
   const { getWidget, updateWidget } = useChartWidgetsStore();
   const widgetState = getWidget(widgetId);
 
-  // Проверка полноты выбранного инструмента
-  const isInstrumentSelected = selectedGroup && 
-    selectedGroup.account && 
-    selectedGroup.exchange && 
-    selectedGroup.market && 
+  // Проверка полноты выбранного инструмента. Candles are public market data —
+  // no account and no credentials required, so `account` is deliberately NOT
+  // part of this gate. Requiring it made a fresh install (which seeds only the
+  // public half of the instrument) show "No instrument selected" instead of a
+  // chart.
+  const isInstrumentSelected = selectedGroup &&
+    selectedGroup.exchange &&
+    selectedGroup.market &&
     selectedGroup.tradingPair;
 
   // Получаем данные инструмента из selectedGroup или fallback значения

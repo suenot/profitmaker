@@ -581,14 +581,31 @@ export const createFetchingActions: StateCreator<
       // First request immediately
       await fetchData();
 
+      // The widget can unmount while that first fetch is in flight, in which
+      // case unsubscribe already deleted the subscription. Starting an interval
+      // now would orphan it: there would be no subscription left to hang the
+      // intervalId on, so nothing could ever clear it.
+      if (!get().activeSubscriptions[subscriptionKey]) {
+        console.log(`🛑 Subscription ${subscriptionKey} went away during the initial fetch — not starting REST interval`);
+        return;
+      }
+
       // Start interval
       const intervalId = setInterval(fetchData, interval) as any;
 
+      let intervalStored = false;
       set(state => {
         if (state.activeSubscriptions[subscriptionKey]) {
           state.activeSubscriptions[subscriptionKey].intervalId = intervalId;
+          intervalStored = true;
         }
       });
+
+      // Nothing holds this timer, so stopDataFetching could never reach it.
+      if (!intervalStored) {
+        clearInterval(intervalId);
+        console.log(`🛑 Subscription ${subscriptionKey} disappeared before its REST interval was stored — interval cleared`);
+      }
 
     } catch (error) {
       console.error(`❌ Failed to start REST polling for ${exchange} ${symbol} ${dataType}:`, error);

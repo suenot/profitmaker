@@ -13,6 +13,22 @@ import { createDefaultDashboard } from '../services/defaultDashboard';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/**
+ * Self-service registration is OFF unless explicitly enabled. Every account this
+ * server issues is fully privileged, so on any reachable deployment an anonymous
+ * visitor could otherwise mint one for themselves.
+ */
+const ALLOW_REGISTRATION = /^(1|true|yes|on)$/i.test((process.env.ALLOW_REGISTRATION ?? '').trim());
+
+/**
+ * A real bcrypt hash (cost 12) of a throwaway random secret. No account holds
+ * this password; it exists only so an unknown email spends the SAME ~500ms in
+ * verifyPassword as a known one. Without it, login answers in ~5ms for an
+ * address that is not registered and ~500ms for one that is, which enumerates
+ * the user table from timing alone.
+ */
+const DUMMY_PASSWORD_HASH = '$2y$12$MVhb2IJooQ6.zosXk72IgujaGH4KqvsKWIYbOAI7oaChUIoitZ7qm';
+
 function extractBearerToken(request: Request): string | null {
   const header = request.headers.get('authorization');
   return header?.startsWith('Bearer ') ? header.slice(7) : null;
@@ -22,6 +38,11 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
   .post(
     '/register',
     async ({ body, set }) => {
+      if (!ALLOW_REGISTRATION) {
+        set.status = 403;
+        return { error: 'Registration is disabled on this server' };
+      }
+
       const { email, password, name } = body;
 
       if (!emailRegex.test(email)) {
@@ -94,6 +115,9 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
         .limit(1);
 
       if (result.length === 0) {
+        // Spend the same work as the found-user path before answering, so the
+        // response time does not reveal whether this email is registered.
+        await verifyPassword(password, DUMMY_PASSWORD_HASH);
         set.status = 401;
         return { error: 'Invalid email or password' };
       }

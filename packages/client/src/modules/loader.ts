@@ -1,9 +1,9 @@
+import satisfies from 'semver/functions/satisfies';
 import type { FrontendModule, InstalledModule } from '@profitmaker/module-sdk';
 import { TERMINAL_API_VERSION } from '@profitmaker/module-sdk';
 
 import { resolveServerBase, moduleFetch } from './api';
-import { initRuntime } from './runtime';
-import { satisfies } from './semver';
+import { initRuntime, createModuleTerminal } from './runtime';
 import { useModuleLoadStore } from './loaderState';
 import { useWidgetRegistry } from './registry';
 import { useNotificationStore } from '@/store/notificationStore';
@@ -13,6 +13,7 @@ interface ModuleBundle {
   default?: FrontendModule;
 }
 
+/** Stylesheet keys (`<id>@<version>`) already injected into <head>. */
 const injectedStyles = new Set<string>();
 
 /**
@@ -22,15 +23,51 @@ const injectedStyles = new Set<string>();
  */
 const importedBundles = new Map<string, FrontendModule>();
 
-/** Inject a module stylesheet once per module id. */
+/**
+ * Currently-registered modules by id — the FrontendModule whose `dispose()` must
+ * run when the module is disabled or uninstalled.
+ */
+const activeModules = new Map<string, FrontendModule>();
+
+/**
+ * Does `version` satisfy the module's `minTerminalApi` range? An unparseable
+ * range fails closed (the module is not loaded) rather than being ignored.
+ */
+function satisfiesRange(version: string, range: string): boolean {
+  try {
+    return satisfies(version, range, { includePrerelease: true });
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Inject a module stylesheet once per `<id>@<version>`, dropping any stylesheet
+ * this module injected for an earlier version so an upgrade does not leave the
+ * old CSS applied.
+ */
 function injectStyle(base: string, id: string, version: string): void {
-  if (injectedStyles.has(id)) return;
+  const key = `${id}@${version}`;
+  if (injectedStyles.has(key)) return;
+  removeStyle(id);
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.dataset.module = id;
   link.href = `${base}/modules/${id}/style.css?v=${encodeURIComponent(version)}`;
   document.head.appendChild(link);
-  injectedStyles.add(id);
+  injectedStyles.add(key);
+}
+
+/** Remove a module's injected stylesheet(s) from <head>. */
+function removeStyle(id: string): void {
+  if (typeof document !== 'undefined') {
+    for (const link of document.querySelectorAll(`link[data-module="${CSS.escape(id)}"]`)) {
+      link.remove();
+    }
+  }
+  for (const key of injectedStyles) {
+    if (key.startsWith(`${id}@`)) injectedStyles.delete(key);
+  }
 }
 
 /**
@@ -43,7 +80,7 @@ async function loadModule(base: string, module: InstalledModule): Promise<void> 
   if (!frontend) return; // backend-only module, nothing to load on the client
 
   const required = manifest.minTerminalApi || '>=1.0.0';
-  if (!satisfies(TERMINAL_API_VERSION, required)) {
+  if (!satisfiesRange(TERMINAL_API_VERSION, required)) {
     throw new Error(
       `requires terminal API ${required}, host is ${TERMINAL_API_VERSION}`,
     );
@@ -67,7 +104,12 @@ async function loadModule(base: string, module: InstalledModule): Promise<void> 
 
   // Re-registering is safe: the registry replaces (with a warn) on duplicate
   // type, so re-enabling a module re-registers its widgets from the cached def.
-  await def.register(window.__PROFITMAKER__!);
+  // The terminal handed over is scoped to this module id, so every widget it
+  // registers is attributed to it — that attribution is what unloadModule()
+  // unregisters by, and what stops it claiming a built-in or another module's
+  // widget type.
+  await def.register(createModuleTerminal(id));
+  activeModules.set(id, def);
 }
 
 let loadingPromise: Promise<void> | null = null;
@@ -135,20 +177,34 @@ export async function loadModules(): Promise<void> {
 }
 
 /**
- * Unregister a module's widget types from the registry (e.g. on disable or
- * uninstall) so any open dashboard widgets of those types fall back to the
- * UnknownWidgetPlaceholder. Widget types are taken from the module manifest's
- * declared frontend widgets.
+ * Tear a module's frontend down (on disable or uninstall): run its `dispose()`
+ * so its timers/sockets/listeners stop, unregister every widget type it
+ * actually registered, and drop its stylesheet. Open dashboard widgets of those
+ * types fall back to the UnknownWidgetPlaceholder.
+ *
+ * Widget types come from the registry's ownership map, NOT from the manifest —
+ * the manifest's widget list is display metadata (runtime registration is
+ * authoritative), so a type the module registered without declaring would
+ * otherwise survive being disabled.
  *
  * NOTE: the already-imported ES bundle cannot be evicted (Bun/JS limitation),
- * so re-enabling within the same session re-registers via the registry's
- * idempotent register; a hard removal of the module code needs a reload.
+ * so re-enabling within the same session re-registers via the cached
+ * FrontendModule; a hard removal of the module code needs a reload.
  */
 export function unloadModule(module: InstalledModule): void {
-  const types = module.manifest.frontend?.widgets?.map((w) => w.type) ?? [];
-  const unregister = useWidgetRegistry.getState().unregister;
-  for (const type of types) {
-    unregister(type);
+  const { id } = module;
+
+  const def = activeModules.get(id);
+  if (def?.dispose) {
+    try {
+      def.dispose();
+    } catch (err) {
+      console.error(`[module-loader] dispose() threw for module "${id}":`, err);
+    }
   }
-  useModuleLoadStore.getState().clearError(module.id);
+  activeModules.delete(id);
+
+  useWidgetRegistry.getState().unregisterByOwner(id);
+  removeStyle(id);
+  useModuleLoadStore.getState().clearError(id);
 }

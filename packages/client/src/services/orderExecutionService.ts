@@ -1,12 +1,29 @@
 import type {
   PlaceOrderRequest,
-  PlaceOrderResponse,
   AdvancedOrderOptions
 } from '../types/orders';
 import type { CCXTServerProvider } from '../types/dataProviders';
 import type { AccountRef } from '@profitmaker/types';
 import { createCCXTServerProvider } from '../store/providers/ccxtServerProvider';
 import { useDataProviderStore } from '../store/dataProviderStore';
+import type { OrderSubmitResponse } from '../store/placeOrderStore';
+
+/**
+ * Order statuses that mean the venue did NOT accept the order, even though the
+ * createOrder call itself resolved. Several exchanges return a well-formed order
+ * object carrying one of these instead of throwing.
+ */
+const NON_EXECUTED_STATUSES = new Set(['rejected', 'canceled', 'cancelled', 'expired']);
+
+/**
+ * True when the exchange's response describes an order that will never execute.
+ * An absent status is treated as accepted — that is the common shape for a
+ * successful createOrder on many venues.
+ */
+export function isRejectedStatus(status: unknown): boolean {
+  if (typeof status !== 'string') return false;
+  return NON_EXECUTED_STATUSES.has(status.trim().toLowerCase());
+}
 
 /**
  * Executes a trading order through CCXT
@@ -14,7 +31,7 @@ import { useDataProviderStore } from '../store/dataProviderStore';
 export async function executeOrder(
   orderRequest: PlaceOrderRequest,
   advancedOptions?: AdvancedOrderOptions
-): Promise<PlaceOrderResponse> {
+): Promise<OrderSubmitResponse> {
   try {
     console.log(`🚀 [OrderExecution] Executing order:`, orderRequest);
 
@@ -119,29 +136,52 @@ export async function executeOrder(
     } catch (createOrderError: any) {
       console.error(`❌ [OrderExecution] Failed to create order:`, createOrderError);
       
-      // Try to provide more helpful error messages
-      let errorMessage = createOrderError.message || 'Unknown error';
-      
-      if (errorMessage.toLowerCase().includes('insufficient')) {
-        errorMessage = 'Insufficient balance to place order';
-      } else if (errorMessage.toLowerCase().includes('minimum')) {
-        errorMessage = 'Order amount below minimum required';
-      } else if (errorMessage.toLowerCase().includes('maximum')) {
-        errorMessage = 'Order amount exceeds maximum allowed';
-      } else if (errorMessage.toLowerCase().includes('invalid symbol')) {
-        errorMessage = 'Trading pair not found or not tradeable';
-      } else if (errorMessage.toLowerCase().includes('market closed')) {
-        errorMessage = 'Market is currently closed for trading';
+      // Prefix a friendly hint where we recognise the failure, but ALWAYS keep
+      // the exchange's own message — it is the only thing that says which filter
+      // actually rejected the order (e.g. Binance's "Filter failure: MIN_NOTIONAL").
+      const rawMessage = createOrderError.message || 'Unknown error';
+      const lowered = rawMessage.toLowerCase();
+
+      let hint = '';
+      if (lowered.includes('insufficient')) {
+        hint = 'Insufficient balance to place order';
+      } else if (lowered.includes('min_notional') || lowered.includes('minimum')) {
+        hint = 'Order is below the exchange minimum';
+      } else if (lowered.includes('invalid symbol')) {
+        hint = 'Trading pair not found or not tradeable';
+      } else if (lowered.includes('market closed')) {
+        hint = 'Market is currently closed for trading';
       }
-      
-      throw new Error(errorMessage);
+
+      throw new Error(hint ? `${hint} — ${rawMessage}` : rawMessage);
     }
 
     console.log(`✅ [OrderExecution] Order placed successfully:`, ccxtOrder);
 
-    // Handle advanced options (stop loss / take profit)
+    // The call resolved, but that is not the same as the venue accepting the
+    // order — some exchanges hand back an order object with a terminal status.
+    if (isRejectedStatus(ccxtOrder?.status)) {
+      const status = String(ccxtOrder.status).toLowerCase();
+      console.error(`❌ [OrderExecution] Exchange returned a non-executed status:`, status, ccxtOrder);
+      return {
+        success: false,
+        error: `Exchange ${status} the order (id ${ccxtOrder.id ?? 'unknown'}). It was not executed.`,
+        orderId: ccxtOrder.id,
+      };
+    }
+
+    // Handle advanced options (stop loss / take profit).
+    //
+    // These are sized to the FULL entry amount and fired immediately, before the
+    // entry is known to have filled. That is a real limitation: on spot the
+    // reduce-only flag is not honoured, and a market buy of 1 BTC credits less
+    // than 1 BTC once fees are taken, so the protective leg can be rejected.
+    // Every failure below is therefore reported back to the caller — a stop that
+    // silently failed to place is worse than no stop at all, because the user
+    // believes they are protected.
     const additionalOrders: any[] = [];
-    
+    const warnings: string[] = [];
+
     if (advancedOptions?.stopLoss?.enabled && advancedOptions.stopLoss.price) {
       try {
         const stopLossOrder = await serverProvider.trading.createOrder(creds, {
@@ -156,10 +196,18 @@ export async function executeOrder(
             reduceOnly: true,
           },
         });
-        additionalOrders.push(stopLossOrder);
-        console.log(`✅ [OrderExecution] Stop loss order placed:`, stopLossOrder);
+        if (isRejectedStatus(stopLossOrder?.status)) {
+          warnings.push(
+            `STOP-LOSS NOT ACTIVE: the exchange ${String(stopLossOrder.status).toLowerCase()} it. This position is unprotected.`
+          );
+        } else {
+          additionalOrders.push(stopLossOrder);
+          console.log(`✅ [OrderExecution] Stop loss order placed:`, stopLossOrder);
+        }
       } catch (stopLossError) {
-        console.warn(`⚠️ [OrderExecution] Failed to place stop loss:`, stopLossError);
+        const reason = stopLossError instanceof Error ? stopLossError.message : 'unknown error';
+        console.error(`❌ [OrderExecution] Failed to place stop loss:`, stopLossError);
+        warnings.push(`STOP-LOSS NOT PLACED: ${reason}. This position is unprotected.`);
       }
     }
 
@@ -177,17 +225,26 @@ export async function executeOrder(
             reduceOnly: true,
           },
         });
-        additionalOrders.push(takeProfitOrder);
-        console.log(`✅ [OrderExecution] Take profit order placed:`, takeProfitOrder);
+        if (isRejectedStatus(takeProfitOrder?.status)) {
+          warnings.push(
+            `TAKE-PROFIT NOT ACTIVE: the exchange ${String(takeProfitOrder.status).toLowerCase()} it.`
+          );
+        } else {
+          additionalOrders.push(takeProfitOrder);
+          console.log(`✅ [OrderExecution] Take profit order placed:`, takeProfitOrder);
+        }
       } catch (takeProfitError) {
-        console.warn(`⚠️ [OrderExecution] Failed to place take profit:`, takeProfitError);
+        const reason = takeProfitError instanceof Error ? takeProfitError.message : 'unknown error';
+        console.error(`❌ [OrderExecution] Failed to place take profit:`, takeProfitError);
+        warnings.push(`TAKE-PROFIT NOT PLACED: ${reason}.`);
       }
     }
 
     // Format response
-    const response: PlaceOrderResponse = {
+    const response: OrderSubmitResponse = {
       success: true,
       orderId: ccxtOrder.id,
+      ...(warnings.length > 0 ? { warnings } : {}),
       order: {
         id: ccxtOrder.id,
         clientOrderId: ccxtOrder.clientOrderId,

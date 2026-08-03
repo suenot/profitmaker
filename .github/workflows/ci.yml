@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3"
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Server tests
+        run: bun run test
+        working-directory: packages/server
+
+      - name: Client tests
+        run: bun run test
+        working-directory: packages/client
+
+      - name: Server typecheck
+        run: bunx tsc --noEmit
+        working-directory: packages/server
+
+      # TODO: both of these are RED at the time this workflow landed (order of 10
+      # tsc errors, order of 230 eslint errors). They are non-blocking so CI can
+      # gate the checks that already pass. Flip both to blocking — drop
+      # continue-on-error — once the backlog is cleared.
+      - name: Client typecheck (non-blocking — see TODO above)
+        run: bun run typecheck
+        working-directory: packages/client
+        continue-on-error: true
+
+      - name: Client lint (non-blocking — see TODO above)
+        run: bun run lint
+        working-directory: packages/client
+        continue-on-error: true

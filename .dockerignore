@@ -1,0 +1,19 @@
+# Secrets — the build does `COPY . .`, so without these the gitignored root
+# .env (live exchange API keys) would be baked into an image layer.
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Never ship history or host-built artifacts; the image builds its own.
+.git
+.gitignore
+node_modules
+**/node_modules
+dist
+**/dist
+
+*.log
+.DS_Store

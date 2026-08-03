@@ -38,11 +38,13 @@ const TradesWidgetV2Inner: React.FC<TradesWidgetV2Props> = ({
   // Fallback to transparent group if no group is selected
   const selectedGroup = currentGroupId ? getGroupById(currentGroupId) : getTransparentGroup();
 
-  // Проверка полноты выбранного инструмента
-  const isInstrumentSelected = selectedGroup && 
-    selectedGroup.account && 
-    selectedGroup.exchange && 
-    selectedGroup.market && 
+  // Проверка полноты выбранного инструмента. This widget renders the PUBLIC
+  // trade tape (initializeTradesData / getTrades take no accountId), so
+  // `account` is deliberately NOT part of this gate. The user's own fills live
+  // in MyTradesWidget / UserTradesTab, which gate on an account themselves.
+  const isInstrumentSelected = selectedGroup &&
+    selectedGroup.exchange &&
+    selectedGroup.market &&
     selectedGroup.tradingPair;
 
   // Получаем данные инструмента из selectedGroup

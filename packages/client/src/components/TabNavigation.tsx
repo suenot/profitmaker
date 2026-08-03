@@ -13,9 +13,8 @@ const TabNavigation: React.FC = () => {
   const [isUserDrawerOpen, setIsUserDrawerOpen] = useState(false);
   const [isNotificationHistoryOpen, setIsNotificationHistoryOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const [isThemeSheetOpen, setIsThemeSheetOpen] = useState(false);
 
-  
+
   // State for renaming dashboards
   const [editingDashboardId, setEditingDashboardId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
@@ -65,14 +64,6 @@ const TabNavigation: React.FC = () => {
 
   // Get notification store
   const { unreadCount, setHistoryOpen } = useNotificationStore();
-
-  const handleThemeClick = (e: React.MouseEvent) => {
-    if (e.altKey) {
-      setIsThemeSheetOpen(true);
-    } else {
-      toggleTheme();
-    }
-  };
 
   // Handler for notification bell click
   const handleNotificationClick = () => {
@@ -184,6 +175,8 @@ const TabNavigation: React.FC = () => {
                   <button 
                     className="ml-2 p-1 rounded-sm hover:bg-terminal-widget/50 text-terminal-muted hover:text-terminal-negative transition-colors"
                     onClick={(e) => handleRemoveDashboard(dashboard.id, e)}
+                    title={`Close ${dashboard.title}`}
+                    aria-label={`Close dashboard ${dashboard.title}`}
                   >
                     <X size={14} />
                   </button>
@@ -193,6 +186,8 @@ const TabNavigation: React.FC = () => {
             <button 
               className="flex items-center justify-center w-10 h-full text-terminal-muted hover:bg-terminal-accent/20"
               onClick={handleAddDashboard}
+              title="New dashboard"
+              aria-label="New dashboard"
             >
               <Plus size={18} />
             </button>
@@ -217,8 +212,9 @@ const TabNavigation: React.FC = () => {
           </button>
           <button
             className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors"
-            onClick={handleThemeClick}
-            title="Click - toggle theme, Option+Click - theme settings"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
           >
             {theme === 'dark' ? (
               <Sun size={18} className="text-terminal-muted" />

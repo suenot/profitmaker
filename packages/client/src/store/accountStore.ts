@@ -31,6 +31,10 @@ import {
 
 const ACCOUNTS_PATH = '/api/accounts';
 const LEGACY_USER_STORE_KEY = 'user-store';
+// Leftovers from the removed in-browser AES vault. `encryption-hash` was derived
+// with the SAME PBKDF2 params as the AES key itself, so it IS the base64 key —
+// purging it matters even though the vault code is gone.
+const LEGACY_ENCRYPTION_KEYS = ['encryption-salt', 'encryption-hash'] as const;
 
 // --- types -----------------------------------------------------------------
 
@@ -349,6 +353,9 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
   purgeLegacyLocalAccounts: () => {
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(LEGACY_USER_STORE_KEY);
+      for (const key of LEGACY_ENCRYPTION_KEYS) {
+        localStorage.removeItem(key);
+      }
     }
   },
 }));

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import ccxt from 'ccxt';
 
 let ccxtPro: any = null;
@@ -15,10 +16,58 @@ export interface CCXTInstanceConfig {
   secret?: string;
   password?: string;
   sandbox?: boolean;
+  /**
+   * Authenticated caller who owns this instance. Authenticated instances are
+   * namespaced by it so two identities never share one, even if they somehow
+   * present the same credential tuple. Omitted for public/anonymous configs.
+   */
+  userId?: string;
 }
 
-const instanceCache = new Map<string, { instance: any; timestamp: number }>();
+interface CacheEntry {
+  instance: any;
+  timestamp: number;
+  /** Per-entry lifetime — a degraded entry expires far sooner than a healthy one. */
+  ttl: number;
+}
+
+const instanceCache = new Map<string, CacheEntry>();
+
+/** Lifetime of a healthy instance (markets loaded successfully). */
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 1 day
+/**
+ * Lifetime of an instance whose `loadMarkets()` FAILED — deliberately three
+ * orders of magnitude shorter than CACHE_TTL.
+ *
+ * Caching a degraded instance at all is what keeps an unreachable exchange from
+ * turning every inbound request into a fresh ccxt construction plus a fresh
+ * loadMarkets attempt against a dead endpoint, i.e. an outage amplifier that
+ * converts their downtime into ours. Keeping the window this short means symbol
+ * discovery recovers seconds after the exchange returns, rather than a day
+ * later (`getCapabilities`/`getMarket` read `ex.markets`/`ex.symbols` directly,
+ * so a degraded entry serves empty discovery for exactly this long).
+ */
+const DEGRADED_CACHE_TTL = 30 * 1000; // 30 seconds
+/**
+ * Hard bound on cached instances. Without it the cache is only ever trimmed by
+ * the 24h TTL, so a caller cycling distinct credentials (or exchanges) grows it
+ * without limit — and every ccxt.pro entry holds live sockets.
+ */
+const MAX_CACHED_INSTANCES = 200;
+
+/**
+ * ccxt reads the market type from `options.defaultType`, so this maps our wire
+ * `marketType` onto the values ccxt actually recognizes.
+ */
+const CCXT_DEFAULT_TYPE: Record<string, string> = {
+  spot: 'spot',
+  futures: 'future',
+  future: 'future',
+  swap: 'swap',
+  margin: 'margin',
+  delivery: 'delivery',
+  option: 'option',
+};
 
 interface KucoinPartnerLeg {
   id: string;
@@ -60,6 +109,33 @@ const applyKucoinBroker = (exchangeId: string, instanceConfig: any): void => {
   if (leg?.name) instanceConfig.headers['KC-BROKER-NAME'] = leg.name;
 };
 
+/**
+ * Collision-free fingerprint of a full credential tuple. Length-prefixes each
+ * field so ('ab','c') and ('a','bc') cannot fingerprint alike, and returns only
+ * a digest — no fragment of a secret ever reaches the cache key.
+ */
+const credentialFingerprint = (config: CCXTInstanceConfig): string => {
+  const hash = createHash('sha256');
+  for (const field of [config.apiKey, config.secret, config.password]) {
+    const value = field ?? '';
+    hash.update(`${value.length}\0${value}\0`);
+  }
+  return hash.digest('hex');
+};
+
+/**
+ * Cache key for a ccxt instance.
+ *
+ * SECURITY: an authenticated entry is reusable ONLY by a caller presenting the
+ * exact same full credential tuple, under the same user id. This previously
+ * keyed on `apiKey.substring(0, 8)` and ignored the secret entirely, so anyone
+ * who supplied a matching 8-char prefix (with any secret at all) was handed
+ * back another user's fully-authenticated instance — enough to read their
+ * balances and trade on their account.
+ *
+ * Credential-less configs are public market data and are deliberately shared
+ * process-wide; they carry nothing worth isolating.
+ */
 export const createCacheKey = (config: CCXTInstanceConfig): string => {
   const parts = [
     config.exchangeId,
@@ -67,19 +143,81 @@ export const createCacheKey = (config: CCXTInstanceConfig): string => {
     config.ccxtType || 'regular',
     config.sandbox ? 'sandbox' : 'live',
   ];
-  if (config.apiKey) parts.push(config.apiKey.substring(0, 8));
+
+  if (!config.apiKey && !config.secret) {
+    parts.push('anon');
+    return parts.join(':');
+  }
+
+  parts.push(`u=${config.userId ?? 'unscoped'}`);
+  parts.push(`c=${credentialFingerprint(config)}`);
   return parts.join(':');
+};
+
+/**
+ * Release an evicted instance. ccxt.pro instances hold live WebSocket
+ * connections and keep-alive timers; dropping the map reference alone leaks
+ * both for the lifetime of the process.
+ */
+const closeInstance = async (instance: any): Promise<void> => {
+  if (typeof instance?.close !== 'function') return;
+  try {
+    await instance.close();
+  } catch (error) {
+    console.warn('Failed to close evicted CCXT instance:', error);
+  }
+};
+
+/**
+ * Evict least-recently-used entries until the cache is back within its bound.
+ * A Map iterates in insertion order and every cache hit re-inserts its key, so
+ * the first key is always the least recently used one.
+ *
+ * CAVEAT: the cache cannot currently tell whether an instance still has live
+ * watch loops attached (wsSubscriptions resolves a provider once, at subscribe
+ * time, and holds the instance for the subscription's lifetime). Evicting one
+ * that does will close its sockets underneath those subscribers, who then fall
+ * into the retry backoff against a dead instance. Only reachable past
+ * MAX_CACHED_INSTANCES distinct configs; the real fix is refcounting instances
+ * from their subscriptions, which is also what unsubscribe needs to close
+ * exchange-side streams at all.
+ */
+const evictOverflow = async (): Promise<void> => {
+  while (instanceCache.size > MAX_CACHED_INSTANCES) {
+    const oldest = instanceCache.keys().next();
+    if (oldest.done) return;
+    const entry = instanceCache.get(oldest.value);
+    instanceCache.delete(oldest.value);
+    if (entry) await closeInstance(entry.instance);
+  }
 };
 
 export const getCCXTInstance = async (config: CCXTInstanceConfig): Promise<any> => {
   const cacheKey = createCacheKey(config);
   const cached = instanceCache.get(cacheKey);
 
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.instance;
+  if (cached) {
+    if (Date.now() - cached.timestamp < cached.ttl) {
+      // LRU touch: re-insert so this key becomes the most-recently-used.
+      instanceCache.delete(cacheKey);
+      instanceCache.set(cacheKey, cached);
+      return cached.instance;
+    }
+    // Expired: drop it and close its sockets before building a replacement.
+    instanceCache.delete(cacheKey);
+    await closeInstance(cached.instance);
   }
 
   const ccxtType = config.ccxtType || 'regular';
+
+  // Validate against ccxt's own exchange list BEFORE the dynamic property
+  // access below: `exchangeId: 'constructor'` would otherwise resolve to Object
+  // and cache `new Object(instanceConfig)` as though it were an exchange.
+  const knownExchanges: string[] = (ccxt as any).exchanges ?? [];
+  if (!knownExchanges.includes(config.exchangeId)) {
+    throw new Error(`Exchange ${config.exchangeId} not found in CCXT`);
+  }
+
   let ExchangeClass: any;
 
   if (ccxtType === 'pro') {
@@ -89,7 +227,7 @@ export const getCCXTInstance = async (config: CCXTInstanceConfig): Promise<any> 
     ExchangeClass = (ccxt as any)[config.exchangeId];
   }
 
-  if (!ExchangeClass) {
+  if (typeof ExchangeClass !== 'function') {
     throw new Error(`Exchange ${config.exchangeId} not found in CCXT${ccxtType === 'pro' ? ' Pro' : ''}`);
   }
 
@@ -111,10 +249,12 @@ export const getCCXTInstance = async (config: CCXTInstanceConfig): Promise<any> 
     if (config.password) instanceConfig.password = config.password;
   }
 
-  if (marketType === 'futures') {
-    instanceConfig.defaultType = 'future';
-  } else if (marketType === 'spot') {
-    instanceConfig.defaultType = 'spot';
+  // ccxt reads `this.options.defaultType`; a TOP-LEVEL `defaultType` is never
+  // read, so setting it there silently routed every futures request to SPOT
+  // markets. Spread so applyKucoinBroker's own `options` merge below survives.
+  const defaultType = CCXT_DEFAULT_TYPE[marketType];
+  if (defaultType) {
+    instanceConfig.options = { ...(instanceConfig.options || {}), defaultType };
   }
 
   // KuCoin Broker Pro: attribute trades placed through this terminal to the
@@ -125,23 +265,30 @@ export const getCCXTInstance = async (config: CCXTInstanceConfig): Promise<any> 
 
   const exchangeInstance = new ExchangeClass(instanceConfig);
 
+  // A failed market load yields a usable-but-degraded instance (ccxt lazy-loads
+  // markets on the next call), so cache it — briefly. See DEGRADED_CACHE_TTL.
+  let ttl = CACHE_TTL;
   try {
     await exchangeInstance.loadMarkets();
   } catch (error) {
     console.warn(`Failed to load markets for ${config.exchangeId}:`, error);
+    ttl = DEGRADED_CACHE_TTL;
   }
 
-  instanceCache.set(cacheKey, { instance: exchangeInstance, timestamp: Date.now() });
+  instanceCache.set(cacheKey, { instance: exchangeInstance, timestamp: Date.now(), ttl });
+  await evictOverflow();
   return exchangeInstance;
 };
 
-export const cleanupCache = () => {
+export const cleanupCache = async (): Promise<void> => {
   const now = Date.now();
   for (const [key, cached] of instanceCache.entries()) {
-    if (now - cached.timestamp > CACHE_TTL) {
+    if (now - cached.timestamp > cached.ttl) {
       instanceCache.delete(key);
+      await closeInstance(cached.instance);
     }
   }
+  await evictOverflow();
 };
 
 export { ccxtPro };

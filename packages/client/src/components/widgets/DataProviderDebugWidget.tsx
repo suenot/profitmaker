@@ -5,10 +5,8 @@ import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { ConnectionStatus, DataProvider, ActiveSubscription } from '../../types/dataProviders';
-import { useRequestLogger } from '../../hooks/useRequestLogger';
 import { 
   Wifi, 
   WifiOff, 
@@ -29,13 +27,7 @@ import {
   PowerOff,
   Hash,
   ArrowRight,
-  AlertTriangle,
-  Network,
-  Filter,
-  ChevronDown,
-  ChevronUp,
-  Globe,
-  Timer
+  AlertTriangle
 } from 'lucide-react';
 
 const getStatusIcon = (status: ConnectionStatus) => {
@@ -105,8 +97,6 @@ export const DataProviderDebugWidget: React.FC = () => {
     getSubscriptionKey
   } = useDataProviderStore();
 
-  const { logs: requestLogs, stats: requestStats, clearLogs: clearRequestLogs, getFilteredLogs } = useRequestLogger();
-
   const [editingProviderId, setEditingProviderId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<{
     name: string;
@@ -119,16 +109,6 @@ export const DataProviderDebugWidget: React.FC = () => {
     apiUrl?: string;
     jsonSchema?: Record<string, any>;
   }>({ name: '', exchanges: [], priority: 1 });
-
-  // Состояние для фильтров REST логов
-  const [requestLogFilter, setRequestLogFilter] = useState({
-    exchange: '',
-    method: '',
-    status: '',
-    hasError: false,
-    showOnlyErrors: false
-  });
-  const [showRequestLogs, setShowRequestLogs] = useState(false);
 
   const activeSubscriptions = getActiveSubscriptionsList();
   const providerList = Object.values(providers);
@@ -218,51 +198,6 @@ export const DataProviderDebugWidget: React.FC = () => {
 
   const cancelEdit = () => {
     setEditingProviderId(null);
-  };
-
-  // Функции для работы с REST логами
-  const getFilteredRequestLogs = () => {
-    let filtered = requestLogs;
-    
-    if (requestLogFilter.showOnlyErrors) {
-      filtered = filtered.filter(log => log.error || (log.status && log.status >= 400));
-    }
-    
-    if (requestLogFilter.exchange) {
-      filtered = filtered.filter(log => log.exchange === requestLogFilter.exchange);
-    }
-    
-    if (requestLogFilter.method) {
-      filtered = filtered.filter(log => log.method === requestLogFilter.method);
-    }
-    
-    if (requestLogFilter.status) {
-      filtered = filtered.filter(log => log.status === parseInt(requestLogFilter.status));
-    }
-    
-    return filtered.slice(0, 50); // Показываем только последние 50 для производительности
-  };
-
-  const getUniqueExchanges = () => {
-    const exchanges = new Set(requestLogs.filter(log => log.exchange).map(log => log.exchange!));
-    return Array.from(exchanges).sort();
-  };
-
-  const getUniqueMethods = () => {
-    const methods = new Set(requestLogs.map(log => log.method));
-    return Array.from(methods).sort();
-  };
-
-  const formatRequestLogTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString();
-  };
-
-  const getStatusColor = (status?: number, error?: string) => {
-    if (error) return 'text-red-600 bg-red-50';
-    if (!status) return 'text-gray-600 bg-gray-50';
-    if (status >= 200 && status < 300) return 'text-green-600 bg-green-50';
-    if (status >= 400) return 'text-red-600 bg-red-50';
-    return 'text-yellow-600 bg-yellow-50';
   };
 
   const renderExchangeSelection = () => {
@@ -740,184 +675,6 @@ export const DataProviderDebugWidget: React.FC = () => {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* REST Request Logs */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Network className="h-4 w-4" />
-              REST Request Logs ({requestLogs.length})
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                <Globe className="h-3 w-3 mr-1" />
-                {requestStats.recentRequests} recent
-              </Badge>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setShowRequestLogs(!showRequestLogs)}
-              >
-                {showRequestLogs ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              </Button>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {/* Request Stats Summary */}
-          <div className="grid grid-cols-4 gap-3 text-sm">
-            <div className="text-center p-2 bg-blue-50 dark:bg-blue-950/50 rounded border border-blue-200 dark:border-blue-800">
-              <div className="font-medium text-blue-900 dark:text-blue-100">Total</div>
-              <div className="font-mono text-blue-800 dark:text-blue-200">{requestStats.totalRequests}</div>
-            </div>
-            <div className="text-center p-2 bg-green-50 dark:bg-green-950/50 rounded border border-green-200 dark:border-green-800">
-              <div className="font-medium text-green-900 dark:text-green-100">Success</div>
-              <div className="font-mono text-green-800 dark:text-green-200">{requestStats.successRequests}</div>
-            </div>
-            <div className="text-center p-2 bg-red-50 dark:bg-red-950/50 rounded border border-red-200 dark:border-red-800">
-              <div className="font-medium text-red-900 dark:text-red-100">Errors</div>
-              <div className="font-mono text-red-800 dark:text-red-200">{requestStats.errorRequests}</div>
-            </div>
-            <div className="text-center p-2 bg-purple-50 dark:bg-purple-950/50 rounded border border-purple-200 dark:border-purple-800">
-              <div className="font-medium text-purple-900 dark:text-purple-100">Avg Time</div>
-              <div className="font-mono text-purple-800 dark:text-purple-200">{requestStats.averageResponseTime}ms</div>
-            </div>
-          </div>
-
-          {/* Control buttons */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant={requestLogFilter.showOnlyErrors ? "default" : "outline"}
-                onClick={() => setRequestLogFilter(prev => ({ ...prev, showOnlyErrors: !prev.showOnlyErrors }))}
-              >
-                <AlertTriangle className="h-3 w-3 mr-1" />
-                Only Errors
-              </Button>
-            </div>
-            <Button size="sm" variant="outline" onClick={clearRequestLogs}>
-              <Trash2 className="h-3 w-3 mr-1" />
-              Clear Logs
-            </Button>
-          </div>
-
-          {showRequestLogs && (
-            <>
-              {/* Filters */}
-              <div className="flex flex-wrap gap-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-3 w-3 text-gray-500" />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">Filters:</span>
-                </div>
-                
-                <Select 
-                  value={requestLogFilter.exchange} 
-                  onValueChange={(value) => setRequestLogFilter(prev => ({ ...prev, exchange: value }))}
-                >
-                  <SelectTrigger className="w-32 h-7 text-xs">
-                    <SelectValue placeholder="Exchange" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Exchanges</SelectItem>
-                    {getUniqueExchanges().map(exchange => (
-                      <SelectItem key={exchange} value={exchange}>{exchange}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select 
-                  value={requestLogFilter.method} 
-                  onValueChange={(value) => setRequestLogFilter(prev => ({ ...prev, method: value }))}
-                >
-                  <SelectTrigger className="w-24 h-7 text-xs">
-                    <SelectValue placeholder="Method" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All</SelectItem>
-                    {getUniqueMethods().map(method => (
-                      <SelectItem key={method} value={method}>{method}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Request logs list */}
-              <div className="space-y-2 max-h-96 overflow-auto">
-                {getFilteredRequestLogs().length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No requests logged yet
-                  </p>
-                ) : (
-                  getFilteredRequestLogs().map((log) => (
-                    <div 
-                      key={log.id} 
-                      className={`p-3 border rounded-lg text-xs ${
-                        log.error || (log.status && log.status >= 400) 
-                          ? 'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800' 
-                          : 'bg-background border-border'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="outline" className="text-xs px-1 py-0">
-                              {log.method}
-                            </Badge>
-                            {log.exchange && (
-                              <Badge variant="secondary" className="text-xs px-1 py-0">
-                                {log.exchange}
-                              </Badge>
-                            )}
-                            {log.operation && (
-                              <Badge variant="outline" className="text-xs px-1 py-0 bg-blue-50 text-blue-700">
-                                {log.operation}
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          <div className="text-xs text-gray-600 dark:text-gray-400 mb-1 font-mono break-all">
-                            {log.url}
-                          </div>
-                          
-                          {log.error && (
-                            <div className="text-xs text-red-600 dark:text-red-400 mb-1">
-                              ❌ {log.error}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-col items-end gap-1 text-right">
-                          <div className="flex items-center gap-2">
-                            {log.status && (
-                              <Badge 
-                                variant="outline" 
-                                className={`text-xs px-1 py-0 ${getStatusColor(log.status, log.error)}`}
-                              >
-                                {log.status}
-                              </Badge>
-                            )}
-                            {log.responseTime && (
-                              <div className="flex items-center gap-1 text-xs text-gray-500">
-                                <Timer className="h-3 w-3" />
-                                {log.responseTime}ms
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {formatRequestLogTime(log.timestamp)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </>
-          )}
         </CardContent>
       </Card>
     </div>

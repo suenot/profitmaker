@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    // Обновляем состояние, чтобы следующий рендер показал fallback UI
+    // Flip to the fallback UI on the next render.
     return { hasError: true, error };
   }
 
@@ -43,42 +43,43 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
-      const { fallbackTitle = "Что-то пошло не так", showDetails = false } = this.props;
-      
+      const { fallbackTitle = "Something went wrong", showDetails = false } = this.props;
+
       return (
-        <Card className="m-4 border-red-200 bg-red-50">
+        <Card className="m-4 border-terminal-negative/40 bg-terminal-negative/10">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-800">
+            <CardTitle className="flex items-center gap-2 text-terminal-negative">
               <AlertTriangle className="h-5 w-5" />
               {fallbackTitle}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-red-700">
-              Приложение столкнулось с неожиданной ошибкой, но мы перехватили её и предотвратили крах.
+            <p className="text-terminal-text">
+              The terminal hit an unexpected error. It was caught here, so the rest of
+              your session is intact.
             </p>
-            
+
             {showDetails && this.state.error && (
-              <div className="bg-red-100 p-3 rounded-lg text-sm">
-                <strong>Детали ошибки:</strong>
-                <pre className="mt-2 text-red-800 overflow-auto">
+              <div className="bg-terminal-negative/10 border border-terminal-negative/30 p-3 rounded-lg text-sm">
+                <strong className="text-terminal-text">Error details:</strong>
+                <pre className="mt-2 text-terminal-negative overflow-auto">
                   {this.state.error.message}
                 </pre>
               </div>
             )}
-            
+
             <div className="flex gap-2">
               <Button onClick={this.handleRetry} variant="outline" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Попробовать снова
+                Try again
               </Button>
-              
-              <Button 
-                onClick={() => window.location.reload()} 
-                variant="default" 
+
+              <Button
+                onClick={() => window.location.reload()}
+                variant="default"
                 size="sm"
               >
-                Перезагрузить страницу
+                Reload page
               </Button>
             </div>
           </CardContent>

@@ -8,6 +8,8 @@ import { useDataProviderStore } from '../../store/dataProviderStore';
 
 export interface Instrument {
   account: string;
+  /** Human-readable account identity for search and selection display. */
+  accountLabel?: string;
   exchange: string;
   market: string;
   pair: string;
@@ -442,4 +444,4 @@ const VirtualizedInstrumentsList: React.FC<{
   );
 };
 
-export default InstrumentHeaderControl; 
+export default InstrumentHeaderControl;
