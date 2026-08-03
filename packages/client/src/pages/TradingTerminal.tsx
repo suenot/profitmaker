@@ -106,7 +106,7 @@ const TradingTerminal: React.FC = () => {
   
   return (
     <div 
-      className="min-h-screen bg-terminal-bg text-terminal-text flex flex-col"
+      className="terminal-shell min-h-[100dvh] bg-terminal-bg text-terminal-text flex flex-col"
       onContextMenu={handleContextMenu}
       onClick={() => contextMenuPosition && setContextMenuPosition(null)}
     >
@@ -114,7 +114,7 @@ const TradingTerminal: React.FC = () => {
       
       <main 
         ref={mainContainerRef}
-        className="flex-1 p-0 h-[calc(100vh-86px)] relative"
+        className="terminal-canvas flex-1 p-0 h-[calc(100vh-86px)] relative"
         style={{ marginTop: 0 }}
       >
         <AlignmentGuides guideLines={guideLines} />
@@ -182,8 +182,8 @@ const TradingTerminal: React.FC = () => {
       {/* Collapsed widgets zone */}
       <CollapsedWidgetsZone />
       
-      <div className="fixed bottom-2 right-2 flex items-center gap-2">
-        <div className="flex items-center text-terminal-muted text-xs bg-terminal-accent/30 px-3 py-1 rounded-md">
+      <div className="terminal-status-dock fixed bottom-3 right-3 flex items-center gap-2">
+        <div className="flex items-center text-terminal-muted text-xs bg-terminal-accent px-2.5 py-1.5 rounded-md border border-terminal-border">
           <span className="font-mono tabular-nums">{timeInTz(currentTime, tz)}</span>
         </div>
         <ConnectionIndicator
@@ -216,4 +216,4 @@ const TradingTerminal: React.FC = () => {
   );
 };
 
-export default TradingTerminal; 
+export default TradingTerminal;

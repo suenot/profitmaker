@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Bell, Sun, Moon, X } from 'lucide-react';
+import { Plus, Bell, Sun, Moon, X, PanelsTopLeft } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useNotificationStore } from '@/store/notificationStore';
@@ -125,30 +125,39 @@ const TabNavigation: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-auto bg-terminal-bg border-b border-terminal-border mb-0 pb-0">
-      <div className="flex justify-between h-12 px-2">
-        <div className="flex h-full">
-          {/* Animated Logo */}
-          <div className="flex-shrink-0 flex items-center px-2">
-            <AnimatedLogo 
-              width={32} 
-              height={32} 
-              className="transition-opacity hover:opacity-80" 
+    <div className="terminal-navigation flex flex-col h-auto bg-terminal-bg border-b border-terminal-border">
+      <div className="flex min-w-0 items-center justify-between h-14 px-3 gap-3">
+        <div className="flex min-w-0 items-center h-full gap-3">
+          <div className="terminal-brand flex shrink-0 items-center gap-2 pr-3 border-r border-terminal-border">
+            <AnimatedLogo
+              width={28}
+              height={28}
+              className="transition-opacity hover:opacity-80"
             />
+            <div className="hidden xl:flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.04em] uppercase">
+              <span>Profitmaker</span>
+              <span className="text-terminal-muted font-medium">Terminal</span>
+            </div>
           </div>
-          {/* Dashboard Tabs */}
-            <div className="flex overflow-x-auto hide-scrollbar h-full">
+          <div className="flex min-w-0 items-center gap-1 overflow-x-auto hide-scrollbar h-full">
             {dashboards.map((dashboard) => (
               <div
+                role="button"
+                tabIndex={0}
                 key={dashboard.id}
-                className={`flex items-center px-4 h-full cursor-pointer whitespace-nowrap ${
-                  activeDashboardId === dashboard.id ? 'text-terminal-text border-b-2' : 'text-terminal-muted hover:bg-terminal-accent/10'
+                className={`terminal-tab flex items-center gap-1.5 px-2.5 py-1.5 rounded-md cursor-pointer whitespace-nowrap text-xs ${
+                  activeDashboardId === dashboard.id ? 'terminal-tab--active text-terminal-text' : 'text-terminal-muted'
                 }`}
-                style={activeDashboardId === dashboard.id ? { borderBottomColor: 'hsl(349.8deg 92.59% 78.82%)' } : {}}
                 onClick={() => {
                   if (editingDashboardId !== dashboard.id) {
                     console.log('TabNavigation: Switching to dashboard', dashboard.id, dashboard.title);
                     setActiveDashboard(dashboard.id);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    if (editingDashboardId !== dashboard.id) setActiveDashboard(dashboard.id);
                   }
                 }}
               >
@@ -159,13 +168,13 @@ const TabNavigation: React.FC = () => {
                     onChange={(e) => setEditingTitle(e.target.value)}
                     onBlur={handleTitleSave}
                     onKeyDown={handleTitleKeyDown}
-                    className="text-sm bg-transparent border-none outline-none w-full min-w-[80px] max-w-[200px]"
+                    className="text-xs bg-transparent border-none outline-none w-full min-w-[80px] max-w-[200px]"
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
-                  <span 
-                    className="text-sm select-none"
+                  <span
+                    className="select-none"
                     onDoubleClick={(e) => handleDashboardDoubleClick(dashboard, e)}
                   >
                     {dashboard.title}
@@ -173,7 +182,7 @@ const TabNavigation: React.FC = () => {
                 )}
                 {dashboards.length > 1 && editingDashboardId !== dashboard.id && (
                   <button 
-                    className="ml-2 p-1 rounded-sm hover:bg-terminal-widget/50 text-terminal-muted hover:text-terminal-negative transition-colors"
+                    className="terminal-icon-button terminal-icon-button--subtle -mr-1 text-terminal-muted hover:text-terminal-negative"
                     onClick={(e) => handleRemoveDashboard(dashboard.id, e)}
                     title={`Close ${dashboard.title}`}
                     aria-label={`Close dashboard ${dashboard.title}`}
@@ -183,8 +192,9 @@ const TabNavigation: React.FC = () => {
                 )}
               </div>
             ))}
-            <button 
-              className="flex items-center justify-center w-10 h-full text-terminal-muted hover:bg-terminal-accent/20"
+            <button
+              type="button"
+              className="terminal-icon-button terminal-icon-button--subtle shrink-0 text-terminal-muted"
               onClick={handleAddDashboard}
               title="New dashboard"
               aria-label="New dashboard"
@@ -193,10 +203,14 @@ const TabNavigation: React.FC = () => {
             </button>
           </div>
         </div>
-        {/* Block with navbar icons */}
-        <div className="flex items-center space-x-3 h-full">
+        <div className="flex shrink-0 items-center gap-1.5 h-full">
+          <div className="hidden 2xl:flex items-center gap-1.5 text-[10px] uppercase tracking-[0.1em] text-terminal-muted pr-1">
+            <PanelsTopLeft size={13} />
+            <span>Workspace</span>
+          </div>
           <button
-            className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors relative"
+            type="button"
+            className="terminal-icon-button terminal-icon-button--subtle relative"
             onClick={handleNotificationClick}
             title="Notifications"
           >
@@ -211,7 +225,8 @@ const TabNavigation: React.FC = () => {
             )}
           </button>
           <button
-            className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors"
+            type="button"
+            className="terminal-icon-button terminal-icon-button--subtle"
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}

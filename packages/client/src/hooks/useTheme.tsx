@@ -22,27 +22,28 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-// Updated colors for modern themes (HSL for Tailwind)
+// Terminal surface tokens (HSL for Tailwind). Keep this in sync with index.css:
+// colors are applied inline when a user switches theme at runtime.
 const modernDarkColors: ThemeColors = {
-  bg: '220 13% 11%',              // #181B20 deep graphite
-  widget: '222 16% 16%',          // #23272F dark gray for panels
-  accent: '217 29% 16%',          // #242D39 for hover/selection
-  text: '210 40% 98%',            // #F7FAFC almost white text
-  muted: '210 13% 69%',           // #A0AEC0 light gray for secondary text
-  positive: '152 77% 43%',        // #16C784 bright green (buy)
-  negative: '356 77% 57%',        // #EA3943 bright red (sell)
-  border: '220 21% 23%'           // #2D3748 dark gray for borders
+  bg: '240 9% 7%',
+  widget: '240 8% 11%',
+  accent: '240 7% 15%',
+  text: '240 14% 94%',
+  muted: '240 7% 65%',
+  positive: '151 58% 54%',
+  negative: '0 70% 65%',
+  border: '240 7% 19%'
 };
 
 const modernLightColors: ThemeColors = {
-  bg: '210 28% 98%',              // #F7F9FB light background
-  widget: '0 0% 100%',            // #FFFFFF white for panels
-  accent: '210 28% 96%',          // #F1F5F9 light gray for selection
-  text: '222 44% 14%',            // #1A202C dark gray text
-  muted: '220 15% 35%',           // #4A5568 gray for secondary text
-  positive: '152 77% 43%',        // #16C784 bright green (buy)
-  negative: '356 77% 57%',        // #EA3943 bright red (sell)
-  border: '210 28% 90%'           // #E2E8F0 light gray for borders
+  bg: '240 20% 98%',
+  widget: '0 0% 100%',
+  accent: '240 18% 96%',
+  text: '240 18% 13%',
+  muted: '240 8% 42%',
+  positive: '151 58% 38%',
+  negative: '0 65% 50%',
+  border: '240 14% 88%'
 };
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {

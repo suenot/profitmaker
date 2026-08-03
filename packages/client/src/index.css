@@ -43,15 +43,14 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Modern Light Trading Theme - HSL */
-    --terminal-bg: 210 28% 98%;        /* #F7F9FB */
-    --terminal-widget: 0 0% 100%;      /* #FFFFFF */
-    --terminal-accent: 210 28% 96%;    /* #F1F5F9 */
-    --terminal-text: 222 44% 8%;       /* #0F1419 - более темный для лучшей контрастности */
-    --terminal-muted: 220 25% 25%;     /* #2D3748 - более темный для лучшей читаемости */
-    --terminal-positive: 152 77% 43%;  /* #16C784 */
-    --terminal-negative: 356 77% 57%;  /* #EA3943 */
-    --terminal-border: 210 28% 90%;    /* #E2E8F0 */
+    --terminal-bg: 240 20% 98%;
+    --terminal-widget: 0 0% 100%;
+    --terminal-accent: 240 18% 96%;
+    --terminal-text: 240 18% 13%;
+    --terminal-muted: 240 8% 42%;
+    --terminal-positive: 151 58% 38%;
+    --terminal-negative: 0 65% 50%;
+    --terminal-border: 240 14% 88%;
   }
 
   .dark {
@@ -91,15 +90,14 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Modern Dark Trading Theme - optimized for OrderBook readability */
-    --terminal-bg: 220 13% 11%;           /* #181B20 */
-    --terminal-widget: 222 16% 16%;       /* #23272F */
-    --terminal-accent: 217 29% 16%;       /* #242D39 */
-    --terminal-text: 210 40% 98%;         /* #F7FAFC */
-    --terminal-muted: 210 15% 75%;        /* #B8C4D0 - улучшенная контрастность */
-    --terminal-positive: 152 77% 43%;     /* #16C784 */
-    --terminal-negative: 356 77% 57%;     /* #EA3943 */
-    --terminal-border: 220 21% 25%;       /* #343A46 - чуть светлее для лучшей видимости */
+    --terminal-bg: 240 9% 7%;
+    --terminal-widget: 240 8% 11%;
+    --terminal-accent: 240 7% 15%;
+    --terminal-text: 240 14% 94%;
+    --terminal-muted: 240 7% 65%;
+    --terminal-positive: 151 58% 54%;
+    --terminal-negative: 0 70% 65%;
+    --terminal-border: 240 7% 19%;
   }
 }
 
@@ -113,43 +111,116 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
-/* Widget container styles - adaptive for light and dark themes */
+.terminal-shell {
+  isolation: isolate;
+}
+
+.terminal-canvas {
+  background-color: hsl(var(--terminal-bg));
+  background-image: radial-gradient(hsl(var(--terminal-border) / 0.62) 0.55px, transparent 0.55px);
+  background-size: 18px 18px;
+}
+
+.terminal-navigation {
+  box-shadow: 0 1px 0 hsl(var(--terminal-border) / 0.65);
+}
+
+.terminal-brand svg {
+  filter: saturate(0.78) contrast(1.05);
+}
+
+.terminal-tab {
+  border: 1px solid transparent;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.terminal-tab:hover {
+  color: hsl(var(--terminal-text));
+  background: hsl(var(--terminal-accent));
+}
+
+.terminal-tab--active {
+  border-color: hsl(var(--terminal-border));
+  background: hsl(var(--terminal-widget));
+  box-shadow: 0 1px 2px hsl(240 20% 4% / 0.08);
+}
+
+.terminal-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  color: hsl(var(--terminal-muted));
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.terminal-icon-button:hover {
+  color: hsl(var(--terminal-text));
+  border-color: hsl(var(--terminal-border));
+  background: hsl(var(--terminal-accent));
+}
+
+.terminal-icon-button:focus-visible,
+.terminal-tab:focus-visible {
+  outline: 2px solid hsl(248 84% 72% / 0.9);
+  outline-offset: 2px;
+}
+
+.terminal-status-dock > * {
+  box-shadow: 0 4px 16px hsl(240 20% 4% / 0.16);
+}
+
+/* Widget container styles - compact, high-density terminal panels. */
 .widget-container {
   position: absolute;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1), 
-              box-shadow 0.3s cubic-bezier(0.2, 0, 0.2, 1),
-              opacity 0.3s cubic-bezier(0.2, 0, 0.2, 1);
-  
-  /* Light theme */
+  transition: transform 180ms cubic-bezier(0.2, 0, 0.2, 1), border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
   background-color: hsl(var(--terminal-widget));
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px hsl(240 20% 4% / 0.08);
 }
 
 .dark .widget-container {
-  /* Dark theme */
-  background-color: rgba(30, 34, 48, 0.95);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 22px hsl(240 20% 3% / 0.24);
 }
 
 .widget-container:hover {
-  /* Light theme */
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-}
-
-.dark .widget-container:hover {
-  /* Dark theme */
-  box-shadow: 0 12px 42px rgba(0, 0, 0, 0.25);
+  border-color: hsl(var(--terminal-muted) / 0.55);
+  box-shadow: 0 8px 22px hsl(240 20% 4% / 0.14);
 }
 
 .widget-header {
   cursor: move;
   user-select: none;
+  border-bottom: 1px solid hsl(var(--terminal-border));
+  background: hsl(var(--terminal-widget));
+}
+
+.widget-header > div:first-child {
+  min-width: 0;
+}
+
+.widget-content {
+  scrollbar-color: hsl(var(--terminal-border)) transparent;
+}
+
+.widget-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.widget-content::-webkit-scrollbar-thumb {
+  background: hsl(var(--terminal-border));
+  border: 2px solid hsl(var(--terminal-widget));
+  border-radius: 999px;
 }
 
 .widget-resize-handle {
@@ -231,6 +302,9 @@
 .widget-menu {
   animation: fade-in 0.2s ease-out;
   transform-origin: top right;
+  border: 1px solid hsl(var(--terminal-border));
+  border-radius: 10px;
+  box-shadow: 0 16px 34px hsl(240 20% 3% / 0.28);
 }
 
 .glass-effect {
@@ -290,4 +364,12 @@
 /* Utility class to hide elements */
 .hide {
   display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .widget-container,
+  .terminal-tab,
+  .terminal-icon-button {
+    transition: none;
+  }
 }
