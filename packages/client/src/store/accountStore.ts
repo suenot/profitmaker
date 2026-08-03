@@ -49,6 +49,8 @@ export const ExchangeAccountSchema = z.object({
   access_level: z.enum(['read', 'trade']).optional(),
   shared: z.boolean().optional(),
   created_at: z.string().optional(),
+  /** Owner-visible final four characters of the API key; never the key itself. */
+  api_key_suffix: z.string().min(1).max(4).optional(),
 
   // --- legacy fields kept for backward-compat with existing consumers --------
   // Never populated for central accounts (secrets live server-side). Present so

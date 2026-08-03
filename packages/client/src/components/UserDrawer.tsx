@@ -332,6 +332,11 @@ const AccountSheet: React.FC<{ account?: ExchangeAccount; onClose: () => void }>
             />
           </div>
           <Input placeholder="Label (optional, e.g. 'Main spot')" value={label} onChange={(e) => setLabel(e.target.value)} className="w-full" />
+          {editing && account.api_key_suffix && (
+            <div className="rounded-md border border-terminal-border/60 bg-terminal-accent/10 px-3 py-2 text-xs text-terminal-muted">
+              Current API key ends in <span className="font-mono text-terminal-text">••••{account.api_key_suffix}</span>
+            </div>
+          )}
           <Input placeholder={editing ? 'New API Key (leave blank to keep current)' : 'API Key *'} value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full" autoComplete="off" />
           <Input placeholder={editing ? 'New secret (leave blank to keep current)' : 'Secret *'} type="password" value={apiSecret} onChange={(e) => setApiSecret(e.target.value)} className="w-full" autoComplete="off" />
           <Input placeholder={editing ? 'New passphrase (leave blank to keep current)' : 'Passphrase (optional, required for some exchanges like BitGet)'} type="password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} className="w-full" autoComplete="off" />

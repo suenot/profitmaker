@@ -58,6 +58,7 @@ const SERVER_ITEM: ExchangeAccount = {
   access_level: 'trade',
   shared: false,
   created_at: '2026-06-13T00:00:00Z',
+  api_key_suffix: 'E123',
 };
 
 beforeEach(() => {
@@ -88,6 +89,7 @@ describe('loadAccounts', () => {
       exchange: 'binance',
       access_level: 'trade',
       shared: false,
+      api_key_suffix: 'E123',
     });
   });
 

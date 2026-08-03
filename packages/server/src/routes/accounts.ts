@@ -17,7 +17,7 @@ import { invalidateCredentialCache, proxyMeExchanges } from '../services/authAcc
  *
  * Client-facing shapes mirror auth 1:1 (see authAccounts contract):
  *   GET    /api/accounts                  -> [{ id, exchange, label, read_only,
- *                                              has_ro_keys, owner_user_id,
+ *                                              api_key_suffix?, has_ro_keys, owner_user_id,
  *                                              access_level, shared, created_at }]
  *   POST   /api/accounts                  { exchange*, label?, api_key*, api_secret*,
  *                                            passphrase?, read_only?, api_key_ro?,
