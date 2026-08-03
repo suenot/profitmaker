@@ -315,6 +315,19 @@ Body: {
 }
 # -> 201 { id, exchange, label, read_only }
 
+# Edit metadata or rotate credentials without changing the account id.
+# Omitted secret fields keep their current values; api_key + api_secret must be
+# supplied together. The exchange itself is immutable.
+PATCH /api/accounts/:id
+Body: {
+  "label": "Primary Binance",
+  "read_only": false,
+  "api_key": "optional replacement key",
+  "api_secret": "optional replacement secret",
+  "passphrase": "optional replacement passphrase"
+}
+# -> 200 { id, exchange, label, read_only, has_ro_keys }
+
 # Delete an account by id
 DELETE /api/accounts/:id
 # -> { ok: true }

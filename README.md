@@ -228,7 +228,7 @@ Browser                          Server                      Database
 | **Dashboards** | `GET, POST, PUT, DELETE /api/dashboards` | CRUD per-user dashboards |
 | **Widgets** | `GET, POST, PUT, DELETE /api/widgets` `PUT /api/widgets/batch` | CRUD + batch position update |
 | **Groups** | `GET, POST, PUT, DELETE /api/groups` | Instrument linking groups |
-| **Accounts** | `GET, POST, PUT, DELETE /api/accounts` | Exchange API accounts |
+| **Accounts** | `GET, POST, PATCH, DELETE /api/accounts` | Exchange API accounts |
 | **Settings** | `GET, PUT, DELETE /api/settings/:key` `PUT /api/settings` (bulk) | Per-user key-value settings |
 | **Providers** | `GET, POST, PUT, DELETE /api/providers` | Data provider configs |
 | **Exchange** | `POST /api/exchange/fetch*` `POST /api/exchange/watch*` | CCXT market data |

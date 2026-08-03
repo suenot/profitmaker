@@ -192,6 +192,13 @@ export function clearCredentialCache(): void {
   credCache.clear();
 }
 
+/** Drop cached key material for one credential after it is edited or deleted. */
+export function invalidateCredentialCache(credentialId: string): void {
+  for (const key of credCache.keys()) {
+    if (key.split('|')[1] === credentialId) credCache.delete(key);
+  }
+}
+
 // --- user-plane account-management proxy --------------------------------------
 
 export interface ProxyResult {
@@ -209,7 +216,7 @@ export interface ProxyResult {
  */
 export async function proxyMeExchanges(args: {
   bearer: string;
-  method: 'GET' | 'POST' | 'DELETE';
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   subPath?: string;
   body?: unknown;
 }): Promise<ProxyResult> {

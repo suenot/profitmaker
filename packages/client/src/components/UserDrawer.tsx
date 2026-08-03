@@ -16,7 +16,7 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { SearchableSelect } from './ui/SearchableSelect';
-import { Plus, Trash2, Check, Loader2, LogIn, Share2, ShieldAlert, ShieldCheck, Eye } from 'lucide-react';
+import { Plus, Trash2, Check, Loader2, LogIn, Share2, ShieldAlert, ShieldCheck, Eye, Pencil } from 'lucide-react';
 
 interface UserDrawerProps {
   open: boolean;
@@ -42,6 +42,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onOpenChange }) => {
   const activeUser = users.find((u) => u.id === (activeSessionId ?? sessions[0]?.id));
 
   const [addingAccount, setAddingAccount] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<ExchangeAccount | null>(null);
   const [shareFor, setShareFor] = useState<ExchangeAccount | null>(null);
 
   // Load the active identity's accounts whenever the drawer opens / identity changes.
@@ -128,6 +129,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onOpenChange }) => {
                   error={error}
                   status={status}
                   onAddAccount={() => setAddingAccount(true)}
+                  onEdit={(acc) => setEditingAccount(acc)}
                   onShare={(acc) => setShareFor(acc)}
                 />
               )}
@@ -144,7 +146,8 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onOpenChange }) => {
         </SheetFooter>
       </SheetContent>
 
-      {addingAccount && <AddAccountSheet onClose={() => setAddingAccount(false)} />}
+      {addingAccount && <AccountSheet onClose={() => setAddingAccount(false)} />}
+      {editingAccount && <AccountSheet account={editingAccount} onClose={() => setEditingAccount(null)} />}
       {shareFor && <ShareAccountSheet account={shareFor} onClose={() => setShareFor(null)} />}
     </Sheet>
   );
@@ -185,8 +188,9 @@ const AccountsBlock: React.FC<{
   error: string | null;
   status: 'unknown' | 'authenticated' | 'unauthenticated';
   onAddAccount: () => void;
+  onEdit: (acc: ExchangeAccount) => void;
   onShare: (acc: ExchangeAccount) => void;
-}> = ({ accounts, loading, error, status, onAddAccount, onShare }) => {
+}> = ({ accounts, loading, error, status, onAddAccount, onEdit, onShare }) => {
   const removeAccount = useAccountStore((s) => s.removeAccount);
 
   return (
@@ -214,12 +218,17 @@ const AccountsBlock: React.FC<{
             <span className="truncate text-xs flex-1">{acc.label || acc.id.slice(0, 8)}</span>
             <AccountBadges account={acc} />
             {owner && (
-              <Button size="icon" variant="outline" onClick={() => onShare(acc)} title="Share account">
+              <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => onEdit(acc)} title="Edit account">
+                <Pencil size={14} />
+              </Button>
+            )}
+            {owner && (
+              <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => onShare(acc)} title="Share account">
                 <Share2 size={14} />
               </Button>
             )}
             {owner && (
-              <Button size="icon" variant="outline" onClick={() => void removeAccount(acc.id)} title="Remove account">
+              <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => void removeAccount(acc.id)} title="Remove account">
                 <Trash2 size={14} />
               </Button>
             )}
@@ -239,17 +248,19 @@ const AccountsBlock: React.FC<{
   );
 };
 
-// --- add account (POST keys to server proxy; no client-side storage) -------
+// --- add/edit account (write-only keys; no client-side storage) -------------
 
-const AddAccountSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const AccountSheet: React.FC<{ account?: ExchangeAccount; onClose: () => void }> = ({ account, onClose }) => {
   const addAccount = useAccountStore((s) => s.addAccount);
+  const updateAccount = useAccountStore((s) => s.updateAccount);
   const { exchanges, loading: loadingExchanges } = useExchangesList();
-  const [exchange, setExchange] = useState('');
-  const [label, setLabel] = useState('');
+  const editing = account !== undefined;
+  const [exchange, setExchange] = useState(account?.exchange ?? '');
+  const [label, setLabel] = useState(account?.label ?? '');
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
   const [passphrase, setPassphrase] = useState('');
-  const [readOnly, setReadOnly] = useState(false);
+  const [readOnly, setReadOnly] = useState(account?.read_only ?? false);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -258,25 +269,39 @@ const AddAccountSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       setError('Exchange is required');
       return;
     }
-    if (!apiKey.trim() || !apiSecret.trim()) {
+    if (!editing && (!apiKey.trim() || !apiSecret.trim())) {
       setError('API key and secret are required');
+      return;
+    }
+    if (editing && Boolean(apiKey.trim()) !== Boolean(apiSecret.trim())) {
+      setError('Enter both a new API key and secret, or leave both blank');
       return;
     }
     setSaving(true);
     setError('');
-    const created = await addAccount({
-      exchange,
-      label: label.trim() || undefined,
-      api_key: apiKey.trim(),
-      api_secret: apiSecret.trim(),
-      passphrase: passphrase.trim() || undefined,
-      read_only: readOnly,
-    });
+    const saved = editing
+      ? await updateAccount(account.id, {
+          label: label.trim() || 'default',
+          read_only: readOnly,
+          ...(apiKey.trim() && apiSecret.trim() ? {
+            api_key: apiKey.trim(),
+            api_secret: apiSecret.trim(),
+          } : {}),
+          ...(passphrase.trim() ? { passphrase: passphrase.trim() } : {}),
+        })
+      : await addAccount({
+          exchange,
+          label: label.trim() || undefined,
+          api_key: apiKey.trim(),
+          api_secret: apiSecret.trim(),
+          passphrase: passphrase.trim() || undefined,
+          read_only: readOnly,
+        });
     setSaving(false);
-    if (created) {
+    if (saved) {
       onClose();
     } else {
-      setError(useAccountStore.getState().error || 'Failed to add account');
+      setError(useAccountStore.getState().error || `Failed to ${editing ? 'update' : 'add'} account`);
     }
   };
 
@@ -284,9 +309,11 @@ const AddAccountSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     <Sheet open onOpenChange={onClose}>
       <SheetContent side="right" className="w-[400px] bg-terminal-widget border-l border-terminal-border flex flex-col">
         <SheetHeader>
-          <SheetTitle>Add account</SheetTitle>
+          <SheetTitle>{editing ? 'Edit account' : 'Add account'}</SheetTitle>
           <SheetDescription>
-            Keys are sent to your terminal server and stored encrypted in the central account service — never in this browser.
+            {editing
+              ? 'Update account details or rotate credentials. Existing keys are never shown; leave key fields blank to keep them.'
+              : 'Keys are sent to your terminal server and stored encrypted in the central account service — never in this browser.'}
           </SheetDescription>
         </SheetHeader>
         <form className="flex flex-col gap-3 mt-3 flex-1" onSubmit={(e) => { e.preventDefault(); void handleSave(); }}>
@@ -300,14 +327,14 @@ const AddAccountSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               placeholder={loadingExchanges ? 'Loading exchanges...' : 'Select exchange'}
               searchPlaceholder="Search exchanges (e.g., binance, bybit, okx)..."
               loading={loadingExchanges}
-              disabled={loadingExchanges}
+              disabled={loadingExchanges || editing}
               className="w-full"
             />
           </div>
           <Input placeholder="Label (optional, e.g. 'Main spot')" value={label} onChange={(e) => setLabel(e.target.value)} className="w-full" />
-          <Input placeholder="API Key *" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full" autoComplete="off" />
-          <Input placeholder="Secret *" type="password" value={apiSecret} onChange={(e) => setApiSecret(e.target.value)} className="w-full" autoComplete="off" />
-          <Input placeholder="Passphrase (optional, required for some exchanges like BitGet)" type="password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} className="w-full" autoComplete="off" />
+          <Input placeholder={editing ? 'New API Key (leave blank to keep current)' : 'API Key *'} value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full" autoComplete="off" />
+          <Input placeholder={editing ? 'New secret (leave blank to keep current)' : 'Secret *'} type="password" value={apiSecret} onChange={(e) => setApiSecret(e.target.value)} className="w-full" autoComplete="off" />
+          <Input placeholder={editing ? 'New passphrase (leave blank to keep current)' : 'Passphrase (optional, required for some exchanges like BitGet)'} type="password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} className="w-full" autoComplete="off" />
           <label className="flex items-center gap-2 text-xs text-terminal-muted">
             <input type="checkbox" checked={readOnly} onChange={(e) => setReadOnly(e.target.checked)} />
             Read-only account (server will never trade with it)
@@ -315,7 +342,7 @@ const AddAccountSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           {error && <div className="text-red-500 text-xs">{error}</div>}
           <div className="flex gap-2 mt-2">
             <Button type="submit" className="flex-1" disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : (editing ? 'Save' : 'Add')}
             </Button>
             <Button type="button" className="flex-1" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
           </div>

@@ -15,8 +15,10 @@ vi.mock('../middleware/requireUser', () => ({
 }));
 
 const proxyMock = vi.fn();
+const invalidateMock = vi.fn();
 vi.mock('../services/authAccounts', () => ({
   proxyMeExchanges: (args: unknown) => proxyMock(args),
+  invalidateCredentialCache: (accountId: string) => invalidateMock(accountId),
 }));
 
 const { accountRoutes } = await import('./accounts');
@@ -46,6 +48,31 @@ describe('SSO gate', () => {
     expect(status).toBe(401);
     expect(json).toMatchObject({ error: expect.stringContaining('SSO') });
     expect(proxyMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('PATCH /api/accounts/:id', () => {
+  it('forwards a partial update and invalidates cached credentials on success', async () => {
+    const body = { label: 'main', read_only: true, api_key: 'K2', api_secret: 'S2' };
+    proxyMock.mockResolvedValue({ status: 200, body: { id: 'cred-1', exchange: 'bingx', ...body } });
+
+    const { status, json } = await call('PATCH', '/api/accounts/cred-1', body);
+
+    expect(status).toBe(200);
+    expect(json).toMatchObject({ id: 'cred-1', label: 'main', read_only: true });
+    expect(proxyMock).toHaveBeenCalledWith({
+      bearer: 'JWT_CALLER', method: 'PATCH', subPath: '/cred-1', body,
+    });
+    expect(invalidateMock).toHaveBeenCalledWith('cred-1');
+  });
+
+  it('does not invalidate cached credentials when auth rejects the update', async () => {
+    proxyMock.mockResolvedValue({ status: 409, body: { error: 'duplicate' } });
+
+    const { status } = await call('PATCH', '/api/accounts/cred-1', { label: 'duplicate' });
+
+    expect(status).toBe(409);
+    expect(invalidateMock).not.toHaveBeenCalled();
   });
 });
 

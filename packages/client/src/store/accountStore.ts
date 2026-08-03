@@ -92,6 +92,17 @@ export interface AddAccountInput {
   passphrase_ro?: string;
 }
 
+export interface UpdateAccountInput {
+  label?: string;
+  api_key?: string;
+  api_secret?: string;
+  passphrase?: string;
+  read_only?: boolean;
+  api_key_ro?: string;
+  api_secret_ro?: string;
+  passphrase_ro?: string;
+}
+
 interface AccountStore {
   /** Accounts for the active identity, keyed by session id. */
   accountsBySession: Record<string, ExchangeAccount[]>;
@@ -104,6 +115,7 @@ interface AccountStore {
   // Central-account actions (active identity).
   loadAccounts: () => Promise<void>;
   addAccount: (input: AddAccountInput) => Promise<ExchangeAccount | null>;
+  updateAccount: (accountId: string, input: UpdateAccountInput) => Promise<ExchangeAccount | null>;
   removeAccount: (accountId: string) => Promise<boolean>;
 
   // Sharing.
@@ -214,6 +226,32 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
       return created;
     } catch (e) {
       set({ error: e instanceof Error ? e.message : 'Failed to add account' });
+      return null;
+    }
+  },
+
+  updateAccount: async (accountId: string, input: UpdateAccountInput) => {
+    const active = getActiveSession();
+    if (!active) {
+      set({ error: 'Not logged in' });
+      return null;
+    }
+    set({ error: null });
+    try {
+      const res = await moduleFetch(`${ACCOUNTS_PATH}/${encodeURIComponent(accountId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      if (!res.ok) {
+        set({ error: await readJsonError(res) });
+        return null;
+      }
+      const updated = ExchangeAccountSchema.parse(await res.json());
+      await get().loadAccounts();
+      return updated;
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'Failed to update account' });
       return null;
     }
   },

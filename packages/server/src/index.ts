@@ -57,7 +57,7 @@ const MIME_TYPES: Record<string, string> = {
 
 // Elysia HTTP server
 const app = new Elysia()
-  .use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] }))
+  .use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] }))
   .use(healthRoutes)
   .use(authRoutes)
   .onBeforeHandle(async ({ request, set }) => {

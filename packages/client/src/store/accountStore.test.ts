@@ -161,6 +161,55 @@ describe('addAccount', () => {
   });
 });
 
+describe('updateAccount', () => {
+  test('PATCHes only submitted fields, re-GETs the list, and stores NO secrets', async () => {
+    seedActiveSession('u1');
+    const updatedItem = { ...SERVER_ITEM, label: 'Rotated', read_only: true };
+    moduleFetch
+      .mockResolvedValueOnce(jsonResponse(updatedItem))
+      .mockResolvedValueOnce(jsonResponse([updatedItem]));
+
+    const updated = await useAccountStore.getState().updateAccount('cred-1', {
+      label: 'Rotated',
+      read_only: true,
+      api_key: 'NEW_KEY',
+      api_secret: 'NEW_SECRET',
+      passphrase: 'NEW_PASS',
+    });
+
+    const [patchUrl, patchInit] = moduleFetch.mock.calls[0];
+    expect(patchUrl).toBe('/api/accounts/cred-1');
+    expect(patchInit.method).toBe('PATCH');
+    expect(JSON.parse(patchInit.body)).toEqual({
+      label: 'Rotated',
+      read_only: true,
+      api_key: 'NEW_KEY',
+      api_secret: 'NEW_SECRET',
+      passphrase: 'NEW_PASS',
+    });
+    expect(moduleFetch.mock.calls[1]).toEqual(['/api/accounts', { method: 'GET' }]);
+    expect(updated).toMatchObject({ id: 'cred-1', label: 'Rotated', read_only: true });
+
+    const blob = JSON.stringify(useAccountStore.getState().accountsBySession);
+    expect(blob).not.toContain('NEW_KEY');
+    expect(blob).not.toContain('NEW_SECRET');
+    expect(blob).not.toContain('NEW_PASS');
+  });
+
+  test('returns null, preserves the list, and sets error on a non-ok PATCH', async () => {
+    seedActiveSession('u1');
+    useAccountStore.setState({ accountsBySession: { u1: [SERVER_ITEM] } });
+    moduleFetch.mockResolvedValueOnce(jsonResponse({ error: 'duplicate' }, { ok: false, status: 409 }));
+
+    const updated = await useAccountStore.getState().updateAccount('cred-1', { label: 'duplicate' });
+
+    expect(updated).toBeNull();
+    expect(useAccountStore.getState().error).toBe('duplicate');
+    expect(useAccountStore.getState().accountsBySession.u1).toEqual([SERVER_ITEM]);
+    expect(moduleFetch).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('removeAccount', () => {
   test('DELETEs /api/accounts/:id and drops it from the active session list', async () => {
     seedActiveSession('u1');

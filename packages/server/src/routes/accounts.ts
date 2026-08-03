@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { getSsoContextFromRequest } from '../middleware/requireUser';
-import { proxyMeExchanges } from '../services/authAccounts';
+import { invalidateCredentialCache, proxyMeExchanges } from '../services/authAccounts';
 
 /**
  * /api/accounts/* — a thin proxy in front of the auth service's
@@ -22,6 +22,8 @@ import { proxyMeExchanges } from '../services/authAccounts';
  *   POST   /api/accounts                  { exchange*, label?, api_key*, api_secret*,
  *                                            passphrase?, read_only?, api_key_ro?,
  *                                            api_secret_ro?, passphrase_ro? } -> 201
+ *   PATCH  /api/accounts/:id              { label?, api_key?, api_secret?,
+ *                                            passphrase?, read_only? } -> 200
  *   DELETE /api/accounts/:id              -> { ok: true }
  *   GET    /api/accounts/:id/grants       -> [{ id, grantee_user_id, grantee_email,
  *                                              access_level, created_at }]
@@ -61,11 +63,35 @@ export const accountRoutes = new Elysia({ prefix: '/api/accounts' })
     }),
   })
 
+  // Update metadata and/or rotate write-only keys on an owned account.
+  .patch('/:id', async ({ request, params, body, set }) => {
+    const ctx = await getSsoContextFromRequest(request);
+    if (!ctx) { set.status = 401; return { error: 'SSO authentication required' }; }
+    const result = await proxyMeExchanges({
+      bearer: ctx.bearer, method: 'PATCH', subPath: `/${params.id}`, body,
+    });
+    if (result.status >= 200 && result.status < 300) invalidateCredentialCache(params.id);
+    set.status = result.status;
+    return result.body;
+  }, {
+    body: t.Object({
+      label: t.Optional(t.String()),
+      api_key: t.Optional(t.String()),
+      api_secret: t.Optional(t.String()),
+      passphrase: t.Optional(t.String()),
+      read_only: t.Optional(t.Boolean()),
+      api_key_ro: t.Optional(t.String()),
+      api_secret_ro: t.Optional(t.String()),
+      passphrase_ro: t.Optional(t.String()),
+    }),
+  })
+
   // Delete an account by id.
   .delete('/:id', async ({ request, params, set }) => {
     const ctx = await getSsoContextFromRequest(request);
     if (!ctx) { set.status = 401; return { error: 'SSO authentication required' }; }
     const { status, body } = await proxyMeExchanges({ bearer: ctx.bearer, method: 'DELETE', subPath: `/${params.id}` });
+    if (status >= 200 && status < 300) invalidateCredentialCache(params.id);
     set.status = status;
     return body;
   })

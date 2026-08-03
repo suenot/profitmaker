@@ -223,6 +223,22 @@ describe('fetchCredentials', () => {
     await fetchCredentials({ ssoUserId: 'u1', credentialId: 'cred-1', want: 'read' });
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
+
+  it('invalidateCredentialCache evicts only the edited credential', async () => {
+    const { fetchCredentials, invalidateCredentialCache } = await importFresh(SECRET_ENV);
+    const fetchMock = vi.fn(async () =>
+      makeResponse({ status: 200, body: { api_key: 'K', api_secret: 'S', access_level: 'read', read_only: true } }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchCredentials({ ssoUserId: 'u1', credentialId: 'cred-1', want: 'read' });
+    await fetchCredentials({ ssoUserId: 'u1', credentialId: 'cred-2', want: 'read' });
+    invalidateCredentialCache('cred-1');
+    await fetchCredentials({ ssoUserId: 'u1', credentialId: 'cred-1', want: 'read' });
+    await fetchCredentials({ ssoUserId: 'u1', credentialId: 'cred-2', want: 'read' });
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
 });
 
 describe('proxyMeExchanges', () => {
@@ -258,6 +274,22 @@ describe('proxyMeExchanges', () => {
     expect(url).toBe('https://auth.test/api/v1/me/exchanges/cred-1/grants');
     expect(init.method).toBe('POST');
     expect(JSON.parse(init.body as string)).toEqual({ grantee_email: 'x@y.z', access_level: 'read' });
+  });
+
+  it('forwards PATCH updates without the internal secret', async () => {
+    const { proxyMeExchanges } = await importFresh(SECRET_ENV);
+    const fetchMock = vi.fn(async () => makeResponse({ status: 200, body: { id: 'cred-1', label: 'updated' } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await proxyMeExchanges({
+      bearer: 'JWT', method: 'PATCH', subPath: '/cred-1', body: { label: 'updated', read_only: true },
+    });
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://auth.test/api/v1/me/exchanges/cred-1');
+    expect(init.method).toBe('PATCH');
+    expect(JSON.parse(init.body as string)).toEqual({ label: 'updated', read_only: true });
+    expect((init.headers as Record<string, string>)['X-Internal-Secret']).toBeUndefined();
   });
 
   it('returns 503 when auth is unreachable', async () => {
