@@ -109,6 +109,19 @@ describe('loadAccounts', () => {
     expect(useAccountStore.getState().error).toBe('boom');
   });
 
+  test('preserves previously loaded accounts when a refresh fails', async () => {
+    seedActiveSession('u1');
+    useAccountStore.setState({ accountsBySession: { u1: [SERVER_ITEM] } });
+    moduleFetch.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+    await useAccountStore.getState().loadAccounts();
+
+    const state = useAccountStore.getState();
+    expect(state.loading).toBe(false);
+    expect(state.error).toBe('Failed to fetch');
+    expect(state.accountsBySession.u1).toEqual([SERVER_ITEM]);
+  });
+
   test('no-ops (no fetch) when there is no active session', async () => {
     await useAccountStore.getState().loadAccounts();
     expect(moduleFetch).not.toHaveBeenCalled();

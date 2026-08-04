@@ -128,6 +128,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onOpenChange }) => {
                   loading={loading}
                   error={error}
                   status={status}
+                  onRetry={() => void loadAccounts()}
                   onAddAccount={() => setAddingAccount(true)}
                   onEdit={(acc) => setEditingAccount(acc)}
                   onShare={(acc) => setShareFor(acc)}
@@ -187,10 +188,11 @@ const AccountsBlock: React.FC<{
   loading: boolean;
   error: string | null;
   status: 'unknown' | 'authenticated' | 'unauthenticated';
+  onRetry: () => void;
   onAddAccount: () => void;
   onEdit: (acc: ExchangeAccount) => void;
   onShare: (acc: ExchangeAccount) => void;
-}> = ({ accounts, loading, error, status, onAddAccount, onEdit, onShare }) => {
+}> = ({ accounts, loading, error, status, onRetry, onAddAccount, onEdit, onShare }) => {
   const removeAccount = useAccountStore((s) => s.removeAccount);
 
   return (
@@ -201,12 +203,23 @@ const AccountsBlock: React.FC<{
       </div>
 
       {error && (
-        <div className="text-xs text-terminal-negative bg-terminal-negative/10 border border-terminal-negative/30 rounded px-2 py-1 mb-2">
-          {error}
+        <div className="flex items-center justify-between gap-2 text-xs text-terminal-negative bg-terminal-negative/10 border border-terminal-negative/30 rounded px-2 py-1.5 mb-2">
+          <div>
+            <div className="font-medium">Could not load accounts. Your saved accounts were not changed.</div>
+            <div className="mt-0.5 opacity-80">{error}</div>
+          </div>
+          <button
+            type="button"
+            className="shrink-0 rounded border border-terminal-negative/40 px-2 py-1 font-medium hover:bg-terminal-negative/10 disabled:opacity-50"
+            onClick={onRetry}
+            disabled={loading}
+          >
+            Retry
+          </button>
         </div>
       )}
 
-      {!loading && accounts.length === 0 && (
+      {!loading && !error && accounts.length === 0 && (
         <div className="text-sm text-terminal-muted mb-2">No accounts yet for this identity.</div>
       )}
 

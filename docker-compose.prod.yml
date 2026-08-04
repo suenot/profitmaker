@@ -30,6 +30,7 @@ services:
       - API_TOKEN=${API_TOKEN}
       - PORT=3001
       - NODE_ENV=production
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://terminal.marketmaker.cc}
       # Central accounts: the server fetches users' exchange keys from auth.marketmaker.cc
       # server-to-server. AUTH_INTERNAL_SECRET MUST equal auth-service's AUTH_INTERNAL_SECRET
       # (set in .env on the server). Absent ⇒ accountId trading returns 503; rest still boots.
