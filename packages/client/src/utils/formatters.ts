@@ -26,6 +26,44 @@ export const formatPrice = (price: number, decimals: number = 2): string => {
   }
 };
 
+/**
+ * Choose enough decimal places to keep small order-book prices visible and
+ * adjacent levels distinct. The configured value remains a lower bound, so a
+ * user can request more precision without allowing a low default to turn a
+ * valid Bitfinex price such as 0.000341 into 0.00.
+ */
+export const getAdaptivePriceDecimals = (
+  prices: number[],
+  minimumDecimals: number = 2,
+  maximumDecimals: number = 12,
+): number => {
+  const maximum = Math.max(0, Math.min(100, Math.floor(maximumDecimals)));
+  const minimum = Math.max(0, Math.min(maximum, Math.floor(minimumDecimals)));
+  const validPrices = prices
+    .filter((price) => Number.isFinite(price) && price > 0)
+    .sort((a, b) => a - b);
+
+  if (validPrices.length === 0) return minimum;
+
+  const smallestPrice = validPrices[0];
+  const magnitudeDecimals = Math.max(
+    0,
+    Math.ceil(-Math.log10(smallestPrice)) + 2,
+  );
+
+  let minimumGap = Number.POSITIVE_INFINITY;
+  for (let index = 1; index < validPrices.length; index += 1) {
+    const gap = validPrices[index] - validPrices[index - 1];
+    if (gap > 0 && gap < minimumGap) minimumGap = gap;
+  }
+
+  const gapDecimals = Number.isFinite(minimumGap)
+    ? Math.max(0, Math.ceil(-Math.log10(minimumGap) - 1e-10))
+    : 0;
+
+  return Math.min(maximum, Math.max(minimum, magnitudeDecimals, gapDecimals));
+};
+
 // Volume formatting
 export const formatVolume = (volume: number): string => {
   if (volume === 0) return '0';
@@ -221,4 +259,4 @@ export const formatCurrency = (value: number, currency?: string): string => {
 export const formatTxHash = (hash: string, startLength: number = 6, endLength: number = 4): string => {
   if (hash.length <= startLength + endLength) return hash;
   return `${hash.substring(0, startLength)}...${hash.substring(hash.length - endLength)}`;
-}; 
+};

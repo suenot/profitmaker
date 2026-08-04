@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { ExchangeAccount } from '../../store/userStore';
 import { UserTradingDataWidgetSettings } from '../../store/userTradingDataWidgetStore';
+import { getAccountDataError, loadAccountData } from '../../utils/accountDataLoader';
 
 // Imperative handle exposed to the parent widget so its header refresh button can
 // re-fetch this tab's data without remounting (see UserTradingDataWidget#handleRefreshData).
@@ -45,12 +46,15 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
   }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestIdRef = React.useRef(0);
 
-  // Data provider integration - get methods only
-  const dataProvider = useDataProviderStore();
+  const fetchMyTrades = useDataProviderStore((state) => state.fetchMyTrades);
 
   // Load trades for accounts
   const loadTrades = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     if (!accounts.length) {
       setTrades([]);
       setError(null);
@@ -62,20 +66,17 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
     setError(null);
 
     try {
-      const allTrades: (Trade & { accountId: string; exchange: string; email: string; })[] = [];
+      const result = await loadAccountData(accounts, (account) => fetchMyTrades(
+        account.id,
+        undefined,
+        undefined,
+        settings.tradesLimit,
+      ));
 
-      // Load trades from each account
-      for (const account of accounts) {
-        try {
-          const trades = await dataProvider.fetchMyTrades(
-            account.id,
-            undefined, // symbol - get all symbols
-            undefined, // since - get recent trades
-            settings.tradesLimit
-          );
+      if (requestId !== requestIdRef.current) return;
 
-          // Transform and add account info
-          const tradesWithAccount = trades.map(trade => {
+      const allTrades = result.loaded.flatMap(({ account, data: accountTrades }) =>
+        accountTrades.map((trade) => {
             const rawTrade = trade as Partial<Trade> & typeof trade;
 
             return {
@@ -93,33 +94,36 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
               exchange: account.exchange || 'Unknown',
               email: account.email || 'Unknown'
             };
-          });
-
-          allTrades.push(...tradesWithAccount);
-        } catch (error) {
-          console.error(`Failed to load trades for account ${account.id}:`, error);
-          // Continue with other accounts even if one fails
-        }
-      }
+          }),
+      );
 
       // Sort trades by timestamp (newest first)
       allTrades.sort((a, b) => b.timestamp - a.timestamp);
 
       setTrades(allTrades);
+      setError(
+        allTrades.length === 0 && result.failures.length > 0
+          ? getAccountDataError('trades', result.failures)
+          : null,
+      );
     } catch (error) {
+      if (requestId !== requestIdRef.current) return;
       console.error('Failed to load trades:', error);
       setError(error instanceof Error ? error.message : 'Failed to load trades');
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
-  }, [accounts, settings.tradesLimit]);
+  }, [accounts, fetchMyTrades, settings.tradesLimit]);
 
   // Load trades only when this tab is active
   useEffect(() => {
     // Check if this tab is active
     if (settings.activeTab === 'trades') {
-      loadTrades();
+      void loadTrades();
     }
+    return () => {
+      requestIdRef.current += 1;
+    };
   }, [loadTrades, settings.activeTab]);
 
   // Expose refresh() to the parent widget's header refresh button.

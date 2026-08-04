@@ -1,5 +1,28 @@
 import { describe, it, expect } from 'vitest';
-import { formatVolume } from './formatters';
+import { formatVolume, getAdaptivePriceDecimals } from './formatters';
+
+describe('getAdaptivePriceDecimals', () => {
+  it('keeps small Bitfinex ETC/BTC order-book prices visible and distinct', () => {
+    const prices = [0.000341, 0.000342, 0.000340];
+    const decimals = getAdaptivePriceDecimals(prices, 2);
+
+    expect(decimals).toBe(6);
+    expect(prices.map((price) => price.toFixed(decimals))).toEqual([
+      '0.000341',
+      '0.000342',
+      '0.000340',
+    ]);
+  });
+
+  it('preserves the configured precision as a minimum', () => {
+    expect(getAdaptivePriceDecimals([64000.1, 64000.2], 2)).toBe(2);
+    expect(getAdaptivePriceDecimals([0.000341, 0.000342], 8)).toBe(8);
+  });
+
+  it('falls back to the configured precision without positive prices', () => {
+    expect(getAdaptivePriceDecimals([0, Number.NaN, Number.POSITIVE_INFINITY], 4)).toBe(4);
+  });
+});
 
 describe('formatVolume', () => {
   it('should format zero volume correctly', () => {

@@ -5,6 +5,7 @@ import { useDataProviderStore } from '../../store/dataProviderStore';
 import { useOrderBookWidgetsStore } from '../../store/orderBookWidgetStore';
 import { useGroupStore } from '../../store/groupStore';
 import { OrderBook, OrderBookEntry, MarketType } from '../../types/dataProviders';
+import { getAdaptivePriceDecimals } from '../../utils/formatters';
 
 interface OrderBookWidgetV2Props {
   dashboardId?: string;
@@ -146,6 +147,18 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
       return null;
     }
   }, [rawOrderBook, displayDepth, showCumulative, widgetId]);
+
+  const effectivePriceDecimals = useMemo(() => {
+    if (!processedOrderBook) return priceDecimals;
+
+    return getAdaptivePriceDecimals(
+      [
+        ...processedOrderBook.asks.map((entry) => entry.price),
+        ...processedOrderBook.bids.map((entry) => entry.price),
+      ],
+      priceDecimals,
+    );
+  }, [processedOrderBook, priceDecimals]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -295,7 +308,7 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
   };
 
   const formatPrice = (price: number): string => {
-    return price.toFixed(priceDecimals);
+    return price.toFixed(effectivePriceDecimals);
   };
 
   const formatAmount = (amount: number): string => {
@@ -461,4 +474,4 @@ export const OrderBookWidgetV2: React.FC<OrderBookWidgetV2Props> = (props) => {
       <OrderBookWidgetV2Inner {...props} />
     </ErrorBoundary>
   );
-}; 
+};

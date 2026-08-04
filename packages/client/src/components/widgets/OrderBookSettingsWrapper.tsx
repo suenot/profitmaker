@@ -251,7 +251,7 @@ const OrderBookSettingsWrapper: React.FC<OrderBookSettingsWrapperProps> = ({ wid
             </Select>
           </div>
           <div>
-            <Label className="text-xs text-terminal-text">Price decimals</Label>
+            <Label className="text-xs text-terminal-text">Minimum price decimals</Label>
             <Select value={priceDecimals.toString()} onValueChange={(value) => setWidgetSettings(widgetId, { 
               ...widget, 
               priceDecimals: parseInt(value) 
