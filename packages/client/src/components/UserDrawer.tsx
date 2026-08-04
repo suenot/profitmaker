@@ -212,26 +212,32 @@ const AccountsBlock: React.FC<{
 
       {accounts.map((acc) => {
         const owner = !acc.shared;
+        const accountLabel = acc.label || acc.id.slice(0, 8);
         return (
-          <div key={acc.id} className="flex items-center gap-2 p-1.5 rounded border border-terminal-border/30 bg-terminal-accent/10 mb-1">
-            <span className="text-xs font-mono px-1 py-0.5 rounded bg-terminal-widget/80 border border-terminal-border/30">{acc.exchange}</span>
-            <span className="truncate text-xs flex-1">{acc.label || acc.id.slice(0, 8)}</span>
-            <AccountBadges account={acc} />
+          <div key={acc.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-1.5 p-2 rounded border border-terminal-border/30 bg-terminal-accent/10 mb-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="shrink-0 text-xs font-mono px-1 py-0.5 rounded bg-terminal-widget/80 border border-terminal-border/30">{acc.exchange}</span>
+              <span className="min-w-0 truncate text-xs" title={accountLabel}>{accountLabel}</span>
+            </div>
             {owner && (
-              <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => onEdit(acc)} title="Edit account">
-                <Pencil size={14} />
-              </Button>
+              <div className="row-span-2 flex shrink-0 items-center gap-1">
+                <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => onEdit(acc)} title="Edit account">
+                  <Pencil size={14} />
+                </Button>
+                <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => onShare(acc)} title="Share account">
+                  <Share2 size={14} />
+                </Button>
+                <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => void removeAccount(acc.id)} title="Remove account">
+                  <Trash2 size={14} />
+                </Button>
+              </div>
             )}
             {owner && (
-              <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => onShare(acc)} title="Share account">
-                <Share2 size={14} />
-              </Button>
+              <div className="min-w-0">
+                <AccountBadges account={acc} />
+              </div>
             )}
-            {owner && (
-              <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => void removeAccount(acc.id)} title="Remove account">
-                <Trash2 size={14} />
-              </Button>
-            )}
+            {!owner && <AccountBadges account={acc} />}
           </div>
         );
       })}
