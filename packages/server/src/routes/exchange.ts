@@ -21,6 +21,86 @@ const MAX_LEVERAGE_READ_BATCH = 50;
 const MAX_LEVERAGE_WRITE_BATCH = 20;
 const LEVERAGE_WRITE_DELAY_MS = 100;
 
+interface PublicExchangeError {
+  status: number;
+  message: string;
+  code: string;
+}
+
+/**
+ * Convert an upstream exchange failure into a safe client-facing response.
+ * CCXT messages may contain request details, so never return the raw message.
+ */
+function toPublicExchangeError(error: unknown): PublicExchangeError {
+  const name = error instanceof Error ? error.name : '';
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (name === 'PermissionDenied' && /unmatched ip|bound ip/i.test(message)) {
+    return {
+      status: 403,
+      message: "Exchange rejected the API key IP address. Check the key's IP whitelist and the server egress IP.",
+      code: 'EXCHANGE_IP_NOT_ALLOWED',
+    };
+  }
+
+  if (['PermissionDenied', 'AuthenticationError', 'AccountSuspended'].includes(name)) {
+    return {
+      status: 403,
+      message: 'Exchange rejected the API credentials or permissions.',
+      code: 'EXCHANGE_ACCESS_DENIED',
+    };
+  }
+
+  if (['RateLimitExceeded', 'DDoSProtection'].includes(name)) {
+    return {
+      status: 429,
+      message: 'Exchange rate limit exceeded. Try again later.',
+      code: 'EXCHANGE_RATE_LIMITED',
+    };
+  }
+
+  if (name === 'RequestTimeout') {
+    return {
+      status: 504,
+      message: 'Exchange request timed out. Try again.',
+      code: 'EXCHANGE_TIMEOUT',
+    };
+  }
+
+  if (['NetworkError', 'ExchangeNotAvailable', 'OnMaintenance'].includes(name)) {
+    return {
+      status: 502,
+      message: 'Exchange is temporarily unavailable.',
+      code: 'EXCHANGE_UNAVAILABLE',
+    };
+  }
+
+  if (
+    ['BadRequest', 'ArgumentsRequired', 'BadSymbol', 'NotSupported'].includes(name) ||
+    /not available|not supported|does not support/i.test(message)
+  ) {
+    return {
+      status: 400,
+      message: 'Exchange operation is not supported or the request is invalid.',
+      code: 'EXCHANGE_BAD_REQUEST',
+    };
+  }
+
+  if (/not found/i.test(message)) {
+    return {
+      status: 404,
+      message: 'Exchange resource not found.',
+      code: 'EXCHANGE_NOT_FOUND',
+    };
+  }
+
+  return {
+    status: 500,
+    message: 'Exchange operation failed.',
+    code: 'EXCHANGE_OPERATION_FAILED',
+  };
+}
+
 const configSchema = t.Object({
   exchangeId: t.String(),
   marketType: t.Optional(t.String()),
@@ -197,6 +277,16 @@ const authedConfigOnly = t.Object({
 });
 
 export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
+  // Elysia hooks affect routes declared after them, so this must stay before
+  // every `.post(...)` below. A trailing hook would not catch route failures.
+  .onError(({ code, error, status }) => {
+    if (code !== 'UNKNOWN') return;
+    const publicError = toPublicExchangeError(error);
+    return status(publicError.status, {
+      error: publicError.message,
+      code: publicError.code,
+    });
+  })
   .post('/instance', async ({ body }) => {
     // NOTE: /instance takes the bare config as the body. The client's
     // CCXTInstanceConfig carries its own `providerId` (the *client* provider id,
@@ -508,17 +598,4 @@ export const exchangeRoutes = new Elysia({ prefix: '/api/exchange' })
       ...providerIdField,
       ...accountIdField,
     }),
-  })
-
-  .onError(({ error, set }) => {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    // Map known CCXT/registry errors to appropriate HTTP codes
-    if (message.includes('not found')) {
-      set.status = 404;
-    } else if (message.includes('not available') || message.includes('not supported') || message.includes('does not support')) {
-      set.status = 400;
-    } else {
-      set.status = 500;
-    }
-    return { error: 'Exchange operation failed', details: message };
   });

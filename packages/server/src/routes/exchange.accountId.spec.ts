@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ProviderRequestConfig } from '@profitmaker/types';
+import { PermissionDenied } from 'ccxt';
 
 /**
  * Unit tests for the /api/exchange/* accountId resolution path
@@ -40,6 +41,8 @@ let lastConfig: ProviderRequestConfig | null = null;
 const createOrderMock = vi.fn(async () => ({ id: 'order-1', status: 'open' }));
 const cancelOrderMock = vi.fn(async () => ({ id: 'order-1', status: 'canceled' }));
 const fetchBalanceMock = vi.fn(async () => ({ total: { USDT: 100 } }));
+const fetchMyTradesMock = vi.fn(async () => []);
+const fetchOpenOrdersMock = vi.fn(async () => []);
 vi.mock('../providers', () => ({
   providerRegistry: {
     resolve: async (config: ProviderRequestConfig) => {
@@ -48,7 +51,12 @@ vi.mock('../providers', () => ({
         providerId: 'ccxt',
         instance: {
           fetchBalance: fetchBalanceMock,
-          trading: { createOrder: createOrderMock, cancelOrder: cancelOrderMock },
+          trading: {
+            createOrder: createOrderMock,
+            cancelOrder: cancelOrderMock,
+            fetchMyTrades: fetchMyTradesMock,
+            fetchOpenOrders: fetchOpenOrdersMock,
+          },
         },
       };
     },
@@ -138,6 +146,15 @@ describe('createOrder — accountId path (trade enforcement)', () => {
     expect(fetchCredsMock).not.toHaveBeenCalled();
   });
 
+  it('preserves Elysia schema validation errors', async () => {
+    const { status } = await post('/api/exchange/createOrder', {
+      accountId: 'cred-1', exchange: 'bingx',
+    });
+
+    expect(status).toBe(422);
+    expect(fetchCredsMock).not.toHaveBeenCalled();
+  });
+
   it('accepts the flat shape (top-level exchange/market) and maps it into the config', async () => {
     fetchCredsMock.mockResolvedValue({
       apiKey: 'K', secret: 'S', accessLevel: 'trade', readOnly: false, credentialId: 'c', ownerUserId: 'o',
@@ -190,6 +207,49 @@ describe('fetchBalance — accountId path uses want=read', () => {
     expect(status).toBe(200);
     // want defaults to 'read' on a read endpoint when omitted.
     expect(fetchCredsMock).toHaveBeenCalledWith({ ssoUserId: 'sso-user-1', credentialId: 'cred-1', want: 'read' });
+  });
+});
+
+describe('private read exchange failures', () => {
+  it.each([
+    ['/api/exchange/fetchMyTrades', fetchMyTradesMock],
+    ['/api/exchange/fetchOpenOrders', fetchOpenOrdersMock],
+  ])('returns an actionable, sanitized IP error from %s', async (path, exchangeCall) => {
+    exchangeCall.mockRejectedValueOnce(new PermissionDenied(
+      'bybit {"retCode":10010,"retMsg":"Unmatched IP, please check bound IP",' +
+      '"apiKey":"MUST_NOT_LEAK"}',
+    ));
+    fetchCredsMock.mockResolvedValue({
+      apiKey: 'K', secret: 'S', accessLevel: 'read', readOnly: true,
+      credentialId: 'c', ownerUserId: 'o',
+    });
+
+    const { status, json } = await post(path, {
+      accountId: 'cred-1', exchange: 'bybit', want: 'read',
+    });
+
+    expect(status).toBe(403);
+    expect(json).toEqual({
+      error: "Exchange rejected the API key IP address. Check the key's IP whitelist and the server egress IP.",
+      code: 'EXCHANGE_IP_NOT_ALLOWED',
+    });
+    expect(JSON.stringify(json)).not.toContain('MUST_NOT_LEAK');
+    expect(JSON.stringify(json)).not.toContain('retCode');
+  });
+
+  it('keeps unknown failures as sanitized internal errors', async () => {
+    fetchMyTradesMock.mockRejectedValueOnce(new Error('database password MUST_NOT_LEAK'));
+
+    const { status, json } = await post('/api/exchange/fetchMyTrades', {
+      accountId: 'cred-1', exchange: 'bybit', want: 'read',
+    });
+
+    expect(status).toBe(500);
+    expect(json).toEqual({
+      error: 'Exchange operation failed.',
+      code: 'EXCHANGE_OPERATION_FAILED',
+    });
+    expect(JSON.stringify(json)).not.toContain('MUST_NOT_LEAK');
   });
 });
 
