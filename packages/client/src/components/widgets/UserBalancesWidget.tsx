@@ -152,7 +152,7 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
   // Widget state
   const [accountBalances, setAccountBalances] = useState<Map<string, AccountBalance>>(new Map());
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'currency' | 'total' | 'free' | 'used' | 'account' | 'walletType' | 'percentage'>('total');
+  const [sortBy, setSortBy] = useState<'currency' | 'total' | 'free' | 'used' | 'account' | 'walletType' | 'usdValue' | 'percentage'>('total');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [loadingPrices, setLoadingPrices] = useState<Set<string>>(new Set());
   const [usdValues, setUsdValues] = useState<Map<string, { value?: number, rate?: string, loading: boolean }>>(new Map());
@@ -370,7 +370,7 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
     // Apply small amount filtering if enabled
     if (widgetSettings.hideSmallAmounts) {
       flatBalances = flatBalances.filter(balance => 
-        !balance.usdValue || balance.usdValue >= widgetSettings.smallAmountThreshold
+        balance.usdValue === undefined || balance.usdValue >= widgetSettings.smallAmountThreshold
       );
     }
 
@@ -394,13 +394,13 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
           compareResult = a.currency.localeCompare(b.currency);
           break;
         case 'total':
-          compareResult = b.total - a.total;
+          compareResult = a.total - b.total;
           break;  
         case 'free':
-          compareResult = b.free - a.free;
+          compareResult = a.free - b.free;
           break;
         case 'used':
-          compareResult = b.used - a.used;
+          compareResult = a.used - b.used;
           break;
         case 'account':
           compareResult = a.exchange.localeCompare(b.exchange) ||
@@ -409,11 +409,23 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
         case 'walletType':
           compareResult = a.walletType.localeCompare(b.walletType);
           break;
+        case 'usdValue':
+          // Values without a market price stay at the end in either direction.
+          if (a.usdValue === undefined && b.usdValue === undefined) {
+            return 0;
+          } else if (a.usdValue === undefined) {
+            return 1;
+          } else if (b.usdValue === undefined) {
+            return -1;
+          } else {
+            compareResult = a.usdValue - b.usdValue;
+          }
+          break;
         case 'percentage':
-          compareResult = (b.percentage || 0) - (a.percentage || 0);
+          compareResult = (a.percentage || 0) - (b.percentage || 0);
           break;
         default:
-          compareResult = b.total - a.total;
+          compareResult = a.total - b.total;
       }
       
       return sortDirection === 'desc' ? -compareResult : compareResult;
@@ -675,7 +687,7 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
       {/* Table Header - only show for table view */}
       {widgetSettings.displayType === 'table' && (
         <div className="flex items-center py-2 px-3 text-xs font-medium text-terminal-muted border-b border-terminal-border bg-terminal-background/50">
-        <button 
+        <button
           onClick={() => handleSort('account')}
           className="flex items-center gap-1 min-w-0 flex-1 hover:text-terminal-text"
         >
@@ -725,7 +737,17 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
           )}
         </button>
         
-        <div className="text-right min-w-0 flex-1">USD Value</div>
+        <button
+          onClick={() => handleSort('usdValue')}
+          className="flex items-center gap-1 justify-end text-right min-w-0 flex-1 hover:text-terminal-text"
+          aria-label="Sort by USD Value"
+          aria-sort={sortBy === 'usdValue' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+        >
+          USD Value
+          {sortBy === 'usdValue' && (
+            sortDirection === 'asc' ? <TrendingUp className="h-3 w-3 text-terminal-text/80" /> : <TrendingDown className="h-3 w-3 text-terminal-text/80" />
+          )}
+        </button>
         
         <button 
           onClick={() => handleSort('percentage')}
@@ -798,4 +820,4 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
   );
 };
 
-export default UserBalancesWidget; 
+export default UserBalancesWidget;

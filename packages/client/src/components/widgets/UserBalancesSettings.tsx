@@ -120,7 +120,8 @@ const UserBalancesSettings: React.FC<UserBalancesSettingsProps> = ({
                   min="0"
                   step="0.1"
                   value={smallAmountThreshold}
-                  onChange={(e) => onSmallAmountThresholdChange(parseFloat(e.target.value) || 0)}
+                  onChange={(e) => onSmallAmountThresholdChange(Math.max(0, parseFloat(e.target.value) || 0))}
+                  aria-label="Small amount threshold in USD"
                   className="bg-terminal-bg border-terminal-border text-terminal-text text-right"
                 />
               </div>
@@ -144,4 +145,4 @@ const UserBalancesSettings: React.FC<UserBalancesSettingsProps> = ({
   );
 };
 
-export default UserBalancesSettings; 
+export default UserBalancesSettings;
