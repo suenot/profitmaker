@@ -3,6 +3,11 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, X } from 'lucide-react';
 import { useUserStore } from '../../store/userStore';
 import { useDataProviderStore } from '../../store/dataProviderStore';
+import { useExchangesList } from '../../hooks/useExchangesList';
+import {
+  createPublicInstrument,
+  getPublicExchangeIds,
+} from '../../utils/instrumentSearch';
 
 export interface Instrument {
   /** Central credential id — bound to group.account. */
@@ -38,62 +43,76 @@ const InstrumentSearch: React.FC<InstrumentSearchProps> = ({
   
   const { users, activeUserId } = useUserStore();
   const { getSymbolsForExchange, getMarketsForExchange } = useDataProviderStore();
+  const { exchanges } = useExchangesList();
   const activeUser = users.find(u => u.id === activeUserId);
+  const accountExchangeIds = useMemo(
+    () => activeUser?.accounts.map(account => account.exchange) ?? [],
+    [activeUser?.accounts],
+  );
+  const publicExchangeIds = useMemo(
+    () => getPublicExchangeIds(
+      exchanges.map(exchange => exchange.id),
+      accountExchangeIds,
+    ),
+    [accountExchangeIds, exchanges],
+  );
+  const exchangeIds = useMemo(
+    () => Array.from(new Set([...accountExchangeIds, ...publicExchangeIds])),
+    [accountExchangeIds, publicExchangeIds],
+  );
 
-  // Load exchange data when activeUser changes
+  // Load public market metadata for every exchange, and account-bound metadata
+  // for connected exchanges. Public data does not require credentials.
   useEffect(() => {
-    if (!activeUser) return;
-
     console.log(`🔍 [InstrumentSearch] Loading data for user:`, {
-      email: activeUser.email,
-      accountsCount: activeUser.accounts.length,
-      accounts: activeUser.accounts.map(acc => ({ exchange: acc.exchange, email: acc.email }))
+      email: activeUser?.email,
+      accountsCount: activeUser?.accounts.length ?? 0,
+      exchangeCount: exchangeIds.length,
     });
+
+    let cancelled = false;
 
     const loadExchangeData = async () => {
       const newExchangeData: Record<string, { symbols: string[]; markets: string[] }> = {};
-      
-      for (const account of activeUser.accounts) {
-        console.log(`🏦 [InstrumentSearch] Loading data for exchange: ${account.exchange}`);
-        if (!newExchangeData[account.exchange]) {
-          try {
-            const [symbols, markets] = await Promise.all([
-              getSymbolsForExchange(account.exchange, undefined, 'spot'), // Используем spot по умолчанию для поиска
-              getMarketsForExchange(account.exchange)
-            ]);
-            
-            newExchangeData[account.exchange] = { symbols, markets };
-            console.log(`✅ [InstrumentSearch] Loaded for ${account.exchange}:`, {
-              symbolsCount: symbols.length,
-              marketsCount: markets.length,
-              symbolsSample: symbols.slice(0, 3),
-              markets
-            });
-          } catch (error) {
-            console.error(`Failed to load data for ${account.exchange}:`, error);
-            // Fallback to basic data
-            newExchangeData[account.exchange] = {
-              symbols: ['BTC/USDT', 'ETH/USDT'],
-              markets: ['spot']
-            };
-          }
+
+      await Promise.all(exchangeIds.map(async (exchange) => {
+        try {
+          const [symbols, markets] = await Promise.all([
+            // Public search is intentionally bounded so adding all CCXT
+            // exchanges does not create an unbounded client-side catalog.
+            getSymbolsForExchange(exchange, 500, 'spot'),
+            getMarketsForExchange(exchange),
+          ]);
+
+          newExchangeData[exchange] = { symbols, markets };
+        } catch (error) {
+          console.error(`Failed to load data for ${exchange}:`, error);
+          newExchangeData[exchange] = {
+            symbols: ['BTC/USDT', 'ETH/USDT'],
+            markets: ['spot'],
+          };
         }
+      }));
+
+      if (!cancelled) {
+        setExchangeData(newExchangeData);
+        console.log(`📊 [InstrumentSearch] Final exchange data:`, newExchangeData);
       }
-      
-      setExchangeData(newExchangeData);
-      console.log(`📊 [InstrumentSearch] Final exchange data:`, newExchangeData);
     };
 
     loadExchangeData();
-  }, [activeUser, getSymbolsForExchange, getMarketsForExchange]);
+    return () => {
+      cancelled = true;
+    };
+  }, [activeUser?.email, activeUser?.accounts.length, exchangeIds, getSymbolsForExchange, getMarketsForExchange]);
 
-  // Generate all possible instruments from user accounts
+  // Generate account-bound instruments and public instruments for exchanges
+  // without a connected account. `-` is a display marker only.
   const allInstruments = useMemo((): Instrument[] => {
-    if (!activeUser) return [];
-    
     const instruments: Instrument[] = [];
+    const connectedExchanges = new Set(accountExchangeIds);
 
-    activeUser.accounts.forEach(account => {
+    activeUser?.accounts.forEach(account => {
       const exchangeInfo = exchangeData[account.exchange];
       if (!exchangeInfo) return; // Skip if data not loaded yet
       
@@ -113,8 +132,19 @@ const InstrumentSearch: React.FC<InstrumentSearchProps> = ({
       });
     });
 
+    publicExchangeIds.forEach(exchange => {
+      const exchangeInfo = exchangeData[exchange];
+      if (!exchangeInfo || connectedExchanges.has(exchange)) return;
+
+      exchangeInfo.markets.forEach(market => {
+        exchangeInfo.symbols.forEach(pair => {
+          instruments.push(createPublicInstrument(exchange, market, pair));
+        });
+      });
+    });
+
     return instruments;
-  }, [activeUser, exchangeData]);
+  }, [activeUser, accountExchangeIds, publicExchangeIds, exchangeData]);
 
   // Smart multi-word search: each word must match any field
   const { filteredInstruments, totalFound } = useMemo(() => {
@@ -369,4 +399,4 @@ const VirtualizedInstrumentsList: React.FC<{
   );
 };
 
-export default InstrumentSearch; 
+export default InstrumentSearch;

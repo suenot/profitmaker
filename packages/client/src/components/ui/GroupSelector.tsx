@@ -5,6 +5,7 @@ import { useGroupStore } from '../../store/groupStore';
 import { useUserStore } from '../../store/userStore';
 import { Group } from '../../types/groups';
 import InstrumentSearch, { Instrument } from './InstrumentSearch';
+import { PUBLIC_INSTRUMENT_ACCOUNT } from '../../utils/instrumentSearch';
 
 interface GroupSelectorProps {
   selectedGroupId?: string;
@@ -48,10 +49,10 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
 
   // Initialize selected instrument based on user and group data
   React.useEffect(() => {
-    if (selectedGroup && selectedGroup.account && selectedGroup.exchange && selectedGroup.market && selectedGroup.tradingPair) {
+    if (selectedGroup && selectedGroup.exchange && selectedGroup.market && selectedGroup.tradingPair) {
       // If group has all instrument data, set it (only if it's different to avoid loops)
       const currentInstrument = {
-        account: selectedGroup.account,
+        account: selectedGroup.account || PUBLIC_INSTRUMENT_ACCOUNT,
         exchange: selectedGroup.exchange,
         market: selectedGroup.market,
         pair: selectedGroup.tradingPair
@@ -87,13 +88,16 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
     // Only update group if user explicitly changed the instrument AND it's actually different
     if (selectedGroup && instrument) {
       const hasChanges = 
-        selectedGroup.account !== instrument.account ||
+        selectedGroup.account !== (instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account) ||
         selectedGroup.exchange !== instrument.exchange ||
         selectedGroup.market !== instrument.market ||
         selectedGroup.tradingPair !== instrument.pair;
       
       if (hasChanges) {
-        setAccount(selectedGroup.id, instrument.account);
+        setAccount(
+          selectedGroup.id,
+          instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account,
+        );
         setExchange(selectedGroup.id, instrument.exchange);
         setMarket(selectedGroup.id, instrument.market);
         setTradingPair(selectedGroup.id, instrument.pair);
@@ -257,4 +261,4 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
   );
 };
 
-export default GroupSelector; 
+export default GroupSelector;

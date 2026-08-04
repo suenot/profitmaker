@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
 import { useGroupStore } from '../../store/groupStore';
 import InstrumentSearch, { Instrument } from './InstrumentSearch';
+import { PUBLIC_INSTRUMENT_ACCOUNT } from '../../utils/instrumentSearch';
 
 interface InstrumentSelectorProps {
   selectedGroupId?: string;
@@ -31,9 +32,9 @@ const InstrumentSelector: React.FC<InstrumentSelectorProps> = ({
 
   // Initialize selected instrument based on group data
   React.useEffect(() => {
-    if (selectedGroup && selectedGroup.account && selectedGroup.exchange && selectedGroup.market && selectedGroup.tradingPair) {
+    if (selectedGroup && selectedGroup.exchange && selectedGroup.market && selectedGroup.tradingPair) {
       const currentInstrument = {
-        account: selectedGroup.account,
+        account: selectedGroup.account || PUBLIC_INSTRUMENT_ACCOUNT,
         exchange: selectedGroup.exchange,
         market: selectedGroup.market,
         pair: selectedGroup.tradingPair
@@ -58,13 +59,16 @@ const InstrumentSelector: React.FC<InstrumentSelectorProps> = ({
     // Update group data if group is selected and instrument changed
     if (selectedGroup && instrument) {
       const hasChanges = 
-        selectedGroup.account !== instrument.account ||
+        selectedGroup.account !== (instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account) ||
         selectedGroup.exchange !== instrument.exchange ||
         selectedGroup.market !== instrument.market ||
         selectedGroup.tradingPair !== instrument.pair;
       
       if (hasChanges) {
-        setAccount(selectedGroup.id, instrument.account);
+        setAccount(
+          selectedGroup.id,
+          instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account,
+        );
         setExchange(selectedGroup.id, instrument.exchange);
         setMarket(selectedGroup.id, instrument.market);
         setTradingPair(selectedGroup.id, instrument.pair);
@@ -183,4 +187,4 @@ const InstrumentSelector: React.FC<InstrumentSelectorProps> = ({
   );
 };
 
-export default InstrumentSelector; 
+export default InstrumentSelector;

@@ -27,7 +27,6 @@ const ChartSettingsWrapper: React.FC<ChartSettingsWrapperProps> = ({ widgetId, s
 
   // Проверка полноты выбранного инструмента
   const isInstrumentSelected = selectedGroup && 
-    selectedGroup.account && 
     selectedGroup.exchange && 
     selectedGroup.market && 
     selectedGroup.tradingPair;
@@ -261,4 +260,4 @@ const ChartSettingsWrapper: React.FC<ChartSettingsWrapperProps> = ({ widgetId, s
   );
 };
 
-export default ChartSettingsWrapper; 
+export default ChartSettingsWrapper;

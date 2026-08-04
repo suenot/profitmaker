@@ -5,6 +5,12 @@ import { Search, X } from 'lucide-react';
 import { useGroupStore } from '../../store/groupStore';
 import { useUserStore } from '../../store/userStore';
 import { useDataProviderStore } from '../../store/dataProviderStore';
+import { useExchangesList } from '../../hooks/useExchangesList';
+import {
+  createPublicInstrument,
+  getPublicExchangeIds,
+  PUBLIC_INSTRUMENT_ACCOUNT,
+} from '../../utils/instrumentSearch';
 
 export interface Instrument {
   account: string;
@@ -42,49 +48,65 @@ const InstrumentHeaderControl: React.FC<InstrumentHeaderControlProps> = ({
 
   const { users, activeUserId } = useUserStore();
   const { getSymbolsForExchange, getMarketsForExchange } = useDataProviderStore();
+  const { exchanges } = useExchangesList();
   const activeUser = users.find(u => u.id === activeUserId);
+  const accountExchangeIds = useMemo(
+    () => activeUser?.accounts.map(account => account.exchange) ?? [],
+    [activeUser?.accounts],
+  );
+  const publicExchangeIds = useMemo(
+    () => getPublicExchangeIds(
+      exchanges.map(exchange => exchange.id),
+      accountExchangeIds,
+    ),
+    [accountExchangeIds, exchanges],
+  );
+  const exchangeIds = useMemo(
+    () => Array.from(new Set([...accountExchangeIds, ...publicExchangeIds])),
+    [accountExchangeIds, publicExchangeIds],
+  );
 
   const selectedGroup = selectedGroupId ? getGroupById(selectedGroupId) : undefined;
 
-  // Load exchange data when activeUser changes
+  // Load public market metadata for every exchange, and account-bound metadata
+  // for connected exchanges. Public data does not require credentials.
   useEffect(() => {
-    if (!activeUser) return;
-
+    let cancelled = false;
     const loadExchangeData = async () => {
       const newExchangeData: Record<string, { symbols: string[]; markets: string[] }> = {};
-      
-      for (const account of activeUser.accounts) {
-        if (!newExchangeData[account.exchange]) {
-          try {
-            const [symbols, markets] = await Promise.all([
-              getSymbolsForExchange(account.exchange, undefined, 'spot'),
-              getMarketsForExchange(account.exchange)
-            ]);
-            
-            newExchangeData[account.exchange] = { symbols, markets };
-          } catch (error) {
-            console.error(`Failed to load data for ${account.exchange}:`, error);
-            newExchangeData[account.exchange] = {
-              symbols: ['BTC/USDT', 'ETH/USDT'],
-              markets: ['spot']
-            };
-          }
+
+      await Promise.all(exchangeIds.map(async (exchange) => {
+        try {
+          const [symbols, markets] = await Promise.all([
+            getSymbolsForExchange(exchange, 500, 'spot'),
+            getMarketsForExchange(exchange),
+          ]);
+
+          newExchangeData[exchange] = { symbols, markets };
+        } catch (error) {
+          console.error(`Failed to load data for ${exchange}:`, error);
+          newExchangeData[exchange] = {
+            symbols: ['BTC/USDT', 'ETH/USDT'],
+            markets: ['spot'],
+          };
         }
-      }
-      
-      setExchangeData(newExchangeData);
+      }));
+
+      if (!cancelled) setExchangeData(newExchangeData);
     };
 
     loadExchangeData();
-  }, [activeUser, getSymbolsForExchange, getMarketsForExchange]);
+    return () => {
+      cancelled = true;
+    };
+  }, [activeUser?.email, activeUser?.accounts.length, exchangeIds, getSymbolsForExchange, getMarketsForExchange]);
 
   // Generate all possible instruments from user accounts
   const allInstruments = useMemo((): Instrument[] => {
-    if (!activeUser) return [];
-    
     const instruments: Instrument[] = [];
+    const connectedExchanges = new Set(accountExchangeIds);
 
-    activeUser.accounts.forEach(account => {
+    activeUser?.accounts.forEach(account => {
       const exchangeInfo = exchangeData[account.exchange];
       if (!exchangeInfo) return;
       
@@ -104,8 +126,19 @@ const InstrumentHeaderControl: React.FC<InstrumentHeaderControlProps> = ({
       });
     });
 
+    publicExchangeIds.forEach(exchange => {
+      const exchangeInfo = exchangeData[exchange];
+      if (!exchangeInfo || connectedExchanges.has(exchange)) return;
+
+      exchangeInfo.markets.forEach(market => {
+        exchangeInfo.symbols.forEach(pair => {
+          instruments.push(createPublicInstrument(exchange, market, pair));
+        });
+      });
+    });
+
     return instruments;
-  }, [activeUser, exchangeData]);
+  }, [activeUser, accountExchangeIds, publicExchangeIds, exchangeData]);
 
   // Smart multi-word search with current selection at top
   const { filteredInstruments, totalFound } = useMemo(() => {
@@ -159,9 +192,9 @@ const InstrumentHeaderControl: React.FC<InstrumentHeaderControlProps> = ({
 
   // Initialize selected instrument based on group data
   React.useEffect(() => {
-    if (selectedGroup && selectedGroup.account && selectedGroup.exchange && selectedGroup.market && selectedGroup.tradingPair) {
+    if (selectedGroup && selectedGroup.exchange && selectedGroup.market && selectedGroup.tradingPair) {
       const currentInstrument = {
-        account: selectedGroup.account,
+        account: selectedGroup.account || PUBLIC_INSTRUMENT_ACCOUNT,
         exchange: selectedGroup.exchange,
         market: selectedGroup.market,
         pair: selectedGroup.tradingPair
@@ -191,13 +224,16 @@ const InstrumentHeaderControl: React.FC<InstrumentHeaderControlProps> = ({
       if (instrument) {
         // Update group data if instrument is selected
         const hasChanges = 
-          selectedGroup.account !== instrument.account ||
+          selectedGroup.account !== (instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account) ||
           selectedGroup.exchange !== instrument.exchange ||
           selectedGroup.market !== instrument.market ||
           selectedGroup.tradingPair !== instrument.pair;
         
         if (hasChanges) {
-          setAccount(selectedGroup.id, instrument.account);
+          setAccount(
+            selectedGroup.id,
+            instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account,
+          );
           setExchange(selectedGroup.id, instrument.exchange);
           setMarket(selectedGroup.id, instrument.market);
           setTradingPair(selectedGroup.id, instrument.pair);
