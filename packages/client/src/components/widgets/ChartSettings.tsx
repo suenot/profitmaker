@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -11,6 +11,7 @@ import { Timeframe, MarketType } from '../../types/dataProviders';
 import { useExchangesList } from '../../hooks/useExchangesList';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { SearchableSelect } from '../ui/SearchableSelect';
+import { FALLBACK_CHART_SYMBOLS, getCompatibleChartSymbol } from '../../utils/chartSettings';
 
 // Mapping timeframes to display labels (CCXT format - lowercase)
 const TIMEFRAME_LABELS: Record<Timeframe, string> = {
@@ -117,12 +118,20 @@ const ChartSettings: React.FC<ChartSettingsProps> = ({
   
   // Состояние для загрузки рынков и символов
   const [availableMarkets, setAvailableMarkets] = useState<string[]>(['spot', 'futures', 'margin']);
-  const [availableSymbols, setAvailableSymbols] = useState<string[]>([
-    'BTC/USDT', 'ETH/USDT', 'BNB/USDT', 'ADA/USDT', 'SOL/USDT',
-    'XRP/USDT', 'DOT/USDT', 'DOGE/USDT', 'AVAX/USDT', 'MATIC/USDT'
-  ]);
+  const [availableSymbols, setAvailableSymbols] = useState<string[]>(FALLBACK_CHART_SYMBOLS);
   const [marketsLoading, setMarketsLoading] = useState(false);
   const [symbolsLoading, setSymbolsLoading] = useState(false);
+  const currentMarketRef = useRef(market);
+  const currentSymbolRef = useRef(symbol);
+  const onMarketChangeRef = useRef(onMarketChange);
+  const onSymbolChangeRef = useRef(onSymbolChange);
+
+  useEffect(() => {
+    currentMarketRef.current = market;
+    currentSymbolRef.current = symbol;
+    onMarketChangeRef.current = onMarketChange;
+    onSymbolChangeRef.current = onSymbolChange;
+  }, [market, symbol, onMarketChange, onSymbolChange]);
 
   // Безопасная загрузка рынков при изменении биржи
   useEffect(() => {
@@ -130,60 +139,85 @@ const ChartSettings: React.FC<ChartSettingsProps> = ({
       setAvailableMarkets(['spot', 'futures', 'margin']);
       return;
     }
-    
+
+    let cancelled = false;
     const loadMarkets = async () => {
       setMarketsLoading(true);
       try {
         console.log(`🔍 Loading markets for exchange: ${exchange}`);
         const markets = await getMarketsForExchange(exchange);
+        if (cancelled) return;
         console.log(`✅ Loaded markets for ${exchange}:`, markets);
-        setAvailableMarkets(markets && markets.length > 0 ? markets : ['spot', 'futures', 'margin']);
+        const nextMarkets = markets && markets.length > 0 ? markets : ['spot', 'futures', 'margin'];
+        setAvailableMarkets(nextMarkets);
+
+        const compatibleMarket = nextMarkets.includes(currentMarketRef.current)
+          ? currentMarketRef.current
+          : nextMarkets[0];
+        if (compatibleMarket && compatibleMarket !== currentMarketRef.current) {
+          onMarketChangeRef.current(compatibleMarket as MarketType);
+        }
       } catch (error) {
+        if (cancelled) return;
         console.error('❌ Failed to load markets:', error);
         setAvailableMarkets(['spot', 'futures', 'margin']);
       } finally {
-        setMarketsLoading(false);
+        if (!cancelled) setMarketsLoading(false);
       }
     };
 
     const timeoutId = setTimeout(loadMarkets, 100);
-    return () => clearTimeout(timeoutId);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, [exchange, getMarketsForExchange]);
 
   // Загрузка реальных символов из провайдера
   useEffect(() => {
     if (!exchange || !market || !getSymbolsForExchange) return;
-    
+
+    let cancelled = false;
     const loadSymbols = async () => {
       setSymbolsLoading(true);
       try {
         console.log(`🔍 Loading symbols for ${exchange}:${market}`);
         // Загружаем ВСЕ символы без лимита для полного списка
         const symbols = await getSymbolsForExchange(exchange, undefined, market);
+        if (cancelled) return;
         console.log(`✅ Loaded ${symbols.length} symbols for ${exchange}:${market}`);
-        
-        if (symbols && symbols.length > 0) {
-          setAvailableSymbols(symbols);
-        } else {
-          // Fallback на популярные символы
-          const fallbackSymbols = [
-            'BTC/USDT', 'ETH/USDT', 'BNB/USDT', 'ADA/USDT', 'SOL/USDT',
-            'XRP/USDT', 'DOT/USDT', 'DOGE/USDT', 'AVAX/USDT', 'MATIC/USDT'
-          ];
-          setAvailableSymbols(fallbackSymbols);
+
+        const nextSymbols = symbols && symbols.length > 0 ? symbols : FALLBACK_CHART_SYMBOLS;
+        setAvailableSymbols(nextSymbols);
+
+        const compatibleSymbol = getCompatibleChartSymbol(currentSymbolRef.current, nextSymbols);
+        if (compatibleSymbol && compatibleSymbol !== currentSymbolRef.current) {
+          onSymbolChangeRef.current(compatibleSymbol);
+        }
+
+        if (!symbols || symbols.length === 0) {
           console.warn(`⚠️ No symbols loaded for ${exchange}:${market}, using fallback`);
         }
       } catch (error) {
+        if (cancelled) return;
         console.error('❌ Failed to load symbols:', error);
         // Fallback на популярные символы при ошибке
-        setAvailableSymbols(['BTC/USDT', 'ETH/USDT', 'BNB/USDT']);
+        setAvailableSymbols(FALLBACK_CHART_SYMBOLS);
+
+        const compatibleSymbol = getCompatibleChartSymbol(currentSymbolRef.current, FALLBACK_CHART_SYMBOLS);
+        if (compatibleSymbol && compatibleSymbol !== currentSymbolRef.current) {
+          onSymbolChangeRef.current(compatibleSymbol);
+        }
       } finally {
-        setSymbolsLoading(false);
+        if (!cancelled) setSymbolsLoading(false);
       }
     };
 
     const timeoutId = setTimeout(loadSymbols, 100);
-    return () => clearTimeout(timeoutId);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, [exchange, market, getSymbolsForExchange]);
   const getStatusIcon = () => {
     switch (connectionStatus) {
@@ -350,4 +384,4 @@ const ChartSettings: React.FC<ChartSettingsProps> = ({
   );
 };
 
-export default ChartSettings; 
+export default ChartSettings;
