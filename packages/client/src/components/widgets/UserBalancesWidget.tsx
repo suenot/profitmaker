@@ -8,6 +8,11 @@ import { useUserBalancesWidgetStore } from '../../store/userBalancesWidgetStore'
 import { MarketType, WalletType, Balance } from '../../types/dataProviders';
 import { Input } from '../ui/input';
 import UserBalancesPieChart from './UserBalancesPieChart';
+import {
+  createListedSpotMarketLoader,
+  getDirectUsdValue,
+  resolveListedUsdPrice,
+} from './userBalancePricing';
 
 interface UserBalancesWidgetProps {
   dashboardId?: string;
@@ -119,7 +124,9 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
     getBalance,
     getActiveSubscriptionsList,
     getOrderBook,
-    getTickerWithRefresh
+    getTickerWithRefresh,
+    getSymbolsForExchange,
+    activeProviderId,
   } = useDataProviderStore();
 
   // User store integration
@@ -156,6 +163,11 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [loadingPrices, setLoadingPrices] = useState<Set<string>>(new Set());
   const [usdValues, setUsdValues] = useState<Map<string, { value?: number, rate?: string, loading: boolean }>>(new Map());
+
+  const getListedSpotMarkets = useMemo(
+    () => createListedSpotMarketLoader(getSymbolsForExchange),
+    [activeProviderId, getSymbolsForExchange],
+  );
 
 
   // Theme integration
@@ -220,33 +232,9 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
 
   // Get USD value from cached state or return loading indicator
   const calculateUsdValue = useCallback((currency: string, amount: number, exchange: string, accountId: string): { value?: number, rate?: string, loading: boolean } => {
-    // Full list of stablecoins pegged to fiat currencies (1:1 conversion)
-    const stablecoins = new Set([
-      // USD stablecoins
-      'USDT', 'USDC', 'DAI', 'USDP', 'TUSD', 'PYUSD', 'BUSD', 'SUSD',
-      // EUR stablecoins  
-      'EURC', 'EURS', 'EURT', 'AEUR', 'EURCV', 'VEUR',
-      // GBP stablecoins
-      'GBPT', 'TGBP', 'POUNDTOKEN',
-      // JPY stablecoins
-      'GYEN', 'JPYC', 'CJPY',
-      // CNY stablecoins
-      'CNHT', 'CNHC', 'TCNH',
-      // CHF stablecoins
-      'VCHF', 'CCHF',
-      // AUD stablecoins
-      'TAUD', 'AUDN',
-      // CAD stablecoins
-      'QCAD', 'ECAD', 'TRUECAD',
-      // BRL stablecoins
-      'BRL1', 'BBRL',
-      // Direct fiat
-      'USD'
-    ]);
-    
-    // Direct USD equivalents (1:1 conversion)
-    if (stablecoins.has(currency)) {
-      return { value: amount, rate: '1:1', loading: false };
+    const directValue = getDirectUsdValue(currency, amount);
+    if (directValue) {
+      return { ...directValue, loading: false };
     }
     
     // Check cached USD values
@@ -275,52 +263,19 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
     // Set loading state
     setUsdValues(prev => new Map(prev).set(priceKey, { loading: true }));
     
-    try {
-      // Try to get price from ticker data for CURRENCY/USDT pair
-      const symbol = `${currency}/USDT`;
-      const ticker = await getTickerWithRefresh(exchange, symbol, 'spot', false);
-      
-      if (ticker?.bid && ticker.bid > 0) {
-        const usdValue = amount * ticker.bid;
-        setUsdValues(prev => new Map(prev).set(priceKey, { 
-          value: usdValue, 
-          rate: `${ticker.bid.toFixed(6)} USDT`,
-          loading: false
-        }));
-        return;
-      }
-      
-      // Try alternative quote currencies if USDT pair not available
-      const alternativeQuotes = ['USDC', 'USD', 'BUSD'];
-      for (const quote of alternativeQuotes) {
-        const altSymbol = `${currency}/${quote}`;
-        const altTicker = await getTickerWithRefresh(exchange, altSymbol, 'spot', false);
-        
-        if (altTicker?.bid && altTicker.bid > 0) {
-          const usdValue = amount * altTicker.bid;
-          setUsdValues(prev => new Map(prev).set(priceKey, { 
-            value: usdValue, 
-            rate: `${altTicker.bid.toFixed(6)} ${quote}`,
-            loading: false
-          }));
-          return;
-        }
-      }
-      
-      // If no price data available
-      setUsdValues(prev => new Map(prev).set(priceKey, { 
-        value: undefined,
-        loading: false
-      }));
-      
-    } catch (error) {
-      console.warn(`⚠️ [USD Calc] Failed to fetch price for ${exchange}:${currency}:`, error);
-      setUsdValues(prev => new Map(prev).set(priceKey, { 
-        value: undefined,
-        loading: false
-      }));
-    }
-  }, [getTickerWithRefresh, usdValues]);
+    const result = await resolveListedUsdPrice({
+      currency,
+      amount,
+      exchange,
+      getListedSpotMarkets,
+      getTickerWithRefresh,
+    });
+
+    setUsdValues(prev => new Map(prev).set(priceKey, {
+      ...result,
+      loading: false,
+    }));
+  }, [getListedSpotMarkets, getTickerWithRefresh, usdValues]);
 
   // Filter and sort balances
   const filteredAndSortedBalances = useMemo(() => {

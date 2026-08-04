@@ -5,6 +5,7 @@ import { userSettings } from '../db/schema/user_settings';
 import { widgetSettings } from '../db/schema/widget_settings';
 import { getUserFromRequest } from '../middleware/requireUser';
 import { emitStateChanged, clientIdFromRequest } from '../services/stateEvents';
+import { getOptionalUserSettingDefault } from '../services/userSettings';
 
 export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
 
@@ -24,7 +25,14 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
     if (!user) { set.status = 401; return { error: 'Authentication required' }; }
     const [row] = await db.select().from(userSettings)
       .where(and(eq(userSettings.userId, user.id), eq(userSettings.key, params.key)));
-    if (!row) { set.status = 404; return { error: 'Setting not found' }; }
+    if (!row) {
+      const settingDefault = getOptionalUserSettingDefault(params.key);
+      if (settingDefault.defined) {
+        return { success: true, data: { key: params.key, value: settingDefault.value } };
+      }
+      set.status = 404;
+      return { error: 'Setting not found' };
+    }
     return { success: true, data: { key: row.key, value: row.value } };
   })
 
