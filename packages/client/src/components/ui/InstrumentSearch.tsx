@@ -1,25 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, X } from 'lucide-react';
-import { useUserStore } from '../../store/userStore';
-import { useDataProviderStore } from '../../store/dataProviderStore';
-import { useExchangesList } from '../../hooks/useExchangesList';
-import {
-  createPublicInstrument,
-  getPublicExchangeIds,
-} from '../../utils/instrumentSearch';
+import { useInstrumentSearchCatalog } from '../../hooks/useInstrumentSearchCatalog';
+import type { Instrument } from '../../utils/instrumentSearch';
 
-export interface Instrument {
-  /** Central credential id — bound to group.account. */
-  account: string;
-  /** Human-readable account label for display/search (not the bound value). */
-  accountLabel?: string;
-  exchange: string;
-  market: string;
-  pair: string;
-  // This represents accountInstrumentId (account + exchange + market + pair)
-  // Note: instrumentId would be just (exchange + market + pair) without account
-}
+export type { Instrument } from '../../utils/instrumentSearch';
 
 interface InstrumentSearchProps {
   value?: Instrument | null;
@@ -37,114 +22,13 @@ const InstrumentSearch: React.FC<InstrumentSearchProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const [exchangeData, setExchangeData] = useState<Record<string, { symbols: string[]; markets: string[] }>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  
-  const { users, activeUserId } = useUserStore();
-  const { getSymbolsForExchange, getMarketsForExchange } = useDataProviderStore();
-  const { exchanges } = useExchangesList();
-  const activeUser = users.find(u => u.id === activeUserId);
-  const accountExchangeIds = useMemo(
-    () => activeUser?.accounts.map(account => account.exchange) ?? [],
-    [activeUser?.accounts],
-  );
-  const publicExchangeIds = useMemo(
-    () => getPublicExchangeIds(
-      exchanges.map(exchange => exchange.id),
-      accountExchangeIds,
-    ),
-    [accountExchangeIds, exchanges],
-  );
-  const exchangeIds = useMemo(
-    () => Array.from(new Set([...accountExchangeIds, ...publicExchangeIds])),
-    [accountExchangeIds, publicExchangeIds],
-  );
-
-  // Load public market metadata for every exchange, and account-bound metadata
-  // for connected exchanges. Public data does not require credentials.
-  useEffect(() => {
-    console.log(`🔍 [InstrumentSearch] Loading data for user:`, {
-      email: activeUser?.email,
-      accountsCount: activeUser?.accounts.length ?? 0,
-      exchangeCount: exchangeIds.length,
-    });
-
-    let cancelled = false;
-
-    const loadExchangeData = async () => {
-      const newExchangeData: Record<string, { symbols: string[]; markets: string[] }> = {};
-
-      await Promise.all(exchangeIds.map(async (exchange) => {
-        try {
-          const [symbols, markets] = await Promise.all([
-            // Public search is intentionally bounded so adding all CCXT
-            // exchanges does not create an unbounded client-side catalog.
-            getSymbolsForExchange(exchange, 500, 'spot'),
-            getMarketsForExchange(exchange),
-          ]);
-
-          newExchangeData[exchange] = { symbols, markets };
-        } catch (error) {
-          console.error(`Failed to load data for ${exchange}:`, error);
-          newExchangeData[exchange] = {
-            symbols: ['BTC/USDT', 'ETH/USDT'],
-            markets: ['spot'],
-          };
-        }
-      }));
-
-      if (!cancelled) {
-        setExchangeData(newExchangeData);
-        console.log(`📊 [InstrumentSearch] Final exchange data:`, newExchangeData);
-      }
-    };
-
-    loadExchangeData();
-    return () => {
-      cancelled = true;
-    };
-  }, [activeUser?.email, activeUser?.accounts.length, exchangeIds, getSymbolsForExchange, getMarketsForExchange]);
-
-  // Generate account-bound instruments and public instruments for exchanges
-  // without a connected account. `-` is a display marker only.
-  const allInstruments = useMemo((): Instrument[] => {
-    const instruments: Instrument[] = [];
-    const connectedExchanges = new Set(accountExchangeIds);
-
-    activeUser?.accounts.forEach(account => {
-      const exchangeInfo = exchangeData[account.exchange];
-      if (!exchangeInfo) return; // Skip if data not loaded yet
-      
-      const { symbols, markets } = exchangeInfo;
-      
-      markets.forEach(market => {
-        symbols.forEach(pair => {
-          const instrument: Instrument = {
-            account: account.id,
-            accountLabel: account.label || account.email || account.exchange,
-            exchange: account.exchange,
-            market,
-            pair
-          };
-          instruments.push(instrument);
-        });
-      });
-    });
-
-    publicExchangeIds.forEach(exchange => {
-      const exchangeInfo = exchangeData[exchange];
-      if (!exchangeInfo || connectedExchanges.has(exchange)) return;
-
-      exchangeInfo.markets.forEach(market => {
-        exchangeInfo.symbols.forEach(pair => {
-          instruments.push(createPublicInstrument(exchange, market, pair));
-        });
-      });
-    });
-
-    return instruments;
-  }, [activeUser, accountExchangeIds, publicExchangeIds, exchangeData]);
+  const { instruments: allInstruments, isLoading } = useInstrumentSearchCatalog({
+    enabled: isOpen,
+    query: searchQuery,
+    selectedExchange: value?.exchange,
+  });
 
   // Smart multi-word search: each word must match any field
   const { filteredInstruments, totalFound } = useMemo(() => {
@@ -291,6 +175,7 @@ const InstrumentSearch: React.FC<InstrumentSearchProps> = ({
           highlightedIndex={highlightedIndex}
           onSelect={handleSelect}
           listRef={listRef}
+          isLoading={isLoading}
         />
       )}
     </div>
@@ -304,7 +189,8 @@ const VirtualizedInstrumentsList: React.FC<{
   highlightedIndex: number;
   onSelect: (instrument: Instrument) => void;
   listRef: React.RefObject<HTMLDivElement>;
-}> = ({ instruments, totalFound, highlightedIndex, onSelect, listRef }) => {
+  isLoading: boolean;
+}> = ({ instruments, totalFound, highlightedIndex, onSelect, listRef, isLoading }) => {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -318,11 +204,11 @@ const VirtualizedInstrumentsList: React.FC<{
     return (
       <div className="absolute top-full left-0 right-0 mt-1 bg-terminal-widget border border-terminal-border rounded-md shadow-lg z-50">
         <div className="px-3 py-4 text-sm text-terminal-muted text-center">
-          No accountInstrumentIds found
+          {isLoading ? 'Loading instruments...' : 'No instruments found'}
         </div>
         <div className="px-3 py-2 border-t border-terminal-border/50 bg-terminal-bg/50">
           <div className="text-xs text-terminal-muted text-center">
-            Found <span className="text-slate-600 dark:text-slate-300 font-medium">0</span> of <span className="text-slate-600 dark:text-slate-300 font-medium">{totalFound}</span> accountInstrumentIds
+            Found <span className="text-slate-600 dark:text-slate-300 font-medium">0</span> of <span className="text-slate-600 dark:text-slate-300 font-medium">{totalFound}</span> instruments
           </div>
         </div>
       </div>
@@ -392,7 +278,7 @@ const VirtualizedInstrumentsList: React.FC<{
       {/* Results counter footer */}
       <div className="px-3 py-2 border-t border-terminal-border/50 bg-terminal-bg/50">
         <div className="text-xs text-terminal-muted text-center">
-          Showing <span className="text-slate-600 dark:text-slate-300 font-medium">{instruments.length}</span> of <span className="text-slate-600 dark:text-slate-300 font-medium">{totalFound}</span> accountInstrumentIds
+          Showing <span className="text-slate-600 dark:text-slate-300 font-medium">{instruments.length}</span> of <span className="text-slate-600 dark:text-slate-300 font-medium">{totalFound}</span> instruments
         </div>
       </div>
     </div>

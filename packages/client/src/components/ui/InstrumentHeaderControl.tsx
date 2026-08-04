@@ -1,25 +1,15 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, X } from 'lucide-react';
 import { useGroupStore } from '../../store/groupStore';
-import { useUserStore } from '../../store/userStore';
-import { useDataProviderStore } from '../../store/dataProviderStore';
-import { useExchangesList } from '../../hooks/useExchangesList';
+import { useInstrumentSearchCatalog } from '../../hooks/useInstrumentSearchCatalog';
 import {
-  createPublicInstrument,
-  getPublicExchangeIds,
+  getStoredInstrumentAccount,
   PUBLIC_INSTRUMENT_ACCOUNT,
+  toGroupInstrumentSelection,
 } from '../../utils/instrumentSearch';
-
-export interface Instrument {
-  account: string;
-  /** Human-readable account identity for search and selection display. */
-  accountLabel?: string;
-  exchange: string;
-  market: string;
-  pair: string;
-}
+import type { Instrument } from '../../utils/instrumentSearch';
 
 interface InstrumentHeaderControlProps {
   selectedGroupId?: string;
@@ -35,110 +25,19 @@ const InstrumentHeaderControl: React.FC<InstrumentHeaderControlProps> = ({
   const [buttonPosition, setButtonPosition] = useState<{ x: number; y: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const [exchangeData, setExchangeData] = useState<Record<string, { symbols: string[]; markets: string[] }>>({});
   const searchInputRef = useRef<HTMLInputElement>(null);
   
   const { 
     getGroupById,
-    setTradingPair,
-    setAccount,
-    setExchange,
-    setMarket
+    setInstrument,
   } = useGroupStore();
 
-  const { users, activeUserId } = useUserStore();
-  const { getSymbolsForExchange, getMarketsForExchange } = useDataProviderStore();
-  const { exchanges } = useExchangesList();
-  const activeUser = users.find(u => u.id === activeUserId);
-  const accountExchangeIds = useMemo(
-    () => activeUser?.accounts.map(account => account.exchange) ?? [],
-    [activeUser?.accounts],
-  );
-  const publicExchangeIds = useMemo(
-    () => getPublicExchangeIds(
-      exchanges.map(exchange => exchange.id),
-      accountExchangeIds,
-    ),
-    [accountExchangeIds, exchanges],
-  );
-  const exchangeIds = useMemo(
-    () => Array.from(new Set([...accountExchangeIds, ...publicExchangeIds])),
-    [accountExchangeIds, publicExchangeIds],
-  );
-
   const selectedGroup = selectedGroupId ? getGroupById(selectedGroupId) : undefined;
-
-  // Load public market metadata for every exchange, and account-bound metadata
-  // for connected exchanges. Public data does not require credentials.
-  useEffect(() => {
-    let cancelled = false;
-    const loadExchangeData = async () => {
-      const newExchangeData: Record<string, { symbols: string[]; markets: string[] }> = {};
-
-      await Promise.all(exchangeIds.map(async (exchange) => {
-        try {
-          const [symbols, markets] = await Promise.all([
-            getSymbolsForExchange(exchange, 500, 'spot'),
-            getMarketsForExchange(exchange),
-          ]);
-
-          newExchangeData[exchange] = { symbols, markets };
-        } catch (error) {
-          console.error(`Failed to load data for ${exchange}:`, error);
-          newExchangeData[exchange] = {
-            symbols: ['BTC/USDT', 'ETH/USDT'],
-            markets: ['spot'],
-          };
-        }
-      }));
-
-      if (!cancelled) setExchangeData(newExchangeData);
-    };
-
-    loadExchangeData();
-    return () => {
-      cancelled = true;
-    };
-  }, [activeUser?.email, activeUser?.accounts.length, exchangeIds, getSymbolsForExchange, getMarketsForExchange]);
-
-  // Generate all possible instruments from user accounts
-  const allInstruments = useMemo((): Instrument[] => {
-    const instruments: Instrument[] = [];
-    const connectedExchanges = new Set(accountExchangeIds);
-
-    activeUser?.accounts.forEach(account => {
-      const exchangeInfo = exchangeData[account.exchange];
-      if (!exchangeInfo) return;
-      
-      const { symbols, markets } = exchangeInfo;
-      
-      markets.forEach(market => {
-        symbols.forEach(pair => {
-          const instrument: Instrument = {
-            account: account.id,
-            accountLabel: account.label || account.email || account.exchange,
-            exchange: account.exchange,
-            market,
-            pair
-          };
-          instruments.push(instrument);
-        });
-      });
-    });
-
-    publicExchangeIds.forEach(exchange => {
-      const exchangeInfo = exchangeData[exchange];
-      if (!exchangeInfo || connectedExchanges.has(exchange)) return;
-
-      exchangeInfo.markets.forEach(market => {
-        exchangeInfo.symbols.forEach(pair => {
-          instruments.push(createPublicInstrument(exchange, market, pair));
-        });
-      });
-    });
-
-    return instruments;
-  }, [activeUser, accountExchangeIds, publicExchangeIds, exchangeData]);
+  const { instruments: allInstruments, isLoading } = useInstrumentSearchCatalog({
+    enabled: isOpen,
+    query: searchQuery,
+    selectedExchange: selectedGroup?.exchange,
+  });
 
   // Smart multi-word search with current selection at top
   const { filteredInstruments, totalFound } = useMemo(() => {
@@ -224,26 +123,22 @@ const InstrumentHeaderControl: React.FC<InstrumentHeaderControlProps> = ({
       if (instrument) {
         // Update group data if instrument is selected
         const hasChanges = 
-          selectedGroup.account !== (instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account) ||
+          selectedGroup.account !== getStoredInstrumentAccount(instrument.account) ||
           selectedGroup.exchange !== instrument.exchange ||
           selectedGroup.market !== instrument.market ||
           selectedGroup.tradingPair !== instrument.pair;
         
         if (hasChanges) {
-          setAccount(
-            selectedGroup.id,
-            instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account,
-          );
-          setExchange(selectedGroup.id, instrument.exchange);
-          setMarket(selectedGroup.id, instrument.market);
-          setTradingPair(selectedGroup.id, instrument.pair);
+          setInstrument(selectedGroup.id, toGroupInstrumentSelection(instrument));
         }
       } else {
         // Clear group data if instrument is cleared
-        setAccount(selectedGroup.id, '');
-        setExchange(selectedGroup.id, '');
-        setMarket(selectedGroup.id, '');
-        setTradingPair(selectedGroup.id, '');
+        setInstrument(selectedGroup.id, {
+          account: undefined,
+          exchange: undefined,
+          market: undefined,
+          tradingPair: undefined,
+        });
       }
     }
   };
@@ -346,6 +241,7 @@ const InstrumentHeaderControl: React.FC<InstrumentHeaderControlProps> = ({
                 highlightedIndex={highlightedIndex}
                 onSelect={handleInstrumentSelect}
                 selectedInstrument={selectedInstrument}
+                isLoading={isLoading}
               />
 
               {/* Help text */}
@@ -370,7 +266,8 @@ const VirtualizedInstrumentsList: React.FC<{
   highlightedIndex: number;
   onSelect: (instrument: Instrument | null) => void;
   selectedInstrument: Instrument | null;
-}> = ({ instruments, totalFound, highlightedIndex, onSelect, selectedInstrument }) => {
+  isLoading: boolean;
+}> = ({ instruments, totalFound, highlightedIndex, onSelect, selectedInstrument, isLoading }) => {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -383,7 +280,7 @@ const VirtualizedInstrumentsList: React.FC<{
   if (instruments.length === 0) {
     return (
       <div className="py-4 text-sm text-terminal-muted text-center">
-        No instruments found
+        {isLoading ? 'Loading instruments...' : 'No instruments found'}
       </div>
     );
   }

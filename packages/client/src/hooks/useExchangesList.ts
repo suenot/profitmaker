@@ -5,7 +5,7 @@ import { moduleFetch } from '../modules/api';
 export interface ExchangeInfo {
   id: string;
   name: string;
-  has: any;
+  has: Record<string, unknown>;
 }
 
 // Safe fallback exchanges list (used only if the server is unreachable)
@@ -27,6 +27,10 @@ const getFallbackExchanges = (): ExchangeInfo[] => {
 
 const titleCase = (id: string) => id.charAt(0).toUpperCase() + id.slice(1);
 
+let exchangesCache: ExchangeInfo[] | null = null;
+let exchangesRequest: Promise<ExchangeInfo[]> | null = null;
+let exchangesCacheError: string | null = null;
+
 // Load the exchanges list from the terminal server (ccxt.exchanges).
 const loadServerExchanges = async (): Promise<ExchangeInfo[]> => {
   const response = await moduleFetch('/api/exchange/list');
@@ -40,33 +44,70 @@ const loadServerExchanges = async (): Promise<ExchangeInfo[]> => {
     .sort((a, b) => a.name.localeCompare(b.name));
 };
 
+const loadExchangesOnce = (): Promise<ExchangeInfo[]> => {
+  if (exchangesCache) return Promise.resolve(exchangesCache);
+  if (exchangesRequest) return exchangesRequest;
+
+  exchangesRequest = loadServerExchanges()
+    .catch((error) => {
+      console.error('useExchangesList: error loading exchanges from server:', error);
+      exchangesCacheError = error instanceof Error ? error.message : 'Failed to load exchanges';
+      return getFallbackExchanges();
+    })
+    .then((exchanges) => {
+      exchangesCache = exchanges;
+      return exchanges;
+    })
+    .finally(() => {
+      exchangesRequest = null;
+    });
+
+  return exchangesRequest;
+};
+
 /**
  * Hook for loading the exchanges list from the terminal server.
  */
 export const useExchangesList = () => {
-  const [exchanges, setExchanges] = useState<ExchangeInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [exchanges, setExchanges] = useState<ExchangeInfo[]>(exchangesCache ?? []);
+  const [loading, setLoading] = useState(!exchangesCache);
+  const [error, setError] = useState<string | null>(exchangesCacheError);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadExchanges = async () => {
+      if (exchangesCache) {
+        setExchanges(exchangesCache);
+        setError(exchangesCacheError);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError(null);
 
       try {
-        const exchangesList = await loadServerExchanges();
-        setExchanges(exchangesList);
-        console.log(`🔥 useExchangesList: loaded ${exchangesList.length} exchanges from server`);
+        const exchangesList = await loadExchangesOnce();
+        if (!cancelled) {
+          setExchanges(exchangesList);
+          setError(exchangesCacheError);
+          console.log(`🔥 useExchangesList: loaded ${exchangesList.length} exchanges`);
+        }
       } catch (err) {
-        console.error('useExchangesList: error loading exchanges from server:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load exchanges');
-        setExchanges(getFallbackExchanges());
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load exchanges');
+          setExchanges(getFallbackExchanges());
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadExchanges();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return {

@@ -5,7 +5,11 @@ import { useGroupStore } from '../../store/groupStore';
 import { useUserStore } from '../../store/userStore';
 import { Group } from '../../types/groups';
 import InstrumentSearch, { Instrument } from './InstrumentSearch';
-import { PUBLIC_INSTRUMENT_ACCOUNT } from '../../utils/instrumentSearch';
+import {
+  getStoredInstrumentAccount,
+  PUBLIC_INSTRUMENT_ACCOUNT,
+  toGroupInstrumentSelection,
+} from '../../utils/instrumentSearch';
 
 interface GroupSelectorProps {
   selectedGroupId?: string;
@@ -26,10 +30,7 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
     getGroupById, 
     getTransparentGroup,
     initializeDefaultGroups,
-    setTradingPair,
-    setAccount,
-    setExchange,
-    setMarket,
+    setInstrument,
     resetGroup
   } = useGroupStore();
 
@@ -88,20 +89,21 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
     // Only update group if user explicitly changed the instrument AND it's actually different
     if (selectedGroup && instrument) {
       const hasChanges = 
-        selectedGroup.account !== (instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account) ||
+        selectedGroup.account !== getStoredInstrumentAccount(instrument.account) ||
         selectedGroup.exchange !== instrument.exchange ||
         selectedGroup.market !== instrument.market ||
         selectedGroup.tradingPair !== instrument.pair;
       
       if (hasChanges) {
-        setAccount(
-          selectedGroup.id,
-          instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account,
-        );
-        setExchange(selectedGroup.id, instrument.exchange);
-        setMarket(selectedGroup.id, instrument.market);
-        setTradingPair(selectedGroup.id, instrument.pair);
+        setInstrument(selectedGroup.id, toGroupInstrumentSelection(instrument));
       }
+    } else if (selectedGroup) {
+      setInstrument(selectedGroup.id, {
+        account: undefined,
+        exchange: undefined,
+        market: undefined,
+        tradingPair: undefined,
+      });
     }
   };
 

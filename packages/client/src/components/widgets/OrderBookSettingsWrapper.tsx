@@ -14,9 +14,10 @@ import { MarketType } from '../../types/dataProviders';
 
 interface OrderBookSettingsWrapperProps {
   widgetId: string;
+  selectedGroupId?: string;
 }
 
-const OrderBookSettingsWrapper: React.FC<OrderBookSettingsWrapperProps> = ({ widgetId }) => {
+const OrderBookSettingsWrapper: React.FC<OrderBookSettingsWrapperProps> = ({ widgetId, selectedGroupId }) => {
   const { 
     subscribe, 
     unsubscribe, 
@@ -33,7 +34,8 @@ const OrderBookSettingsWrapper: React.FC<OrderBookSettingsWrapperProps> = ({ wid
   const widget = getWidget(widgetId);
 
   // Get instrument data from selectedGroup (like Chart and Trades widgets)
-  const selectedGroup = getGroupById(globalSelectedGroupId);
+  const currentGroupId = selectedGroupId || globalSelectedGroupId;
+  const selectedGroup = currentGroupId ? getGroupById(currentGroupId) : getTransparentGroup();
   const exchange = selectedGroup?.exchange || 'binance';
   const symbol = selectedGroup?.tradingPair || 'BTC/USDT';
   const market = (selectedGroup?.market as MarketType) || 'spot';
@@ -333,4 +335,4 @@ const OrderBookSettingsWrapper: React.FC<OrderBookSettingsWrapperProps> = ({ wid
   );
 };
 
-export default OrderBookSettingsWrapper; 
+export default OrderBookSettingsWrapper;

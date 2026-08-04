@@ -269,7 +269,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     icon: 'PieChart',
     category: 'system',
     defaultSize: { width: 800, height: 350 },
-    showGroupSelector: true,
+    showGroupSelector: false,
     Component: adaptComponent(PortfolioWidget),
     Settings: PortfolioSettingsPlaceholder,
   },
@@ -280,7 +280,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     icon: 'FileText',
     category: 'system',
     defaultSize: { width: 400, height: 330 },
-    showGroupSelector: true,
+    showGroupSelector: false,
     Component: adaptComponent(TransactionHistoryWidget),
   },
   {
@@ -291,7 +291,7 @@ const BUILTIN_DEFINITIONS: BuiltinWidgetDefinition[] = [
     icon: 'PieChart',
     category: 'system',
     defaultSize: { width: 800, height: 350 },
-    showGroupSelector: true,
+    showGroupSelector: false,
     Component: adaptComponent(PortfolioWidget),
   },
   {

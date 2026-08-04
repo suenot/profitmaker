@@ -3,7 +3,11 @@ import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
 import { useGroupStore } from '../../store/groupStore';
 import InstrumentSearch, { Instrument } from './InstrumentSearch';
-import { PUBLIC_INSTRUMENT_ACCOUNT } from '../../utils/instrumentSearch';
+import {
+  getStoredInstrumentAccount,
+  PUBLIC_INSTRUMENT_ACCOUNT,
+  toGroupInstrumentSelection,
+} from '../../utils/instrumentSearch';
 
 interface InstrumentSelectorProps {
   selectedGroupId?: string;
@@ -22,10 +26,7 @@ const InstrumentSelector: React.FC<InstrumentSelectorProps> = ({
   
   const { 
     getGroupById,
-    setTradingPair,
-    setAccount,
-    setExchange,
-    setMarket
+    setInstrument,
   } = useGroupStore();
 
   const selectedGroup = selectedGroupId ? getGroupById(selectedGroupId) : undefined;
@@ -59,19 +60,13 @@ const InstrumentSelector: React.FC<InstrumentSelectorProps> = ({
     // Update group data if group is selected and instrument changed
     if (selectedGroup && instrument) {
       const hasChanges = 
-        selectedGroup.account !== (instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account) ||
+        selectedGroup.account !== getStoredInstrumentAccount(instrument.account) ||
         selectedGroup.exchange !== instrument.exchange ||
         selectedGroup.market !== instrument.market ||
         selectedGroup.tradingPair !== instrument.pair;
       
       if (hasChanges) {
-        setAccount(
-          selectedGroup.id,
-          instrument.account === PUBLIC_INSTRUMENT_ACCOUNT ? undefined : instrument.account,
-        );
-        setExchange(selectedGroup.id, instrument.exchange);
-        setMarket(selectedGroup.id, instrument.market);
-        setTradingPair(selectedGroup.id, instrument.pair);
+        setInstrument(selectedGroup.id, toGroupInstrumentSelection(instrument));
       }
     }
   };
@@ -86,10 +81,12 @@ const InstrumentSelector: React.FC<InstrumentSelectorProps> = ({
   const handleClear = () => {
     setSelectedInstrument(null);
     if (selectedGroup) {
-      setAccount(selectedGroup.id, '');
-      setExchange(selectedGroup.id, '');
-      setMarket(selectedGroup.id, '');
-      setTradingPair(selectedGroup.id, '');
+      setInstrument(selectedGroup.id, {
+        account: undefined,
+        exchange: undefined,
+        market: undefined,
+        tradingPair: undefined,
+      });
     }
   };
 

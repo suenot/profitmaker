@@ -14,6 +14,7 @@ import { MarketType } from '../../types/dataProviders';
 
 interface TradesSettingsWrapperProps {
   widgetId: string;
+  selectedGroupId?: string;
   isSubscribed?: boolean;
   isLoading?: boolean;
   error?: string | null;
@@ -23,6 +24,7 @@ interface TradesSettingsWrapperProps {
 
 const TradesSettingsWrapper: React.FC<TradesSettingsWrapperProps> = ({ 
   widgetId,
+  selectedGroupId,
   isSubscribed = false,
   isLoading = false,
   error = null,
@@ -44,7 +46,8 @@ const TradesSettingsWrapper: React.FC<TradesSettingsWrapperProps> = ({
 
   // Group store integration - берем данные из выбранной группы
   const { getGroupById, selectedGroupId: globalSelectedGroupId, getTransparentGroup } = useGroupStore();
-  const selectedGroup = globalSelectedGroupId ? getGroupById(globalSelectedGroupId) : getTransparentGroup();
+  const currentGroupId = selectedGroupId || globalSelectedGroupId;
+  const selectedGroup = currentGroupId ? getGroupById(currentGroupId) : getTransparentGroup();
 
   // Получаем данные инструмента из selectedGroup
   const exchange = selectedGroup?.exchange || 'binance';
@@ -511,4 +514,4 @@ const TradesSettingsWrapper: React.FC<TradesSettingsWrapperProps> = ({
   );
 };
 
-export default TradesSettingsWrapper; 
+export default TradesSettingsWrapper;

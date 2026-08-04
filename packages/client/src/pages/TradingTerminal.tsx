@@ -139,7 +139,7 @@ const TradingTerminal: React.FC = () => {
               isActive={true} // Dashboard widgets are always "active" in their context
               groupId={widget.groupId}
               widgetType={widget.type}
-              showGroupSelector={widget.showGroupSelector}
+              showGroupSelector={definition?.showGroupSelector ?? widget.showGroupSelector}
               headerActions={HeaderActions ? <HeaderActions widgetId={widget.id} /> : undefined}
               onRemove={onRemove}
             >
@@ -216,4 +216,4 @@ const TradingTerminal: React.FC = () => {
   );
 };
 
-export default TradingTerminal; 
+export default TradingTerminal;
