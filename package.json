@@ -2,6 +2,9 @@
   "name": "profitmaker",
   "private": true,
   "version": "3.0.0",
+  "engines": {
+    "node": "24.x"
+  },
   "workspaces": ["packages/*", "templates/*"],
   "scripts": {
     "dev": "bun --filter '@profitmaker/client' dev",
