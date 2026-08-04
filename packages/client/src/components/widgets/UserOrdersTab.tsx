@@ -4,6 +4,7 @@ import { ShoppingCart, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-r
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { ExchangeAccount } from '../../store/userStore';
 import { UserTradingDataWidgetSettings } from '../../store/userTradingDataWidgetStore';
+import { getAccountDataIssue, loadAccountData } from '../../utils/accountDataLoader';
 import { TabRefreshHandle } from './UserTradesTab';
 
 interface Order {
@@ -44,84 +45,110 @@ const UserOrdersTab = forwardRef<TabRefreshHandle, UserOrdersTabProps>(({
   }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Data provider integration
-  const dataProvider = useDataProviderStore();
+  const [warning, setWarning] = useState<string | null>(null);
+  const requestIdRef = React.useRef(0);
+
+  const fetchOrders = useDataProviderStore((state) => state.fetchOrders);
+  const fetchOpenOrders = useDataProviderStore((state) => state.fetchOpenOrders);
 
   // Load orders for accounts
   const loadOrders = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     if (!accounts.length) {
+      setOrders([]);
+      setError(null);
+      setWarning(null);
+      setLoading(false);
       return;
     }
 
+    setOrders([]);
     setLoading(true);
     setError(null);
+    setWarning(null);
 
     try {
-      const allOrders: (Order & { accountId: string; exchange: string; email: string; })[] = [];
-
-      // Load orders from each account
-      for (const account of accounts) {
-        try {
-          let orders: any[] = [];
+      const result = await loadAccountData(
+        accounts,
+        async (account) => {
+          let orders: Order[] = [];
 
           if (settings.showClosedOrders) {
             try {
-              // Try to fetch all orders (open + closed)
-              orders = await dataProvider.fetchOrders(
+              orders = await fetchOrders(
                 account.id,
-                undefined, // symbol - get all symbols
-                undefined, // since - get recent orders
-                100 // limit
+                undefined,
+                undefined,
+                100,
               );
-            } catch (error) {
-              // Fallback to open orders only if fetchOrders fails
-              orders = await dataProvider.fetchOpenOrders(
+            } catch {
+              orders = await fetchOpenOrders(
                 account.id,
-                undefined // symbol - get all symbols
+                undefined,
               );
             }
           } else {
-            // Fetch only open orders
-            orders = await dataProvider.fetchOpenOrders(
+            orders = await fetchOpenOrders(
               account.id,
-              undefined // symbol - get all symbols
+              undefined,
             );
           }
 
-          // Transform and add account info
-          const ordersWithAccount = orders.map(order => ({
-            ...order,
-            accountId: account.id,
-            exchange: account.exchange || 'Unknown',
-            email: account.email || 'Unknown'
-          }));
+          return orders;
+        },
+        (progress) => {
+          if (requestId !== requestIdRef.current || progress.loaded.length === 0) return;
 
-          allOrders.push(...ordersWithAccount);
-        } catch (error) {
-          console.error(`Failed to load orders for account ${account.id}:`, error);
-          // Continue with other accounts even if one fails
-        }
-      }
+          const allOrders = progress.loaded.flatMap(({ account, data: accountOrders }) =>
+            accountOrders.map((order) => ({
+              ...order,
+              accountId: account.id,
+              exchange: account.exchange || 'Unknown',
+              email: account.email || 'Unknown'
+            })),
+          );
 
-      // Sort orders by timestamp (newest first)
-      allOrders.sort((a, b) => b.timestamp - a.timestamp);
+          allOrders.sort((a, b) => b.timestamp - a.timestamp);
+          setOrders(allOrders);
 
-      setOrders(allOrders);
+          const issue = getAccountDataIssue(
+            'orders',
+            progress,
+            (account) => account.label || account.email || account.id.slice(0, 8),
+          );
+          setWarning(issue.warning);
+        },
+      );
+
+      if (requestId !== requestIdRef.current) return;
+
+      const issue = getAccountDataIssue(
+        'orders',
+        result,
+        (account) => account.label || account.email || account.id.slice(0, 8),
+      );
+      setError(issue.error);
+      setWarning(issue.warning);
     } catch (error) {
+      if (requestId !== requestIdRef.current) return;
       console.error('Failed to load orders:', error);
       setError(error instanceof Error ? error.message : 'Failed to load orders');
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
-  }, [accounts, settings.showClosedOrders]);
+  }, [accounts, fetchOpenOrders, fetchOrders, settings.showClosedOrders]);
 
   // Load orders only when this tab is active
   useEffect(() => {
     // Check if this tab is active
     if (settings.activeTab === 'orders') {
-      loadOrders();
+      void loadOrders();
     }
+    return () => {
+      requestIdRef.current += 1;
+    };
   }, [loadOrders, settings.activeTab]);
 
   // Expose refresh() to the parent widget's header refresh button.
@@ -256,7 +283,7 @@ const UserOrdersTab = forwardRef<TabRefreshHandle, UserOrdersTabProps>(({
     );
   }, [formatCurrency, formatTime, getStatusInfo]);
 
-  if (loading) {
+  if (loading && !orders.length) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -284,12 +311,21 @@ const UserOrdersTab = forwardRef<TabRefreshHandle, UserOrdersTabProps>(({
     );
   }
 
+  const warningBanner = warning ? (
+    <div className="border-b border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+      Partial data. {warning}
+    </div>
+  ) : null;
+
   if (!orders.length) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <ShoppingCart className="w-8 h-8 text-terminal-text/80 mb-2 mx-auto" />
-          <p className="text-terminal-muted">No orders found</p>
+      <div className="h-full flex flex-col">
+        {warningBanner}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <ShoppingCart className="w-8 h-8 text-terminal-text/80 mb-2 mx-auto" />
+            <p className="text-terminal-muted">No orders found</p>
+          </div>
         </div>
       </div>
     );
@@ -297,6 +333,7 @@ const UserOrdersTab = forwardRef<TabRefreshHandle, UserOrdersTabProps>(({
 
   return (
     <div className="h-full flex flex-col">
+      {warningBanner}
       {/* Header */}
       <div className="flex items-center py-2 px-3 text-xs font-medium text-terminal-muted border-b border-terminal-border bg-terminal-background/50">
         <div className="min-w-0 flex-1">Time / Exchange</div>
@@ -358,4 +395,4 @@ const UserOrdersTab = forwardRef<TabRefreshHandle, UserOrdersTabProps>(({
 
 UserOrdersTab.displayName = 'UserOrdersTab';
 
-export default UserOrdersTab; 
+export default UserOrdersTab;

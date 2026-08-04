@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getAccountDataError, loadAccountData } from './accountDataLoader';
+import { getAccountDataError, getAccountDataIssue, loadAccountData } from './accountDataLoader';
 
 describe('loadAccountData', () => {
   it('starts all account reads without waiting for an earlier account', async () => {
@@ -34,5 +34,52 @@ describe('loadAccountData', () => {
     expect(getAccountDataError('trades', result.failures)).toBe(
       'Failed to load trades: Unmatched IP',
     );
+  });
+
+  it('publishes successful account data before a slower account settles', async () => {
+    let releaseSlow: (() => void) | undefined;
+    const slow = new Promise<void>((resolve) => {
+      releaseSlow = resolve;
+    });
+    const progress = vi.fn();
+
+    const resultPromise = loadAccountData(['fast', 'slow'], async (account) => {
+      if (account === 'slow') await slow;
+      return account === 'fast' ? ['trade'] : [];
+    }, progress);
+
+    await vi.waitFor(() => {
+      expect(progress).toHaveBeenCalledWith({
+        loaded: [{ account: 'fast', data: ['trade'] }],
+        failures: [],
+      });
+    });
+
+    releaseSlow?.();
+    await resultPromise;
+  });
+
+  it('treats a failed account as a warning when another account succeeded with no rows', () => {
+    const issue = getAccountDataIssue('trades', {
+      loaded: [{ account: 'working', data: [] }],
+      failures: [{ account: 'blocked', error: new Error('Unmatched IP') }],
+    });
+
+    expect(issue).toEqual({
+      error: null,
+      warning: 'Failed to load trades: Unmatched IP',
+    });
+  });
+
+  it('treats account failures as fatal only when every account failed', () => {
+    const issue = getAccountDataIssue('orders', {
+      loaded: [],
+      failures: [{ account: 'blocked', error: new Error('Invalid key') }],
+    });
+
+    expect(issue).toEqual({
+      error: 'Failed to load orders: Invalid key',
+      warning: null,
+    });
   });
 });

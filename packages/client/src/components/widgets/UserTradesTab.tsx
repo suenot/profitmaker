@@ -4,7 +4,7 @@ import { TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { ExchangeAccount } from '../../store/userStore';
 import { UserTradingDataWidgetSettings } from '../../store/userTradingDataWidgetStore';
-import { getAccountDataError, loadAccountData } from '../../utils/accountDataLoader';
+import { getAccountDataIssue, loadAccountData } from '../../utils/accountDataLoader';
 
 // Imperative handle exposed to the parent widget so its header refresh button can
 // re-fetch this tab's data without remounting (see UserTradingDataWidget#handleRefreshData).
@@ -46,6 +46,7 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
   }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const requestIdRef = React.useRef(0);
 
   const fetchMyTrades = useDataProviderStore((state) => state.fetchMyTrades);
@@ -58,12 +59,15 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
     if (!accounts.length) {
       setTrades([]);
       setError(null);
+      setWarning(null);
       setLoading(false);
       return;
     }
 
+    setTrades([]);
     setLoading(true);
     setError(null);
+    setWarning(null);
 
     try {
       const result = await loadAccountData(accounts, (account) => fetchMyTrades(
@@ -71,41 +75,51 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
         undefined,
         undefined,
         settings.tradesLimit,
-      ));
+      ), (progress) => {
+        if (requestId !== requestIdRef.current || progress.loaded.length === 0) return;
+
+        const allTrades = progress.loaded.flatMap(({ account, data: accountTrades }) =>
+          accountTrades.map((trade) => {
+              const rawTrade = trade as Partial<Trade> & typeof trade;
+
+              return {
+                id: trade.id,
+                timestamp: trade.timestamp,
+                symbol: rawTrade.symbol || 'Unknown',
+                side: trade.side,
+                amount: trade.amount,
+                price: trade.price,
+                cost: typeof rawTrade.cost === 'number' ? rawTrade.cost : trade.price * trade.amount,
+                fee: rawTrade.fee,
+                order: rawTrade.order,
+                info: rawTrade.info,
+                accountId: account.id,
+                exchange: account.exchange || 'Unknown',
+                email: account.email || 'Unknown'
+              };
+            }),
+        );
+
+        allTrades.sort((a, b) => b.timestamp - a.timestamp);
+        setTrades(allTrades);
+
+        const issue = getAccountDataIssue(
+          'trades',
+          progress,
+          (account) => account.label || account.email || account.id.slice(0, 8),
+        );
+        setWarning(issue.warning);
+      });
 
       if (requestId !== requestIdRef.current) return;
 
-      const allTrades = result.loaded.flatMap(({ account, data: accountTrades }) =>
-        accountTrades.map((trade) => {
-            const rawTrade = trade as Partial<Trade> & typeof trade;
-
-            return {
-              id: trade.id,
-              timestamp: trade.timestamp,
-              symbol: rawTrade.symbol || 'Unknown',
-              side: trade.side,
-              amount: trade.amount,
-              price: trade.price,
-              cost: typeof rawTrade.cost === 'number' ? rawTrade.cost : trade.price * trade.amount,
-              fee: rawTrade.fee,
-              order: rawTrade.order,
-              info: rawTrade.info,
-              accountId: account.id,
-              exchange: account.exchange || 'Unknown',
-              email: account.email || 'Unknown'
-            };
-          }),
+      const issue = getAccountDataIssue(
+        'trades',
+        result,
+        (account) => account.label || account.email || account.id.slice(0, 8),
       );
-
-      // Sort trades by timestamp (newest first)
-      allTrades.sort((a, b) => b.timestamp - a.timestamp);
-
-      setTrades(allTrades);
-      setError(
-        allTrades.length === 0 && result.failures.length > 0
-          ? getAccountDataError('trades', result.failures)
-          : null,
-      );
+      setError(issue.error);
+      setWarning(issue.warning);
     } catch (error) {
       if (requestId !== requestIdRef.current) return;
       console.error('Failed to load trades:', error);
@@ -226,7 +240,7 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
     </div>
   ), [formatCurrency, formatTime]);
 
-  if (loading) {
+  if (loading && !trades.length) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -254,12 +268,21 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
     );
   }
 
+  const warningBanner = warning ? (
+    <div className="border-b border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+      Partial data. {warning}
+    </div>
+  ) : null;
+
   if (!trades.length) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <TrendingUp className="w-8 h-8 text-terminal-text/80 mb-2 mx-auto" />
-          <p className="text-terminal-muted">No trades found</p>
+      <div className="h-full flex flex-col">
+        {warningBanner}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <TrendingUp className="w-8 h-8 text-terminal-text/80 mb-2 mx-auto" />
+            <p className="text-terminal-muted">No trades found</p>
+          </div>
         </div>
       </div>
     );
@@ -267,6 +290,7 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
 
   return (
     <div className="h-full flex flex-col">
+      {warningBanner}
       {/* Header */}
       <div className="flex items-center py-2 px-3 text-xs font-medium text-terminal-muted border-b border-terminal-border bg-terminal-background/50">
         <div className="min-w-0 flex-1">Time / Account</div>

@@ -4,6 +4,7 @@ import { BarChart3, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { ExchangeAccount } from '../../store/userStore';
 import { UserTradingDataWidgetSettings } from '../../store/userTradingDataWidgetStore';
+import { getAccountDataIssue, loadAccountData } from '../../utils/accountDataLoader';
 import { TabRefreshHandle } from './UserTradesTab';
 
 interface Position {
@@ -41,66 +42,88 @@ const UserPositionsTab = forwardRef<TabRefreshHandle, UserPositionsTabProps>(({
   }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Data provider integration
-  const dataProvider = useDataProviderStore();
+  const [warning, setWarning] = useState<string | null>(null);
+  const requestIdRef = React.useRef(0);
+
+  const fetchPositions = useDataProviderStore((state) => state.fetchPositions);
 
   // Load positions for accounts
   const loadPositions = useCallback(async () => {
-    if (!accounts.length) return;
-    
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
+    if (!accounts.length) {
+      setPositions([]);
+      setError(null);
+      setWarning(null);
+      setLoading(false);
+      return;
+    }
+
+    setPositions([]);
     setLoading(true);
     setError(null);
+    setWarning(null);
 
     try {
-      const allPositions: (Position & { accountId: string; exchange: string; email: string; })[] = [];
+      const result = await loadAccountData(
+        accounts,
+        (account) => fetchPositions(account.id, undefined),
+        (progress) => {
+          if (requestId !== requestIdRef.current || progress.loaded.length === 0) return;
 
-      // Load positions from each account
-      for (const account of accounts) {
-        try {
-          const positions = await dataProvider.fetchPositions(
-            account.id,
-            undefined // symbols - get all symbols
+          const allPositions = progress.loaded.flatMap(({ account, data: accountPositions }) =>
+            accountPositions
+              .map((position) => ({
+                ...position,
+                accountId: account.id,
+                exchange: account.exchange || 'Unknown',
+                email: account.email || 'Unknown'
+              }))
+              .filter((position) =>
+                settings.showZeroPositions || Math.abs(position.amount) > 0.00000001,
+              ),
           );
-          
-          // Transform and add account info, filter zero positions if needed
-          const positionsWithAccount = positions
-            .map(position => ({
-              ...position,
-              accountId: account.id,
-              exchange: account.exchange || 'Unknown',
-              email: account.email || 'Unknown'
-            }))
-            .filter(position => {
-              // If showZeroPositions is false, filter out positions with zero amount
-              return settings.showZeroPositions || Math.abs(position.amount) > 0.00000001;
-            });
-          
-          allPositions.push(...positionsWithAccount);
-        } catch (error) {
-          console.error(`Failed to load positions for account ${account.id}:`, error);
-          // Continue with other accounts even if one fails
-        }
-      }
 
-      // Sort positions by notional value (largest first)
-      allPositions.sort((a, b) => Math.abs(b.notional) - Math.abs(a.notional));
+          allPositions.sort((a, b) => Math.abs(b.notional) - Math.abs(a.notional));
+          setPositions(allPositions);
 
-      setPositions(allPositions);
+          const issue = getAccountDataIssue(
+            'positions',
+            progress,
+            (account) => account.label || account.email || account.id.slice(0, 8),
+          );
+          setWarning(issue.warning);
+        },
+      );
+
+      if (requestId !== requestIdRef.current) return;
+
+      const issue = getAccountDataIssue(
+        'positions',
+        result,
+        (account) => account.label || account.email || account.id.slice(0, 8),
+      );
+      setError(issue.error);
+      setWarning(issue.warning);
     } catch (error) {
+      if (requestId !== requestIdRef.current) return;
       console.error('Failed to load positions:', error);
       setError(error instanceof Error ? error.message : 'Failed to load positions');
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
-  }, [accounts, settings.showZeroPositions]);
+  }, [accounts, fetchPositions, settings.showZeroPositions]);
 
   // Load positions only when this tab is active
   useEffect(() => {
     // Check if this tab is active
     if (settings.activeTab === 'positions') {
-      loadPositions();
+      void loadPositions();
     }
+    return () => {
+      requestIdRef.current += 1;
+    };
   }, [loadPositions, settings.activeTab]);
 
   // Expose refresh() to the parent widget's header refresh button.
@@ -212,7 +235,7 @@ const UserPositionsTab = forwardRef<TabRefreshHandle, UserPositionsTabProps>(({
     );
   }, [formatCurrency, formatPnl]);
 
-  if (loading) {
+  if (loading && !positions.length) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -240,12 +263,21 @@ const UserPositionsTab = forwardRef<TabRefreshHandle, UserPositionsTabProps>(({
     );
   }
 
+  const warningBanner = warning ? (
+    <div className="border-b border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+      Partial data. {warning}
+    </div>
+  ) : null;
+
   if (!positions.length) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <BarChart3 className="w-8 h-8 text-terminal-text/80 mb-2 mx-auto" />
-          <p className="text-terminal-muted">No positions found</p>
+      <div className="h-full flex flex-col">
+        {warningBanner}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <BarChart3 className="w-8 h-8 text-terminal-text/80 mb-2 mx-auto" />
+            <p className="text-terminal-muted">No positions found</p>
+          </div>
         </div>
       </div>
     );
@@ -253,6 +285,7 @@ const UserPositionsTab = forwardRef<TabRefreshHandle, UserPositionsTabProps>(({
 
   return (
     <div className="h-full flex flex-col">
+      {warningBanner}
       {/* Header */}
       <div className="flex items-center py-2 px-3 text-xs font-medium text-terminal-muted border-b border-terminal-border bg-terminal-background/50">
         <div className="min-w-0 flex-1">Symbol / Exchange</div>
@@ -304,4 +337,4 @@ const UserPositionsTab = forwardRef<TabRefreshHandle, UserPositionsTabProps>(({
 
 UserPositionsTab.displayName = 'UserPositionsTab';
 
-export default UserPositionsTab; 
+export default UserPositionsTab;
