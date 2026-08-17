@@ -53,6 +53,9 @@ export interface SsoClaims {
 }
 
 export interface SsoUser {
+  /** Canonical auth-service user id used by central usage billing. */
+  authUserId: string;
+  /** Local terminal user id used to scope terminal-owned rows. */
   id: string;
   email: string;
   name: string | null;
@@ -139,7 +142,7 @@ const ssoUserCache = new Map<string, string>(); // sso userId -> local user id
 export async function resolveSsoUser(claims: SsoClaims): Promise<SsoUser | null> {
   const cachedId = ssoUserCache.get(claims.userId);
   if (cachedId) {
-    return { id: cachedId, email: claims.email, name: claims.username };
+    return { authUserId: claims.userId, id: cachedId, email: claims.email, name: claims.username };
   }
 
   // (a) Canonical lookup: already bound to this SSO identity.
@@ -150,7 +153,7 @@ export async function resolveSsoUser(claims: SsoClaims): Promise<SsoUser | null>
     .limit(1);
   if (bound) {
     ssoUserCache.set(claims.userId, bound.id);
-    return { id: bound.id, email: bound.email, name: bound.name };
+    return { authUserId: claims.userId, id: bound.id, email: bound.email, name: bound.name };
   }
 
   // Is there a local account holding this email?
@@ -176,7 +179,7 @@ export async function resolveSsoUser(claims: SsoClaims): Promise<SsoUser | null>
       .returning({ id: users.id, email: users.email, name: users.name });
     if (adopted) {
       ssoUserCache.set(claims.userId, adopted.id);
-      return { id: adopted.id, email: adopted.email, name: adopted.name };
+      return { authUserId: claims.userId, id: adopted.id, email: adopted.email, name: adopted.name };
     }
     // Lost the race — someone bound this row first. Re-resolve from the top.
     return resolveSsoUser(claims);
@@ -199,7 +202,7 @@ export async function resolveSsoUser(claims: SsoClaims): Promise<SsoUser | null>
 
   if (created) {
     ssoUserCache.set(claims.userId, created.id);
-    return { id: created.id, email: created.email, name: created.name };
+    return { authUserId: claims.userId, id: created.id, email: created.email, name: created.name };
   }
 
   // Lost an insert race (email or sso_user_id unique conflict) — re-resolve so

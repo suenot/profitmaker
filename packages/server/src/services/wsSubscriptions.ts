@@ -1,6 +1,7 @@
 import type { CCXTInstanceConfig } from './ccxtCache';
 import type { ServerProviderInstance, ServerWatchDataType } from '@profitmaker/types';
 import { providerRegistry } from '../providers';
+import type { StreamUsageHandle } from './usageMeter';
 
 export interface WebSocketSubscription {
   id: string;
@@ -14,6 +15,7 @@ export interface WebSocketSubscription {
   providerId?: string;
   isActive: boolean;
   providerInstance?: ServerProviderInstance;
+  usage?: StreamUsageHandle;
 }
 
 const activeSubscriptions = new Map<string, WebSocketSubscription>();
@@ -72,8 +74,9 @@ export const startWebSocketSubscription = async (
       // don't emit into a socket that has already unsubscribed or disconnected.
       if (!subscription.isActive) return;
       retryDelay = RETRY_BASE_MS; // a healthy payload resets the backoff
+      subscription.usage?.resume();
 
-      emitData(subscription.socketId, {
+      const payload = {
         subscriptionId: subscription.id,
         dataType: subscription.dataType,
         exchange: subscription.exchangeId,
@@ -81,7 +84,9 @@ export const startWebSocketSubscription = async (
         timeframe: subscription.timeframe,
         data,
         timestamp: Date.now(),
-      });
+      };
+      emitData(subscription.socketId, payload);
+      subscription.usage?.publication(Buffer.byteLength(JSON.stringify(payload)));
 
       setTimeout(watchData, 0);
     } catch (error) {
@@ -100,6 +105,8 @@ export const startWebSocketSubscription = async (
         });
         return;
       }
+
+      subscription.usage?.pause();
 
       emitError(subscription.socketId, {
         subscriptionId: subscription.id,
@@ -120,6 +127,7 @@ export const stopWebSocketSubscription = (subscriptionId: string): void => {
   const subscription = activeSubscriptions.get(subscriptionId);
   if (subscription) {
     subscription.isActive = false;
+    subscription.usage?.close();
     activeSubscriptions.delete(subscriptionId);
   }
 };

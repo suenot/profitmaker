@@ -3,6 +3,7 @@ import { cors } from '@elysiajs/cors';
 import { Server as SocketIOServer } from 'socket.io';
 import { existsSync } from 'fs';
 import { join, extname } from 'path';
+import { createHash } from 'node:crypto';
 
 import { healthRoutes } from './routes/health';
 import { authRoutes } from './routes/auth';
@@ -36,6 +37,7 @@ import {
   removeSocketSubscriptions,
   type WebSocketSubscription,
 } from './services/wsSubscriptions';
+import { usageMeter } from './services/usageMeter';
 
 const PORT = Number(process.env.PORT) || 3001;
 const STATIC_DIR = process.env.STATIC_DIR || join(import.meta.dir, '../../client/dist');
@@ -60,6 +62,14 @@ const SOCKET_ORIGINS = ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS : DEV_ORIGIN
 // Subscriptions are backed by a live exchange websocket each, so an unbounded
 // count is a resource-exhaustion lever. Applies per socket.
 const MAX_SUBSCRIPTIONS_PER_SOCKET = 50;
+
+const streamOperationCode = (dataType: string): string =>
+  `terminal.market.${dataType.replace(/[^a-zA-Z0-9_-]/g, '_')}_stream`;
+
+const streamChannelHash = (exchangeId: string, symbol: string, dataType: string, timeframe?: string): string =>
+  createHash('sha256')
+    .update(`${exchangeId.toLowerCase()}:${symbol.toUpperCase()}:${dataType.toLowerCase()}:${timeframe ?? ''}`)
+    .digest('hex');
 
 /**
  * Replace the body of any 500 that escapes a route.
@@ -224,6 +234,8 @@ moduleManager.init(io).catch((err) => {
   console.error('[modules] init failed:', err);
 });
 
+usageMeter.start();
+
 io.on('connection', (socket) => {
   console.log(`Client connected: ${socket.id}`);
 
@@ -241,12 +253,19 @@ io.on('connection', (socket) => {
     // valid SSO JWT from auth.marketmaker.cc. On success the socket joins that
     // user's room so it receives state:changed / ui:command events.
     let userId: string | null = null;
+    let billingUserId: string | null = null;
     try {
       if (typeof data?.token === 'string' && matchesApiToken(data.token)) {
         userId = (await getBootstrapUser()).id;
       } else if (typeof data?.token === 'string') {
         const session = await validateSession(db, data.token);
-        userId = session?.id ?? (await getSsoUserFromToken(data.token))?.id ?? null;
+        if (session) {
+          userId = session.id;
+        } else {
+          const ssoUser = await getSsoUserFromToken(data.token);
+          userId = ssoUser?.id ?? null;
+          billingUserId = ssoUser?.authUserId ?? null;
+        }
       }
     } catch (err) {
       console.error('[socket] authenticate failed:', err);
@@ -259,6 +278,7 @@ io.on('connection', (socket) => {
     }
 
     socket.data.userId = userId;
+    socket.data.billingUserId = billingUserId;
     socket.join(userRoom(userId));
     socket.emit('authenticated', { success: true, userId });
   });
@@ -286,11 +306,30 @@ io.on('connection', (socket) => {
 
     const subscriptionKey = createSubscriptionKey(exchangeId, symbol, dataType, timeframe);
     const subscriptionId = `${socket.id}:${subscriptionKey}`;
+    const operationCode = streamOperationCode(dataType);
+    const operation = usageMeter.describe(operationCode);
+
+    // A paid operation without a canonical auth-service identity could never be
+    // settled safely. Unknown and explicitly-free operations remain available.
+    if (operation.billing_model !== 'free' && /[1-9]/.test(operation.unit_price_mm) && !socket.data.billingUserId) {
+      socket.emit('subscription_error', { error: 'Central billing identity required for this paid subscription' });
+      return;
+    }
 
     if (hasSubscription(subscriptionId)) {
       socket.emit('subscription_error', { error: 'Subscription already exists' });
       return;
     }
+
+    const usage = usageMeter.beginStream({
+      userId: socket.data.billingUserId ?? undefined,
+      operationCode,
+      canonicalChannelHash: streamChannelHash(exchangeId, symbol, dataType, timeframe),
+      connectionId: socket.id,
+    });
+    // Provider resolution and the initial watch call are setup time. Active
+    // billing begins only after the first successfully delivered publication.
+    usage.pause();
 
     const subscription: WebSocketSubscription = {
       id: subscriptionId,
@@ -302,6 +341,7 @@ io.on('connection', (socket) => {
       config: { ...config, ccxtType: 'pro' as const },
       providerId,
       isActive: true,
+      usage,
     };
 
     addSubscription(subscription);
@@ -313,7 +353,19 @@ io.on('connection', (socket) => {
         (sid, d) => io.to(sid).emit('data', d),
         (sid, d) => io.to(sid).emit('error', d)
       );
-      socket.emit('subscribed', { subscriptionId, exchangeId, symbol, dataType, timeframe });
+      socket.emit('subscribed', {
+        subscriptionId,
+        exchangeId,
+        symbol,
+        dataType,
+        timeframe,
+        operationCode: operation.operation_code,
+        billingModel: operation.billing_model,
+        priceVersion: operation.price_version ?? 'unregistered',
+        unitPriceMm: operation.unit_price_mm,
+        unitType: operation.unit_type,
+        channelWeight: operation.channel_weight ?? '1',
+      });
     } catch (error) {
       // Clean up orphan subscription on failure
       ownedSubscriptions.delete(subscriptionId);
