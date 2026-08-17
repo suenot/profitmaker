@@ -6,6 +6,12 @@ The format follows Keep a Changelog and versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [3.1.3] - 2026-08-17
+
+### Fixed
+
+- Pass the postpaid usage metering feature flag into the production server container.
+
 ## [3.1.2] - 2026-08-17
 
 ### Fixed

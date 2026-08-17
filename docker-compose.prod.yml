@@ -37,6 +37,7 @@ services:
       - AUTH_URL=https://auth.marketmaker.cc
       - AUTH_INTERNAL_URL=https://auth.marketmaker.cc
       - AUTH_INTERNAL_SECRET=${AUTH_INTERNAL_SECRET}
+      - USAGE_METERING_ENABLED=${USAGE_METERING_ENABLED:-0}
       # KuCoin Broker Pro: attribute KuCoin trades to the marketmaker broker.
       # broker-key is an HMAC secret (server-side only); absent ⇒ no-op.
       - KUCOIN_BROKER_SPOT_PARTNER=${KUCOIN_BROKER_SPOT_PARTNER}
