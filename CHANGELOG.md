@@ -6,6 +6,12 @@ The format follows Keep a Changelog and versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-08-17
+
+### Security
+
+- Verify the auth-service HMAC before accepting a cached pricing snapshot.
+
 ## [3.1.0] - 2026-08-17
 
 ### Added

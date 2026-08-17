@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { createHmac } from 'node:crypto';
 import { UsageMeter } from './usageMeter';
 
 const meters: UsageMeter[] = [];
@@ -9,6 +10,11 @@ afterEach(() => {
 
 const jsonResponse = (body: unknown, status = 200): Response =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+const signedSnapshot = (payload: Record<string, unknown>, secret = 'test-secret') => ({
+  payload,
+  signature: createHmac('sha256', secret).update(JSON.stringify(payload)).digest('base64url'),
+});
 
 describe('UsageMeter', () => {
   it('does not make a billing request in the stream hot path', async () => {
@@ -61,8 +67,10 @@ describe('UsageMeter', () => {
       internalSecret: 'test-secret',
       fetchFn: (async (_input: string | URL | Request, init?: RequestInit) => {
         if (init?.method === 'POST') return jsonResponse({ accepted: 1 });
-        return jsonResponse({
+        return jsonResponse(signedSnapshot({
+          service: 'terminal',
           version: 'terminal-v2',
+          generated_at: '2026-08-17T00:00:00Z',
           operations: [{
             operation_code: 'terminal.market.trades_stream',
             billing_model: 'active_subscription_time',
@@ -71,7 +79,7 @@ describe('UsageMeter', () => {
             channel_weight: '2',
             price_version: 'terminal-v2',
           }],
-        });
+        }));
       }) as typeof fetch,
     });
     meters.push(meter);
@@ -88,6 +96,33 @@ describe('UsageMeter', () => {
       unit_price_mm: '0',
       price_version: 'unregistered',
     });
+  });
+
+  it('rejects a pricing snapshot with an invalid signature', async () => {
+    const meter = new UsageMeter({
+      enabled: true,
+      internalSecret: 'test-secret',
+      fetchFn: (async () => jsonResponse({
+        payload: {
+          service: 'terminal',
+          version: 2,
+          generated_at: '2026-08-17T00:00:00Z',
+          operations: [{
+            operation_code: 'terminal.market.ticker_stream',
+            billing_model: 'active_subscription_time',
+            unit_type: 'weighted_second',
+            unit_price_mm: '1',
+          }],
+        },
+        signature: 'tampered',
+      })) as typeof fetch,
+    });
+    meters.push(meter);
+
+    await meter.refreshPricing();
+
+    expect(meter.stats().pricing_version).toBe('unregistered');
+    expect(meter.stats().registered_operations).toBe(0);
   });
 
   it('retains checkpoints in order after a rejected batch', async () => {

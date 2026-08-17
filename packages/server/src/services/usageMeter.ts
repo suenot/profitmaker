@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 
 type BillingModel = 'free' | 'per_operation' | 'active_subscription_time' | 'provider_units';
 
@@ -12,8 +12,15 @@ type PricingOperation = {
 };
 
 type PricingSnapshot = {
+  service: string;
   version: string | number;
+  generated_at: string;
   operations: PricingOperation[];
+};
+
+type PricingSnapshotEnvelope = {
+  payload: PricingSnapshot;
+  signature: string;
 };
 
 type UsageEvent = {
@@ -191,7 +198,12 @@ export class UsageMeter {
         headers: { 'X-Internal-Secret': this.internalSecret },
       });
       if (!response.ok) return;
-      const snapshot = await response.json() as PricingSnapshot;
+      const envelope = await response.json() as PricingSnapshotEnvelope;
+      if (!this.validPricingSignature(envelope)) {
+        console.warn('[usage-meter] rejected pricing snapshot with an invalid signature');
+        return;
+      }
+      const snapshot = envelope.payload;
       if (!Array.isArray(snapshot.operations)) return;
       this.pricing.clear();
       for (const operation of snapshot.operations) this.pricing.set(operation.operation_code, operation);
@@ -237,6 +249,16 @@ export class UsageMeter {
 
   private checkpointStreams(): void {
     for (const state of this.streams.values()) this.emitCheckpoint(state);
+  }
+
+  private validPricingSignature(envelope: PricingSnapshotEnvelope): boolean {
+    if (!envelope?.payload || typeof envelope.signature !== 'string') return false;
+    const expected = createHmac('sha256', this.internalSecret)
+      .update(JSON.stringify(envelope.payload))
+      .digest('base64url');
+    const actualBytes = Buffer.from(envelope.signature);
+    const expectedBytes = Buffer.from(expected);
+    return actualBytes.length === expectedBytes.length && timingSafeEqual(actualBytes, expectedBytes);
   }
 
   private emitCheckpoint(state: StreamState): void {
