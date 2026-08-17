@@ -6,6 +6,12 @@ The format follows Keep a Changelog and versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [3.1.2] - 2026-08-17
+
+### Fixed
+
+- Align usage ingestion and signed pricing snapshots with the registered `profitmaker` service identifier.
+
 ## [3.1.1] - 2026-08-17
 
 ### Security

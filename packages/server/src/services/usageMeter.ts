@@ -194,7 +194,7 @@ export class UsageMeter {
   async refreshPricing(): Promise<void> {
     if (!this.enabled || !this.internalSecret) return;
     try {
-      const response = await this.fetchFn(`${this.authServiceUrl}/api/v1/internal/pricing/snapshot/terminal`, {
+      const response = await this.fetchFn(`${this.authServiceUrl}/api/v1/internal/pricing/snapshot/profitmaker`, {
         headers: { 'X-Internal-Secret': this.internalSecret },
       });
       if (!response.ok) return;
@@ -221,7 +221,7 @@ export class UsageMeter {
       const response = await this.fetchFn(`${this.authServiceUrl}/api/v1/internal/usage/events:batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Internal-Secret': this.internalSecret },
-        body: JSON.stringify({ service: 'terminal', service_id: 'terminal', batch_id: randomUUID(), events }),
+        body: JSON.stringify({ service: 'profitmaker', service_id: 'profitmaker', batch_id: randomUUID(), events }),
       });
       if (!response.ok) throw new Error(`usage ingestion returned ${response.status}`);
     } catch (error) {

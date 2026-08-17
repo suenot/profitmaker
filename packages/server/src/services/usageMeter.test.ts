@@ -68,7 +68,7 @@ describe('UsageMeter', () => {
       fetchFn: (async (_input: string | URL | Request, init?: RequestInit) => {
         if (init?.method === 'POST') return jsonResponse({ accepted: 1 });
         return jsonResponse(signedSnapshot({
-          service: 'terminal',
+          service: 'profitmaker',
           version: 'terminal-v2',
           generated_at: '2026-08-17T00:00:00Z',
           operations: [{
@@ -104,7 +104,7 @@ describe('UsageMeter', () => {
       internalSecret: 'test-secret',
       fetchFn: (async () => jsonResponse({
         payload: {
-          service: 'terminal',
+          service: 'profitmaker',
           version: 2,
           generated_at: '2026-08-17T00:00:00Z',
           operations: [{
