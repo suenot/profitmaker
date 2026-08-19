@@ -7,6 +7,7 @@ import type { AccountRef } from '@profitmaker/types';
 import { createCCXTServerProvider } from '../store/providers/ccxtServerProvider';
 import { useDataProviderStore } from '../store/dataProviderStore';
 import type { OrderSubmitResponse } from '../store/placeOrderStore';
+import { generateClientOrderId } from '../utils/orderMath';
 
 /**
  * Order statuses that mean the venue did NOT accept the order, even though the
@@ -59,6 +60,7 @@ export async function executeOrder(
     
     let ccxtOrderType: string;
     let orderParams: any = {};
+    const clientOrderId = orderRequest.clientOrderId ?? generateClientOrderId();
 
     // Map our order types to CCXT order types
     switch (type) {
@@ -108,9 +110,7 @@ export async function executeOrder(
       orderParams.postOnly = true;
     }
     
-    if (orderRequest.clientOrderId) {
-      orderParams.clientOrderId = orderRequest.clientOrderId;
-    }
+    orderParams.clientOrderId = clientOrderId;
 
     // Execute the order
     console.log(`📤 [OrderExecution] Placing ${ccxtOrderType} ${side} order:`, {
@@ -192,6 +192,7 @@ export async function executeOrder(
           amount,
           market: orderRequest.market as any,
           params: {
+            clientOrderId: generateClientOrderId(),
             stopPrice: advancedOptions.stopLoss.price,
             reduceOnly: true,
           },
@@ -222,6 +223,7 @@ export async function executeOrder(
           price: advancedOptions.takeProfit.price,
           market: orderRequest.market as any,
           params: {
+            clientOrderId: generateClientOrderId(),
             reduceOnly: true,
           },
         });
@@ -247,7 +249,7 @@ export async function executeOrder(
       ...(warnings.length > 0 ? { warnings } : {}),
       order: {
         id: ccxtOrder.id,
-        clientOrderId: ccxtOrder.clientOrderId,
+        clientOrderId: ccxtOrder.clientOrderId ?? clientOrderId,
         symbol: ccxtOrder.symbol,
         side: ccxtOrder.side as any,
         type: ccxtOrder.type as any,
@@ -362,4 +364,4 @@ export async function cancelOrder(
       error: error instanceof Error ? error.message : 'Failed to cancel order',
     };
   }
-} 
+}

@@ -1,11 +1,13 @@
 import { Elysia } from 'elysia';
 import { sql } from 'drizzle-orm';
-import ccxt from 'ccxt';
 import { db } from '../db';
 import pkg from '../../package.json';
 
 const PORT = Number(process.env.PORT) || 3001;
 const startedAt = Date.now();
+const ccxtPkg = await Bun.file(Bun.resolveSync('ccxt/package.json', import.meta.dir)).json() as {
+  version: string;
+};
 
 async function pingDb(): Promise<boolean> {
   try {
@@ -21,7 +23,9 @@ export const healthRoutes = new Elysia({ prefix: '/health' })
     status: 'ok',
     timestamp: new Date().toISOString(),
     version: pkg.version,
-    ccxtVersion: (ccxt as any).version,
+    // CCXT 4.5.74's ESM runtime constant was published as 4.5.73. The package
+    // manifest is the installed-version source of truth and matches the lockfile.
+    ccxtVersion: ccxtPkg.version,
     socketPort: PORT + 1,
     uptime: Math.floor((Date.now() - startedAt) / 1000),
     db: await pingDb(),

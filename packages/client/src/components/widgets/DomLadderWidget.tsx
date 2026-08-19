@@ -4,6 +4,7 @@ import { useDataProviderStore } from '../../store/dataProviderStore';
 import { useGroupStore } from '../../store/groupStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { executeOrder, cancelOrder } from '../../services/orderExecutionService';
+import { cancelAndFlatten } from '../../services/emergencyFlattenService';
 import type { MarketType, OrderBookEntry } from '../../types/dataProviders';
 
 /**
@@ -97,6 +98,7 @@ const DomLadderWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const emergencyInFlightRef = useRef(false);
   const [viewportHeight, setViewportHeight] = useState(400);
 
   // Market data subscriptions.
@@ -351,6 +353,52 @@ const DomLadderWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
     }
   }, [position, canTrade, exchange, accountId, market, symbol, showError, showSuccess, refreshPrivate]);
 
+  const emergencyCancelAndFlatten = useCallback(async () => {
+    if (!canTrade || emergencyInFlightRef.current) return;
+    emergencyInFlightRef.current = true;
+    setBusy(true);
+    try {
+      const result = await cancelAndFlatten({
+        exchange,
+        accountId,
+        market,
+        symbol,
+        openOrders,
+        fetchOpenOrders: () => fetchOpenOrders(accountId, symbol),
+        fetchPositions: () => fetchPositions(accountId, [symbol]),
+      });
+
+      if (result.success) {
+        showSuccess(
+          'Emergency flatten complete',
+          result.flattenedContracts > 0
+            ? `${result.flattenedContracts} ${symbol} closed after reconciliation`
+            : 'Open orders cleared; position already flat',
+        );
+      } else {
+        showError('Emergency flatten not confirmed', result.error || 'Final account state is unknown');
+      }
+      await refreshPrivate();
+    } catch (error) {
+      showError('Emergency flatten failed', error instanceof Error ? error.message : String(error));
+    } finally {
+      emergencyInFlightRef.current = false;
+      setBusy(false);
+    }
+  }, [
+    canTrade,
+    exchange,
+    accountId,
+    market,
+    symbol,
+    openOrders,
+    fetchOpenOrders,
+    fetchPositions,
+    showError,
+    showSuccess,
+    refreshPrivate,
+  ]);
+
   // --- interactions --------------------------------------------------------
 
   const onWheel = useCallback(
@@ -390,10 +438,10 @@ const DomLadderWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
       else if (key === 'd') { e.preventDefault(); void closePosition(); }
       else if (key === 'r') { e.preventDefault(); setFollowMode((m) => (m === 'auto' ? 'locked' : 'auto')); }
       else if (e.key === ' ') { e.preventDefault(); void cancelAll(); }
-      else if (e.key === 'Escape') { e.preventDefault(); void cancelAll(); void closePosition(); }
+      else if (e.key === 'Escape') { e.preventDefault(); void emergencyCancelAndFlatten(); }
       else if (e.key === 'Shift') { setCenterPrice(midPrice); setFollowMode('auto'); }
     },
-    [place, closePosition, cancelAll, midPrice],
+    [place, closePosition, cancelAll, emergencyCancelAndFlatten, midPrice],
   );
 
   const positionSize = Number(position?.contracts ?? 0);

@@ -57,7 +57,7 @@ AI agents drive the terminal over **MCP**, and humans/scripts over a
 | State | Zustand 5 + Immer, synced to API |
 | Data Fetching | TanStack React Query |
 | Charts | Night Vision (OHLCV candlestick) + Recharts (pie, bar) |
-| Exchange API | CCXT 4.4 (100+ exchanges, REST + WebSocket) |
+| Exchange API | CCXT 4.5 (100+ exchanges, REST + WebSocket) |
 | Backend | **Bun + Elysia** (HTTP API) + Socket.IO (WebSocket streaming) |
 | Database | **PostgreSQL** via Drizzle ORM |
 | Auth | Local sessions (bcrypt) **or** ecosystem SSO via `auth.marketmaker.cc` (RS256 JWT, verified through public JWKS) |
@@ -244,7 +244,7 @@ Socket.IO (port 3002): `subscribe`, `unsubscribe`, `data`, `error`
 ## Related Projects
 
 - **[profitmaker.cc](https://profitmaker.cc/)** -- open source crypto terminal + modular server for custom metrics
-- **[marketmaker.cc](https://marketmaker.cc/)** -- commercial trading platform with profitmaker integration
+- **[marketmaker.cc](https://marketmaker.cc/)** -- separate commercial trading platform and codebase with Profitmaker integration; its automated quoting engine is not part of this repository
 
 ## Team
 
@@ -284,4 +284,4 @@ See [LICENSE](./LICENSE) for full text. For commercial licensing -- [Telegram](h
 
 [![MarketMaker.cc](public/images/generated/banner-marketmaker.png)](https://marketmaker.cc/)
 
-**[MarketMaker.cc](https://marketmaker.cc/)** -- commercial trading platform with AI-powered analytics, automated bots, and Profitmaker integration.
+**[MarketMaker.cc](https://marketmaker.cc/)** -- a separate commercial platform and codebase with AI-powered analytics, automated bots, and Profitmaker integration. Its automated quoting engine is not part of this repository.

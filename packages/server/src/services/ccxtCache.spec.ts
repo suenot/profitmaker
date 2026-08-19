@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { createCacheKey, getCCXTInstance, type CCXTInstanceConfig } from './ccxtCache';
+import {
+  canonicalExchangeId,
+  createCacheKey,
+  getCCXTInstance,
+  type CCXTInstanceConfig,
+} from './ccxtCache';
 
 /**
  * Unit tests for the ccxt instance cache key.
@@ -105,6 +110,17 @@ describe('createCacheKey — legitimate reuse still works', () => {
     ]);
 
     expect(keys.size).toBe(5);
+  });
+
+  it.each([
+    ['coinbaseadvanced', 'coinbase'],
+    ['gateio', 'gate'],
+    ['huobi', 'htx'],
+  ])('reuses the canonical cache entry for legacy id %s', (legacy, canonical) => {
+    expect(canonicalExchangeId(legacy)).toBe(canonical);
+    expect(createCacheKey({ ...base, exchangeId: legacy })).toBe(
+      createCacheKey({ ...base, exchangeId: canonical }),
+    );
   });
 });
 

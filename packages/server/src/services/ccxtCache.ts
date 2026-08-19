@@ -69,6 +69,17 @@ const CCXT_DEFAULT_TYPE: Record<string, string> = {
   option: 'option',
 };
 
+/** Legacy CCXT ids removed in 4.5.74 but still present in saved accounts/groups. */
+const CCXT_EXCHANGE_ALIASES = new Map<string, string>([
+  ['coinbaseadvanced', 'coinbase'],
+  ['gateio', 'gate'],
+  ['huobi', 'htx'],
+]);
+
+export const canonicalExchangeId = (exchangeId: string): string => (
+  CCXT_EXCHANGE_ALIASES.get(exchangeId) ?? exchangeId
+);
+
 interface KucoinPartnerLeg {
   id: string;
   key: string;
@@ -138,7 +149,7 @@ const credentialFingerprint = (config: CCXTInstanceConfig): string => {
  */
 export const createCacheKey = (config: CCXTInstanceConfig): string => {
   const parts = [
-    config.exchangeId,
+    canonicalExchangeId(config.exchangeId),
     config.marketType || 'spot',
     config.ccxtType || 'regular',
     config.sandbox ? 'sandbox' : 'live',
@@ -209,12 +220,13 @@ export const getCCXTInstance = async (config: CCXTInstanceConfig): Promise<any> 
   }
 
   const ccxtType = config.ccxtType || 'regular';
+  const exchangeId = canonicalExchangeId(config.exchangeId);
 
   // Validate against ccxt's own exchange list BEFORE the dynamic property
   // access below: `exchangeId: 'constructor'` would otherwise resolve to Object
   // and cache `new Object(instanceConfig)` as though it were an exchange.
   const knownExchanges: string[] = (ccxt as any).exchanges ?? [];
-  if (!knownExchanges.includes(config.exchangeId)) {
+  if (!knownExchanges.includes(exchangeId)) {
     throw new Error(`Exchange ${config.exchangeId} not found in CCXT`);
   }
 
@@ -222,9 +234,9 @@ export const getCCXTInstance = async (config: CCXTInstanceConfig): Promise<any> 
 
   if (ccxtType === 'pro') {
     if (!ccxtPro) throw new Error('CCXT Pro not available');
-    ExchangeClass = ccxtPro[config.exchangeId];
+    ExchangeClass = ccxtPro[exchangeId];
   } else {
-    ExchangeClass = (ccxt as any)[config.exchangeId];
+    ExchangeClass = (ccxt as any)[exchangeId];
   }
 
   if (typeof ExchangeClass !== 'function') {
@@ -259,8 +271,8 @@ export const getCCXTInstance = async (config: CCXTInstanceConfig): Promise<any> 
 
   // KuCoin Broker Pro: attribute trades placed through this terminal to the
   // marketmaker broker (kucoin = spot, kucoinfutures = futures).
-  if (config.exchangeId.startsWith('kucoin')) {
-    applyKucoinBroker(config.exchangeId, instanceConfig);
+  if (exchangeId.startsWith('kucoin')) {
+    applyKucoinBroker(exchangeId, instanceConfig);
   }
 
   const exchangeInstance = new ExchangeClass(instanceConfig);

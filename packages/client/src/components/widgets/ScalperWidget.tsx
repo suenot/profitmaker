@@ -3,6 +3,7 @@ import { useDataProviderStore } from '../../store/dataProviderStore';
 import { useGroupStore } from '../../store/groupStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { executeOrder, cancelOrder } from '../../services/orderExecutionService';
+import { cancelAndFlatten } from '../../services/emergencyFlattenService';
 import type { MarketType, Trade } from '../../types/dataProviders';
 import {
   createPriceAxis,
@@ -115,6 +116,7 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
   const resizeRef = useRef<{ left: PaneId; right: PaneId; startX: number; pxPerPortion: number } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const tickSizeSetRef = useRef(false);
+  const emergencyInFlightRef = useRef(false);
 
   const instrumentKey = `${exchange}:${market}:${symbol}`;
 
@@ -341,6 +343,52 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
     }
   }, [position, canTrade, exchange, accountId, market, symbol, showError, showSuccess, refreshPrivate]);
 
+  const emergencyCancelAndFlatten = useCallback(async () => {
+    if (!canTrade || emergencyInFlightRef.current) return;
+    emergencyInFlightRef.current = true;
+    setBusy(true);
+    try {
+      const result = await cancelAndFlatten({
+        exchange,
+        accountId,
+        market,
+        symbol,
+        openOrders,
+        fetchOpenOrders: () => fetchOpenOrders(accountId, symbol),
+        fetchPositions: () => fetchPositions(accountId, [symbol]),
+      });
+
+      if (result.success) {
+        showSuccess(
+          'Emergency flatten complete',
+          result.flattenedContracts > 0
+            ? `${result.flattenedContracts} ${symbol} closed after reconciliation`
+            : 'Open orders cleared; position already flat',
+        );
+      } else {
+        showError('Emergency flatten not confirmed', result.error || 'Final account state is unknown');
+      }
+      await refreshPrivate();
+    } catch (error) {
+      showError('Emergency flatten failed', error instanceof Error ? error.message : String(error));
+    } finally {
+      emergencyInFlightRef.current = false;
+      setBusy(false);
+    }
+  }, [
+    canTrade,
+    exchange,
+    accountId,
+    market,
+    symbol,
+    openOrders,
+    fetchOpenOrders,
+    fetchPositions,
+    showError,
+    showSuccess,
+    refreshPrivate,
+  ]);
+
   // --- axis interaction ----------------------------------------------------
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -388,14 +436,14 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
           void cancelAll();
           break;
         case 'Escape':
-          // Emergency: pull every working order, then flatten.
-          void cancelAll().then(() => closePosition());
+          // Emergency: reconcile the exchange after cancel before sizing close.
+          void emergencyCancelAndFlatten();
           break;
         default:
           return;
       }
     },
-    [togglePane, place, closePosition, cancelAll],
+    [togglePane, place, closePosition, cancelAll, emergencyCancelAndFlatten],
   );
 
   // --- pane drag & divider resize ------------------------------------------
