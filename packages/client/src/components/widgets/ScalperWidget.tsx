@@ -4,6 +4,10 @@ import { useGroupStore } from '../../store/groupStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { executeOrder, cancelOrder } from '../../services/orderExecutionService';
 import { cancelAndFlatten } from '../../services/emergencyFlattenService';
+import {
+  subscribePrivateTrading,
+  type PrivateTradingSubscription,
+} from '../../services/privateTradingStream';
 import type { MarketType, Trade } from '../../types/dataProviders';
 import {
   createPriceAxis,
@@ -31,7 +35,7 @@ import {
   visiblePanes,
   type PaneId,
 } from './scalper/panelLayout';
-import { startOfToday, summarizePnl, unrealizedOf, type PnlSummary } from './scalper/scalperPnl';
+import { startOfToday, summarizePnl, unrealizedOf, type MyTrade, type PnlSummary } from './scalper/scalperPnl';
 import * as t from './scalper/scalperTheme';
 import OrderBookPane from './scalper/panes/OrderBookPane';
 import ClusterPane from './scalper/panes/ClusterPane';
@@ -64,7 +68,6 @@ const CLUSTER_TIMEFRAMES = [1_000, 5_000, 15_000, 30_000, 60_000];
 const TICKS_PER_CANDLE_OPTIONS = [10, 25, 50, 100];
 const MAX_CLUSTER_CANDLES = 60;
 const MAX_TICK_CANDLES = 120;
-const PRIVATE_POLL_MS = 4000;
 
 type TapeEntry = Trade & { key: string };
 
@@ -117,6 +120,7 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
   const rootRef = useRef<HTMLDivElement>(null);
   const tickSizeSetRef = useRef(false);
   const emergencyInFlightRef = useRef(false);
+  const privateSubscriptionRef = useRef<PrivateTradingSubscription | null>(null);
 
   const instrumentKey = `${exchange}:${market}:${symbol}`;
 
@@ -224,46 +228,50 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
 
   // --- private data --------------------------------------------------------
 
+  // Order replies acknowledge commands; they are not account-state truth. This
+  // asks the private state session to reconcile from streams + a REST snapshot.
   const refreshPrivate = useCallback(async () => {
+    await privateSubscriptionRef.current?.reconcile();
+  }, []);
+
+  useEffect(() => {
     if (!accountId) {
+      privateSubscriptionRef.current = null;
       setOpenOrders([]);
       setPosition(null);
       setPnl({ realized: 0, fees: 0, trades: 0, closedTrades: 0, winRate: 0 });
       return;
     }
-    try {
-      const orders = await fetchOpenOrders(accountId, symbol);
-      setOpenOrders(Array.isArray(orders) ? orders : []);
-    } catch {
-      setOpenOrders([]);
-    }
-    if (market !== 'spot') {
-      try {
-        const positions = await fetchPositions(accountId, [symbol]);
-        const match = (positions || []).find(
-          (p: any) => p?.symbol === symbol && Math.abs(Number(p?.contracts ?? 0)) > 0,
-        );
-        setPosition(match ?? null);
-      } catch {
-        setPosition(null);
-      }
-    }
-    // Session P&L from this account's own fills since local midnight. The
-    // exchange is asked for the window, not the whole history.
-    try {
-      const since = startOfToday();
-      const fills = await fetchMyTrades(accountId, symbol, since, 500);
-      setPnl(summarizePnl((fills as any[]) ?? [], since));
-    } catch {
-      // Leave the last good summary rather than blanking the panel on a hiccup.
-    }
-  }, [accountId, symbol, market, fetchOpenOrders, fetchPositions, fetchMyTrades]);
 
-  useEffect(() => {
-    void refreshPrivate();
-    const id = window.setInterval(() => void refreshPrivate(), PRIVATE_POLL_MS);
-    return () => window.clearInterval(id);
-  }, [refreshPrivate]);
+    const since = startOfToday();
+    let active = true;
+    const subscription = subscribePrivateTrading({
+      accountId,
+      exchangeId: exchange,
+      symbol,
+      market,
+      fetchOpenOrders: () => fetchOpenOrders(accountId, symbol),
+      fetchPositions: () => fetchPositions(accountId, [symbol]),
+      fetchMyTrades: (from) => fetchMyTrades(accountId, symbol, from, 500),
+      onSnapshot: (snapshot) => {
+        if (!active) return;
+        setOpenOrders(snapshot.openOrders);
+        const match = market === 'spot'
+          ? undefined
+          : snapshot.positions.find(
+              (candidate) => candidate?.symbol === symbol && Math.abs(Number(candidate?.contracts ?? 0)) > 0,
+            );
+        setPosition(match ?? null);
+        setPnl(summarizePnl(snapshot.myTrades as unknown as MyTrade[], since));
+      },
+    });
+    privateSubscriptionRef.current = subscription;
+    return () => {
+      active = false;
+      if (privateSubscriptionRef.current === subscription) privateSubscriptionRef.current = null;
+      subscription.close();
+    };
+  }, [accountId, exchange, symbol, market, fetchOpenOrders, fetchPositions, fetchMyTrades]);
 
   // --- trading -------------------------------------------------------------
 
@@ -310,8 +318,8 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
         openOrders.map(o => cancelOrder(String(o.id), symbol, exchange, accountId, market)),
       );
       const failed = results.filter(r => !r.success).length;
-      if (failed) showError('Cancel all', `${failed} of ${results.length} orders could not be cancelled`);
-      else showSuccess('Cancel all', `${results.length} order${results.length === 1 ? '' : 's'} cancelled`);
+      if (failed) showError('Cancel all', `${failed} of ${results.length} cancellation requests were rejected`);
+      else showSuccess('Cancel requests sent', `${results.length} cancellation request${results.length === 1 ? '' : 's'} accepted`);
       await refreshPrivate();
     } finally {
       setBusy(false);
@@ -333,7 +341,7 @@ const ScalperWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> = 
         amount: Math.abs(size),
         reduceOnly: true,
       });
-      if (res.success) showSuccess('Position closed', `${Math.abs(size)} ${symbol}`);
+      if (res.success) showSuccess('Close request sent', `${Math.abs(size)} ${symbol} reduce-only order accepted`);
       else showError('Close failed', res.error || 'Order rejected');
       await refreshPrivate();
     } catch (e) {

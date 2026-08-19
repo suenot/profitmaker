@@ -18,7 +18,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
  * amplifier) but expiring in seconds (so recovery is quick).
  */
 
-const h = vi.hoisted(() => ({ constructed: 0 }));
+const h = vi.hoisted(() => ({ constructed: 0, closed: 0 }));
 
 vi.mock('ccxt', () => {
   class UnreachableExchange {
@@ -35,13 +35,15 @@ vi.mock('ccxt', () => {
       throw new Error('getaddrinfo ENOTFOUND fakeex.example');
     }
 
-    async close(): Promise<void> {}
+    async close(): Promise<void> {
+      h.closed += 1;
+    }
   }
 
   return { default: { exchanges: ['fakeex'], fakeex: UnreachableExchange, pro: {} } };
 });
 
-const { getCCXTInstance } = await import('./ccxtCache');
+const { cleanupCache, getCCXTInstance, releaseCCXTInstance } = await import('./ccxtCache');
 
 // The instance cache is module-level, so each test uses its own credentials to
 // get its own cache key rather than leaking state into the next one.
@@ -56,6 +58,7 @@ const cfg = (tag: string) => ({
 describe('getCCXTInstance — failed loadMarkets', () => {
   beforeEach(() => {
     h.constructed = 0;
+    h.closed = 0;
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
   });
@@ -93,5 +96,19 @@ describe('getCCXTInstance — failed loadMarkets', () => {
     const rebuilt = await getCCXTInstance(cfg('ttl'));
     expect(rebuilt).not.toBe(first);
     expect(h.constructed).toBe(2);
+  });
+
+  it('keeps a leased websocket runtime alive past TTL until release', async () => {
+    const config = cfg('leased');
+    const first = await getCCXTInstance(config, { lease: true });
+
+    vi.setSystemTime(Date.now() + 31_000);
+    await cleanupCache();
+    expect(await getCCXTInstance(config)).toBe(first);
+    const closedBeforeRelease = h.closed;
+
+    await releaseCCXTInstance(config, first);
+    expect(h.closed).toBe(closedBeforeRelease + 1);
+    expect(await getCCXTInstance(config)).not.toBe(first);
   });
 });

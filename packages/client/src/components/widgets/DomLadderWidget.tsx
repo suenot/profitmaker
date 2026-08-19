@@ -5,6 +5,10 @@ import { useGroupStore } from '../../store/groupStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { executeOrder, cancelOrder } from '../../services/orderExecutionService';
 import { cancelAndFlatten } from '../../services/emergencyFlattenService';
+import {
+  subscribePrivateTrading,
+  type PrivateTradingSubscription,
+} from '../../services/privateTradingStream';
 import type { MarketType, OrderBookEntry } from '../../types/dataProviders';
 
 /**
@@ -76,6 +80,7 @@ const DomLadderWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
     initializeTradesData,
     fetchOpenOrders,
     fetchPositions,
+    fetchMyTrades,
   } = useDataProviderStore();
   const { getGroupById, selectedGroupId: globalSelectedGroupId, getTransparentGroup } = useGroupStore();
   const showError = useNotificationStore((s) => s.showError);
@@ -99,6 +104,7 @@ const DomLadderWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const emergencyInFlightRef = useRef(false);
+  const privateSubscriptionRef = useRef<PrivateTradingSubscription | null>(null);
   const [viewportHeight, setViewportHeight] = useState(400);
 
   // Market data subscriptions.
@@ -125,37 +131,47 @@ const DomLadderWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
     };
   }, [exchange, symbol, market, widgetId, subscribe, unsubscribe, initializeOrderBookData, initializeTradesData]);
 
-  // Own orders + position. Polled rather than streamed: there is no private
-  // stream in the provider contract, and a ladder that shows stale working
-  // orders is worse than one that shows none.
+  // create/cancel responses are command acknowledgements only. Canonical state
+  // comes from the private stream, seeded and recovered with REST snapshots.
   const refreshPrivate = useCallback(async () => {
+    await privateSubscriptionRef.current?.reconcile();
+  }, []);
+
+  useEffect(() => {
     if (!accountId) {
+      privateSubscriptionRef.current = null;
       setOpenOrders([]);
       setPosition(null);
       return;
     }
-    try {
-      const orders = await fetchOpenOrders(accountId, symbol);
-      setOpenOrders(Array.isArray(orders) ? orders : []);
-    } catch {
-      setOpenOrders([]);
-    }
-    if (market !== 'spot') {
-      try {
-        const positions = await fetchPositions(accountId, [symbol]);
-        const match = (positions || []).find((p: any) => p?.symbol === symbol && Math.abs(Number(p?.contracts ?? p?.contractSize ?? 0)) > 0);
-        setPosition(match ?? null);
-      } catch {
-        setPosition(null);
-      }
-    }
-  }, [accountId, symbol, market, fetchOpenOrders, fetchPositions]);
 
-  useEffect(() => {
-    void refreshPrivate();
-    const id = window.setInterval(() => void refreshPrivate(), 4000);
-    return () => window.clearInterval(id);
-  }, [refreshPrivate]);
+    let active = true;
+    const subscription = subscribePrivateTrading({
+      accountId,
+      exchangeId: exchange,
+      symbol,
+      market,
+      fetchOpenOrders: () => fetchOpenOrders(accountId, symbol),
+      fetchPositions: () => fetchPositions(accountId, [symbol]),
+      fetchMyTrades: (since) => fetchMyTrades(accountId, symbol, since, 500),
+      onSnapshot: (snapshot) => {
+        if (!active) return;
+        setOpenOrders(snapshot.openOrders);
+        const match = market === 'spot'
+          ? undefined
+          : snapshot.positions.find(
+              (candidate) => candidate?.symbol === symbol && Math.abs(Number(candidate?.contracts ?? 0)) > 0,
+            );
+        setPosition(match ?? null);
+      },
+    });
+    privateSubscriptionRef.current = subscription;
+    return () => {
+      active = false;
+      if (privateSubscriptionRef.current === subscription) privateSubscriptionRef.current = null;
+      subscription.close();
+    };
+  }, [accountId, exchange, symbol, market, fetchOpenOrders, fetchPositions, fetchMyTrades]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -318,8 +334,8 @@ const DomLadderWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
         openOrders.map((o) => cancelOrder(String(o.id), symbol, exchange, accountId, market)),
       );
       const failed = results.filter((r) => !r.success).length;
-      if (failed) showError('Cancel all', `${failed} of ${results.length} orders could not be cancelled`);
-      else showSuccess('Cancel all', `${results.length} order${results.length === 1 ? '' : 's'} cancelled`);
+      if (failed) showError('Cancel all', `${failed} of ${results.length} cancellation requests were rejected`);
+      else showSuccess('Cancel requests sent', `${results.length} cancellation request${results.length === 1 ? '' : 's'} accepted`);
       await refreshPrivate();
     } finally {
       setBusy(false);
@@ -343,7 +359,7 @@ const DomLadderWidget: React.FC<{ widgetId: string; selectedGroupId?: string }> 
         amount: Math.abs(size),
         reduceOnly: true,
       });
-      if (res.success) showSuccess('Position closed', `${Math.abs(size)} ${symbol}`);
+      if (res.success) showSuccess('Close request sent', `${Math.abs(size)} ${symbol} reduce-only order accepted`);
       else showError('Close failed', res.error || 'Order rejected');
       await refreshPrivate();
     } catch (e) {

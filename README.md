@@ -235,7 +235,9 @@ Browser                          Server                      Database
 | **Proxy** | `POST /api/proxy/request` | CORS bypass proxy |
 | **Health** | `GET /health` | Server health (no auth) |
 
-Socket.IO (port 3002): `subscribe`, `unsubscribe`, `data`, `error`
+Socket.IO (port 3002): public market-data events `subscribe`, `unsubscribe`, `data`, `error`; authenticated account-data events `private:subscribe`, `private:unsubscribe`, `private:data`, `private:error`.
+
+For supported exchanges, the scalper and DOM use CCXT Pro private order, trade, and derivative-position streams as their live source of truth. REST provides the initial snapshot, reconnect backfill, final safety reconciliation, and fallback when a private channel is unavailable. Create and cancel responses are command acknowledgements only.
 
 ## Supported Exchanges
 
@@ -243,8 +245,8 @@ Socket.IO (port 3002): `subscribe`, `unsubscribe`, `data`, `error`
 
 ## Related Projects
 
-- **[profitmaker.cc](https://profitmaker.cc/)** -- open source crypto terminal + modular server for custom metrics
-- **[marketmaker.cc](https://marketmaker.cc/)** -- separate commercial trading platform and codebase with Profitmaker integration; its automated quoting engine is not part of this repository
+- **[profitmaker.cc](https://profitmaker.cc/)** -- the open source crypto trading terminal and modular server in this repository
+- **[MarketMaker.cc](https://marketmaker.cc/)** -- the home of our quantitative research team, where we work on several projects, including Profitmaker
 
 ## Team
 
@@ -284,4 +286,4 @@ See [LICENSE](./LICENSE) for full text. For commercial licensing -- [Telegram](h
 
 [![MarketMaker.cc](public/images/generated/banner-marketmaker.png)](https://marketmaker.cc/)
 
-**[MarketMaker.cc](https://marketmaker.cc/)** -- a separate commercial platform and codebase with AI-powered analytics, automated bots, and Profitmaker integration. Its automated quoting engine is not part of this repository.
+**[MarketMaker.cc](https://marketmaker.cc/)** is the home of our quantitative research team. We work on several projects there, including the open source Profitmaker terminal.

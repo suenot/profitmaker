@@ -6,6 +6,26 @@ The format follows Keep a Changelog and versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-08-20
+
+### Added
+
+- Add authenticated CCXT Pro private order, trade, and derivative-position streams for the scalper and DOM.
+- Add a canonical private-state ledger with client/exchange order ID correlation, event deduplication, monotonic fills, and terminal-state protection.
+
+### Changed
+
+- Use private streams as the primary live account-state source wherever the exchange supports them, with REST snapshots for startup, reconnect recovery, safety confirmation, and fallback.
+- Describe Profitmaker.cc as the open source terminal and MarketMaker.cc as the home of the quantitative research team working on several projects, including Profitmaker.
+
+### Fixed
+
+- Backfill account state before and after private-stream startup so fills cannot disappear in the subscription gap.
+- Reauthenticate, resubscribe, and reconcile after Socket.IO or CCXT Pro reconnects while rejecting late events from older runtime generations.
+- Keep leased CCXT Pro runtimes out of TTL/LRU eviction until their private subscription is released.
+- Allow unauthenticated Socket.IO subscriptions for public market-data channels while continuing to require authentication for account data.
+- Label cancel and reduce-only close responses as accepted requests rather than confirmed final account state.
+
 ## [3.1.4] - 2026-08-20
 
 ### Changed

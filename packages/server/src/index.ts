@@ -38,6 +38,13 @@ import {
   type WebSocketSubscription,
 } from './services/wsSubscriptions';
 import { usageMeter } from './services/usageMeter';
+import {
+  activatePrivateSubscription,
+  hasPrivateSubscription,
+  startPrivateSubscription,
+  stopPrivateSubscription,
+  stopSocketPrivateSubscriptions,
+} from './services/privateWsSubscriptions';
 
 const PORT = Number(process.env.PORT) || 3001;
 const STATIC_DIR = process.env.STATIC_DIR || join(import.meta.dir, '../../client/dist');
@@ -62,6 +69,7 @@ const SOCKET_ORIGINS = ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS : DEV_ORIGIN
 // Subscriptions are backed by a live exchange websocket each, so an unbounded
 // count is a resource-exhaustion lever. Applies per socket.
 const MAX_SUBSCRIPTIONS_PER_SOCKET = 50;
+const PUBLIC_MARKET_DATA_TYPES = new Set(['ticker', 'trades', 'orderbook', 'ohlcv']);
 
 const streamOperationCode = (dataType: string): string =>
   `terminal.market.${dataType.replace(/[^a-zA-Z0-9_-]/g, '_')}_stream`;
@@ -243,6 +251,8 @@ io.on('connection', (socket) => {
   // shared registry keys teardown by subscription id alone, so without an
   // ownership set any socket could unsubscribe another socket's stream.
   const ownedSubscriptions = new Set<string>();
+  const ownedPrivateSubscriptions = new Set<string>();
+  const pendingPrivateSubscriptions = new Set<string>();
 
   // Acks for ui:command round-trips (POST /api/ui/command).
   registerUiCommandSocket(socket);
@@ -284,16 +294,16 @@ io.on('connection', (socket) => {
   });
 
   socket.on('subscribe', async (data) => {
-    // Each subscription opens a live exchange websocket, so it must cost an
-    // authenticated identity — never an anonymous connection.
-    if (!socket.data.userId) {
-      socket.emit('subscription_error', { error: 'Not authenticated' });
-      return;
-    }
-
     const { exchangeId, symbol, dataType, timeframe, config, providerId } = data;
     if (!exchangeId || !symbol || !dataType) {
       socket.emit('subscription_error', { error: 'Missing required parameters' });
+      return;
+    }
+    // Public market data remains usable without an account. Anything capable
+    // of exposing account state must use an authenticated socket (and new
+    // clients use the credential-free private:* accountId protocol instead).
+    if (!socket.data.userId && !PUBLIC_MARKET_DATA_TYPES.has(dataType)) {
+      socket.emit('subscription_error', { error: 'Authentication required for account data' });
       return;
     }
 
@@ -376,6 +386,92 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('private:subscribe', async (data) => {
+    // Central-account credentials can only be resolved for an SSO identity.
+    // The browser sends account/routing ids only; inline credentials are never
+    // accepted on this event.
+    if (!socket.data.billingUserId) {
+      socket.emit('private:error', { error: 'SSO authentication required for private streams', fatal: true });
+      return;
+    }
+
+    const accountId = typeof data?.accountId === 'string' ? data.accountId.trim() : '';
+    const exchangeId = typeof data?.exchangeId === 'string' ? data.exchangeId.trim() : '';
+    const symbol = typeof data?.symbol === 'string' ? data.symbol.trim() : '';
+    const market = typeof data?.market === 'string' ? data.market.trim() : undefined;
+    if (!accountId || !exchangeId || !symbol) {
+      socket.emit('private:error', { error: 'accountId, exchangeId and symbol are required', fatal: true });
+      return;
+    }
+    if (
+      ownedSubscriptions.size
+      + ownedPrivateSubscriptions.size
+      + pendingPrivateSubscriptions.size
+      >= MAX_SUBSCRIPTIONS_PER_SOCKET
+    ) {
+      socket.emit('private:error', { error: `Subscription limit reached (max ${MAX_SUBSCRIPTIONS_PER_SOCKET})`, fatal: true });
+      return;
+    }
+
+    const privateKey = createHash('sha256')
+      .update(`${socket.data.billingUserId}:${accountId}:${exchangeId}:${market ?? 'spot'}:${symbol}`)
+      .digest('hex');
+    const subscriptionId = `${socket.id}:private:${privateKey}`;
+    if (hasPrivateSubscription(subscriptionId) || pendingPrivateSubscriptions.has(subscriptionId)) {
+      socket.emit('private:error', { subscriptionId, accountId, error: 'Private subscription already exists', fatal: true });
+      return;
+    }
+
+    pendingPrivateSubscriptions.add(subscriptionId);
+    try {
+      const subscription = await startPrivateSubscription({
+        id: subscriptionId,
+        socketId: socket.id,
+        ssoUserId: socket.data.billingUserId,
+        accountId,
+        exchangeId,
+        symbol,
+        market,
+        emitData: (socketId, event) => io.to(socketId).emit('private:data', event),
+        emitError: (socketId, event) => io.to(socketId).emit('private:error', event),
+        emitHeartbeat: (socketId, event) => io.to(socketId).emit('private:heartbeat', event),
+      });
+      if (!socket.connected) {
+        await stopPrivateSubscription(subscriptionId);
+        return;
+      }
+      ownedPrivateSubscriptions.add(subscriptionId);
+      socket.emit('private:subscribed', {
+        subscriptionId,
+        accountId,
+        exchangeId,
+        symbol,
+        capabilities: subscription.capabilities,
+        generation: subscription.runtimeGeneration,
+      });
+      activatePrivateSubscription(subscriptionId);
+    } catch {
+      socket.emit('private:error', {
+        accountId,
+        error: 'Private subscription failed',
+        fatal: true,
+      });
+    } finally {
+      pendingPrivateSubscriptions.delete(subscriptionId);
+    }
+  });
+
+  socket.on('private:unsubscribe', (data) => {
+    const subscriptionId = typeof data?.subscriptionId === 'string' ? data.subscriptionId : '';
+    if (!subscriptionId || !ownedPrivateSubscriptions.has(subscriptionId)) {
+      socket.emit('private:error', { error: 'Unknown private subscription', fatal: true });
+      return;
+    }
+    ownedPrivateSubscriptions.delete(subscriptionId);
+    void stopPrivateSubscription(subscriptionId);
+    socket.emit('private:unsubscribed', { subscriptionId });
+  });
+
   socket.on('unsubscribe', (data) => {
     const { subscriptionId } = data;
     if (!subscriptionId) {
@@ -395,7 +491,10 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     ownedSubscriptions.clear();
+    ownedPrivateSubscriptions.clear();
+    pendingPrivateSubscriptions.clear();
     removeSocketSubscriptions(socket.id);
+    void stopSocketPrivateSubscriptions(socket.id);
   });
 });
 

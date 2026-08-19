@@ -353,7 +353,7 @@ export async function cancelOrder(
     const serverProvider = createCCXTServerProvider(provider as CCXTServerProvider);
 
     const result = await serverProvider.trading.cancelOrder(creds, exchange, orderId, symbol, market as any);
-    console.log(`✅ [OrderExecution] Order cancelled successfully:`, result);
+    console.log(`✅ [OrderExecution] Cancellation request accepted:`, result);
 
     return { success: true };
 

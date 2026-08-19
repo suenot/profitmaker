@@ -29,6 +29,8 @@ interface CacheEntry {
   timestamp: number;
   /** Per-entry lifetime — a degraded entry expires far sooner than a healthy one. */
   ttl: number;
+  /** Active consumers whose websocket runtime must not be evicted. */
+  leases: number;
 }
 
 const instanceCache = new Map<string, CacheEntry>();
@@ -184,34 +186,33 @@ const closeInstance = async (instance: any): Promise<void> => {
  * A Map iterates in insertion order and every cache hit re-inserts its key, so
  * the first key is always the least recently used one.
  *
- * CAVEAT: the cache cannot currently tell whether an instance still has live
- * watch loops attached (wsSubscriptions resolves a provider once, at subscribe
- * time, and holds the instance for the subscription's lifetime). Evicting one
- * that does will close its sockets underneath those subscribers, who then fall
- * into the retry backoff against a dead instance. Only reachable past
- * MAX_CACHED_INSTANCES distinct configs; the real fix is refcounting instances
- * from their subscriptions, which is also what unsubscribe needs to close
- * exchange-side streams at all.
+ * Leased websocket runtimes are skipped. Private subscriptions are globally
+ * bounded by their owning service, so leases cannot grow this cache without a
+ * corresponding subscription limit.
  */
 const evictOverflow = async (): Promise<void> => {
   while (instanceCache.size > MAX_CACHED_INSTANCES) {
-    const oldest = instanceCache.keys().next();
-    if (oldest.done) return;
-    const entry = instanceCache.get(oldest.value);
-    instanceCache.delete(oldest.value);
+    const candidate = Array.from(instanceCache.entries()).find(([, entry]) => entry.leases === 0);
+    if (!candidate) return;
+    const [key, entry] = candidate;
+    instanceCache.delete(key);
     if (entry) await closeInstance(entry.instance);
   }
 };
 
-export const getCCXTInstance = async (config: CCXTInstanceConfig): Promise<any> => {
+export const getCCXTInstance = async (
+  config: CCXTInstanceConfig,
+  options: { lease?: boolean } = {},
+): Promise<any> => {
   const cacheKey = createCacheKey(config);
   const cached = instanceCache.get(cacheKey);
 
   if (cached) {
-    if (Date.now() - cached.timestamp < cached.ttl) {
+    if (cached.leases > 0 || Date.now() - cached.timestamp < cached.ttl) {
       // LRU touch: re-insert so this key becomes the most-recently-used.
       instanceCache.delete(cacheKey);
       instanceCache.set(cacheKey, cached);
+      if (options.lease) cached.leases += 1;
       return cached.instance;
     }
     // Expired: drop it and close its sockets before building a replacement.
@@ -287,7 +288,12 @@ export const getCCXTInstance = async (config: CCXTInstanceConfig): Promise<any> 
     ttl = DEGRADED_CACHE_TTL;
   }
 
-  instanceCache.set(cacheKey, { instance: exchangeInstance, timestamp: Date.now(), ttl });
+  instanceCache.set(cacheKey, {
+    instance: exchangeInstance,
+    timestamp: Date.now(),
+    ttl,
+    leases: options.lease ? 1 : 0,
+  });
   await evictOverflow();
   return exchangeInstance;
 };
@@ -295,12 +301,42 @@ export const getCCXTInstance = async (config: CCXTInstanceConfig): Promise<any> 
 export const cleanupCache = async (): Promise<void> => {
   const now = Date.now();
   for (const [key, cached] of instanceCache.entries()) {
-    if (now - cached.timestamp > cached.ttl) {
+    if (cached.leases === 0 && now - cached.timestamp > cached.ttl) {
       instanceCache.delete(key);
       await closeInstance(cached.instance);
     }
   }
   await evictOverflow();
+};
+
+/**
+ * Remove one exact runtime from the cache and close its sockets. `expected`
+ * prevents an old failing watch loop from evicting a replacement installed by
+ * another loop for the same configuration.
+ */
+export const disposeCCXTInstance = async (
+  config: CCXTInstanceConfig,
+  expected?: any,
+): Promise<void> => {
+  const cacheKey = createCacheKey(config);
+  const cached = instanceCache.get(cacheKey);
+  if (!cached || (expected !== undefined && cached.instance !== expected)) return;
+  instanceCache.delete(cacheKey);
+  await closeInstance(cached.instance);
+};
+
+/** Release one leased runtime and close it when its final owner is gone. */
+export const releaseCCXTInstance = async (
+  config: CCXTInstanceConfig,
+  expected?: any,
+): Promise<void> => {
+  const cacheKey = createCacheKey(config);
+  const cached = instanceCache.get(cacheKey);
+  if (!cached || (expected !== undefined && cached.instance !== expected)) return;
+  cached.leases = Math.max(0, cached.leases - 1);
+  if (cached.leases > 0) return;
+  instanceCache.delete(cacheKey);
+  await closeInstance(cached.instance);
 };
 
 export { ccxtPro };
