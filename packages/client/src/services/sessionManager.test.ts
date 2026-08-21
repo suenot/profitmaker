@@ -100,6 +100,59 @@ describe('upsertSession', () => {
   });
 });
 
+describe('upsertSession — background refresh ({ activate: false })', () => {
+  test('refreshing a NON-active identity keeps the current selection active', async () => {
+    const sm = await freshModule();
+    sm.upsertSession(fakeJwt({ sub: 'u1', exp: futureExpSec() }), user({ userId: 'u1' }));
+    sm.upsertSession(fakeJwt({ sub: 'u2', exp: futureExpSec() }), user({ userId: 'u2', email: 'u2@example.com' }));
+    sm.setActiveSession('u1');
+
+    // Cookie-bound background refresh of u2 must not steal activation from u1
+    // (bug: page reload snapped back to the cookie's identity).
+    const newToken = fakeJwt({ sub: 'u2', exp: futureExpSec() });
+    sm.upsertSession(newToken, user({ userId: 'u2', email: 'u2@example.com' }), { activate: false });
+
+    const { sessions, activeSessionId } = sm.useSessionStore.getState();
+    expect(sessions.find((s) => s.id === 'u2')!.token).toBe(newToken); // refreshed in place
+    expect(activeSessionId).toBe('u1'); // selection preserved
+  });
+
+  test('appending a brand-new identity does not steal activation either', async () => {
+    const sm = await freshModule();
+    sm.upsertSession(fakeJwt({ sub: 'u1', exp: futureExpSec() }), user({ userId: 'u1' }));
+
+    sm.upsertSession(fakeJwt({ sub: 'u2', exp: futureExpSec() }), user({ userId: 'u2' }), { activate: false });
+
+    const { sessions, activeSessionId } = sm.useSessionStore.getState();
+    expect(sessions.map((s) => s.id)).toEqual(['u1', 'u2']);
+    expect(activeSessionId).toBe('u1');
+  });
+
+  test('with no usable selection it still activates the resolved identity', async () => {
+    const sm = await freshModule();
+    // No sessions yet → nothing to preserve; the resolved identity becomes active.
+    sm.upsertSession(fakeJwt({ sub: 'u1', exp: futureExpSec() }), user({ userId: 'u1' }), { activate: false });
+    expect(sm.useSessionStore.getState().activeSessionId).toBe('u1');
+  });
+
+  test('a dangling selection (points at a removed session) falls back to the resolved identity', async () => {
+    store.setItem(
+      SESSIONS_KEY,
+      JSON.stringify({
+        sessions: [
+          { id: 'u1', token: fakeJwt({ sub: 'u1', exp: futureExpSec() }), user: user({ userId: 'u1' }), addedAt: Date.now() },
+        ],
+        activeSessionId: 'ghost',
+      }),
+    );
+    const sm = await freshModule();
+
+    sm.upsertSession(fakeJwt({ sub: 'u2', exp: futureExpSec() }), user({ userId: 'u2' }), { activate: false });
+
+    expect(sm.useSessionStore.getState().activeSessionId).toBe('u2');
+  });
+});
+
 describe('getSsoToken', () => {
   test("returns the ACTIVE session's token", async () => {
     const sm = await freshModule();

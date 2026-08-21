@@ -191,12 +191,27 @@ export function getActiveUser(): SsoUser | null {
   return getActiveSession()?.user ?? null;
 }
 
+export interface UpsertOptions {
+  /**
+   * Whether the upserted identity should become the active one. Explicit
+   * logins pass true (the default); silent background refreshes (bootstrap on
+   * page load) pass false so they don't clobber the user's last selection.
+   */
+  activate?: boolean;
+}
+
 /**
  * Add or refresh a session from a freshly issued token. If a session for the
- * same ecosystem user already exists it's refreshed in place (and made active);
- * otherwise a new session is appended. Never clobbers other identities.
+ * same ecosystem user already exists it's refreshed in place; otherwise a new
+ * session is appended. Never clobbers other identities.
+ *
+ * Activation follows `opts.activate`: with the default (true) the upserted
+ * identity becomes active; with false the current selection is preserved and
+ * only replaced when there is no usable one (none at all, or pointing at a
+ * removed session).
  */
-export function upsertSession(token: string, user: SsoUser): SsoSession {
+export function upsertSession(token: string, user: SsoUser, opts: UpsertOptions = {}): SsoSession {
+  const { activate = true } = opts;
   const id = user.userId || (decodeJwt(token)?.sub as string) || `s_${Date.now()}`;
   const session: SsoSession = {
     id,
@@ -211,7 +226,12 @@ export function upsertSession(token: string, user: SsoUser): SsoSession {
       idx === -1
         ? [...state.sessions, session]
         : state.sessions.map((s, i) => (i === idx ? session : s));
-    const next: SessionState = { sessions, activeSessionId: id };
+    const keepSelection =
+      !activate && state.activeSessionId && sessions.some((s) => s.id === state.activeSessionId);
+    const next: SessionState = {
+      sessions,
+      activeSessionId: keepSelection ? state.activeSessionId : id,
+    };
     persist(next);
     return next;
   });

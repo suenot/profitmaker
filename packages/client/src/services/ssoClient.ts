@@ -63,6 +63,31 @@ interface SsoView {
 // a real 'unauthenticated'). Not persisted — resets each page load.
 let resolvedOnce = false;
 
+// sessionStorage marker for an in-flight explicit login/add-login redirect.
+// On return, bootstrap() may promote the returned identity to active. A plain
+// reload carries no marker and must NOT steal activation from the user's last
+// selected identity (bug: refresh used to snap back to the cookie's identity).
+const LOGIN_INTENT_KEY = 'profitmaker.sso.loginIntent';
+
+function markLoginIntent(): void {
+  try {
+    sessionStorage.setItem(LOGIN_INTENT_KEY, '1');
+  } catch {
+    // Storage unavailable — worst case the returned identity won't be
+    // auto-activated; the user can still switch manually.
+  }
+}
+
+function consumeLoginIntent(): boolean {
+  try {
+    if (sessionStorage.getItem(LOGIN_INTENT_KEY) !== '1') return false;
+    sessionStorage.removeItem(LOGIN_INTENT_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function deriveStatus(hasActive: boolean): SsoView['status'] {
   if (hasActive) return 'authenticated';
   return resolvedOnce ? 'unauthenticated' : 'unknown';
@@ -110,12 +135,17 @@ function toUser(resp: SsoSessionResponse): SsoUser {
 /**
  * Silent bootstrap: ask the auth service for a session using the shared cookie.
  * 200 → upsert the fresh JWT as a session (append-if-new identity, refresh if it
- * already exists) and make it active; 401 → mark unauthenticated (but keep other
- * cached sessions — only the cookie-bound identity is gone). Network failure
- * leaves status 'unknown' (so we don't wrongly show a login button when the auth
- * service is merely unreachable) and keeps any cached sessions.
+ * already exists). It becomes active only right after an explicit login/add-login
+ * redirect (login-intent marker); a plain page load refreshes the token without
+ * touching the user's last selected identity. 401 → mark unauthenticated (but
+ * keep other cached sessions — only the cookie-bound identity is gone). Network
+ * failure leaves status 'unknown' (so we don't wrongly show a login button when
+ * the auth service is merely unreachable) and keeps any cached sessions.
  */
 export async function bootstrap(): Promise<void> {
+  // Consume the login-intent marker once per load, regardless of outcome — a
+  // stale marker must never promote some later unrelated refresh.
+  const activateOnUpsert = consumeLoginIntent();
   try {
     const res = await fetch(`${AUTH_URL}/api/v1/auth/session`, {
       method: 'GET',
@@ -125,7 +155,7 @@ export async function bootstrap(): Promise<void> {
       const data = (await res.json()) as SsoSessionResponse;
       if (data?.token) {
         resolvedOnce = true;
-        upsertSession(data.token, toUser(data));
+        upsertSession(data.token, toUser(data), { activate: activateOnUpsert });
         return;
       }
     }
@@ -157,6 +187,7 @@ function authLoginUrl(forcePrompt: boolean): string {
  * cookie signs the user straight back in.
  */
 export function login(): void {
+  markLoginIntent();
   window.location.href = authLoginUrl(false);
 }
 
@@ -168,6 +199,7 @@ export function login(): void {
  * existing ones. (Requires auth's force-relogin support at /login?prompt=login.)
  */
 export function addLogin(): void {
+  markLoginIntent();
   window.location.href = authLoginUrl(true);
 }
 
