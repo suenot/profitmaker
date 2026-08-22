@@ -4,7 +4,16 @@ import { TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { ExchangeAccount } from '../../store/userStore';
 import { UserTradingDataWidgetSettings } from '../../store/userTradingDataWidgetStore';
-import { getAccountDataIssue, loadAccountData } from '../../utils/accountDataLoader';
+import {
+  AccountDataSummary,
+  getAccountDataIssue,
+  loadAccountData,
+  summarizeAccountData,
+} from '../../utils/accountDataLoader';
+import AccountStatusBanner from './AccountStatusBanner';
+
+const getAccountLabel = (account: ExchangeAccount) =>
+  account.label || account.email || account.id.slice(0, 8);
 
 // Imperative handle exposed to the parent widget so its header refresh button can
 // re-fetch this tab's data without remounting (see UserTradingDataWidget#handleRefreshData).
@@ -46,7 +55,7 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
   }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [warning, setWarning] = useState<string | null>(null);
+  const [statusSummary, setStatusSummary] = useState<AccountDataSummary | null>(null);
   const requestIdRef = React.useRef(0);
 
   const fetchMyTrades = useDataProviderStore((state) => state.fetchMyTrades);
@@ -59,7 +68,7 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
     if (!accounts.length) {
       setTrades([]);
       setError(null);
-      setWarning(null);
+      setStatusSummary(null);
       setLoading(false);
       return;
     }
@@ -67,7 +76,7 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
     setTrades([]);
     setLoading(true);
     setError(null);
-    setWarning(null);
+    setStatusSummary(null);
 
     try {
       const result = await loadAccountData(accounts, (account) => fetchMyTrades(
@@ -103,23 +112,14 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
         allTrades.sort((a, b) => b.timestamp - a.timestamp);
         setTrades(allTrades);
 
-        const issue = getAccountDataIssue(
-          'trades',
-          progress,
-          (account) => account.label || account.email || account.id.slice(0, 8),
-        );
-        setWarning(issue.warning);
+        setStatusSummary(summarizeAccountData(progress, getAccountLabel, (data) => data.length, accounts));
       });
 
       if (requestId !== requestIdRef.current) return;
 
-      const issue = getAccountDataIssue(
-        'trades',
-        result,
-        (account) => account.label || account.email || account.id.slice(0, 8),
-      );
+      const issue = getAccountDataIssue('trades', result, getAccountLabel);
       setError(issue.error);
-      setWarning(issue.warning);
+      setStatusSummary(summarizeAccountData(result, getAccountLabel, (data) => data.length, accounts));
     } catch (error) {
       if (requestId !== requestIdRef.current) return;
       console.error('Failed to load trades:', error);
@@ -268,10 +268,8 @@ const UserTradesTab = forwardRef<TabRefreshHandle, UserTradesTabProps>(({
     );
   }
 
-  const warningBanner = warning ? (
-    <div className="border-b border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-      Partial data. {warning}
-    </div>
+  const warningBanner = statusSummary ? (
+    <AccountStatusBanner summary={statusSummary} noun="trades" />
   ) : null;
 
   if (!trades.length) {

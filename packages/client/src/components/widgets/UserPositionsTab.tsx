@@ -4,8 +4,17 @@ import { BarChart3, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { ExchangeAccount } from '../../store/userStore';
 import { UserTradingDataWidgetSettings } from '../../store/userTradingDataWidgetStore';
-import { getAccountDataIssue, loadAccountData } from '../../utils/accountDataLoader';
+import {
+  AccountDataSummary,
+  getAccountDataIssue,
+  loadAccountData,
+  summarizeAccountData,
+} from '../../utils/accountDataLoader';
+import AccountStatusBanner from './AccountStatusBanner';
 import { TabRefreshHandle } from './UserTradesTab';
+
+const getAccountLabel = (account: ExchangeAccount) =>
+  account.label || account.email || account.id.slice(0, 8);
 
 interface Position {
   id: string;
@@ -42,7 +51,7 @@ const UserPositionsTab = forwardRef<TabRefreshHandle, UserPositionsTabProps>(({
   }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [warning, setWarning] = useState<string | null>(null);
+  const [statusSummary, setStatusSummary] = useState<AccountDataSummary | null>(null);
   const requestIdRef = React.useRef(0);
 
   const fetchPositions = useDataProviderStore((state) => state.fetchPositions);
@@ -55,7 +64,7 @@ const UserPositionsTab = forwardRef<TabRefreshHandle, UserPositionsTabProps>(({
     if (!accounts.length) {
       setPositions([]);
       setError(null);
-      setWarning(null);
+      setStatusSummary(null);
       setLoading(false);
       return;
     }
@@ -63,7 +72,7 @@ const UserPositionsTab = forwardRef<TabRefreshHandle, UserPositionsTabProps>(({
     setPositions([]);
     setLoading(true);
     setError(null);
-    setWarning(null);
+    setStatusSummary(null);
 
     try {
       const result = await loadAccountData(
@@ -88,24 +97,15 @@ const UserPositionsTab = forwardRef<TabRefreshHandle, UserPositionsTabProps>(({
           allPositions.sort((a, b) => Math.abs(b.notional) - Math.abs(a.notional));
           setPositions(allPositions);
 
-          const issue = getAccountDataIssue(
-            'positions',
-            progress,
-            (account) => account.label || account.email || account.id.slice(0, 8),
-          );
-          setWarning(issue.warning);
+          setStatusSummary(summarizeAccountData(progress, getAccountLabel, (data) => data.length, accounts));
         },
       );
 
       if (requestId !== requestIdRef.current) return;
 
-      const issue = getAccountDataIssue(
-        'positions',
-        result,
-        (account) => account.label || account.email || account.id.slice(0, 8),
-      );
+      const issue = getAccountDataIssue('positions', result, getAccountLabel);
       setError(issue.error);
-      setWarning(issue.warning);
+      setStatusSummary(summarizeAccountData(result, getAccountLabel, (data) => data.length, accounts));
     } catch (error) {
       if (requestId !== requestIdRef.current) return;
       console.error('Failed to load positions:', error);
@@ -263,10 +263,8 @@ const UserPositionsTab = forwardRef<TabRefreshHandle, UserPositionsTabProps>(({
     );
   }
 
-  const warningBanner = warning ? (
-    <div className="border-b border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-      Partial data. {warning}
-    </div>
+  const warningBanner = statusSummary ? (
+    <AccountStatusBanner summary={statusSummary} noun="positions" />
   ) : null;
 
   if (!positions.length) {

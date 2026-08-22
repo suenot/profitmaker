@@ -4,8 +4,17 @@ import { ShoppingCart, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-r
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { ExchangeAccount } from '../../store/userStore';
 import { UserTradingDataWidgetSettings } from '../../store/userTradingDataWidgetStore';
-import { getAccountDataIssue, loadAccountData } from '../../utils/accountDataLoader';
+import {
+  AccountDataSummary,
+  getAccountDataIssue,
+  loadAccountData,
+  summarizeAccountData,
+} from '../../utils/accountDataLoader';
+import AccountStatusBanner from './AccountStatusBanner';
 import { TabRefreshHandle } from './UserTradesTab';
+
+const getAccountLabel = (account: ExchangeAccount) =>
+  account.label || account.email || account.id.slice(0, 8);
 
 interface Order {
   id: string;
@@ -45,7 +54,7 @@ const UserOrdersTab = forwardRef<TabRefreshHandle, UserOrdersTabProps>(({
   }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [warning, setWarning] = useState<string | null>(null);
+  const [statusSummary, setStatusSummary] = useState<AccountDataSummary | null>(null);
   const requestIdRef = React.useRef(0);
 
   const fetchOrders = useDataProviderStore((state) => state.fetchOrders);
@@ -59,7 +68,7 @@ const UserOrdersTab = forwardRef<TabRefreshHandle, UserOrdersTabProps>(({
     if (!accounts.length) {
       setOrders([]);
       setError(null);
-      setWarning(null);
+      setStatusSummary(null);
       setLoading(false);
       return;
     }
@@ -67,7 +76,7 @@ const UserOrdersTab = forwardRef<TabRefreshHandle, UserOrdersTabProps>(({
     setOrders([]);
     setLoading(true);
     setError(null);
-    setWarning(null);
+    setStatusSummary(null);
 
     try {
       const result = await loadAccountData(
@@ -113,24 +122,15 @@ const UserOrdersTab = forwardRef<TabRefreshHandle, UserOrdersTabProps>(({
           allOrders.sort((a, b) => b.timestamp - a.timestamp);
           setOrders(allOrders);
 
-          const issue = getAccountDataIssue(
-            'orders',
-            progress,
-            (account) => account.label || account.email || account.id.slice(0, 8),
-          );
-          setWarning(issue.warning);
+          setStatusSummary(summarizeAccountData(progress, getAccountLabel, (data) => data.length, accounts));
         },
       );
 
       if (requestId !== requestIdRef.current) return;
 
-      const issue = getAccountDataIssue(
-        'orders',
-        result,
-        (account) => account.label || account.email || account.id.slice(0, 8),
-      );
+      const issue = getAccountDataIssue('orders', result, getAccountLabel);
       setError(issue.error);
-      setWarning(issue.warning);
+      setStatusSummary(summarizeAccountData(result, getAccountLabel, (data) => data.length, accounts));
     } catch (error) {
       if (requestId !== requestIdRef.current) return;
       console.error('Failed to load orders:', error);
@@ -311,10 +311,8 @@ const UserOrdersTab = forwardRef<TabRefreshHandle, UserOrdersTabProps>(({
     );
   }
 
-  const warningBanner = warning ? (
-    <div className="border-b border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-      Partial data. {warning}
-    </div>
+  const warningBanner = statusSummary ? (
+    <AccountStatusBanner summary={statusSummary} noun="orders" />
   ) : null;
 
   if (!orders.length) {

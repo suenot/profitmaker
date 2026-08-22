@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from 'react';
 import { Loader2, RefreshCw, Search, TrendingUp, TrendingDown, Wallet, User } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTheme } from '../../hooks/useTheme';
@@ -26,6 +26,60 @@ interface AccountBalance {
   error: string | null;
   lastUpdate: number | null;
 }
+
+interface FailedBalanceAccount {
+  label: string;
+  exchange: string;
+  error: string;
+}
+
+// Ephemeral per-widget record of accounts whose balance fetch failed. Lives at
+// module scope (not in React state) because the header refresh button and the
+// widget body are mounted as separate component trees by the widget framework.
+const EMPTY_FAILED_ACCOUNTS: FailedBalanceAccount[] = [];
+let failedBalanceAccounts = new Map<string, FailedBalanceAccount[]>();
+let failedBalanceAccountsListeners: Array<() => void> = [];
+
+const emitFailedBalanceAccounts = () => {
+  failedBalanceAccountsListeners.forEach((listener) => listener());
+};
+
+const subscribeFailedBalanceAccounts = (listener: () => void) => {
+  failedBalanceAccountsListeners = [...failedBalanceAccountsListeners, listener];
+  return () => {
+    failedBalanceAccountsListeners = failedBalanceAccountsListeners.filter(
+      (item) => item !== listener,
+    );
+  };
+};
+
+const resetFailedBalanceAccounts = (widgetId: string) => {
+  if (!failedBalanceAccounts.has(widgetId)) return;
+  failedBalanceAccounts = new Map(failedBalanceAccounts);
+  failedBalanceAccounts.delete(widgetId);
+  emitFailedBalanceAccounts();
+};
+
+const recordFailedBalanceAccount = (
+  widgetId: string,
+  account: ExchangeAccount,
+  error: unknown,
+) => {
+  failedBalanceAccounts = new Map(failedBalanceAccounts);
+  const current = failedBalanceAccounts.get(widgetId) ?? [];
+  failedBalanceAccounts.set(widgetId, [...current, {
+    label: account.label || account.email || account.id.slice(0, 8),
+    exchange: account.exchange,
+    error: error instanceof Error ? error.message : String(error),
+  }]);
+  emitFailedBalanceAccounts();
+};
+
+const useFailedBalanceAccounts = (widgetId: string): FailedBalanceAccount[] =>
+  useSyncExternalStore(
+    subscribeFailedBalanceAccounts,
+    () => failedBalanceAccounts.get(widgetId) ?? EMPTY_FAILED_ACCOUNTS,
+  );
 
 // Header actions component for the widget
 export const UserBalancesHeaderActions: React.FC<{ widgetId: string }> = ({ widgetId }) => {
@@ -71,17 +125,19 @@ export const UserBalancesHeaderActions: React.FC<{ widgetId: string }> = ({ widg
       
       // STEP 2: Fetch fresh balance data
       console.log(`📥 [USER-BALANCES-WIDGET-REFRESH] Fetching fresh balance data...`);
+      resetFailedBalanceAccounts(widgetId);
       for (const account of accountsWithKeys) {
         try {
           console.log(`🚀 [USER-BALANCES-WIDGET-REFRESH] Fetching balances for account ${account.id} (${account.exchange}:${account.label || account.email || ''})`);
-          
+
           // Fetch both trading and funding balances using new architecture - EXACT SAME as subscribeToAllAccounts
           await initializeBalanceData(account.id, 'trading');
           await initializeBalanceData(account.id, 'funding');
-          
+
           console.log(`✅ [USER-BALANCES-WIDGET-REFRESH] Fetched balances for account ${account.id} (${account.exchange})`);
         } catch (error) {
           console.error(`❌ [USER-BALANCES-WIDGET-REFRESH] Failed to fetch balances for account ${account.id} (${account.exchange}):`, error);
+          recordFailedBalanceAccount(widgetId, account, error);
         }
       }
       
@@ -91,7 +147,7 @@ export const UserBalancesHeaderActions: React.FC<{ widgetId: string }> = ({ widg
     } finally {
       setIsRefreshing(false);
     }
-  }, [hasValidAccounts, isRefreshing, accountsWithKeys, initializeBalanceData, clearBalanceData]);
+  }, [hasValidAccounts, isRefreshing, accountsWithKeys, initializeBalanceData, clearBalanceData, widgetId]);
 
   return (
     <div className="flex items-center gap-1">
@@ -163,6 +219,9 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [loadingPrices, setLoadingPrices] = useState<Set<string>>(new Set());
   const [usdValues, setUsdValues] = useState<Map<string, { value?: number, rate?: string, loading: boolean }>>(new Map());
+  // Accounts whose balance fetch failed in the latest pass (header refresh or
+  // the auto-subscribe sweep) — rendered as an amber strip at the bottom.
+  const failedAccounts = useFailedBalanceAccounts(widgetId);
 
   const getListedSpotMarkets = useMemo(
     () => createListedSpotMarketLoader(getSymbolsForExchange),
@@ -428,6 +487,7 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
       activeUser.accounts.map(acc => ({ exchange: acc.exchange, label: acc.label || acc.email }))
     );
 
+    resetFailedBalanceAccounts(widgetId);
     for (const account of activeUser.accounts) {
       // Central accounts: no client-side keys; balances resolve server-side via
       // the accountId flow (want:'read'). No client-key gate.
@@ -437,13 +497,14 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
         // Fetch both trading and funding balances using new architecture
         await initializeBalanceData(account.id, 'trading');
         await initializeBalanceData(account.id, 'funding');
-        
+
         console.log(`✅ [UserBalances] Fetched balances for account ${account.id} (${account.exchange})`);
       } catch (error) {
         console.error(`❌ [UserBalances] Failed to fetch balances for account ${account.id} (${account.exchange}):`, error);
+        recordFailedBalanceAccount(widgetId, account, error);
       }
     }
-  }, [activeUser?.accounts, initializeBalanceData]);
+  }, [activeUser?.accounts, initializeBalanceData, widgetId]);
 
 
 
@@ -768,6 +829,20 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
           </div>
         )}
       </div>
+
+      {/* Failed account fetches from the latest balance pass */}
+      {failedAccounts.length > 0 && (
+        <div className="border-t border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+          <div>Failed accounts: {failedAccounts.length}</div>
+          <div className="mt-1 flex flex-col gap-0.5">
+            {failedAccounts.map((failed, index) => (
+              <div key={`${index}-${failed.label}`} className="text-red-400">
+                {failed.label} ({failed.exchange}) — {failed.error}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Portfolio Total */}
       <PortfolioTotal />

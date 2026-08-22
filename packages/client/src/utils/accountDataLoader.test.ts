@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getAccountDataError, getAccountDataIssue, loadAccountData } from './accountDataLoader';
+import {
+  getAccountDataError,
+  getAccountDataIssue,
+  loadAccountData,
+  summarizeAccountData,
+} from './accountDataLoader';
 
 describe('loadAccountData', () => {
   it('starts all account reads without waiting for an earlier account', async () => {
@@ -81,5 +86,96 @@ describe('loadAccountData', () => {
       error: 'Failed to load orders: Invalid key',
       warning: null,
     });
+  });
+});
+
+describe('summarizeAccountData', () => {
+  const labelOf = (account: string) => account.toUpperCase();
+  const countOf = (data: string[]) => data.length;
+
+  it('keeps input account order across loaded and failed accounts', () => {
+    const summary = summarizeAccountData(
+      {
+        loaded: [
+          { account: 'first', data: ['a', 'b'] },
+          { account: 'third', data: [] },
+        ],
+        failures: [{ account: 'second', error: new Error('Unmatched IP') }],
+      },
+      labelOf,
+      countOf,
+      ['first', 'second', 'third'],
+    );
+
+    expect(summary).toEqual({
+      totalAccounts: 3,
+      loadedAccounts: 2,
+      failedAccounts: 1,
+      rows: [
+        { label: 'FIRST', ok: true, count: 2 },
+        { label: 'SECOND', ok: false, error: 'Unmatched IP' },
+        { label: 'THIRD', ok: true, count: 0 },
+      ],
+    });
+  });
+
+  it('marks every account failed when nothing loaded', () => {
+    const summary = summarizeAccountData(
+      {
+        loaded: [],
+        failures: [
+          { account: 'a', error: 'boom' },
+          { account: 'b', error: new Error('Invalid key') },
+        ],
+      },
+      labelOf,
+      countOf,
+    );
+
+    expect(summary.totalAccounts).toBe(2);
+    expect(summary.loadedAccounts).toBe(0);
+    expect(summary.failedAccounts).toBe(2);
+    expect(summary.rows).toEqual([
+      { label: 'A', ok: false, error: 'boom' },
+      { label: 'B', ok: false, error: 'Invalid key' },
+    ]);
+  });
+
+  it('reports counts for an all-ok result', () => {
+    const summary = summarizeAccountData(
+      {
+        loaded: [
+          { account: 'a', data: ['x'] },
+          { account: 'b', data: ['x', 'y', 'z'] },
+        ],
+        failures: [],
+      },
+      labelOf,
+      countOf,
+    );
+
+    expect(summary).toEqual({
+      totalAccounts: 2,
+      loadedAccounts: 2,
+      failedAccounts: 0,
+      rows: [
+        { label: 'A', ok: true, count: 1 },
+        { label: 'B', ok: true, count: 3 },
+      ],
+    });
+  });
+
+  it('counts still-in-flight accounts in totalAccounts while skipping their rows', () => {
+    const summary = summarizeAccountData(
+      { loaded: [{ account: 'done', data: [] }], failures: [] },
+      labelOf,
+      countOf,
+      ['done', 'pending'],
+    );
+
+    expect(summary.totalAccounts).toBe(2);
+    expect(summary.loadedAccounts).toBe(1);
+    expect(summary.failedAccounts).toBe(0);
+    expect(summary.rows).toEqual([{ label: 'DONE', ok: true, count: 0 }]);
   });
 });
