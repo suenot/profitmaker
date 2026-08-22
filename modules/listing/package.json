@@ -1,0 +1,50 @@
+{
+  "name": "profitmaker-module-listing",
+  "version": "0.1.0",
+  "description": "ListingAPIs widgets for the Profitmaker terminal: live listing feed (SSE), trends, stats",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["profitmaker-module"],
+  "files": ["dist", "package.json", "README.md"],
+  "scripts": {
+    "build": "bun run build:frontend && bun run build:backend",
+    "build:frontend": "vite build",
+    "build:backend": "bun build src/backend/index.ts --target=bun --outdir dist/backend",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "profitmaker": {
+    "manifestVersion": 1,
+    "id": "listing",
+    "displayName": "ListingAPIs",
+    "description": "Live exchange listing feed, trends and stats from ListingAPIs",
+    "minTerminalApi": ">=1.0.0",
+    "permissions": ["network", "storage", "jobs"],
+    "frontend": {
+      "entry": "dist/frontend/index.js",
+      "style": "dist/frontend/style.css",
+      "widgets": [
+        { "type": "listing.live", "title": "Live Listings", "category": "modules" },
+        { "type": "listing.trends", "title": "Listing Trends", "category": "modules" },
+        { "type": "listing.stats", "title": "Listing Stats", "category": "modules" }
+      ]
+    },
+    "backend": {
+      "entry": "dist/backend/index.js",
+      "routes": ["/listings/recent", "/trends", "/stats", "/exchanges", "/status"],
+      "services": ["sse", "poller"]
+    }
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "devDependencies": {
+    "@profitmaker/module-sdk": "workspace:*",
+    "@types/react": "^18.3.0",
+    "elysia": "^1.3.0",
+    "react": "^18.3.0",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}

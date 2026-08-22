@@ -5,7 +5,7 @@
   "engines": {
     "node": "24.x"
   },
-  "workspaces": ["packages/*", "templates/*"],
+  "workspaces": ["packages/*", "templates/*", "modules/*"],
   "scripts": {
     "dev": "bun --filter '@profitmaker/client' dev",
     "build": "bun --filter '@profitmaker/client' build",
