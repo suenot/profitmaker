@@ -12,6 +12,7 @@ import {
   AuthAccountsError,
   type AccessWant,
 } from '../services/authAccounts';
+import { getCachedEgressIp } from '../services/egressIp';
 
 // Leverage batch limits. Both directions are capped per request so a call can't
 // run past the client's 30s HTTP timeout. Writes get a much smaller cap: each
@@ -36,9 +37,14 @@ function toPublicExchangeError(error: unknown): PublicExchangeError {
   const message = error instanceof Error ? error.message : String(error);
 
   if (name === 'PermissionDenied' && /unmatched ip|bound ip/i.test(message)) {
+    // Sync cache peek only — this runs in the Elysia onError hook and must not
+    // await anything. Without a known IP, fall back to the generic guidance.
+    const egressIp = getCachedEgressIp();
     return {
       status: 403,
-      message: "Exchange rejected the API key IP address. Check the key's IP whitelist and the server egress IP.",
+      message: egressIp
+        ? `Exchange rejected the API key IP address. Add the server egress IP ${egressIp} to the key's IP whitelist.`
+        : "Exchange rejected the API key IP address. Check the key's IP whitelist and the server egress IP.",
       code: 'EXCHANGE_IP_NOT_ALLOWED',
     };
   }

@@ -36,6 +36,15 @@ vi.mock('../services/authAccounts', async (orig) => {
   };
 });
 
+// --- mock the egress IP cache (IP-whitelist error enrichment) -----------------
+// toPublicExchangeError reads the CACHED ip synchronously when mapping an
+// IP-whitelist rejection; controlling it here keeps the 403 message assertions
+// deterministic without touching the network or the real service's state.
+let cachedEgressIp: string | null = null;
+vi.mock('../services/egressIp', () => ({
+  getCachedEgressIp: () => cachedEgressIp,
+}));
+
 // --- mock the provider registry to capture the resolved config ----------------
 let lastConfig: ProviderRequestConfig | null = null;
 const createOrderMock = vi.fn(async () => ({ id: 'order-1', status: 'open' }));
@@ -83,6 +92,7 @@ async function post(path: string, body: unknown, auth = 'Bearer test') {
 beforeEach(() => {
   vi.clearAllMocks();
   lastConfig = null;
+  cachedEgressIp = null;
   ssoMock.mockResolvedValue({ ssoUserId: 'sso-user-1', bearer: 'JWT' });
 });
 
@@ -235,6 +245,29 @@ describe('private read exchange failures', () => {
     });
     expect(JSON.stringify(json)).not.toContain('MUST_NOT_LEAK');
     expect(JSON.stringify(json)).not.toContain('retCode');
+  });
+
+  it('names the cached server egress IP in the 403 message when one is known', async () => {
+    cachedEgressIp = '203.0.113.7';
+    fetchMyTradesMock.mockRejectedValueOnce(new PermissionDenied(
+      'bybit {"retCode":10010,"retMsg":"Unmatched IP, please check bound IP",' +
+      '"apiKey":"MUST_NOT_LEAK"}',
+    ));
+    fetchCredsMock.mockResolvedValue({
+      apiKey: 'K', secret: 'S', accessLevel: 'read', readOnly: true,
+      credentialId: 'c', ownerUserId: 'o',
+    });
+
+    const { status, json } = await post('/api/exchange/fetchMyTrades', {
+      accountId: 'cred-1', exchange: 'bybit', want: 'read',
+    });
+
+    expect(status).toBe(403);
+    expect(json).toEqual({
+      error: "Exchange rejected the API key IP address. Add the server egress IP 203.0.113.7 to the key's IP whitelist.",
+      code: 'EXCHANGE_IP_NOT_ALLOWED',
+    });
+    expect(JSON.stringify(json)).not.toContain('MUST_NOT_LEAK');
   });
 
   it('keeps unknown failures as sanitized internal errors', async () => {

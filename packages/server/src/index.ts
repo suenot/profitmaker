@@ -21,6 +21,7 @@ import { uiRoutes } from './routes/ui';
 import { moduleManager } from './modules/manager';
 import { registerBuiltinProviders } from './providers';
 import { cleanupCache } from './services/ccxtCache';
+import { warmEgressIp } from './services/egressIp';
 import { validateSession, deleteExpiredSessions } from './services/auth';
 import { matchesApiToken } from './services/apiToken';
 import { getBootstrapUser } from './services/bootstrapUser';
@@ -202,7 +203,9 @@ Bun.serve({
 
     // API routes and module bundle/asset routes go to Elysia.
     // /modules/ is outside /api/ and intentionally bypasses Bearer auth.
-    if (pathname.startsWith('/api/') || pathname === '/health' || pathname.startsWith('/modules/')) {
+    // /health is a prefix: sub-routes like /health/egress-ip must reach Elysia
+    // too, or they'd fall through to the SPA index fallback.
+    if (pathname.startsWith('/api/') || pathname.startsWith('/health') || pathname.startsWith('/modules/')) {
       return sanitizeServerError(await app.handle(req), req);
     }
 
@@ -243,6 +246,11 @@ moduleManager.init(io).catch((err) => {
 });
 
 usageMeter.start();
+
+// Resolve the public egress IP up front (cached, retried in the background on
+// failure) so the first exchange IP-whitelist rejection can already name the
+// address to add.
+warmEgressIp();
 
 io.on('connection', (socket) => {
   console.log(`Client connected: ${socket.id}`);

@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { sql } from 'drizzle-orm';
 import { db } from '../db';
+import { getEgressIp } from '../services/egressIp';
 import pkg from '../../package.json';
 
 const PORT = Number(process.env.PORT) || 3001;
@@ -29,4 +30,10 @@ export const healthRoutes = new Elysia({ prefix: '/health' })
     socketPort: PORT + 1,
     uptime: Math.floor((Date.now() - startedAt) / 1000),
     db: await pingDb(),
-  }));
+  }))
+
+  // Intentionally public: the egress IP is the source address exchanges already
+  // see on every outgoing request — not a secret — and users configuring an API
+  // key IP whitelist need it. (The index.ts auth gate only covers /api/* and
+  // /ws/*.) `ip` is null while the resolve is unknown/in flight.
+  .get('/egress-ip', async () => ({ ip: await getEgressIp() }));
