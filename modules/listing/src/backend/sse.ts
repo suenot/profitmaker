@@ -102,6 +102,9 @@ export function createSseService(deps: SseServiceDeps): SseService {
         ? maxBackoffMs
         : Math.min(1000 * 2 ** (failures - 1), maxBackoffMs);
     if (billing) {
+      // A poll interval armed by an earlier non-billing failure ladder would
+      // keep firing billed REST calls against the exhausted balance — disarm it.
+      stopPolling();
       setStatus('billing');
       later(retryIn, connect);
       return;

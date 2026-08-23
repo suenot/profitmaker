@@ -253,6 +253,49 @@ it('billing failures (HTTP 402) surface a dedicated state and retry at the slow 
   expect(vi.getTimerCount()).toBe(0);
 });
 
+it('a 402 -> 500 -> 402 sequence disarms the REST poll interval in the billing branch (regression)', async () => {
+  // 402 puts the service in 'billing'; a later 500 blip walks the normal
+  // failure ladder (startPolling + 'polling'); the NEXT 402 returns to
+  // 'billing' — and must take the 30s poll interval down with it, or billed
+  // getListings calls keep firing while the balance is exhausted.
+  const statuses: string[] = [];
+  const getListings = vi.fn(async () => []);
+  const fetchImpl = vi.fn<FetchLike>()
+    .mockResolvedValueOnce(new Response(null, { status: 402 }))
+    .mockResolvedValueOnce(new Response(null, { status: 500 }))
+    .mockResolvedValue(new Response(null, { status: 402 }));
+  const svc = createSseService({
+    baseUrl: 'https://api.test', apiKey: 'k',
+    api: { getListings },
+    ring: createListingRing(),
+    onListing: vi.fn(),
+    onStatus: (s) => statuses.push(s),
+    fetchImpl,
+  });
+  svc.start();
+  await vi.advanceTimersByTimeAsync(0); // t=0: 402 -> billing, slow retry at 300s
+  expect(svc.getStatus().status).toBe('billing');
+
+  await vi.advanceTimersByTimeAsync(300_000); // t=300: 500 -> ladder: polling armed
+  expect(svc.getStatus().status).toBe('polling');
+
+  await vi.advanceTimersByTimeAsync(60_000); // t=360: reconnect 402s -> billing again
+  expect(svc.getStatus().status).toBe('billing');
+  expect(statuses).toEqual(['billing', 'polling', 'billing']);
+
+  // Whatever polls fired up to the transition are the ladder's own (at most
+  // the t=330 and t=360 ticks); from here on — across the next slow billing
+  // retry — not a single REST call may fire.
+  const pollsAtTransition = getListings.mock.calls.length;
+  expect(pollsAtTransition).toBeLessThanOrEqual(2);
+  await vi.advanceTimersByTimeAsync(300_000); // t=660: next billing retry (402 again)
+  expect(fetchImpl).toHaveBeenCalledTimes(4);
+  expect(getListings.mock.calls.length).toBe(pollsAtTransition); // zero leaked REST calls
+  expect(svc.getStatus().status).toBe('billing');
+  svc.stop();
+  expect(vi.getTimerCount()).toBe(0);
+});
+
 it('stop() clears every timer', async () => {
   const svc = createSseService({
     baseUrl: 'https://api.test', apiKey: 'k',
