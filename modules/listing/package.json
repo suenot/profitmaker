@@ -31,8 +31,8 @@
     },
     "backend": {
       "entry": "dist/backend/index.js",
-      "routes": ["/listings/recent", "/trends", "/stats", "/exchanges", "/status"],
-      "services": ["sse", "poller"]
+      "routes": ["/stream", "/listings/recent", "/trends", "/stats", "/exchanges", "/status"],
+      "services": ["user-streams", "poller"]
     }
   },
   "peerDependencies": {

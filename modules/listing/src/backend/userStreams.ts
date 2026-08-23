@@ -7,9 +7,16 @@ import { createSseService, type SseService } from './sse';
 /** Handle onto one user's live stream: their ring plus fan-out subscriptions. */
 export interface UserStream {
   ring: ListingRing;
-  onListing(cb: (l: ModuleListing) => void): void;
-  onStatus(cb: (s: SseStatus) => void): void;
+  /** Register a listener; the return value unsubscribes it. */
+  onListing(cb: (l: ModuleListing) => void): () => void;
+  /** Register a listener; the return value unsubscribes it. */
+  onStatus(cb: (s: SseStatus) => void): () => void;
   status(): SseStatus;
+  /**
+   * False once the entry was torn down (idle timeout, upstream 401, dispose).
+   * A torn-down stream goes silent — poll this to notice and reconnect.
+   */
+  isLive(): boolean;
 }
 
 export type UserStreamFailReason = Extract<KeyResult, { ok: false }>['reason'];
@@ -150,9 +157,16 @@ export function createUserStreams(deps: UserStreamsDeps): UserStreams {
     });
     const view: UserStream = {
       ring,
-      onListing: (cb) => { listingListeners.add(cb); },
-      onStatus: (cb) => { statusListeners.add(cb); },
+      onListing: (cb) => {
+        listingListeners.add(cb);
+        return () => { listingListeners.delete(cb); };
+      },
+      onStatus: (cb) => {
+        statusListeners.add(cb);
+        return () => { statusListeners.delete(cb); };
+      },
       status: () => sse.getStatus().status,
+      isLive: () => entries.get(userId) === entry,
     };
     const entry: Entry = { sse, ring, view, subscribers: 0 };
     entries.set(userId, entry);
@@ -176,7 +190,11 @@ export function createUserStreams(deps: UserStreamsDeps): UserStreams {
       }
       const res = await inFlight;
       if (!res.ok) return { ok: false, reason: res.reason };
-      res.entry.subscribers += 1; // every caller of a shared mint is a subscriber
+      // Every caller of a shared mint is a subscriber — and, like the
+      // existing-entry path above, must cancel any idle teardown its
+      // predecessor's removal may have armed between the continuations.
+      cancelIdle(res.entry);
+      res.entry.subscribers += 1;
       return { ok: true, stream: res.entry.view };
     },
 

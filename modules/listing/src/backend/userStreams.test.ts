@@ -311,6 +311,53 @@ describe('createUserStreams', () => {
     expect(h.authCalls()).toBe(2); // user-3 never reached the resolver
   });
 
+  it('pending-share acquires each count as a subscriber; teardown waits for the last one (cancelIdle regression)', async () => {
+    // Pins the Task-4 review fix (pending-share increment must mirror the
+    // existing-entry path: count the subscriber, cancel any armed idle timer).
+    // The literal interleave — the first caller's removal landing between the
+    // two shared-mint continuations — is unreachable from outside: promise FIFO
+    // runs both continuations before any caller reaction can remove. So this
+    // pins the reachable invariant: both parallel callers are counted, the
+    // entry survives idle while either is live, and tears down after the last.
+    const h = harness({ idleMs: 60_000 });
+    const first = h.streams.acquire('user-1');
+    const second = h.streams.acquire('user-1');
+    expect((await first).ok).toBe(true);
+    h.streams.subscriberRemoved('user-1'); // first caller disconnects on resolution
+    expect((await second).ok).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(h.streams.activeCount()).toBe(1); // second subscriber keeps the entry live
+
+    h.streams.subscriberRemoved('user-1');
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(h.streams.activeCount()).toBe(0);
+    h.streams.dispose();
+  });
+
+  it('onListing/onStatus return unsubscribe; isLive() flips on teardown', async () => {
+    const h = harness({
+      stream: () => delayedStream(1_000, [sseFrame('hello', { ok: true }), sseFrame('listing', payload(5))]),
+    });
+    const a = await h.streams.acquire('user-1');
+    if (!a.ok) throw new Error('expected acquire to succeed');
+    expect(a.stream.isLive()).toBe(true);
+
+    const seen: number[] = [];
+    const offListing = a.stream.onListing((l) => seen.push(l.id));
+    const offStatus = a.stream.onStatus(() => seen.push(-1));
+    offListing();
+    offStatus();
+
+    await vi.advanceTimersByTimeAsync(1_000); // hello + listing arrive: nobody hears them
+    expect(seen).toEqual([]);
+
+    h.streams.subscriberRemoved('user-1');
+    await vi.advanceTimersByTimeAsync(60_000); // idle teardown
+    expect(a.stream.isLive()).toBe(false);
+    h.streams.dispose();
+  });
+
   it('rings and listeners are isolated per user; the ring caps at 50', async () => {
     const h = harness({
       stream: (auth) => (auth === 'Bearer sk_1'

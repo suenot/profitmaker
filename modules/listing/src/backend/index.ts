@@ -1,50 +1,52 @@
 import { Elysia } from 'elysia';
 import type { BackendModule, BackendModuleContext, BackendModuleHandles, ModuleJobs } from '@profitmaker/module-sdk';
 import type { RouteStatus } from '../shared/types';
-import { AuthError, BillingError, createListingApi, type FetchLike, type ListingApi } from './apiClient';
-import { createListingRing, type ListingRing } from './ringBuffer';
-import { createSseService, type SseService } from './sse';
+import { AuthError, BillingError, createListingApi, type FetchLike } from './apiClient';
 import { startPoller, type PollerCache } from './poller';
+import { createUserStreams, type UserStream, type UserStreamFailReason, type UserStreams } from './userStreams';
 
 /** DI seam for tests: inject a fake fetch and/or env without touching process.env. */
 export interface BuildDeps {
   fetchImpl?: FetchLike;
   env?: Record<string, string | undefined>;
+  /** Test seam: shrink the per-user stream pool (limit) or its idle window (idleMs). */
+  userStreamsTuning?: { limit?: number; idleMs?: number };
 }
+
+/** Downstream heartbeat cadence on /stream (SSE comment frame). */
+const HEARTBEAT_MS = 25_000;
+/** retryAfterSeconds advertised on transient /stream acquire failures. */
+const RETRY_AFTER_SECONDS = 60;
+const DEFAULT_API_BASE_URL = 'https://api.listingapis.com';
+const DEFAULT_AUTH_INTERNAL_URL = 'https://auth.marketmaker.cc';
 
 type PollerHandle = { cache(): PollerCache; dispose(): void };
 
 /**
- * Wire the listing module together: ListingAPIs client -> SSE stream + REST
- * poller -> ring buffer + caches -> Elysia routes and /m/listing socket events.
+ * Wire the listing module together.
  *
- * Failure philosophy: a missing or rejected key NEVER crashes start(). The
- * module always comes up; data routes answer 503 (no key) or a mapped upstream
- * error (401/402/502) while they have nothing to serve, /status always answers
- * 200 so the frontend can show why, and last-good data keeps being served for
- * as long as it exists.
+ * Shared, server-keyed data: ListingAPIs client -> REST poller -> caches ->
+ * /trends /stats /exchanges /status. Per-user live data: auth-service bridge
+ * mints a ListingAPIs key per terminal user -> one upstream SSE stream each ->
+ * /stream (downstream SSE) and /listings/recent read the calling user's ring.
+ *
+ * Failure philosophy: a missing key or secret NEVER crashes start(). The module
+ * always comes up; every route answers its own config error while it has
+ * nothing to serve, /status always answers 200 so the frontend can show why,
+ * and last-good data keeps being served for as long as it exists.
  */
 export function buildModule(deps: BuildDeps = {}): { backend: BackendModule; __reset(): void } {
-  let sse: SseService | null = null;
   let poller: PollerHandle | null = null;
-  let ring: ListingRing = createListingRing();
+  let userStreams: UserStreams | null = null;
   let keyConfigured = false;
-  /** Last error surfacing from the tracked API client; null again on the next success. */
+  /** Last error surfacing from the poller's refreshes; null again on the next full success. */
   let lastApiFailure: unknown = null;
 
-  /** Track success/failure of every API call so routes can map upstream errors. */
-  function tracked<T>(op: () => Promise<T>): Promise<T> {
-    return op().then(
-      (value) => { lastApiFailure = null; return value; },
-      (err) => { lastApiFailure = err; throw err; },
-    );
-  }
-
   /**
-   * Map the last API failure to a route response. Auth/Billing errors carry no
-   * status field, so the classes are mapped explicitly; anything else upstream
-   * is a generic 502. Returns null when the last call succeeded — the caller
-   * then serves whatever (possibly empty) data it has.
+   * Map the last poller failure to a route response. Auth/Billing errors carry
+   * no status field, so the classes are mapped explicitly; anything else
+   * upstream is a generic 502. Returns null when the last refresh succeeded —
+   * the caller then serves whatever (possibly empty) data it has.
    */
   function upstreamFailureResponse(set: ErrorStatusSetter): { error: string } | null {
     const err = lastApiFailure;
@@ -55,63 +57,83 @@ export function buildModule(deps: BuildDeps = {}): { backend: BackendModule; __r
     return { error: 'ListingAPIs unavailable' };
   }
 
+  /** Map a per-user acquire failure to its /stream or /listings/recent response. */
+  function acquireFailureResponse(set: ErrorStatusSetter, reason: UserStreamFailReason): { error: string; retryAfterSeconds?: number } {
+    switch (reason) {
+      case 'no-subscription':
+        return errResponse(set, 403, 'listingapis subscription required');
+      case 'bridge-unconfigured':
+        return errResponse(set, 503, 'terminal auth bridge not configured');
+      case 'cap':
+        set.status = 503;
+        return { error: 'listing streams busy, retry shortly', retryAfterSeconds: RETRY_AFTER_SECONDS };
+      case 'auth-unavailable':
+        set.status = 503;
+        return { error: 'auth service unavailable, retry shortly', retryAfterSeconds: RETRY_AFTER_SECONDS };
+      case 'bad-response':
+        set.status = 503;
+        return { error: 'auth service returned an unexpected response', retryAfterSeconds: RETRY_AFTER_SECONDS };
+    }
+  }
+
   const backend: BackendModule = {
     async start(ctx: BackendModuleContext): Promise<BackendModuleHandles> {
       const env = deps.env ?? process.env;
       const apiKey = env.LISTINGAPIS_API_KEY ?? null;
-      const baseUrl = env.LISTINGAPIS_API_URL ?? 'https://api.listingapis.com';
+      const baseUrl = env.LISTINGAPIS_API_URL ?? DEFAULT_API_BASE_URL;
+      // `|| null`: an empty secret is "not configured", same as an absent one.
+      const authSecret = env.AUTH_INTERNAL_SECRET || null;
+      const authInternalUrl = env.AUTH_INTERNAL_URL ?? DEFAULT_AUTH_INTERNAL_URL;
       keyConfigured = apiKey !== null;
 
-      if (!apiKey) {
-        ctx.log.warn('LISTINGAPIS_API_KEY not set — module runs inactive: data routes return 503, /status reports keyConfigured=false');
-      } else {
-        const rawApi = createListingApi({ baseUrl, apiKey, fetchImpl: deps.fetchImpl });
-        // Only getListings is per-call tracked (its backfill/poll outcome maps
-        // directly to /listings/recent errors). The poller's three endpoints are
-        // reported as an aggregate through onSettled — per-call tracking would
-        // let a later-settling success clear a sibling endpoint's failure.
-        const api: ListingApi = {
-          ...rawApi,
-          getListings: (limit) => tracked(() => rawApi.getListings(limit)),
-        };
+      if (!apiKey && !authSecret) {
+        ctx.log.warn('neither LISTINGAPIS_API_KEY nor AUTH_INTERNAL_SECRET set — module runs inactive: every route answers its own config error');
+      } else if (!apiKey) {
+        ctx.log.warn('LISTINGAPIS_API_KEY not set — /trends /stats /exchanges answer 503');
+      }
+      if (!authSecret) {
+        ctx.log.warn('AUTH_INTERNAL_SECRET not set — /stream and /listings/recent answer 503 (terminal auth bridge not configured)');
+      }
 
-        ring = createListingRing(100);
-        sse = createSseService({
-          baseUrl, apiKey, api, ring,
-          fetchImpl: deps.fetchImpl,
-          onListing: (listing) => ctx.io.emit('listing', listing),
-          onStatus: (status) => ctx.io.emit('status', status),
-        });
+      if (apiKey) {
         poller = startPoller({
-          api: rawApi,   // untracked: the aggregate outcome flows through onSettled
+          api: createListingApi({ baseUrl, apiKey, fetchImpl: deps.fetchImpl }),
           jobs: guardJobs(ctx),
           storage: ctx.storage,
           // null only when trends+stats+exchanges ALL succeeded; any failure
           // keeps the mapped error (401/402/502) in front of empty routes.
           onSettled: (err) => { lastApiFailure = err; },
         });
+      }
 
-        try {
-          await sse.backfill(100);
-        } catch (err) {
-          // Bad key / exhausted balance must not crash module start: routes
-          // keep serving last-good data (or the mapped error) and /status reports it.
-          ctx.log.warn(`listing backfill failed: ${err instanceof Error ? err.message : String(err)}`);
-        }
-        sse.start();
+      if (authSecret) {
+        userStreams = createUserStreams({
+          authInternalUrl,
+          authInternalSecret: authSecret,
+          apiBaseUrl: baseUrl,
+          fetchImpl: deps.fetchImpl,
+          limit: deps.userStreamsTuning?.limit,
+          idleMs: deps.userStreamsTuning?.idleMs,
+        });
       }
 
       const routes = new Elysia()
-        .get('/listings/recent', ({ query, set }) => {
-          if (!keyConfigured) return errResponse(set, 503, 'LISTINGAPIS_API_KEY is not configured');
+        .get('/listings/recent', async ({ request, query, set }) => {
+          const userId = request.headers.get('x-pm-user-id');
+          if (!userId) return errResponse(set, 401, 'user identity required');
+          if (!userStreams) return errResponse(set, 503, 'terminal auth bridge not configured');
+          const acquired = await userStreams.acquire(userId);
+          if (!acquired.ok) return acquireFailureResponse(set, acquired.reason);
           const limit = Math.min(Math.max(Number(query.limit ?? 50) || 50, 1), 100);
-          const listings = ring.recent(limit);
-          if (listings.length === 0) {
-            const mapped = upstreamFailureResponse(set);
-            if (mapped) return mapped;
+          // One-shot read: release the subscriber right away so the entry
+          // idles out after its warm window instead of pinning a stream per call.
+          try {
+            return { listings: acquired.stream.ring.recent(limit) };
+          } finally {
+            userStreams.subscriberRemoved(userId);
           }
-          return { listings };
         })
+        .get('/stream', ({ request, set }) => streamDownstream(request, set, userStreams))
         .get('/trends', ({ set }) => {
           if (!keyConfigured) return errResponse(set, 503, 'LISTINGAPIS_API_KEY is not configured');
           const cache = poller?.cache();
@@ -140,11 +162,20 @@ export function buildModule(deps: BuildDeps = {}): { backend: BackendModule; __r
           return { exchanges: cache?.exchanges ?? [] };
         })
         .get('/status', () => {
-          const s = sse?.getStatus();
+          // Shared-data health only (the global SSE service is gone): the
+          // poller's freshness and the last aggregate refresh failure.
+          const cache = poller?.cache();
+          const status: RouteStatus = !keyConfigured
+            ? 'inactive'
+            : lastApiFailure !== null
+              ? 'reconnecting'
+              : cache?.updatedAt != null
+                ? 'up'
+                : 'connecting';
           return {
-            status: (s?.status ?? 'inactive') as RouteStatus,
-            lastEventAt: s?.lastEventAt ?? null,
-            lastError: s?.lastError ?? null,
+            status,
+            lastEventAt: cache?.updatedAt ?? null,
+            lastError: lastApiFailure instanceof Error ? lastApiFailure.message : lastApiFailure != null ? String(lastApiFailure) : null,
             keyConfigured,
           };
         });
@@ -153,21 +184,103 @@ export function buildModule(deps: BuildDeps = {}): { backend: BackendModule; __r
     },
 
     async stop() {
-      sse?.stop();
+      userStreams?.dispose();
+      userStreams = null;
       poller?.dispose();
+      poller = null;
     },
   };
+
+  function streamDownstream(
+    request: Request,
+    set: ErrorStatusSetter,
+    pool: UserStreams | null,
+  ): Promise<Response | { error: string; retryAfterSeconds?: number }> {
+    const userId = request.headers.get('x-pm-user-id');
+    if (!userId) return Promise.resolve(errResponse(set, 401, 'user identity required'));
+    if (!pool) return Promise.resolve(errResponse(set, 503, 'terminal auth bridge not configured'));
+    return pool.acquire(userId).then((acquired) => {
+      if (!acquired.ok) return acquireFailureResponse(set, acquired.reason);
+      return downstreamSse(userId, acquired.stream, pool, request.signal);
+    });
+  }
 
   return {
     backend,
     __reset() {
-      sse = null;
       poller = null;
-      ring = createListingRing();
+      userStreams = null;
       keyConfigured = false;
       lastApiFailure = null;
     },
   };
+}
+
+/**
+ * One downstream SSE connection for one user: a hello frame carrying only the
+ * caller identity (never key material), the user's ring replayed as early
+ * listing frames (events that landed before this subscribe), then live
+ * listing/status relays and a 25s heartbeat comment.
+ *
+ * Closing is driven from three sides: client abort (request.signal), reader
+ * cancel, and the heartbeat tick noticing a silently dead upstream (a 401 key
+ * teardown leaves no callback) — the last one sends a terminal
+ * {"state":"expired"} status frame first so the client knows to re-acquire.
+ */
+function downstreamSse(userId: string, stream: UserStream, pool: UserStreams, signal: AbortSignal): Response {
+  const encoder = new TextEncoder();
+  let heartbeat: ReturnType<typeof setInterval> | null = null;
+  let offListing: (() => void) | null = null;
+  let offStatus: (() => void) | null = null;
+  let closed = false;
+  let cleanup: () => void = () => {};
+
+  const readable = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const send = (frame: string) => {
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(frame));
+        } catch {
+          cleanup(); // reader gone without an abort signal: treat as disconnect
+        }
+      };
+      cleanup = () => {
+        if (closed) return;
+        closed = true;
+        if (heartbeat) { clearInterval(heartbeat); heartbeat = null; }
+        offListing?.();
+        offStatus?.();
+        pool.subscriberRemoved(userId);
+        try { controller.close(); } catch { /* already closed by cancel() */ }
+      };
+
+      send(`event: hello\ndata: ${JSON.stringify({ userId })}\n\n`);
+      // Backfill oldest-first (the ring is newest-first): the client sees
+      // pre-subscribe events in the same order live ones arrive.
+      for (const listing of [...stream.ring.recent()].reverse()) {
+        send(`event: listing\ndata: ${JSON.stringify(listing)}\n\n`);
+      }
+      offListing = stream.onListing((listing) => send(`event: listing\ndata: ${JSON.stringify(listing)}\n\n`));
+      offStatus = stream.onStatus((s) => send(`event: status\ndata: ${JSON.stringify({ state: s })}\n\n`));
+      heartbeat = setInterval(() => {
+        if (!stream.isLive()) {
+          send('event: status\ndata: {"state":"expired"}\n\n');
+          cleanup();
+          return;
+        }
+        send(': heartbeat\n\n');
+      }, HEARTBEAT_MS);
+      pool.subscriberAdded(userId);
+      if (signal.aborted) cleanup();
+      else signal.addEventListener('abort', cleanup, { once: true });
+    },
+    cancel: () => cleanup(),
+  });
+
+  return new Response(readable, {
+    headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-store' },
+  });
 }
 
 /**
