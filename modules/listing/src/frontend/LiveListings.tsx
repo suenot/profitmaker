@@ -29,7 +29,11 @@ export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
         if (!res.ok) { setBanner('ListingAPIs unavailable'); return; }
         setBanner(null);
         const data = (await res.json()) as { listings: ModuleListing[] };
-        setListings(data.listings.slice(0, MAX_ROWS));
+        // Socket rows that arrived while the backfill was in flight are fresher
+        // than this server-side snapshot — merge-dedupe instead of replacing.
+        setListings((prev) => prev.length
+          ? [...data.listings.filter((b) => !prev.some((p) => p.id === b.id)), ...prev].slice(0, MAX_ROWS)
+          : data.listings.slice(0, MAX_ROWS));
       } catch { if (alive) setBanner('connection error'); }
       try {
         const st = await terminal.api.fetch('/api/modules/listing/status');
@@ -60,8 +64,8 @@ export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
     return () => { socket.off('listing', onListing); socket.off('status', onStatus); };
   }, [socket, widgetId, terminal, cfg.exchanges, cfg.types, cfg.sound, cfg.toast, cfg.autoRestore]);
 
-  const visible = listings; // already filtered on push; backfill rows also pass through filter render-time:
-  const rows = visible.filter((l) => passFilters(l, cfg));
+  // Pushes are already filtered; backfill rows also pass through the filter at render time.
+  const rows = listings.filter((l) => passFilters(l, cfg));
 
   return (
     <div className="pm-lw-live">
