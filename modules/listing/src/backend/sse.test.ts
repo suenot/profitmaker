@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createSseService } from './sse';
+import type { FetchLike } from './apiClient';
 import { createListingRing } from './ringBuffer';
 import { makeHeartbeatStream, makeStream, sseFrame } from './testStreams';
 import type { ModuleListing } from '../shared/types';
@@ -23,7 +24,7 @@ afterEach(() => { vi.useRealTimers(); });
 it('connects, goes up on the first frame, and emits listing events', async () => {
   const seen: ModuleListing[] = [];
   const statuses: string[] = [];
-  const fetchImpl = vi.fn<typeof fetch>(async () => okResponse([
+  const fetchImpl = vi.fn<FetchLike>(async () => okResponse([
     sseFrame('hello', { ok: true }),
     sseFrame('listing', payload(5)),
   ]));
@@ -57,7 +58,7 @@ it('connects, goes up on the first frame, and emits listing events', async () =>
 it('treats heartbeat comments as liveness: up transition and watchdog feed', async () => {
   const statuses: string[] = [];
   // comment pings at t=0, 40s, 80s (watchdog deadline is last traffic + 45s)
-  const fetchImpl = vi.fn<typeof fetch>(async () =>
+  const fetchImpl = vi.fn<FetchLike>(async () =>
     new Response(makeHeartbeatStream(40_000, 3), { status: 200 }));
   const svc = createSseService({
     baseUrl: 'https://api.test', apiKey: 'k',
@@ -95,7 +96,7 @@ it('reassembles frames split across chunks', async () => {
     ring: createListingRing(),
     onListing: (l) => seen.push(l),
     onStatus: vi.fn(),
-    fetchImpl: vi.fn<typeof fetch>(async () =>
+    fetchImpl: vi.fn<FetchLike>(async () =>
       okResponse(['event: list', `ing\ndata: ${JSON.stringify(payload(11))}\n\n`])),
   });
   svc.start();
@@ -109,7 +110,7 @@ it('falls back to REST polling after two consecutive failures', async () => {
   const statuses: string[] = [];
   const getListings = vi.fn<(limit: number) => Promise<ModuleListing[]>>()
     .mockResolvedValue([LISTING(7), LISTING(8)]);
-  const fetchImpl = vi.fn<typeof fetch>()
+  const fetchImpl = vi.fn<FetchLike>()
     .mockResolvedValueOnce(new Response(null, { status: 503 })) // non-200 counts as failure
     .mockRejectedValueOnce(new Error('down'))
     .mockRejectedValueOnce(new Error('down'));
@@ -150,7 +151,7 @@ it('recovers to up when SSE reconnects while polling', async () => {
     .mockResolvedValueOnce([LISTING(7)])
     .mockResolvedValueOnce([LISTING(8)])
     .mockResolvedValue([LISTING(99)]); // must never be fetched after recovery
-  const fetchImpl = vi.fn<typeof fetch>()
+  const fetchImpl = vi.fn<FetchLike>()
     .mockRejectedValueOnce(new Error('down'))
     .mockRejectedValueOnce(new Error('down'))
     .mockResolvedValueOnce(okResponse([sseFrame('hello', { ok: true }), sseFrame('listing', payload(9))]));
@@ -188,7 +189,7 @@ it('emits onListing only for new ids (ring dedup)', async () => {
     ring,
     onListing: (l) => seen.push(l.id),
     onStatus: vi.fn(),
-    fetchImpl: vi.fn<typeof fetch>(async () => okResponse([
+    fetchImpl: vi.fn<FetchLike>(async () => okResponse([
       sseFrame('listing', payload(5)),
       sseFrame('listing', payload(5)), // duplicate id
       sseFrame('listing', payload(6)),
@@ -212,7 +213,7 @@ it('backfill fills the ring via REST without emitting onListing', async () => {
     ring,
     onListing,
     onStatus: vi.fn(),
-    fetchImpl: vi.fn<typeof fetch>(),
+    fetchImpl: vi.fn<FetchLike>(),
   });
   await svc.backfill();
   expect(getListings).toHaveBeenCalledWith(100);
@@ -229,7 +230,7 @@ it('stop() clears every timer', async () => {
     ring: createListingRing(),
     onListing: vi.fn(),
     onStatus: vi.fn(),
-    fetchImpl: vi.fn<typeof fetch>().mockRejectedValueOnce(new Error('down')),
+    fetchImpl: vi.fn<FetchLike>().mockRejectedValueOnce(new Error('down')),
   });
   svc.start();
   await vi.advanceTimersByTimeAsync(0); // failure -> reconnect scheduled in 1s

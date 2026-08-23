@@ -26,10 +26,18 @@ interface RestListing {
   created_at: string;
 }
 
+/**
+ * Structural fetch signature. The ambient `typeof fetch` changes shape once
+ * Elysia's types (and with them Bun's globals, whose fetch has `preconnect`)
+ * enter the program, so injected fetches are typed structurally: both the real
+ * fetch and test doubles stay assignable either way.
+ */
+export type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
+
 export interface ListingApiOptions {
   baseUrl: string;
   apiKey: string | null;
-  fetchImpl?: typeof fetch;
+  fetchImpl?: FetchLike;
   timeoutMs?: number;
 }
 

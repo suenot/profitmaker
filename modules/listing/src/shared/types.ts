@@ -67,6 +67,9 @@ export interface StatsData {
 
 export type SseStatus = 'connecting' | 'up' | 'reconnecting' | 'polling';
 
+/** /status route status: any SSE state, or 'inactive' when no API key is configured. */
+export type RouteStatus = SseStatus | 'inactive';
+
 /** Widget config for listing.live (persisted via widget `config`). */
 export interface LiveConfig {
   exchanges?: string[];

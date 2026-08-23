@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  AuthError, BillingError, MissingKeyError, UpstreamError, createListingApi,
+  AuthError, BillingError, MissingKeyError, UpstreamError, createListingApi, type FetchLike,
 } from './apiClient';
 import type { ModuleListing } from '../shared/types';
 
@@ -11,7 +11,7 @@ const A_LISTING: ModuleListing = {
 };
 
 function apiWith(status: number, body: unknown, headers: Record<string, string> = {}) {
-  const fetchImpl = vi.fn<typeof fetch>(async () =>
+  const fetchImpl = vi.fn<FetchLike>(async () =>
     new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } }));
   return { api: createListingApi({ baseUrl: 'https://api.test', apiKey: 'k', fetchImpl }), fetchImpl };
 }

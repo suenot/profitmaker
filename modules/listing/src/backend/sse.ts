@@ -1,5 +1,5 @@
 import type { ModuleListing, SseStatus } from '../shared/types';
-import type { ListingApi } from './apiClient';
+import type { FetchLike, ListingApi } from './apiClient';
 import type { ListingRing } from './ringBuffer';
 import { normalizeStreamEvent } from './normalize';
 
@@ -20,7 +20,7 @@ export interface SseServiceDeps {
   onListing: (listing: ModuleListing) => void;
   /** fired on every status transition */
   onStatus: (status: SseStatus) => void;
-  fetchImpl?: typeof fetch;
+  fetchImpl?: FetchLike;
   heartbeatTimeoutMs?: number;
   pollIntervalMs?: number;
   maxBackoffMs?: number;
