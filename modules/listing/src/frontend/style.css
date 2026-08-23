@@ -1,1 +1,30 @@
 /* ListingAPIs module styles — selectors prefixed .pm-lw- */
+
+/* Live Listings widget */
+.pm-lw-live { display: flex; flex-direction: column; height: 100%; padding: 8px;
+  color: var(--terminal-text); background: var(--terminal-widget); font-size: 12px; }
+.pm-lw-live__bar { display: flex; gap: 8px; margin-bottom: 6px; }
+.pm-lw-badge { padding: 1px 8px; border-radius: 999px; font-size: 11px; border: 1px solid var(--terminal-border); }
+.pm-lw-badge--up { color: var(--terminal-positive); border-color: var(--terminal-positive); }
+.pm-lw-badge--warn { color: var(--terminal-muted); }
+.pm-lw-banner { padding: 6px 8px; margin-bottom: 6px; border-radius: 6px; font-size: 12px;
+  color: var(--terminal-text); background: color-mix(in srgb, var(--terminal-accent) 25%, transparent);
+  border: 1px solid var(--terminal-accent); }
+.pm-lw-empty { margin: auto; color: var(--terminal-muted); }
+.pm-lw-live__rows { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.pm-lw-row { display: grid; grid-template-columns: 64px 1fr 88px 52px 20px; gap: 6px;
+  align-items: center; padding: 3px 6px; border-radius: 4px; }
+.pm-lw-row:hover { background: color-mix(in srgb, var(--terminal-accent) 12%, transparent); }
+.pm-lw-row__time { color: var(--terminal-muted); font-variant-numeric: tabular-nums; }
+.pm-lw-row__ex { color: var(--terminal-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-lw-row__sym { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-lw-row__type { font-size: 10px; color: var(--terminal-muted);
+  border: 1px solid var(--terminal-border); border-radius: 999px; text-align: center; }
+.pm-lw-row--new-pair .pm-lw-row__type { color: var(--terminal-accent); border-color: var(--terminal-accent); }
+.pm-lw-row__link { color: var(--terminal-muted); text-decoration: none; }
+
+/* Live Listings settings panel */
+.pm-lw-settings { padding: 12px; color: var(--terminal-text); font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+.pm-lw-settings__section { font-weight: 600; margin-top: 8px; color: var(--terminal-muted); }
+.pm-lw-settings__row { display: flex; align-items: center; gap: 8px; }
+.pm-lw-settings__hint { color: var(--terminal-muted); font-size: 12px; }
