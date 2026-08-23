@@ -15,7 +15,12 @@ export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
   const [listings, setListings] = React.useState<ModuleListing[]>([]);
   const [status, setStatus] = React.useState<RouteStatus>('connecting');
   const [banner, setBanner] = React.useState<string | null>(null);
-  const cfg = { ...defaultLiveConfig(), ...(config as Partial<ReturnType<typeof defaultLiveConfig>>) };
+  const cfg = React.useMemo(
+    () => ({ ...defaultLiveConfig(), ...(config as Partial<ReturnType<typeof defaultLiveConfig>>) }),
+    // Stable while the persisted config object is unchanged: nested arrays keep
+    // their references, so the socket effect below does not resubscribe every render.
+    [config],
+  );
 
   // Backfill + current status on mount.
   React.useEffect(() => {
@@ -24,17 +29,22 @@ export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
       try {
         const res = await terminal.api.fetch('/api/modules/listing/listings/recent?limit=50');
         if (!alive) return;
-        if (res.status === 402) { setBanner('MM balance exhausted — top up at auth.marketmaker.cc'); return; }
-        if (res.status === 503) { setBanner('LISTINGAPIS_API_KEY is not configured on the server'); return; }
-        if (!res.ok) { setBanner('ListingAPIs unavailable'); return; }
-        setBanner(null);
-        const data = (await res.json()) as { listings: ModuleListing[] };
-        // Socket rows that arrived while the backfill was in flight are fresher
-        // than this server-side snapshot — merge-dedupe instead of replacing.
-        setListings((prev) => prev.length
-          ? [...data.listings.filter((b) => !prev.some((p) => p.id === b.id)), ...prev].slice(0, MAX_ROWS)
-          : data.listings.slice(0, MAX_ROWS));
+        if (res.status === 402) setBanner('MM balance exhausted — top up at auth.marketmaker.cc');
+        else if (res.status === 503) setBanner('LISTINGAPIS_API_KEY is not configured on the server');
+        else if (!res.ok) setBanner('ListingAPIs unavailable');
+        else {
+          setBanner(null);
+          const data = (await res.json()) as { listings: ModuleListing[] };
+          // Socket rows that arrived while the backfill was in flight are fresher
+          // than this server-side snapshot — merge-dedupe instead of replacing,
+          // keeping the live rows on top (backfill survivors are provably older).
+          setListings((prev) => prev.length
+            ? [...prev, ...data.listings.filter((b) => !prev.some((p) => p.id === b.id))].slice(0, MAX_ROWS)
+            : data.listings.slice(0, MAX_ROWS));
+        }
       } catch { if (alive) setBanner('connection error'); }
+      // /status is fetched even when the backfill errored: an early return on
+      // 402/503 would leave the badge stuck on "connecting…" forever.
       try {
         const st = await terminal.api.fetch('/api/modules/listing/status');
         if (alive && st.ok) setStatus(((await st.json()) as { status: RouteStatus }).status);

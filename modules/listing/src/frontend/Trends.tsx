@@ -36,8 +36,9 @@ export function TrendsWidget(_props: WidgetProps) {
     return () => { alive = false; clearInterval(t); };
   }, [terminal]);
 
-  const tickers: TrendingTicker[] = data?.trending_tickers[win === '7d' ? 'last_7_days' : 'last_30_days'] ?? [];
-  const exchanges: TrendingExchange[] = data?.trending_exchanges[win === '7d' ? 'last_7_days' : 'last_30_days'] ?? [];
+  // Optional chaining throughout: upstream may omit either trending field.
+  const tickers: TrendingTicker[] = data?.trending_tickers?.[win === '7d' ? 'last_7_days' : 'last_30_days'] ?? [];
+  const exchanges: TrendingExchange[] = data?.trending_exchanges?.[win === '7d' ? 'last_7_days' : 'last_30_days'] ?? [];
 
   return (
     <div className="pm-lw-trends">
