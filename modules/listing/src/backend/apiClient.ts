@@ -1,4 +1,5 @@
 import type { ModuleListing, StatsData, TrendsData } from '../shared/types';
+import { httpsUrl } from './normalize';
 
 export class MissingKeyError extends Error {
   constructor() { super('LISTINGAPIS_API_KEY is not configured'); this.name = 'MissingKeyError'; }
@@ -91,7 +92,7 @@ export function normalizeRestListing(r: RestListing): ModuleListing {
     fullName: r.ticker_full_name,
     type: r.type === 'New Pair' ? 'new-pair' : 'listing',
     title: r.title,
-    url: r.pairs?.[0]?.url ?? null,
+    url: httpsUrl(r.pairs?.[0]?.url),
     listedAt: r.listing_date ?? null,
     detectedAt: r.created_at ?? null,
     source: null,

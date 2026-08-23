@@ -61,4 +61,16 @@ describe('createListingApi', () => {
     const { api } = apiWith(200, { exchanges: [{ slug: 'binance' }, { slug: 'bybit' }] });
     expect(await api.getExchanges()).toEqual(['binance', 'bybit']);
   });
+
+  it('drops non-https pair urls during REST normalization', async () => {
+    const { api } = apiWith(200, {
+      listings: [{
+        id: 2, exchange_name: 'binance', ticker_symbol: 'X', ticker_full_name: 'X',
+        type: 'Listing', title: 'X listed', pairs: [{ pair: 'X/USDT', url: 'javascript:alert(1)' }],
+        listing_date: '2026-08-23T10:00:00Z', created_at: '2026-08-23T09:59:00Z',
+      }],
+    });
+    const out = await api.getListings(1);
+    expect(out[0].url).toBeNull();
+  });
 });

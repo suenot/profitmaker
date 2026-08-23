@@ -84,6 +84,67 @@ describe('startPoller', () => {
     d.api.getStats.mockRejectedValue(new Error('down'));
     const p = startPoller({ ...d, jobs: { every: () => ({ dispose: () => undefined }) } });
     await expect(p.refresh()).rejects.toThrow('down');
-    expect(p.cache().trends).toBeNull();  // nothing cached
+    expect(p.cache().trends).toEqual(TRENDS);  // partial data still cached: only the failed slot stays empty
+    expect(p.cache().stats).toBeNull();
+  });
+
+  /** Freeze the fire-and-forget kickoff refresh so tests drive refresh() directly. */
+  function freezeKickoff(d: ReturnType<typeof makeDeps>) {
+    const frozen = new Promise<never>(() => {});
+    d.api.getTrends.mockReturnValue(frozen);
+    d.api.getStats.mockReturnValue(frozen);
+    d.api.getExchanges.mockReturnValue(frozen);
+  }
+
+  it('caches partial results and reports the failure when one endpoint fails', async () => {
+    const d = makeDeps();
+    freezeKickoff(d);
+    const settled: unknown[] = [];
+    const p = startPoller({ ...d, jobs: { every: () => ({ dispose: () => undefined }) }, onSettled: (e) => settled.push(e) });
+    d.api.getTrends.mockResolvedValue(TRENDS);
+    d.api.getStats.mockRejectedValue(new Error('stats down'));
+    d.api.getExchanges.mockResolvedValue(['binance']);
+    await expect(p.refresh()).rejects.toThrow('stats down');  // fresh install: the failed slot has nothing to serve
+    expect(p.cache().trends).toEqual(TRENDS);          // successes cached despite the sibling outage
+    expect(p.cache().exchanges).toEqual(['binance']);
+    expect(p.cache().stats).toBeNull();
+    expect(settled).toHaveLength(1);                   // failure reported for route error mapping
+    expect((settled[0] as Error).message).toBe('stats down');
+    expect(d.storageMap.get('trends')).toEqual(TRENDS);  // only successful slots persisted
+    expect(d.storageMap.has('stats')).toBe(false);
+  });
+
+  it('clears the failure flag only when all three endpoints succeed', async () => {
+    const d = makeDeps();
+    freezeKickoff(d);
+    const settled: unknown[] = [];
+    const p = startPoller({ ...d, jobs: { every: () => ({ dispose: () => undefined }) }, onSettled: (e) => settled.push(e) });
+    d.api.getTrends.mockResolvedValue(TRENDS);
+    d.api.getStats.mockRejectedValueOnce(new Error('flaky')).mockResolvedValue(STATS);
+    d.api.getExchanges.mockResolvedValue(['binance']);
+    await expect(p.refresh()).rejects.toThrow('flaky');  // partial outage
+    await p.refresh();                                   // full recovery
+    expect(p.cache().stats).toEqual(STATS);
+    expect(settled).toHaveLength(2);
+    expect((settled[0] as Error).message).toBe('flaky');
+    expect(settled[1]).toBeNull();                       // null == every endpoint succeeded
+  });
+
+  it('never leaves a scheduled tick rejection unhandled', async () => {
+    const unhandled: unknown[] = [];
+    const onUnhandled = (err: unknown) => unhandled.push(err);
+    process.on('unhandledRejection', onUnhandled);
+    try {
+      const d = makeDeps();
+      d.api.getTrends.mockRejectedValue(new Error('down'));
+      let tick!: () => void;
+      const p = startPoller({ ...d, jobs: { every: (_ms: number, fn: () => void) => { tick = fn; return { dispose: () => undefined }; } } });
+      tick();  // scheduled tick on a fresh install with the upstream down
+      await new Promise((r) => setTimeout(r, 10));  // let any rejection surface
+      expect(unhandled).toEqual([]);
+      await expect(p.refresh()).rejects.toThrow('down');  // direct callers still see the failure
+    } finally {
+      process.off('unhandledRejection', onUnhandled);
+    }
   });
 });

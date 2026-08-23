@@ -5,7 +5,7 @@ import { createListingRing } from './ringBuffer';
 import { makeHeartbeatStream, makeStream, sseFrame } from './testStreams';
 import type { ModuleListing } from '../shared/types';
 
-const STREAM_URL = 'https://api.test/api/public/stream?type=listing';
+const STREAM_URL = 'https://api.test/api/public/stream';
 
 const LISTING = (id: number): ModuleListing => ({
   id, exchange: 'e', symbol: `S${id}`, fullName: `S${id}`, type: 'listing',
@@ -221,6 +221,30 @@ it('backfill fills the ring via REST without emitting onListing', async () => {
   await svc.backfill(5);
   expect(getListings).toHaveBeenLastCalledWith(5);
   expect(onListing).not.toHaveBeenCalled();
+});
+
+it('retries billing failures (HTTP 402) at the slow 5-minute cadence', async () => {
+  const fetchImpl = vi.fn<FetchLike>().mockResolvedValue(new Response(null, { status: 402 }));
+  const svc = createSseService({
+    baseUrl: 'https://api.test', apiKey: 'k',
+    api: { getListings: vi.fn(async () => []) },
+    ring: createListingRing(),
+    onListing: vi.fn(),
+    onStatus: vi.fn(),
+    fetchImpl,
+  });
+  svc.start();
+  await vi.advanceTimersByTimeAsync(0); // billing failure #1 -> slow retry scheduled
+  expect(fetchImpl).toHaveBeenCalledTimes(1);
+  expect(fetchImpl.mock.calls[0][0]).toBe(STREAM_URL);
+
+  await vi.advanceTimersByTimeAsync(60_000); // past the normal 60s backoff cap
+  expect(fetchImpl).toHaveBeenCalledTimes(1); // still waiting: connections are billed
+
+  await vi.advanceTimersByTimeAsync(240_000); // t=300s: the slow retry fires
+  expect(fetchImpl).toHaveBeenCalledTimes(2);  // fails again -> another 5-minute wait
+  svc.stop();
+  expect(vi.getTimerCount()).toBe(0);
 });
 
 it('stop() clears every timer', async () => {

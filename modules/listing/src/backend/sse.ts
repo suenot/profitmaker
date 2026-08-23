@@ -29,6 +29,8 @@ export interface SseServiceDeps {
 const DEFAULT_HEARTBEAT_TIMEOUT_MS = 45_000;
 const DEFAULT_POLL_INTERVAL_MS = 30_000;
 const DEFAULT_MAX_BACKOFF_MS = 60_000;
+/** Billing failures (HTTP 402) retry slowly: every stream connection is billed. */
+const BILLING_RETRY_MS = 300_000;
 const POLL_PAGE_SIZE = 10;
 
 /**
@@ -83,19 +85,27 @@ export function createSseService(deps: SseServiceDeps): SseService {
     watchdog = setTimeout(() => fail('heartbeat timeout'), heartbeatTimeoutMs);
   }
 
-  function fail(reason: string) {
+  function fail(reason: string, billing = false) {
     attempt += 1; // whatever attempt was live is now dead
     if (controller) { controller.abort(); controller = null; }
     clearWatchdog();
     lastError = reason;
     failures += 1;
+    // A 402 means the account is out of balance, not a flaky stream — reconnect
+    // attempts cost money, so back off at the slow 5-minute cadence instead of
+    // the (much faster) backoff cap.
+    const retryIn = billing
+      ? BILLING_RETRY_MS
+      : failures >= 2
+        ? maxBackoffMs
+        : Math.min(1000 * 2 ** (failures - 1), maxBackoffMs);
     if (failures >= 2) {
       startPolling();
       setStatus('polling');
-      later(maxBackoffMs, connect); // keep retrying SSE alongside the polls
+      later(retryIn, connect); // keep retrying SSE alongside the polls
     } else {
       setStatus('reconnecting');
-      later(Math.min(1000 * 2 ** (failures - 1), maxBackoffMs), connect);
+      later(retryIn, connect);
     }
   }
 
@@ -154,13 +164,15 @@ export function createSseService(deps: SseServiceDeps): SseService {
     setStatus(failures >= 2 ? 'polling' : status === 'connecting' ? 'connecting' : 'reconnecting');
     controller = new AbortController();
     try {
-      const res = await doFetch(`${deps.baseUrl}/api/public/stream?type=listing`, {
+      // No `type` filter: the API's non-empty type param is restrictive, so it
+      // would exclude New Pair events; widget-side filters handle types instead.
+      const res = await doFetch(`${deps.baseUrl}/api/public/stream`, {
         headers: { Authorization: `Bearer ${deps.apiKey}`, Accept: 'text/event-stream' },
         signal: controller.signal,
       });
       if (myAttempt !== attempt) return; // superseded while fetching
       if (!res.ok || !res.body) {
-        fail(`stream HTTP ${res.status}`);
+        fail(`stream HTTP ${res.status}`, res.status === 402);
         return;
       }
       resetWatchdog();

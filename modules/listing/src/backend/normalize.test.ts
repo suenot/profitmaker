@@ -24,6 +24,16 @@ describe('normalizeStreamEvent', () => {
     });
     expect(out).toMatchObject({ id: 9, exchange: 'okx', symbol: 'WIF', fullName: 'dogwifhat', type: 'new-pair' });
   });
+  it('drops non-https urls so javascript: never reaches an href', () => {
+    const out = normalizeStreamEvent({ id: 10, exchange: 'e', symbol: 'S', type: 'listing', title: 't', url: 'javascript:alert(1)' });
+    expect(out?.url).toBeNull();
+    const http = normalizeStreamEvent({ id: 11, exchange: 'e', symbol: 'S', type: 'listing', title: 't', url: 'http://e.com/x' });
+    expect(http?.url).toBeNull();
+  });
+  it('keeps https urls', () => {
+    const out = normalizeStreamEvent({ id: 12, exchange: 'e', symbol: 'S', type: 'listing', title: 't', url: 'https://e.com/x' });
+    expect(out?.url).toBe('https://e.com/x');
+  });
   it('returns null for garbage', () => {
     expect(normalizeStreamEvent(null)).toBeNull();
     expect(normalizeStreamEvent({ nope: 1 })).toBeNull();

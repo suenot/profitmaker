@@ -66,11 +66,13 @@ export function buildModule(deps: BuildDeps = {}): { backend: BackendModule; __r
         ctx.log.warn('LISTINGAPIS_API_KEY not set — module runs inactive: data routes return 503, /status reports keyConfigured=false');
       } else {
         const rawApi = createListingApi({ baseUrl, apiKey, fetchImpl: deps.fetchImpl });
+        // Only getListings is per-call tracked (its backfill/poll outcome maps
+        // directly to /listings/recent errors). The poller's three endpoints are
+        // reported as an aggregate through onSettled — per-call tracking would
+        // let a later-settling success clear a sibling endpoint's failure.
         const api: ListingApi = {
+          ...rawApi,
           getListings: (limit) => tracked(() => rawApi.getListings(limit)),
-          getTrends: () => tracked(() => rawApi.getTrends()),
-          getStats: () => tracked(() => rawApi.getStats()),
-          getExchanges: () => tracked(() => rawApi.getExchanges()),
         };
 
         ring = createListingRing(100);
@@ -80,7 +82,14 @@ export function buildModule(deps: BuildDeps = {}): { backend: BackendModule; __r
           onListing: (listing) => ctx.io.emit('listing', listing),
           onStatus: (status) => ctx.io.emit('status', status),
         });
-        poller = startPoller({ api, jobs: guardJobs(ctx), storage: ctx.storage });
+        poller = startPoller({
+          api: rawApi,   // untracked: the aggregate outcome flows through onSettled
+          jobs: guardJobs(ctx),
+          storage: ctx.storage,
+          // null only when trends+stats+exchanges ALL succeeded; any failure
+          // keeps the mapped error (401/402/502) in front of empty routes.
+          onSettled: (err) => { lastApiFailure = err; },
+        });
 
         try {
           await sse.backfill(100);
@@ -163,8 +172,8 @@ export function buildModule(deps: BuildDeps = {}): { backend: BackendModule; __r
 
 /**
  * jobs.every adapter: a scheduled tick that throws (or rejects) must never take
- * the host process down — the poller's own callback has no catch, so every fn
- * scheduled through the module is wrapped here and failures only logged.
+ * the host process down — defense in depth on top of the callbacks' own catch,
+ * so every fn scheduled through the module is wrapped here and failures only logged.
  */
 function guardJobs(ctx: BackendModuleContext): ModuleJobs {
   return {
@@ -189,4 +198,10 @@ function errResponse(set: ErrorStatusSetter, status: number, message: string) {
   return { error: message };
 }
 
-export default buildModule();
+/**
+ * Host loader contract (packages/server modules/manager): it imports this entry
+ * and requires mod.default.start — exporting the whole buildModule() result
+ * (`{backend, __reset}`) would make the module refuse to start. Tests use the
+ * named buildModule() export; __reset stays reachable through it.
+ */
+export default buildModule().backend;

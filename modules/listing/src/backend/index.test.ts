@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildModule, type BuildDeps } from './index';
+import backendEntry, { buildModule, type BuildDeps } from './index';
 import type { FetchLike } from './apiClient';
 import { makeStream, sseFrame } from './testStreams';
 import type { StatsData, TrendsData } from '../shared/types';
@@ -64,6 +64,8 @@ interface FakeUpstreamOptions {
   restStatus?: number;
   /** Non-200 status for the SSE stream endpoint. */
   streamStatus?: number;
+  /** Non-200 status for the stats endpoint only (partial outage). */
+  statsStatus?: number;
 }
 
 /** fetchImpl fake routing by URL: SSE stream, listings, trends, stats, exchanges. */
@@ -74,6 +76,7 @@ function makeFetchImpl(opts: FakeUpstreamOptions = {}) {
       if (opts.streamStatus && opts.streamStatus !== 200) return new Response(null, { status: opts.streamStatus });
       return new Response(makeStream(opts.stream ?? [sseFrame('hello', { ok: true })]), { status: 200 });
     }
+    if (url.includes('/stats') && opts.statsStatus && opts.statsStatus !== 200) return new Response(null, { status: opts.statsStatus });
     if (opts.restStatus && opts.restStatus !== 200) return new Response(null, { status: opts.restStatus });
     if (url.includes('/listings')) return Response.json({ listings: opts.listings ?? [] });
     if (url.includes('/trends')) return Response.json(opts.trends ?? TRENDS);
@@ -112,6 +115,14 @@ describe('listing backend module', () => {
     await cleanup?.();
     cleanup = null;
     vi.useRealTimers();
+  });
+
+  it('default export is a startable backend module (host loader contract)', () => {
+    // packages/server modules/manager imports the built entry and requires
+    // mod.default.start — anything else throws "backend entry ... has no
+    // start() export" and the module never starts in the terminal.
+    expect(backendEntry).toBeDefined();
+    expect(typeof backendEntry.start).toBe('function');
   });
 
   it('serves 503 on every data route without a key, but /status stays 200 inactive', async () => {
@@ -189,5 +200,22 @@ describe('listing backend module', () => {
     const body = await res.json();
     expect(body.keyConfigured).toBe(true);
     expect(body.lastError).toContain(String(streamStatus));
+  });
+
+  it('serves 200 with partial data when only one poller endpoint fails', async () => {
+    const { routes } = await startApp({ env: { LISTINGAPIS_API_KEY: 'k' }, fetchImpl: makeFetchImpl({ statsStatus: 402 }) });
+    await vi.advanceTimersByTimeAsync(0); // poller refresh settles: trends+exchanges cached, stats failed
+
+    // successful endpoints keep serving fresh data with 200
+    const trends = await get(routes, '/trends');
+    expect(trends.status).toBe(200);
+    expect(await trends.json()).toEqual({ trends: TRENDS, updatedAt: expect.any(Number) });
+    const exchanges = await (await get(routes, '/exchanges')).json();
+    expect(exchanges).toEqual({ exchanges: ['binance', 'bybit'] });
+
+    // the failed slot has nothing to serve: the mapped upstream error, not 200 null
+    const stats = await get(routes, '/stats');
+    expect(stats.status).toBe(402);
+    expect(await stats.json()).toEqual({ error: 'MM balance exhausted' });
   });
 });
