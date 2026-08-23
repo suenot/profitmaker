@@ -201,6 +201,19 @@ export interface ModuleLogger {
   error(...args: unknown[]): void;
 }
 
+/**
+ * Runtime context the host hands to a backend module's `start()`.
+ *
+ * ## Caller identity
+ *
+ * Routes mounted by this module receive two host-minted headers on every
+ * request: `x-pm-user-id` (the local terminal user id) and, when the caller
+ * has an auth-service identity, `x-pm-user-auth-id` (the auth.marketmaker.cc
+ * user id). They are present only for session/SSO callers and ABSENT for
+ * server-to-server (API_TOKEN) calls. Client-supplied `x-pm-user-*` values are
+ * stripped by the host before dispatch — never trust a value you did not get
+ * from the host; only the host's are real.
+ */
 export interface BackendModuleContext {
   id: string;
   version: string;

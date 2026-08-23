@@ -13,6 +13,7 @@ import {
 } from '@profitmaker/module-sdk';
 
 import { buildBackendModuleContext } from './context';
+import { peekRequestIdentity } from './requestIdentity';
 
 /**
  * On-disk state for a single installed module. Persisted in
@@ -362,7 +363,7 @@ class ModuleManager {
         if (maybeModules && typeof (maybeModules as Promise<unknown>).then === 'function') {
           await maybeModules;
         }
-        this.dispatchMap.set(id, (req) => plugin.handle(this.rewriteForModule(id, req)));
+        this.dispatchMap.set(id, (req) => plugin.handle(rewriteForModule(id, req)));
       }
     } catch (err) {
       // A module that threw partway through start() may already have registered
@@ -571,35 +572,6 @@ class ModuleManager {
   // ---- request dispatch ---------------------------------------------------
 
   /**
-   * Strip the `/api/modules/<id>` mount prefix so the module's Elysia plugin
-   * sees root-relative paths (the SDK contract: "routes relative to root; host
-   * mounts under /api/modules/<id>"). `/api/modules/hello/ping` -> `/ping`.
-   *
-   * Also strips the caller's credentials. Module code is third-party and
-   * in-process; forwarding the raw `Authorization` header would hand it the
-   * caller's session token / SSO JWT, letting it act as that user against the
-   * auth service and every other API — an escalation beyond this process.
-   * Modules authenticate via their own context, never by replaying the caller's
-   * bearer token.
-   */
-  private rewriteForModule(id: string, request: Request): Request {
-    const url = new URL(request.url);
-    const prefix = `/api/modules/${id}`;
-    if (url.pathname === prefix || url.pathname.startsWith(prefix + '/')) {
-      url.pathname = url.pathname.slice(prefix.length) || '/';
-    }
-    // A standalone Headers has no guard, so `cookie` (a forbidden header name
-    // on a Request-guarded Headers) can actually be removed here.
-    const sanitized = new Headers(request.headers);
-    sanitized.delete('authorization');
-    sanitized.delete('proxy-authorization');
-    sanitized.delete('cookie');
-    // Two-step: the inner Request carries over method/body/url, the outer one
-    // replaces the header set without having to re-plumb the body stream.
-    return new Request(new Request(url, request), { headers: sanitized });
-  }
-
-  /**
    * Route an `/api/modules/:id/*` request to the module's Elysia plugin.
    * Returns 404 when the module is unknown/disabled/has no backend routes.
    */
@@ -671,6 +643,53 @@ class ModuleManager {
       return null;
     }
   }
+}
+
+/**
+ * Strip the `/api/modules/<id>` mount prefix so the module's Elysia plugin
+ * sees root-relative paths (the SDK contract: "routes relative to root; host
+ * mounts under /api/modules/<id>"). `/api/modules/hello/ping` -> `/ping`.
+ *
+ * Also strips the caller's credentials. Module code is third-party and
+ * in-process; forwarding the raw `Authorization` header would hand it the
+ * caller's session token / SSO JWT, letting it act as that user against the
+ * auth service and every other API — an escalation beyond this process.
+ * Modules authenticate via their own context, never by replaying the caller's
+ * bearer token.
+ *
+ * Caller identity is the one thing re-added — as host-minted opaque ids: any
+ * client-supplied `x-pm-user-*` headers are dropped, then the identity the
+ * auth gate recorded for THIS Request is set (see requestIdentity). A module
+ * can trust `x-pm-user-id`/`x-pm-user-auth-id` precisely because the caller
+ * can never be their author. No recorded identity (server-to-server calls) →
+ * the headers are simply absent.
+ *
+ * Module-level (not a method) because it touches no manager state — and so it
+ * is unit-testable without constructing a manager.
+ */
+export function rewriteForModule(id: string, request: Request): Request {
+  const url = new URL(request.url);
+  const prefix = `/api/modules/${id}`;
+  if (url.pathname === prefix || url.pathname.startsWith(prefix + '/')) {
+    url.pathname = url.pathname.slice(prefix.length) || '/';
+  }
+  // A standalone Headers has no guard, so `cookie` (a forbidden header name
+  // on a Request-guarded Headers) can actually be removed here.
+  const sanitized = new Headers(request.headers);
+  sanitized.delete('authorization');
+  sanitized.delete('proxy-authorization');
+  sanitized.delete('cookie');
+  // Identity is host-minted: drop caller assertions, then set recorded identity.
+  sanitized.delete('x-pm-user-id');
+  sanitized.delete('x-pm-user-auth-id');
+  const identity = peekRequestIdentity(request);
+  if (identity) {
+    sanitized.set('x-pm-user-id', identity.userId);
+    if (identity.authUserId) sanitized.set('x-pm-user-auth-id', identity.authUserId);
+  }
+  // Two-step: the inner Request carries over method/body/url, the outer one
+  // replaces the header set without having to re-plumb the body stream.
+  return new Request(new Request(url, request), { headers: sanitized });
 }
 
 /** Process-wide singleton. */

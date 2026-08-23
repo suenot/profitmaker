@@ -19,6 +19,7 @@ import { proxyRoutes } from './routes/proxy';
 import { moduleRoutes, moduleAssetRoutes } from './routes/modules';
 import { uiRoutes } from './routes/ui';
 import { moduleManager } from './modules/manager';
+import { authGate } from './middleware/authGate';
 import { registerBuiltinProviders } from './providers';
 import { cleanupCache } from './services/ccxtCache';
 import { warmEgressIp } from './services/egressIp';
@@ -131,35 +132,7 @@ const app = new Elysia()
   .use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] }))
   .use(healthRoutes)
   .use(authRoutes)
-  .onBeforeHandle(async ({ request, set }) => {
-    const pathname = new URL(request.url).pathname;
-
-    // Skip auth for health, auth routes, and static files
-    if (pathname === '/health' || pathname.startsWith('/api/auth')) return;
-    if (!pathname.startsWith('/api/') && !pathname.startsWith('/ws')) return;
-
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-
-    if (!token) {
-      set.status = 401;
-      return { error: 'Access token required' };
-    }
-
-    // Allow server-to-server API_TOKEN (no-op when none is configured)
-    if (matchesApiToken(token)) return;
-
-    // Allow valid local user session token
-    const user = await validateSession(db, token);
-    if (user) return;
-
-    // Allow a valid SSO JWT from auth.marketmaker.cc (verified via public JWKS).
-    const ssoUser = await getSsoUserFromToken(token);
-    if (ssoUser) return;
-
-    set.status = 403;
-    return { error: 'Invalid token' };
-  })
+  .onBeforeHandle(authGate)
   .use(dashboardRoutes)
   .use(widgetRoutes)
   .use(groupRoutes)
