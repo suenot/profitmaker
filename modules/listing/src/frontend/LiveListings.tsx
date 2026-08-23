@@ -1,8 +1,9 @@
 import React from 'react';
-import { getTerminal, useModuleSocket } from '@profitmaker/module-sdk';
+import { getTerminal } from '@profitmaker/module-sdk';
 import type { WidgetProps } from '@profitmaker/module-sdk';
 import type { ModuleListing, RouteStatus } from '../shared/types';
 import { defaultLiveConfig, formatTime, passFilters, playBeep, restoreIfMinimized, type DashboardStoreShape } from './lib';
+import { subscribeListingStream } from './streamClient';
 
 const MAX_ROWS = 100;
 const STATUS_LABEL: Record<RouteStatus, string> = {
@@ -11,14 +12,13 @@ const STATUS_LABEL: Record<RouteStatus, string> = {
 
 export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
   const terminal = getTerminal();
-  const socket = useModuleSocket('listing');
   const [listings, setListings] = React.useState<ModuleListing[]>([]);
   const [status, setStatus] = React.useState<RouteStatus>('connecting');
   const [banner, setBanner] = React.useState<string | null>(null);
   const cfg = React.useMemo(
     () => ({ ...defaultLiveConfig(), ...(config as Partial<ReturnType<typeof defaultLiveConfig>>) }),
     // Stable while the persisted config object is unchanged: nested arrays keep
-    // their references, so the socket effect below does not resubscribe every render.
+    // their references, so the stream effect below does not resubscribe every render.
     [config],
   );
 
@@ -35,7 +35,7 @@ export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
         else {
           setBanner(null);
           const data = (await res.json()) as { listings: ModuleListing[] };
-          // Socket rows that arrived while the backfill was in flight are fresher
+          // Stream rows that arrived while the backfill was in flight are fresher
           // than this server-side snapshot — merge-dedupe instead of replacing,
           // keeping the live rows on top (backfill survivors are provably older).
           setListings((prev) => prev.length
@@ -53,26 +53,39 @@ export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
     return () => { alive = false; };
   }, [terminal]);
 
-  // Live pushes.
+  // Live pushes over the per-user /stream SSE (the module's socket namespace is gone).
   React.useEffect(() => {
-    if (!socket) return;
-    const onListing = (raw: unknown) => {
-      const listing = raw as ModuleListing;
-      if (!passFilters(listing, cfg)) return;
-      setListings((prev) => [listing, ...prev].slice(0, MAX_ROWS));
-      setBanner(null);
-      if (cfg.toast) terminal.notify.info(`Listing: ${listing.symbol} on ${listing.exchange}`);
-      if (cfg.sound) playBeep();
-      if (cfg.autoRestore) {
-        const store = terminal.stores.useDashboardStore as unknown as DashboardStoreShape & { getState(): DashboardStoreShape };
-        restoreIfMinimized(store.getState(), widgetId);
-      }
-    };
-    const onStatus = (raw: unknown) => setStatus(raw as RouteStatus);
-    socket.on('listing', onListing);
-    socket.on('status', onStatus);
-    return () => { socket.off('listing', onListing); socket.off('status', onStatus); };
-  }, [socket, widgetId, terminal, cfg.exchanges, cfg.types, cfg.sound, cfg.toast, cfg.autoRestore]);
+    const sub = subscribeListingStream({
+      url: '/api/modules/listing/stream',
+      fetchImpl: (path, init) => terminal.api.fetch(path, init),
+      onListing(listing) {
+        if (!passFilters(listing, cfg)) return;
+        setListings((prev) => [listing, ...prev].slice(0, MAX_ROWS));
+        setBanner(null);
+        setStatus('up'); // a delivered listing proves the stream is live
+        if (cfg.toast) terminal.notify.info(`Listing: ${listing.symbol} on ${listing.exchange}`);
+        if (cfg.sound) playBeep();
+        if (cfg.autoRestore) {
+          const store = terminal.stores.useDashboardStore as unknown as DashboardStoreShape & { getState(): DashboardStoreShape };
+          restoreIfMinimized(store.getState(), widgetId);
+        }
+      },
+      onStatus(state) {
+        // 'expired' means the server tore the stream down for a re-acquire —
+        // the client reconnects, so show that on the badge instead.
+        setStatus(state === 'expired' ? 'reconnecting' : (state as RouteStatus));
+      },
+      onError(err) {
+        if (err.status === 401) setBanner('sign in required');
+        else if (err.status === 403) setBanner('listingapis subscription required at auth.marketmaker.cc');
+        else if (err.status === 503) setBanner('busy, retrying');
+        else setBanner('connection error');
+        // 401/403 never reconnect — leave the badge alone; the banner says why.
+        if (err.status !== 401 && err.status !== 403) setStatus('reconnecting');
+      },
+    });
+    return () => sub.close();
+  }, [widgetId, terminal, cfg.exchanges, cfg.types, cfg.sound, cfg.toast, cfg.autoRestore]);
 
   // Pushes are already filtered; backfill rows also pass through the filter at render time.
   const rows = listings.filter((l) => passFilters(l, cfg));
