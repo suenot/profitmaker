@@ -48,16 +48,18 @@ const LISTING: ModuleListing = {
 
 function subscribe(over: Partial<Parameters<typeof subscribeListingStream>[0]> = {}) {
   const onListing = vi.fn();
+  const onBackfill = vi.fn();
   const onStatus = vi.fn();
   const onError = vi.fn();
   const sub = subscribeListingStream({
     url: '/api/modules/listing/stream',
     onListing,
+    onBackfill,
     onStatus,
     onError,
     ...over,
   });
-  return { sub, onListing, onStatus, onError };
+  return { sub, onListing, onBackfill, onStatus, onError };
 }
 
 beforeEach(() => { vi.useFakeTimers(); });
@@ -90,10 +92,38 @@ describe('subscribeListingStream: frame dispatch', () => {
     s.push('event: hello\ndata: {"userId":"u1"}\n\n');
     s.push(`event: listing\ndata: ${JSON.stringify(LISTING)}\n\n`);
     s.push('event: status\ndata: {"state":"up"}\n\n');
+    s.push('event: status\ndata: {"state":"billing"}\n\n');
     await flush();
     expect(h.onListing).toHaveBeenCalledTimes(1);
     expect(h.onListing).toHaveBeenCalledWith(LISTING);
     expect(h.onStatus).toHaveBeenCalledWith('up');
+    expect(h.onStatus).toHaveBeenCalledWith('billing');
+    expect(h.onError).not.toHaveBeenCalled();
+    h.sub.close();
+  });
+
+  it('dispatches replayed backfill frames to onBackfill, never onListing', async () => {
+    const s = pushableStream();
+    const { fetchImpl } = endpoint([s.response]);
+    const h = subscribe({ fetchImpl });
+    await flush();
+    s.push(`event: backfill\ndata: ${JSON.stringify(LISTING)}\n\n`);
+    s.push(`event: listing\ndata: ${JSON.stringify(LISTING)}\n\n`);
+    await flush();
+    expect(h.onBackfill).toHaveBeenCalledTimes(1);
+    expect(h.onBackfill).toHaveBeenCalledWith(LISTING);
+    expect(h.onListing).toHaveBeenCalledTimes(1); // only the live frame alerted
+    h.sub.close();
+  });
+
+  it('ignores backfill frames when no onBackfill is registered', async () => {
+    const s = pushableStream();
+    const { fetchImpl } = endpoint([s.response]);
+    const h = subscribe({ fetchImpl, onBackfill: undefined });
+    await flush();
+    s.push(`event: backfill\ndata: ${JSON.stringify(LISTING)}\n\n`);
+    await flush();
+    expect(h.onListing).not.toHaveBeenCalled();
     expect(h.onError).not.toHaveBeenCalled();
     h.sub.close();
   });

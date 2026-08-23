@@ -225,7 +225,7 @@ export function buildModule(deps: BuildDeps = {}): { backend: BackendModule; __r
 /**
  * One downstream SSE connection for one user: a hello frame carrying only the
  * caller's auth-service id (never key material), the user's ring replayed as
- * early listing frames (events that landed before this subscribe), then live
+ * early backfill frames (events that landed before this subscribe), then live
  * listing/status relays and a 25s heartbeat comment.
  *
  * Closing is driven from four sides: client abort (request.signal), reader
@@ -272,10 +272,22 @@ function downstreamSse(authUserId: string, stream: UserStream, release: () => vo
       // The hello frame carries the caller's auth-service id under the `userId`
       // field name — identity only, never any key material.
       send(`event: hello\ndata: ${JSON.stringify({ userId: authUserId })}\n\n`);
+      // Catch up a transition that fired before this subscriber attached: an
+      // upstream 402 during acquire, say, already put the entry in 'billing',
+      // and setStatus only speaks on change — without this the late subscriber
+      // would never learn. 'connecting' is the initial value (nothing happened
+      // yet) and would be pure noise.
+      const currentStatus = stream.status();
+      if (currentStatus !== 'connecting') {
+        send(`event: status\ndata: ${JSON.stringify({ state: currentStatus })}\n\n`);
+      }
       // Backfill oldest-first (the ring is newest-first): the client sees
-      // pre-subscribe events in the same order live ones arrive.
+      // pre-subscribe events in the same order live ones arrive. Replayed
+      // frames go out as `backfill`, not `listing`: they already fired their
+      // alerts on the connection that first saw them, and a reconnecting or
+      // second tab must not toast/beep each row again.
       for (const listing of [...stream.ring.recent()].reverse()) {
-        send(`event: listing\ndata: ${JSON.stringify(listing)}\n\n`);
+        send(`event: backfill\ndata: ${JSON.stringify(listing)}\n\n`);
       }
       offListing = stream.onListing((listing) => send(`event: listing\ndata: ${JSON.stringify(listing)}\n\n`));
       offStatus = stream.onStatus((s) => send(`event: status\ndata: ${JSON.stringify({ state: s })}\n\n`));

@@ -9,8 +9,9 @@ import type { ModuleListing, StreamFrameStatus } from '../shared/types';
  * frames are `\n\n`-delimited:
  *
  *   event: hello\ndata: {"userId":...}
- *   event: listing\ndata: {...ModuleListing}
- *   event: status\ndata: {"state":"up"|"connecting"|"reconnecting"|"polling"|"expired"}
+ *   event: listing\ndata: {...ModuleListing}          — live, alert-worthy
+ *   event: backfill\ndata: {...ModuleListing}         — ring replay, no alerts
+ *   event: status\ndata: {"state":"up"|"connecting"|"reconnecting"|"polling"|"billing"|"expired"}
  *   : heartbeat
  *
  * This client owns the whole connection lifecycle: incremental frame parsing
@@ -35,6 +36,13 @@ export interface SubscribeListingStreamOptions {
   /** Defaults to the global fetch; the widget passes `terminal.api.fetch`. */
   fetchImpl?: StreamFetch;
   onListing(listing: ModuleListing): void;
+  /**
+   * Ring-replayed frames (events that predate this subscribe). Same payload
+   * shape as onListing but never alert-worthy: they already fired on the
+   * connection that first saw them. Optional — a consumer that ignores
+   * history simply never hears about backfill frames.
+   */
+  onBackfill?(listing: ModuleListing): void;
   onStatus(state: StreamFrameStatus): void;
   onError(error: ListingStreamError): void;
 }
@@ -147,10 +155,15 @@ export function subscribeListingStream(opts: SubscribeListingStreamOptions): Lis
     attempt = 0;
     const parsed = parseSseFrame(frame);
     if (!parsed) return;
-    if (parsed.event === 'listing') {
+    if (parsed.event === 'listing' || parsed.event === 'backfill') {
       const data = parseJson(parsed.data);
-      if (data && typeof data === 'object') opts.onListing(data as ModuleListing);
-      else opts.onError({ status: 0, message: 'malformed listing frame data' });
+      if (!(data && typeof data === 'object')) {
+        opts.onError({ status: 0, message: `malformed ${parsed.event} frame data` });
+      } else if (parsed.event === 'backfill') {
+        opts.onBackfill?.(data as ModuleListing);
+      } else {
+        opts.onListing(data as ModuleListing);
+      }
     } else if (parsed.event === 'status') {
       // A status frame whose state is missing or not one of the protocol's
       // carries nothing actionable — ignore it rather than surfacing noise.
@@ -182,7 +195,7 @@ export function parseSseFrame(frame: string): { event: string; data: string } | 
   return { event, data: dataLines.join('\n') };
 }
 
-const STREAM_FRAME_STATES = new Set<string>(['connecting', 'up', 'reconnecting', 'polling', 'expired']);
+const STREAM_FRAME_STATES = new Set<string>(['connecting', 'up', 'reconnecting', 'polling', 'billing', 'expired']);
 
 /** Narrow a parsed status-frame state to the protocol union; unknown strings are noise. */
 function isStreamFrameState(v: unknown): v is StreamFrameStatus {
@@ -201,8 +214,13 @@ function networkError(err: unknown): ListingStreamError {
   return { status: 0, message: err instanceof Error ? err.message : String(err) };
 }
 
-/** Best-effort error message: the JSON body's `error` field, else the raw text. */
-async function errorMessage(res: Response): Promise<string> {
+/**
+ * Best-effort error message: the JSON body's `error` field, else the raw text.
+ * Exported for the widget's one-shot fetches, so every surface shows the
+ * server's own words (e.g. "terminal auth bridge not configured") instead of a
+ * generic guess.
+ */
+export async function errorMessage(res: Response): Promise<string> {
   let text = '';
   try {
     text = await res.text();

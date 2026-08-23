@@ -65,7 +65,12 @@ export interface StatsData {
   pair_stats: { most_common_quote_currencies: { quote: string; count: number }[] };
 }
 
-export type SseStatus = 'connecting' | 'up' | 'reconnecting' | 'polling';
+/**
+ * Per-stream connection state. 'billing' is upstream HTTP 402: the account is
+ * out of MM balance — the service keeps retrying at its own slow cadence while
+ * in it, and never degrades to REST polling (those calls bill too).
+ */
+export type SseStatus = 'connecting' | 'up' | 'reconnecting' | 'polling' | 'billing';
 
 /** /status route status: any SSE state, or 'inactive' when no API key is configured. */
 export type RouteStatus = SseStatus | 'inactive';

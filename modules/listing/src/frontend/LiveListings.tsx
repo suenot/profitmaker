@@ -6,9 +6,23 @@ import { defaultLiveConfig, formatTime, passFilters, playBeep, restoreIfMinimize
 import { subscribeListingStream } from './streamClient';
 
 const MAX_ROWS = 100;
+/** One banner text for every balance-exhausted surface (upstream 402, relayed 'billing' state). */
+const BILLING_BANNER = 'MM balance exhausted — top up at auth.marketmaker.cc';
 const STATUS_LABEL: Record<RouteStatus, string> = {
-  connecting: 'connecting…', up: 'live', reconnecting: 'reconnecting…', polling: 'polling', inactive: 'no key',
+  connecting: 'connecting…', up: 'live', reconnecting: 'reconnecting…', polling: 'polling',
+  // Displayed only if a 'billing' state ever reaches the badge; the widget
+  // normally surfaces it as BILLING_BANNER instead and keeps the badge as-is.
+  billing: 'no balance', inactive: 'no key',
 };
+
+/**
+ * Merge older backfill rows under the live ones, deduped by id, capped: rows
+ * that already streamed in are provably fresher than any replayed snapshot.
+ */
+const mergeBackfill = (prev: ModuleListing[], incoming: ModuleListing[]): ModuleListing[] =>
+  prev.length
+    ? [...prev, ...incoming.filter((b) => !prev.some((p) => p.id === b.id))].slice(0, MAX_ROWS)
+    : incoming.slice(0, MAX_ROWS);
 
 export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
   const terminal = getTerminal();
@@ -38,9 +52,7 @@ export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
           // Stream rows that arrived while the backfill was in flight are fresher
           // than this server-side snapshot — merge-dedupe instead of replacing,
           // keeping the live rows on top (backfill survivors are provably older).
-          setListings((prev) => prev.length
-            ? [...prev, ...data.listings.filter((b) => !prev.some((p) => p.id === b.id))].slice(0, MAX_ROWS)
-            : data.listings.slice(0, MAX_ROWS));
+          setListings((prev) => mergeBackfill(prev, data.listings));
         }
       } catch { if (alive) setBanner('connection error'); }
       // /status is fetched even when the backfill errored: an early return on
@@ -70,7 +82,20 @@ export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
           restoreIfMinimized(store.getState(), widgetId);
         }
       },
+      // Ring replay (reconnect, reload, second tab): merge like the mount
+      // backfill, NEVER through the alert pipeline — these events already
+      // toasted/beeped on the connection that first saw them.
+      onBackfill(listing) {
+        setListings((prev) => mergeBackfill(prev, [listing]));
+      },
       onStatus(state) {
+        if (state === 'billing') {
+          // Upstream 402 relayed as a state, not an HTTP error: the connection
+          // stays open and the server retries on its own cadence — banner only.
+          setBanner(BILLING_BANNER);
+          return;
+        }
+        if (state === 'up') setBanner(null); // recovered: any transient banner is stale
         // 'expired' means the server tore the stream down for a re-acquire —
         // the client reconnects, so show that on the badge instead.
         setStatus(state === 'expired' ? 'reconnecting' : state);

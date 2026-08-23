@@ -304,7 +304,7 @@ describe('listing backend module', () => {
       expect(streamAuths).toEqual(['Bearer sk_1']); // user-2 never connected
     });
 
-    it('streams hello (identity only) and the ring as early backfill listing frames', async () => {
+    it('streams hello (identity only) and the ring as early backfill frames', async () => {
       const { fetchImpl, streamAuths } = makeFetchImpl({
         // listing(7) is buffered on the connect: it lands in the ring while the
         // first subscriber is attached, then stays there for the next one.
@@ -312,17 +312,26 @@ describe('listing backend module', () => {
       });
       const { routes, emitted } = await startApp({ env: BRIDGE_ENV, fetchImpl: fetchImpl });
 
-      // warm the user's stream: one connection consumes the buffered listing
+      // warm the user's stream: one connection consumes the buffered listing.
+      // The chunks are enqueued eagerly, so both upstream frames are processed
+      // before this subscriber attaches — the entry is already 'up' (relayed as
+      // a catch-up status frame) and 7 sits in the ring, replayed as backfill.
       const warm = await asUser(routes, '/stream');
       const warmFrames = collectFrames(warm);
       await vi.advanceTimersByTimeAsync(1_000); // settle the connect's read chain
-      expect(warmFrames.length).toBeGreaterThanOrEqual(2); // hello + live relay of 7
+      expect(warmFrames).toEqual([
+        'event: hello\ndata: {"userId":"user-1"}',
+        'event: status\ndata: {"state":"up"}', // catch-up: the transition predated the attach
+        expect.stringMatching(/^event: backfill\ndata: /),
+      ]);
+      expect(parseFrame(warmFrames[2]).data).toMatchObject({ id: 7 });
       warm.body?.cancel().catch(() => {});
       expect(streamAuths).toEqual(['Bearer sk_1']); // per-user minted key, not the server key
       expect(emitted).toEqual([]); // nothing is pushed over the socket anymore
 
-      // the next subscriber gets hello first, then 7 replayed from the ring —
-      // before any of its own live events (the upstream is quiet by now)
+      // the next subscriber gets hello, the catch-up state, then 7 replayed
+      // from the ring — before any of its own live events (the upstream is
+      // quiet by now)
       const res = await asUser(routes, '/stream');
       expect(res.status).toBe(200);
       expect(res.headers.get('content-type')).toBe('text/event-stream');
@@ -332,9 +341,11 @@ describe('listing backend module', () => {
 
       // first frame is exactly hello with the caller identity — never key material
       expect(frames[0]).toBe('event: hello\ndata: {"userId":"user-1"}');
-      // the pre-subscribe event is served as an early listing frame
-      expect(frames[1]?.startsWith('event: listing\ndata: ')).toBe(true);
-      expect(parseFrame(frames[1]).data).toMatchObject({ id: 7, exchange: 'binance', symbol: 'SYM7' });
+      expect(frames[1]).toBe('event: status\ndata: {"state":"up"}');
+      // the pre-subscribe event is replayed as a backfill frame — a distinct
+      // event so a reconnecting client never re-fires alerts on ring history
+      expect(frames[2]?.startsWith('event: backfill\ndata: ')).toBe(true);
+      expect(parseFrame(frames[2]).data).toMatchObject({ id: 7, exchange: 'binance', symbol: 'SYM7' });
       expect(streamAuths).toEqual(['Bearer sk_1']); // the warm entry was reused, no re-mint
       res.body?.cancel().catch(() => {});
     });
@@ -370,9 +381,15 @@ describe('listing backend module', () => {
       const frames = collectFrames(res);
 
       await vi.advanceTimersByTimeAsync(24_999);
-      expect(frames).toHaveLength(1); // hello only, no heartbeat yet
+      // hello + the catch-up 'up' (the first upstream ping predates the
+      // attach) — no heartbeat yet
+      expect(frames).toHaveLength(2);
       await vi.advanceTimersByTimeAsync(1);
-      expect(frames).toEqual(['event: hello\ndata: {"userId":"user-1"}', ': heartbeat']);
+      expect(frames).toEqual([
+        'event: hello\ndata: {"userId":"user-1"}',
+        'event: status\ndata: {"state":"up"}',
+        ': heartbeat',
+      ]);
       await vi.advanceTimersByTimeAsync(25_000);
       expect(frames[2]).toBe(': heartbeat');
       res.body?.cancel().catch(() => {});
@@ -389,7 +406,9 @@ describe('listing backend module', () => {
       const res = await asUser(routes, '/stream', 'user-1', abort.signal);
       const frames = collectFrames(res);
       await vi.advanceTimersByTimeAsync(0);
-      expect(frames).toHaveLength(1);
+      // hello + the catch-up 'up' (the buffered upstream hello predates the attach)
+      expect(frames).toHaveLength(2);
+      expect(frames[0]).toBe('event: hello\ndata: {"userId":"user-1"}');
 
       abort.abort(); // client disconnects
       await vi.advanceTimersByTimeAsync(6_000); // idle window passes -> entry torn down
@@ -405,6 +424,34 @@ describe('listing backend module', () => {
       expect(frames2[0]).toBe('event: hello\ndata: {"userId":"user-1"}');
       expect(streamAuths).toEqual(['Bearer sk_1', 'Bearer sk_1']); // cached key reused on re-mint path
       again.body?.cancel().catch(() => {});
+    });
+
+    it('relays {"state":"billing"} on an upstream 402 and keeps the downstream open (slow retry)', async () => {
+      const { fetchImpl, streamAuths } = makeFetchImpl({
+        userStream: () => new Response(null, { status: 402 }),
+      });
+      const { routes } = await startApp({ env: BRIDGE_ENV, fetchImpl: fetchImpl });
+      const res = await asUser(routes, '/stream');
+      expect(res.status).toBe(200); // acquire succeeded; the 402 lands async
+      const frames = collectFrames(res);
+
+      await vi.advanceTimersByTimeAsync(1_000); // connect gets the 402: billing state, no teardown
+      expect(frames).toEqual([
+        'event: hello\ndata: {"userId":"user-1"}',
+        'event: status\ndata: {"state":"billing"}',
+      ]);
+
+      // the downstream stays open under the billing retry: heartbeats keep
+      // flowing (no 'expired', the entry is live)
+      await vi.advanceTimersByTimeAsync(24_000);
+      expect(frames[2]).toBe(': heartbeat');
+
+      // the upstream retries at its own slow 5-minute cadence — one reconnect
+      // per window, and the relayed state never flaps
+      await vi.advanceTimersByTimeAsync(275_000);
+      expect(streamAuths).toEqual(['Bearer sk_1', 'Bearer sk_1']);
+      expect(frames.filter((f) => f.includes('"billing"'))).toHaveLength(1);
+      res.body?.cancel().catch(() => {});
     });
 
     it('closes with {"state":"expired"} when the upstream key dies (silent 401 teardown)', async () => {

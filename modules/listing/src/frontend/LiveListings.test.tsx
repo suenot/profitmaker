@@ -129,6 +129,42 @@ describe('LiveListingsWidget', () => {
     expect(fetchImpl.mock.calls.filter(([p]) => p === '/api/modules/listing/stream')).toHaveLength(1);
   });
 
+  it('backfill frames merge rows without firing the alert pipeline (reconnect/replay)', async () => {
+    const body = sseBody();
+    const { notifyInfo, toggleWidgetMinimized } = fakeTerminal(body);
+    const unmount = await renderWidget({ sound: false });
+
+    // A live row first, so the replay must merge under it (dedupe path too).
+    await pushFrame(body, `event: listing\ndata: ${JSON.stringify(LIVE)}\n\n`);
+    expect(notifyInfo).toHaveBeenCalledTimes(1);
+    expect(toggleWidgetMinimized).toHaveBeenCalledTimes(1);
+
+    // Ring replay of an older id: row appears, no second toast/beep/restore.
+    await pushFrame(body, `event: backfill\ndata: ${JSON.stringify(BACKFILL)}\n\n`);
+    expect(document.body.textContent).toContain('PEPE');
+    expect(document.body.textContent).toContain('DOGE');
+    expect(notifyInfo).toHaveBeenCalledTimes(1);
+    expect(toggleWidgetMinimized).toHaveBeenCalledTimes(1);
+
+    // A replayed id the widget already has live is deduped away.
+    await pushFrame(body, `event: backfill\ndata: ${JSON.stringify(LIVE)}\n\n`);
+    expect((document.body.textContent!.match(/DOGE/g) ?? []).length).toBe(1);
+    await unmount();
+  });
+
+  it('maps a relayed billing status frame to the balance banner (upstream 402)', async () => {
+    const body = sseBody();
+    fakeTerminal(body);
+    const unmount = await renderWidget({ sound: false });
+
+    await pushFrame(body, 'event: status\ndata: {"state":"billing"}\n\n');
+    expect(document.body.textContent).toContain('MM balance exhausted — top up at auth.marketmaker.cc');
+    // recovery clears it: the banner must not outlive the condition
+    await pushFrame(body, 'event: status\ndata: {"state":"up"}\n\n');
+    expect(document.body.textContent).not.toContain('MM balance exhausted');
+    await unmount();
+  });
+
   it.each([
     [401, 'sign in required'],
     [403, 'listingapis subscription required at auth.marketmaker.cc'],

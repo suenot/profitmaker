@@ -223,26 +223,32 @@ it('backfill fills the ring via REST without emitting onListing', async () => {
   expect(onListing).not.toHaveBeenCalled();
 });
 
-it('retries billing failures (HTTP 402) at the slow 5-minute cadence', async () => {
+it('billing failures (HTTP 402) surface a dedicated state and retry at the slow 5-minute cadence', async () => {
+  const statuses: string[] = [];
+  const getListings = vi.fn(async () => []);
   const fetchImpl = vi.fn<FetchLike>().mockResolvedValue(new Response(null, { status: 402 }));
   const svc = createSseService({
     baseUrl: 'https://api.test', apiKey: 'k',
-    api: { getListings: vi.fn(async () => []) },
+    api: { getListings },
     ring: createListingRing(),
     onListing: vi.fn(),
-    onStatus: vi.fn(),
+    onStatus: (s) => statuses.push(s),
     fetchImpl,
   });
   svc.start();
   await vi.advanceTimersByTimeAsync(0); // billing failure #1 -> slow retry scheduled
   expect(fetchImpl).toHaveBeenCalledTimes(1);
   expect(fetchImpl.mock.calls[0][0]).toBe(STREAM_URL);
+  expect(statuses).toEqual(['billing']); // a distinct state, not 'reconnecting'
+  expect(getListings).not.toHaveBeenCalled(); // REST polls bill too: never started
 
   await vi.advanceTimersByTimeAsync(60_000); // past the normal 60s backoff cap
   expect(fetchImpl).toHaveBeenCalledTimes(1); // still waiting: connections are billed
 
   await vi.advanceTimersByTimeAsync(240_000); // t=300s: the slow retry fires
   expect(fetchImpl).toHaveBeenCalledTimes(2);  // fails again -> another 5-minute wait
+  expect(statuses).toEqual(['billing']);      // steady state: the retry never flaps it
+  expect(svc.getStatus().status).toBe('billing');
   svc.stop();
   expect(vi.getTimerCount()).toBe(0);
 });

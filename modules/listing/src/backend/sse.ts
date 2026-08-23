@@ -93,12 +93,19 @@ export function createSseService(deps: SseServiceDeps): SseService {
     failures += 1;
     // A 402 means the account is out of balance, not a flaky stream — reconnect
     // attempts cost money, so back off at the slow 5-minute cadence instead of
-    // the (much faster) backoff cap.
+    // the (much faster) backoff cap. The dedicated 'billing' state rides the
+    // normal onStatus fan-out downstream, and REST polling never starts: those
+    // calls bill too and would 402 anyway.
     const retryIn = billing
       ? BILLING_RETRY_MS
       : failures >= 2
         ? maxBackoffMs
         : Math.min(1000 * 2 ** (failures - 1), maxBackoffMs);
+    if (billing) {
+      setStatus('billing');
+      later(retryIn, connect);
+      return;
+    }
     if (failures >= 2) {
       startPolling();
       setStatus('polling');
@@ -161,7 +168,11 @@ export function createSseService(deps: SseServiceDeps): SseService {
   async function connect() {
     if (stopped) return;
     const myAttempt = ++attempt;
-    setStatus(failures >= 2 ? 'polling' : status === 'connecting' ? 'connecting' : 'reconnecting');
+    // A billing retry keeps its state: flipping to 'reconnecting' on every slow
+    // retry would blink the downstream banner off and back on for nothing.
+    if (status !== 'billing') {
+      setStatus(failures >= 2 ? 'polling' : status === 'connecting' ? 'connecting' : 'reconnecting');
+    }
     controller = new AbortController();
     try {
       // No `type` filter: the API's non-empty type param is restrictive, so it
