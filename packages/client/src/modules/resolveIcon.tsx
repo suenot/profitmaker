@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Users,
   Wallet,
+  Zap,
   type LucideProps,
 } from 'lucide-react';
 
@@ -58,6 +59,7 @@ const ICONS: Record<string, React.ComponentType<LucideProps>> = {
   TrendingUp,
   Users,
   Wallet,
+  Zap,
 };
 
 /**
