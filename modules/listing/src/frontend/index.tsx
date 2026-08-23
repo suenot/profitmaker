@@ -3,6 +3,7 @@ import type { WidgetDefinition } from '@profitmaker/module-sdk';
 import { LiveListingsWidget } from './LiveListings';
 import { LiveListingsSettings } from './LiveListingsSettings';
 import { TrendsWidget } from './Trends';
+import { StatsWidget } from './Stats';
 import './style.css';
 
 const liveListings: WidgetDefinition = {
@@ -28,4 +29,15 @@ const trends: WidgetDefinition = {
   Component: TrendsWidget,
 };
 
-export default defineModule({ id: 'listing', widgets: [liveListings, trends] });
+const statsWidget: WidgetDefinition = {
+  type: 'listing.stats',
+  title: 'Listing Stats',
+  icon: 'BarChart3',
+  category: 'modules',
+  defaultSize: { width: 360, height: 300 },
+  showGroupSelector: false,
+  needsTransparentGroup: true,
+  Component: StatsWidget,
+};
+
+export default defineModule({ id: 'listing', widgets: [liveListings, trends, statsWidget] });
