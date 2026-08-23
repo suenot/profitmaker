@@ -49,7 +49,7 @@ interface HarnessOpts {
   /** Overrides the auth issue endpoint; defaults to minting sk_1, sk_2, ... */
   issue?: () => Response;
   /** Stream responder keyed on the Authorization header of the connect. */
-  stream?: (auth: string) => Response;
+  stream?: (auth: string) => Response | Promise<Response>;
 }
 
 function harness(opts: HarnessOpts = {}) {
@@ -330,6 +330,56 @@ describe('createUserStreams', () => {
     expect(h.streams.activeCount()).toBe(1); // second subscriber keeps the entry live
 
     h.streams.subscriberRemoved('user-1');
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(h.streams.activeCount()).toBe(0);
+    h.streams.dispose();
+  });
+
+  it('release is entry-scoped: a stale release never eats a successor entry (regression)', async () => {
+    // Two holds on E1; the upstream 401 tears E1 down regardless of counts,
+    // orphaning the second hold (its connection dropped without cleanup). A
+    // reconnect builds E2 — and the orphan's LATE release must leave E2 alone.
+    const h = harness({
+      idleMs: 60_000,
+      // Delayed 401 on sk_1: both acquires must land on E1 before the
+      // teardown fires; the successor's re-mint (sk_2) gets a good stream.
+      stream: async (auth) => {
+        if (auth !== 'Bearer sk_1') return okStream([sseFrame('hello', { ok: true })]);
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return new Response(null, { status: 401 });
+      },
+    });
+    const a1 = await h.streams.acquire('user-1');
+    const a2 = await h.streams.acquire('user-1');
+    if (!a1.ok || !a2.ok) throw new Error('expected acquires to succeed');
+    await vi.advanceTimersByTimeAsync(1_000); // 401 lands: E1 torn down silently
+    expect(h.streams.activeCount()).toBe(0);
+
+    const b = await h.streams.acquire('user-1'); // successor E2 (re-mint after 401)
+    if (!b.ok) throw new Error('expected re-acquire to succeed');
+    expect(b.stream.isLive()).toBe(true);
+
+    a2.release(); // stale: E1 is long gone, E2 has its own live subscriber
+    expect(b.stream.isLive()).toBe(true);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(h.streams.activeCount()).toBe(1); // E2 survived the stale release
+
+    b.release();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(h.streams.activeCount()).toBe(0);
+    h.streams.dispose();
+  });
+
+  it('release is idempotent: double-release counts once', async () => {
+    const h = harness({ idleMs: 60_000 });
+    const a = await h.streams.acquire('user-1');
+    const b = await h.streams.acquire('user-1');
+    if (!a.ok || !b.ok) throw new Error('expected acquires to succeed');
+    a.release();
+    a.release(); // must not steal b's count
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(h.streams.activeCount()).toBe(1); // b still holds the entry
+    b.release();
     await vi.advanceTimersByTimeAsync(60_000);
     expect(h.streams.activeCount()).toBe(0);
     h.streams.dispose();

@@ -67,7 +67,7 @@ interface FakeUpstreamOptions {
   /** Auth-service key-mint responder; default mints sk_1, sk_2, ... for 168h. */
   issue?: () => Response;
   /** Upstream stream body keyed on the connect's Authorization header. */
-  userStream?: (auth: string) => Response;
+  userStream?: (auth: string) => Response | Promise<Response>;
 }
 
 /**
@@ -405,6 +405,94 @@ describe('listing backend module', () => {
       // the stream closed: one expired frame, then EOF, and no timer is left running
       await vi.advanceTimersByTimeAsync(0);
       expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('a stale connection releases only its own entry, never a successor (regression)', async () => {
+      // E1 (shared by connections A and B) dies via upstream 401; B reconnects
+      // first and lands on a fresh E2; A's late cleanup must not release E2's
+      // hold — otherwise E2 idles out under the live B and its ring is lost.
+      const { fetchImpl, streamAuths } = makeFetchImpl({
+        // sk_1's connect answers 401 only after a delay, so BOTH connections
+        // land on E1 before it dies (an instant 401 would tear E1 down in the
+        // same microtask window, before the second acquire can share it).
+        userStream: async (auth) => {
+          if (auth === 'Bearer sk_1') {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            return new Response(null, { status: 401 });
+          }
+          return new Response(makeStream([sseFrame('hello', { ok: true }), sseFrame('listing', streamPayload(42))]), { status: 200 });
+        },
+      });
+      const { routes } = await startApp({
+        env: BRIDGE_ENV,
+        fetchImpl: fetchImpl,
+        userStreamsTuning: { idleMs: 5_000 },
+      });
+
+      const abortA = new AbortController();
+      const a = await asUser(routes, '/stream', 'user-1', abortA.signal); // A acquires E1
+      const framesA = collectFrames(a);
+      const b = await asUser(routes, '/stream'); // B shares E1
+      collectFrames(b);
+      await vi.advanceTimersByTimeAsync(1_000); // E1's connect 401s: silent teardown
+
+      const b2 = await asUser(routes, '/stream'); // B reconnects first: fresh E2
+      const framesB2 = collectFrames(b2);
+      await vi.advanceTimersByTimeAsync(1_000); // E2's buffered listing lands in its ring
+      expect(streamAuths).toEqual(['Bearer sk_1', 'Bearer sk_2']);
+
+      abortA.abort(); // A's cleanup fires now, after E2 exists
+      await vi.advanceTimersByTimeAsync(6_000); // idle window passes
+
+      // E2 survived A's stale release: it is still the live entry, so the
+      // re-read hits its pre-warmed ring (a torn-down E2 would answer []).
+      const recent = await (await asUser(routes, '/listings/recent')).json();
+      expect(recent.listings.map((l: { id: number }) => l.id)).toEqual([42]);
+      // B2's connection never saw the entry expire underneath it
+      expect(framesB2.some((f) => f.includes('"expired"'))).toBe(false);
+      expect(framesA[0]).toBe('event: hello\ndata: {"userId":"user-1"}');
+      a.body?.cancel().catch(() => {});
+      b2.body?.cancel().catch(() => {});
+    });
+
+    it('force-closes a stalled downstream when its frame queue overflows, releasing the subscriber', async () => {
+      // 70 listings land at once while the client never reads: the bounded
+      // queue must trip, close the connection, and release the subscriber.
+      const many = Array.from({ length: 70 }, (_, i) => sseFrame('listing', streamPayload(i + 1)));
+      const { fetchImpl, streamAuths } = makeFetchImpl({
+        userStream: () => delayedStream(1_000, [sseFrame('hello', { ok: true }), ...many]),
+      });
+      const { routes } = await startApp({
+        env: BRIDGE_ENV,
+        fetchImpl: fetchImpl,
+        userStreamsTuning: { idleMs: 5_000 },
+      });
+
+      const res = await asUser(routes, '/stream');
+      // deliberately no reader: nothing drains the downstream queue
+      await vi.advanceTimersByTimeAsync(1_100); // all 70 listings relay: overflow trips
+
+      // the connection was closed: a late reader drains the backlog, then EOF
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let text = '';
+      let done = false;
+      for (let guard = 0; !done && guard < 200; guard++) {
+        const chunk = await reader.read();
+        done = chunk.done ?? false;
+        if (chunk.value) text += decoder.decode(chunk.value, { stream: true });
+      }
+      expect(done).toBe(true);
+      const listingFrames = (text.match(/event: listing/g) ?? []).length;
+      expect(listingFrames).toBeLessThanOrEqual(64); // bounded, not the full 70
+      expect(listingFrames).toBeGreaterThanOrEqual(60);
+
+      // the subscriber was released: the entry idles out and a reconnect dials fresh
+      await vi.advanceTimersByTimeAsync(6_000);
+      const again = await asUser(routes, '/stream');
+      expect(again.status).toBe(200);
+      expect(streamAuths).toEqual(['Bearer sk_1', 'Bearer sk_1']); // cached key, new connect
+      again.body?.cancel().catch(() => {});
     });
   });
 

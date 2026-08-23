@@ -15,6 +15,8 @@ export interface BuildDeps {
 
 /** Downstream heartbeat cadence on /stream (SSE comment frame). */
 const HEARTBEAT_MS = 25_000;
+/** Frames a stalled downstream client may owe before /stream closes on it. */
+const DOWNSTREAM_QUEUE_FRAMES = 64;
 /** retryAfterSeconds advertised on transient /stream acquire failures. */
 const RETRY_AFTER_SECONDS = 60;
 const DEFAULT_API_BASE_URL = 'https://api.listingapis.com';
@@ -130,7 +132,7 @@ export function buildModule(deps: BuildDeps = {}): { backend: BackendModule; __r
           try {
             return { listings: acquired.stream.ring.recent(limit) };
           } finally {
-            userStreams.subscriberRemoved(userId);
+            acquired.release();
           }
         })
         .get('/stream', ({ request, set }) => streamDownstream(request, set, userStreams))
@@ -201,7 +203,7 @@ export function buildModule(deps: BuildDeps = {}): { backend: BackendModule; __r
     if (!pool) return Promise.resolve(errResponse(set, 503, 'terminal auth bridge not configured'));
     return pool.acquire(userId).then((acquired) => {
       if (!acquired.ok) return acquireFailureResponse(set, acquired.reason);
-      return downstreamSse(userId, acquired.stream, pool, request.signal);
+      return downstreamSse(userId, acquired.stream, acquired.release, request.signal);
     });
   }
 
@@ -222,12 +224,15 @@ export function buildModule(deps: BuildDeps = {}): { backend: BackendModule; __r
  * listing frames (events that landed before this subscribe), then live
  * listing/status relays and a 25s heartbeat comment.
  *
- * Closing is driven from three sides: client abort (request.signal), reader
- * cancel, and the heartbeat tick noticing a silently dead upstream (a 401 key
- * teardown leaves no callback) — the last one sends a terminal
- * {"state":"expired"} status frame first so the client knows to re-acquire.
+ * Closing is driven from four sides: client abort (request.signal), reader
+ * cancel, a stalled client (frame queue overfull — nothing drains it), and the
+ * heartbeat tick noticing a silently dead upstream (a 401 key teardown leaves
+ * no callback) — the last one sends a terminal {"state":"expired"} status
+ * frame first so the client knows to re-acquire. Every close path releases
+ * through `release`, which is bound to the entry THIS connection acquired: it
+ * can never eat a successor entry's subscriber count after a reconnect.
  */
-function downstreamSse(userId: string, stream: UserStream, pool: UserStreams, signal: AbortSignal): Response {
+function downstreamSse(userId: string, stream: UserStream, release: () => void, signal: AbortSignal): Response {
   const encoder = new TextEncoder();
   let heartbeat: ReturnType<typeof setInterval> | null = null;
   let offListing: (() => void) | null = null;
@@ -243,7 +248,12 @@ function downstreamSse(userId: string, stream: UserStream, pool: UserStreams, si
           controller.enqueue(encoder.encode(frame));
         } catch {
           cleanup(); // reader gone without an abort signal: treat as disconnect
+          return;
         }
+        // Bound the queue: a client that stopped reading must not pin a
+        // per-user upstream stream forever. Overfull means nobody has drained
+        // ~64 frames — close hard; the client reconnects with ring backfill.
+        if ((controller.desiredSize ?? 1) <= 0) cleanup();
       };
       cleanup = () => {
         if (closed) return;
@@ -251,7 +261,7 @@ function downstreamSse(userId: string, stream: UserStream, pool: UserStreams, si
         if (heartbeat) { clearInterval(heartbeat); heartbeat = null; }
         offListing?.();
         offStatus?.();
-        pool.subscriberRemoved(userId);
+        release();
         try { controller.close(); } catch { /* already closed by cancel() */ }
       };
 
@@ -271,12 +281,11 @@ function downstreamSse(userId: string, stream: UserStream, pool: UserStreams, si
         }
         send(': heartbeat\n\n');
       }, HEARTBEAT_MS);
-      pool.subscriberAdded(userId);
       if (signal.aborted) cleanup();
       else signal.addEventListener('abort', cleanup, { once: true });
     },
     cancel: () => cleanup(),
-  });
+  }, new CountQueuingStrategy({ highWaterMark: DOWNSTREAM_QUEUE_FRAMES }));
 
   return new Response(readable, {
     headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-store' },

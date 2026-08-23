@@ -22,7 +22,17 @@ export interface UserStream {
 export type UserStreamFailReason = Extract<KeyResult, { ok: false }>['reason'];
 
 export type AcquireResult =
-  | { ok: true; stream: UserStream }
+  | {
+      ok: true;
+      stream: UserStream;
+      /**
+       * Release THIS acquire's hold — and only this acquire's. Bound to the
+       * entry the acquire landed on: after a teardown (e.g. upstream 401) a
+       * reconnect creates a successor entry, and a stale connection releasing
+       * by userId would eat the successor's subscriber count. Idempotent.
+       */
+      release(): void;
+    }
   | { ok: false; reason: UserStreamFailReason };
 
 export interface UserStreamsDeps {
@@ -95,6 +105,32 @@ export function createUserStreams(deps: UserStreamsDeps): UserStreams {
       clearTimeout(entry.idleTimer);
       entry.idleTimer = undefined;
     }
+  }
+
+  /**
+   * Count one subscriber on `entry` and return its entry-scoped release. The
+   * release only ever touches the entry it was minted for: a torn-down entry
+   * decrements harmlessly, and the idle timer is armed only when the entry is
+   * still the live one in the map — so a stale connection (its entry already
+   * dead, a successor re-acquired) can never eat the successor's count.
+   */
+  function claim(userId: string, entry: Entry): () => void {
+    cancelIdle(entry); // a live subscriber cancels any pending idle teardown
+    entry.subscribers += 1;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      if (entry.subscribers === 0) return;
+      entry.subscribers -= 1;
+      if (entry.subscribers === 0 && entries.get(userId) === entry) {
+        cancelIdle(entry);
+        entry.idleTimer = setTimeout(() => {
+          entry.idleTimer = undefined;
+          teardown(userId);
+        }, idleMs);
+      }
+    };
   }
 
   function teardown(userId: string): void {
@@ -177,11 +213,7 @@ export function createUserStreams(deps: UserStreamsDeps): UserStreams {
   return {
     async acquire(userId) {
       const existing = entries.get(userId);
-      if (existing) {
-        cancelIdle(existing); // a live subscriber cancels any pending idle teardown
-        existing.subscribers += 1;
-        return { ok: true, stream: existing.view };
-      }
+      if (existing) return { ok: true, stream: existing.view, release: claim(userId, existing) };
       if (disposed) return { ok: false, reason: 'auth-unavailable' };
       let inFlight = pending.get(userId);
       if (!inFlight) {
@@ -190,12 +222,10 @@ export function createUserStreams(deps: UserStreamsDeps): UserStreams {
       }
       const res = await inFlight;
       if (!res.ok) return { ok: false, reason: res.reason };
-      // Every caller of a shared mint is a subscriber — and, like the
-      // existing-entry path above, must cancel any idle teardown its
-      // predecessor's removal may have armed between the continuations.
-      cancelIdle(res.entry);
-      res.entry.subscribers += 1;
-      return { ok: true, stream: res.entry.view };
+      // Every caller of a shared mint is a subscriber; claim() also cancels
+      // any idle teardown a predecessor's removal may have armed between the
+      // continuations. Each caller gets a release bound to THIS entry.
+      return { ok: true, stream: res.entry.view, release: claim(userId, res.entry) };
     },
 
     subscriberAdded(userId) {
