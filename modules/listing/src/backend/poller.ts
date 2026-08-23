@@ -15,7 +15,8 @@ export function startPoller(deps: {
     const [trends, stats, exchanges] = await Promise.all([
       deps.storage.get<TrendsData>('trends'), deps.storage.get<StatsData>('stats'), deps.storage.get<string[]>('exchanges'),
     ]);
-    if (!disposed) cache = { trends, stats, exchanges, updatedAt: cache.updatedAt };
+    // apply only while no fresh data has landed: a refresh that beat slow storage must not be clobbered
+    if (!disposed && cache.updatedAt === null) cache = { trends, stats, exchanges, updatedAt: null };
   })();
 
   async function refresh(): Promise<void> {
@@ -31,6 +32,6 @@ export function startPoller(deps: {
   }
 
   const job = deps.jobs.every(deps.intervalMs ?? 300_000, () => void refresh(), 'trends-stats');
-  void refresh();
+  refresh().catch(() => {});   // fire-and-forget kickoff: first-failure surfaces to direct refresh() callers, never as unhandled rejection
   return { cache: () => cache, refresh, dispose: () => { disposed = true; job.dispose(); } };
 }

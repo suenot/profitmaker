@@ -46,4 +46,44 @@ describe('startPoller', () => {
     await vi.waitFor(() => expect(p.cache().trends).toEqual(TRENDS));
     expect(p.cache().updatedAt).toBeNull();  // restore preserves updatedAt; only refresh sets it
   });
+
+  it('does not clobber fresh data with a late storage restore', async () => {
+    const d = makeDeps();
+    const stale = { ...TRENDS, metadata: { last_updated: 'stale' } };
+    d.storageMap.set('trends', stale);
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const slowStorage = {
+      // capture the pre-seeded value synchronously, resolve late (after refresh already wrote fresh data)
+      get: async <T,>(k: string) => { const v = (d.storageMap.get(k) as T) ?? null; await gate; return v; },
+      set: d.storage.set,
+    };
+    const p = startPoller({ ...d, storage: slowStorage });
+    await vi.waitFor(() => expect(p.cache().trends).toEqual(TRENDS));  // fresh data landed first
+    expect(p.cache().updatedAt).not.toBeNull();
+    release();  // storage.get finally resolves — restore must not overwrite the fresh cache
+    await new Promise((r) => setTimeout(r, 10));  // let the restore continuation run
+    expect(p.cache().trends).toEqual(TRENDS);  // still fresh, not the stale snapshot
+  });
+
+  it('dispose blocks later refresh writes', async () => {
+    const d = makeDeps();
+    const jobDispose = vi.fn();
+    const p = startPoller({ ...d, jobs: { every: () => ({ dispose: jobDispose }) } });
+    await vi.waitFor(() => expect(p.cache().trends).toEqual(TRENDS));
+    p.dispose();
+    expect(jobDispose).toHaveBeenCalled();
+    const next = { ...TRENDS, metadata: { last_updated: 'next' } };
+    d.api.getTrends.mockResolvedValue(next);
+    await p.refresh();  // no-op after dispose
+    expect(p.cache().trends).toEqual(TRENDS);  // cache untouched
+  });
+
+  it('throws from a direct refresh when the first fetch fails', async () => {
+    const d = makeDeps();
+    d.api.getStats.mockRejectedValue(new Error('down'));
+    const p = startPoller({ ...d, jobs: { every: () => ({ dispose: () => undefined }) } });
+    await expect(p.refresh()).rejects.toThrow('down');
+    expect(p.cache().trends).toBeNull();  // nothing cached
+  });
 });
