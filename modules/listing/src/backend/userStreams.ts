@@ -29,7 +29,7 @@ export type AcquireResult =
        * Release THIS acquire's hold — and only this acquire's. Bound to the
        * entry the acquire landed on: after a teardown (e.g. upstream 401) a
        * reconnect creates a successor entry, and a stale connection releasing
-       * by userId would eat the successor's subscriber count. Idempotent.
+       * by authUserId would eat the successor's subscriber count. Idempotent.
        */
       release(): void;
     }
@@ -47,9 +47,9 @@ export interface UserStreamsDeps {
 }
 
 export interface UserStreams {
-  acquire(userId: string): Promise<AcquireResult>;
-  subscriberAdded(userId: string): void;
-  subscriberRemoved(userId: string): void;
+  acquire(authUserId: string): Promise<AcquireResult>;
+  subscriberAdded(authUserId: string): void;
+  subscriberRemoved(authUserId: string): void;
   activeCount(): number;
   dispose(): void;
 }
@@ -73,12 +73,14 @@ interface Entry {
 }
 
 /**
- * Per-user listing streams. Each user gets their own minted ListingAPIs key
- * (via the auth-service internal bridge), their own SSE connection, ring and
- * listener sets; entries are created lazily on first acquire, shared across
- * concurrent acquires of the same user, and torn down idleMs after the last
- * subscriber leaves (or immediately when the upstream rejects the key with a
- * 401 — the key is invalidated so the next acquire re-mints).
+ * Per-user listing streams, keyed by auth-service user id (the host's
+ * x-pm-user-auth-id — the same id space the key resolver mints against). Each
+ * user gets their own minted ListingAPIs key (via the auth-service internal
+ * bridge), their own SSE connection, ring and listener sets; entries are
+ * created lazily on first acquire, shared across concurrent acquires of the
+ * same user, and torn down idleMs after the last subscriber leaves (or
+ * immediately when the upstream rejects the key with a 401 — the key is
+ * invalidated so the next acquire re-mints).
  *
  * Never logs: key material and the internal secret must not reach any output
  * stream.
@@ -94,7 +96,7 @@ export function createUserStreams(deps: UserStreamsDeps): UserStreams {
     fetchImpl: doFetch,
   });
   const entries = new Map<string, Entry>();
-  /** Cold acquires in flight, keyed by user: parallel callers share one mint and one entry. */
+  /** Cold acquires in flight, keyed by auth user: parallel callers share one mint and one entry. */
   const pending = new Map<string, Promise<{ ok: true; entry: Entry } | { ok: false; reason: UserStreamFailReason }>>();
   /** Parked mint failures: until passes, acquire answers the stored reason without a resolver call. */
   const backoff = new Map<string, { until: number; reason: UserStreamFailReason }>();
@@ -114,7 +116,7 @@ export function createUserStreams(deps: UserStreamsDeps): UserStreams {
    * still the live one in the map — so a stale connection (its entry already
    * dead, a successor re-acquired) can never eat the successor's count.
    */
-  function claim(userId: string, entry: Entry): () => void {
+  function claim(authUserId: string, entry: Entry): () => void {
     cancelIdle(entry); // a live subscriber cancels any pending idle teardown
     entry.subscribers += 1;
     let released = false;
@@ -123,21 +125,21 @@ export function createUserStreams(deps: UserStreamsDeps): UserStreams {
       released = true;
       if (entry.subscribers === 0) return;
       entry.subscribers -= 1;
-      if (entry.subscribers === 0 && entries.get(userId) === entry) {
+      if (entry.subscribers === 0 && entries.get(authUserId) === entry) {
         cancelIdle(entry);
         entry.idleTimer = setTimeout(() => {
           entry.idleTimer = undefined;
-          teardown(userId);
+          teardown(authUserId);
         }, idleMs);
       }
     };
   }
 
-  function teardown(userId: string): void {
-    const entry = entries.get(userId);
+  function teardown(authUserId: string): void {
+    const entry = entries.get(authUserId);
     if (!entry) return;
     cancelIdle(entry);
-    entries.delete(userId);
+    entries.delete(authUserId);
     entry.sse.stop();
   }
 
@@ -145,39 +147,39 @@ export function createUserStreams(deps: UserStreamsDeps): UserStreams {
    * A 401 from the listing API means the minted key died mid-flight: drop the
    * resolver cache so the next acquire re-mints, and tear the dead stream down.
    */
-  function onUpstreamAuthFailure(userId: string): void {
-    resolver.invalidate(userId);
-    teardown(userId);
+  function onUpstreamAuthFailure(authUserId: string): void {
+    resolver.invalidate(authUserId);
+    teardown(authUserId);
   }
 
   /** Per-user fetch wrapper: watches listing-API responses for key rejection. */
-  function guardedFetch(userId: string): FetchLike {
+  function guardedFetch(authUserId: string): FetchLike {
     return async (input, init) => {
       const res = await doFetch(input, init);
-      if (res.status === 401 && String(input).startsWith(listingBase)) onUpstreamAuthFailure(userId);
+      if (res.status === 401 && String(input).startsWith(listingBase)) onUpstreamAuthFailure(authUserId);
       return res;
     };
   }
 
-  async function coldAcquire(userId: string): Promise<{ ok: true; entry: Entry } | { ok: false; reason: UserStreamFailReason }> {
-    const parked = backoff.get(userId);
+  async function coldAcquire(authUserId: string): Promise<{ ok: true; entry: Entry } | { ok: false; reason: UserStreamFailReason }> {
+    const parked = backoff.get(authUserId);
     if (parked) {
       if (parked.until > Date.now()) return { ok: false, reason: parked.reason };
-      backoff.delete(userId);
+      backoff.delete(authUserId);
     }
     // Pending cold acquires hold a slot too: without them a burst of first-time
     // users would all pass the check before any entry exists.
     if (entries.size + pending.size >= limit) return { ok: false, reason: 'cap' };
 
-    const key = await resolver.getKey(userId);
+    const key = await resolver.getKey(authUserId);
     if (disposed) return { ok: false, reason: 'auth-unavailable' };
     if (!key.ok) {
-      backoff.set(userId, { until: Date.now() + FAILURE_BACKOFF_MS, reason: key.reason });
+      backoff.set(authUserId, { until: Date.now() + FAILURE_BACKOFF_MS, reason: key.reason });
       return { ok: false, reason: key.reason };
     }
-    backoff.delete(userId);
+    backoff.delete(authUserId);
 
-    const fetchForUser = guardedFetch(userId);
+    const fetchForUser = guardedFetch(authUserId);
     const ring = createListingRing(RING_SIZE);
     const listingListeners = new Set<(l: ModuleListing) => void>();
     const statusListeners = new Set<(s: SseStatus) => void>();
@@ -202,46 +204,46 @@ export function createUserStreams(deps: UserStreamsDeps): UserStreams {
         return () => { statusListeners.delete(cb); };
       },
       status: () => sse.getStatus().status,
-      isLive: () => entries.get(userId) === entry,
+      isLive: () => entries.get(authUserId) === entry,
     };
     const entry: Entry = { sse, ring, view, subscribers: 0 };
-    entries.set(userId, entry);
+    entries.set(authUserId, entry);
     sse.start();
     return { ok: true, entry };
   }
 
   return {
-    async acquire(userId) {
-      const existing = entries.get(userId);
-      if (existing) return { ok: true, stream: existing.view, release: claim(userId, existing) };
+    async acquire(authUserId) {
+      const existing = entries.get(authUserId);
+      if (existing) return { ok: true, stream: existing.view, release: claim(authUserId, existing) };
       if (disposed) return { ok: false, reason: 'auth-unavailable' };
-      let inFlight = pending.get(userId);
+      let inFlight = pending.get(authUserId);
       if (!inFlight) {
-        inFlight = coldAcquire(userId).finally(() => pending.delete(userId));
-        pending.set(userId, inFlight);
+        inFlight = coldAcquire(authUserId).finally(() => pending.delete(authUserId));
+        pending.set(authUserId, inFlight);
       }
       const res = await inFlight;
       if (!res.ok) return { ok: false, reason: res.reason };
       // Every caller of a shared mint is a subscriber; claim() also cancels
       // any idle teardown a predecessor's removal may have armed between the
       // continuations. Each caller gets a release bound to THIS entry.
-      return { ok: true, stream: res.entry.view, release: claim(userId, res.entry) };
+      return { ok: true, stream: res.entry.view, release: claim(authUserId, res.entry) };
     },
 
-    subscriberAdded(userId) {
-      const entry = entries.get(userId);
+    subscriberAdded(authUserId) {
+      const entry = entries.get(authUserId);
       if (entry) cancelIdle(entry);
     },
 
-    subscriberRemoved(userId) {
-      const entry = entries.get(userId);
+    subscriberRemoved(authUserId) {
+      const entry = entries.get(authUserId);
       if (!entry || entry.subscribers === 0) return;
       entry.subscribers -= 1;
       if (entry.subscribers === 0) {
         cancelIdle(entry);
         entry.idleTimer = setTimeout(() => {
           entry.idleTimer = undefined;
-          teardown(userId);
+          teardown(authUserId);
         }, idleMs);
       }
     },

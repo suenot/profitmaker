@@ -19,7 +19,10 @@ trends and global stats — powered by [ListingAPIs](https://listingapis.com).
 Live listings bill the viewing user's own ListingAPIs key, not the operator's:
 the terminal mints a 168h service key per signed-in user through the
 auth-service internal bridge (re-minted transparently on expiry) and opens one
-upstream SSE stream per user. Each user needs:
+upstream SSE stream per user. Per-user data is available to SSO-linked users
+only — the mint is keyed on the auth-service account id, so terminal-local
+accounts without an auth link see the `sign in required` state on Live. Each
+of those users needs:
 
 - the `listingapis` service role on their account at
   [auth.marketmaker.cc](https://auth.marketmaker.cc),

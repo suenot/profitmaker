@@ -139,9 +139,9 @@ type Dispatcher = { handle(request: Request): Response | Promise<Response> };
 const get = (routes: Dispatcher, path: string, init?: RequestInit) =>
   routes.handle(new Request(`http://localhost${path}`, init));
 
-/** Dispatch one GET as a named terminal user (host-minted identity header). */
+/** Dispatch one GET as a named auth-service user (host-minted identity header). */
 const asUser = (routes: Dispatcher, path: string, userId = 'user-1', signal?: AbortSignal) =>
-  get(routes, path, { headers: { 'x-pm-user-id': userId }, signal });
+  get(routes, path, { headers: { 'x-pm-user-auth-id': userId }, signal });
 
 /**
  * Collect downstream SSE frames from a /stream response in the background.
@@ -244,6 +244,24 @@ describe('listing backend module', () => {
       expect(res.status).toBe(401);
       expect(await res.json()).toEqual({ error: 'user identity required' });
       // the poller's server-keyed calls may have happened; nothing per-user did
+      const urls = (fetchImpl.mock.calls as unknown as [string][]).map(([input]) => String(input));
+      expect(urls.some((u) => u.startsWith(AUTH_URL))).toBe(false);
+      expect(urls.some((u) => u.includes('/api/public/stream'))).toBe(false);
+    });
+
+    it('401 for a local-only session: x-pm-user-id alone is not a billing identity (regression)', async () => {
+      // Per-user data keys on the auth-service id (x-pm-user-auth-id). A
+      // terminal-local id must never reach the mint: auth-service would key
+      // service_roles/api_keys on a user that does not exist there.
+      const { fetchImpl } = makeFetchImpl();
+      const { routes } = await startApp({ env: BRIDGE_ENV, fetchImpl: fetchImpl });
+      const stream = await get(routes, '/stream', { headers: { 'x-pm-user-id': 'user-1' } });
+      expect(stream.status).toBe(401);
+      expect(await stream.json()).toEqual({ error: 'user identity required' });
+      const recent = await get(routes, '/listings/recent', { headers: { 'x-pm-user-id': 'user-1' } });
+      expect(recent.status).toBe(401);
+      expect(await recent.json()).toEqual({ error: 'user identity required' });
+      // nothing per-user was fetched on either path
       const urls = (fetchImpl.mock.calls as unknown as [string][]).map(([input]) => String(input));
       expect(urls.some((u) => u.startsWith(AUTH_URL))).toBe(false);
       expect(urls.some((u) => u.includes('/api/public/stream'))).toBe(false);
