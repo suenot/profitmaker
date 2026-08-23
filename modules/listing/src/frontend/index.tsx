@@ -2,6 +2,7 @@ import { defineModule } from '@profitmaker/module-sdk';
 import type { WidgetDefinition } from '@profitmaker/module-sdk';
 import { LiveListingsWidget } from './LiveListings';
 import { LiveListingsSettings } from './LiveListingsSettings';
+import { TrendsWidget } from './Trends';
 import './style.css';
 
 const liveListings: WidgetDefinition = {
@@ -16,4 +17,15 @@ const liveListings: WidgetDefinition = {
   Settings: LiveListingsSettings,
 };
 
-export default defineModule({ id: 'listing', widgets: [liveListings] });
+const trends: WidgetDefinition = {
+  type: 'listing.trends',
+  title: 'Listing Trends',
+  icon: 'TrendingUp',
+  category: 'modules',
+  defaultSize: { width: 380, height: 420 },
+  showGroupSelector: false,
+  needsTransparentGroup: true,
+  Component: TrendsWidget,
+};
+
+export default defineModule({ id: 'listing', widgets: [liveListings, trends] });
