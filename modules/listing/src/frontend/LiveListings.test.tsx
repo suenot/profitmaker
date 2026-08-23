@@ -142,6 +142,16 @@ describe('LiveListingsWidget', () => {
     await unmount();
   });
 
+  it('maps a 402 stream error to the balance banner (defensive: /stream does not emit 402 today)', async () => {
+    fakeTerminal({ status: 402, error: 'MM balance exhausted' });
+    const unmount = await renderWidget({ sound: false });
+    await React.act(async () => {
+      for (let i = 0; i < 10; i++) await Promise.resolve();
+    });
+    expect(document.body.textContent).toContain('MM balance exhausted — top up at auth.marketmaker.cc');
+    await unmount();
+  });
+
   it('shows a busy banner and keeps retrying on 503', async () => {
     fakeTerminal({ status: 503, error: 'listing streams busy, retry shortly' });
     const unmount = await renderWidget({ sound: false });

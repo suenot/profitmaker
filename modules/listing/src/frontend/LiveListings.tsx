@@ -73,10 +73,11 @@ export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
       onStatus(state) {
         // 'expired' means the server tore the stream down for a re-acquire —
         // the client reconnects, so show that on the badge instead.
-        setStatus(state === 'expired' ? 'reconnecting' : (state as RouteStatus));
+        setStatus(state === 'expired' ? 'reconnecting' : state);
       },
       onError(err) {
         if (err.status === 401) setBanner('sign in required');
+        else if (err.status === 402) setBanner('MM balance exhausted — top up at auth.marketmaker.cc');
         else if (err.status === 403) setBanner('listingapis subscription required at auth.marketmaker.cc');
         else if (err.status === 503) setBanner('busy, retrying');
         else setBanner('connection error');

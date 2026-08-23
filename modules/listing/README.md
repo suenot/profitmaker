@@ -14,17 +14,42 @@ trends and global stats — powered by [ListingAPIs](https://listingapis.com).
 - **Listing Stats** (`listing.stats`) — totals, 24h/7d/30d activity, top quote
   currencies.
 
+## Per-user billing
+
+Live listings bill the viewing user's own ListingAPIs key, not the operator's:
+the terminal mints a 168h service key per signed-in user through the
+auth-service internal bridge (re-minted transparently on expiry) and opens one
+upstream SSE stream per user. Each user needs:
+
+- the `listingapis` service role on their account at
+  [auth.marketmaker.cc](https://auth.marketmaker.cc),
+- an MM balance — live listing calls are billed per call to it.
+
+Trends, Stats and the status badge run on the operator's shared
+`LISTINGAPIS_API_KEY` (~3 calls / 5 min), so those widgets work for every user
+regardless of role.
+
+The Live widget surfaces its failure states as a banner: `sign in required`
+(no session), `listingapis subscription required at auth.marketmaker.cc` (user
+lacks the `listingapis` role), `busy, retrying` (stream pool full or
+auth-service briefly unavailable).
+
 ## Setup
 
-The terminal server needs two env vars (Bun loads `.env` automatically):
+The terminal server reads env vars (Bun loads `.env` automatically):
 
 ```
-LISTINGAPIS_API_KEY=<MM API key from auth.marketmaker.cc>
-LISTINGAPIS_API_URL=https://api.listingapis.com   # optional override
+AUTH_INTERNAL_SECRET=<internal secret shared with auth-service>  # required for Live
+AUTH_INTERNAL_URL=https://auth.marketmaker.cc                    # optional override
+LISTINGAPIS_API_KEY=<MM API key from auth.marketmaker.cc>        # optional, shared widgets only
+LISTINGAPIS_API_URL=https://api.listingapis.com                  # optional override
 ```
 
-Without `LISTINGAPIS_API_KEY` the module installs cleanly and all widgets show
-a configuration hint. API calls are billed per call to your MM balance.
+`AUTH_INTERNAL_SECRET` is the same secret auth-service checks on the
+`X-Internal-Secret` header of its internal routes — the per-user key bridge
+needs it. The module never crashes on a missing var: without
+`AUTH_INTERNAL_SECRET` it still installs and `/stream` answers 503; without
+`LISTINGAPIS_API_KEY` the shared widgets show a configuration hint.
 
 ## Install
 

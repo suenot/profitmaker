@@ -70,6 +70,13 @@ export type SseStatus = 'connecting' | 'up' | 'reconnecting' | 'polling';
 /** /status route status: any SSE state, or 'inactive' when no API key is configured. */
 export type RouteStatus = SseStatus | 'inactive';
 
+/**
+ * Status frame states on the per-user /stream downstream SSE: the relayed
+ * upstream SseStatus plus the terminal 'expired' (server tore the stream down
+ * for a re-acquire — the client reconnects).
+ */
+export type StreamFrameStatus = SseStatus | 'expired';
+
 /** Widget config for listing.live (persisted via widget `config`). */
 export interface LiveConfig {
   exchanges?: string[];

@@ -1,4 +1,4 @@
-import type { ModuleListing } from '../shared/types';
+import type { ModuleListing, StreamFrameStatus } from '../shared/types';
 
 /**
  * Per-user live stream client for the Live Listings widget.
@@ -35,7 +35,7 @@ export interface SubscribeListingStreamOptions {
   /** Defaults to the global fetch; the widget passes `terminal.api.fetch`. */
   fetchImpl?: StreamFetch;
   onListing(listing: ModuleListing): void;
-  onStatus(state: string): void;
+  onStatus(state: StreamFrameStatus): void;
   onError(error: ListingStreamError): void;
 }
 
@@ -152,12 +152,11 @@ export function subscribeListingStream(opts: SubscribeListingStreamOptions): Lis
       if (data && typeof data === 'object') opts.onListing(data as ModuleListing);
       else opts.onError({ status: 0, message: 'malformed listing frame data' });
     } else if (parsed.event === 'status') {
-      // A status frame without a string state carries nothing actionable —
-      // ignore it rather than surfacing noise.
+      // A status frame whose state is missing or not one of the protocol's
+      // carries nothing actionable — ignore it rather than surfacing noise.
       const data = parseJson(parsed.data);
-      if (data && typeof data === 'object' && typeof (data as { state?: unknown }).state === 'string') {
-        opts.onStatus((data as { state: string }).state);
-      }
+      const state = data && typeof data === 'object' ? (data as { state?: unknown }).state : undefined;
+      if (isStreamFrameState(state)) opts.onStatus(state);
     }
     // hello and unknown events carry nothing the widget needs — ignored.
   }
@@ -181,6 +180,13 @@ export function parseSseFrame(frame: string): { event: string; data: string } | 
   }
   if (dataLines.length === 0) return null;
   return { event, data: dataLines.join('\n') };
+}
+
+const STREAM_FRAME_STATES = new Set<string>(['connecting', 'up', 'reconnecting', 'polling', 'expired']);
+
+/** Narrow a parsed status-frame state to the protocol union; unknown strings are noise. */
+function isStreamFrameState(v: unknown): v is StreamFrameStatus {
+  return typeof v === 'string' && STREAM_FRAME_STATES.has(v);
 }
 
 function parseJson(data: string): unknown {
