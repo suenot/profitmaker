@@ -19,6 +19,12 @@ export interface KeyResolver {
 const MIN_REMAINING_MS = 12 * 60 * 60 * 1000;
 /** Bound a single mint so a hung auth service cannot pin the in-flight dedup forever. */
 const MINT_TIMEOUT_MS = 10_000;
+/**
+ * Upper bound on cached per-user keys: without one, a terminal that sees many
+ * distinct auth users grows the map forever (keys live 168h). FIFO-evicted on
+ * insert; eviction only costs a re-mint if that user ever comes back.
+ */
+const CACHE_MAX = 100;
 
 /**
  * Mints and caches per-user ListingAPIs service keys through the auth-service
@@ -72,6 +78,12 @@ export function createKeyResolver(deps: KeyResolverDeps): KeyResolver {
         return { ok: false, reason: 'bad-response' };
       }
       cache.set(authUserId, { key, expiresAt });
+      // FIFO eviction: a Map iterates in insertion order, so the first key is
+      // the oldest mint. The in-flight dedup above is untouched by this.
+      if (cache.size > CACHE_MAX) {
+        const oldest = cache.keys().next().value;
+        if (oldest !== undefined) cache.delete(oldest);
+      }
       return { ok: true, key, expiresAt };
     } catch {
       return { ok: false, reason: 'auth-unavailable' };

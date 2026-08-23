@@ -32,10 +32,12 @@ Trends, Stats and the status badge run on the operator's shared
 `LISTINGAPIS_API_KEY` (~3 calls / 5 min), so those widgets work for every user
 regardless of role.
 
-The Live widget surfaces its failure states as a banner: `sign in required`
-(no session), `listingapis subscription required at auth.marketmaker.cc` (user
-lacks the `listingapis` role), `busy, retrying` (stream pool full or
-auth-service briefly unavailable).
+The Live widget surfaces its failure states as a banner, showing the server's
+own message whenever it sends one: `sign in required` (no SSO-linked session),
+`listingapis subscription required at auth.marketmaker.cc` (user lacks the
+`listingapis` role), `MM balance exhausted — top up at auth.marketmaker.cc`
+(upstream 402, relayed as a `billing` status while the stream keeps retrying),
+and the retryable stream-pool / auth-service messages as sent.
 
 ## Setup
 

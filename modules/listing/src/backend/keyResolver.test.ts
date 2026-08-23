@@ -193,6 +193,23 @@ describe('createKeyResolver', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it('caps the cache at 100 users: the oldest mint is FIFO-evicted', async () => {
+    const { resolver, fetchImpl } = resolverWith();
+    // 101 distinct auth users mint fresh keys; user-1 is the oldest and falls out.
+    for (let i = 1; i <= 101; i += 1) fetchImpl.mockResolvedValueOnce(issueResponse(168, `sk_${i}`));
+    for (let i = 1; i <= 101; i += 1) await resolver.getKey(`user-${i}`);
+    expect(fetchImpl).toHaveBeenCalledTimes(101);
+
+    // user-1 was evicted -> re-minted (and that insert evicts user-2, the
+    // then-oldest — FIFO keeps rolling); a mid-cache user stays cached.
+    fetchImpl.mockResolvedValueOnce(issueResponse(168, 'sk_1_again'));
+    const first = await resolver.getKey('user-1');
+    const mid = await resolver.getKey('user-50');
+    expect((first as Extract<KeyResult, { ok: true }>).key).toBe('sk_1_again');
+    expect((mid as Extract<KeyResult, { ok: true }>).key).toBe('sk_50');
+    expect(fetchImpl).toHaveBeenCalledTimes(102);
+  });
+
   it('invalidate drops the cache entry so the next call re-mints', async () => {
     const { resolver, fetchImpl } = resolverWith();
     fetchImpl.mockResolvedValueOnce(issueResponse(168, 'sk_before'));

@@ -30,7 +30,10 @@ function sseBody() {
 }
 
 /** Fake terminal host: routes the module's authenticated fetches. */
-function fakeTerminal(stream: ReturnType<typeof sseBody> | { status: number; error: string }) {
+function fakeTerminal(
+  stream: ReturnType<typeof sseBody> | { status: number; error: string },
+  recent?: () => Response,
+) {
   const notifyInfo = vi.fn();
   const toggleWidgetMinimized = vi.fn();
   const fetchImpl = vi.fn(async (path: string, init?: RequestInit): Promise<Response> => {
@@ -45,6 +48,7 @@ function fakeTerminal(stream: ReturnType<typeof sseBody> | { status: number; err
       return stream.response();
     }
     if (path.startsWith('/api/modules/listing/listings/recent')) {
+      if (recent) return recent();
       return new Response(JSON.stringify({ listings: [BACKFILL] }), {
         status: 200,
         headers: { 'content-type': 'application/json' },
@@ -188,13 +192,29 @@ describe('LiveListingsWidget', () => {
     await unmount();
   });
 
-  it('shows a busy banner and keeps retrying on 503', async () => {
-    fakeTerminal({ status: 503, error: 'listing streams busy, retry shortly' });
+  it('shows the server error body on a retryable 503, not a generic guess', async () => {
+    fakeTerminal({ status: 503, error: 'terminal auth bridge not configured' });
     const unmount = await renderWidget({ sound: false });
     await React.act(async () => {
       for (let i = 0; i < 10; i++) await Promise.resolve();
     });
-    expect(document.body.textContent).toContain('busy, retrying');
+    expect(document.body.textContent).toContain('terminal auth bridge not configured');
+    expect(document.body.textContent).not.toContain('busy, retrying');
+    await unmount();
+  });
+
+  it('surfaces the mount-backfill error body too (bridge gap, not a key-config guess)', async () => {
+    const body = sseBody();
+    fakeTerminal(body, () => new Response(JSON.stringify({ error: 'terminal auth bridge not configured' }), {
+      status: 503,
+      headers: { 'content-type': 'application/json' },
+    }));
+    const unmount = await renderWidget({ sound: false });
+    await React.act(async () => {
+      for (let i = 0; i < 10; i++) await Promise.resolve();
+    });
+    expect(document.body.textContent).toContain('terminal auth bridge not configured');
+    expect(document.body.textContent).not.toContain('LISTINGAPIS_API_KEY is not configured');
     await unmount();
   });
 });

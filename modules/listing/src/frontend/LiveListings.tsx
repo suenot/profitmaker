@@ -3,7 +3,7 @@ import { getTerminal } from '@profitmaker/module-sdk';
 import type { WidgetProps } from '@profitmaker/module-sdk';
 import type { ModuleListing, RouteStatus } from '../shared/types';
 import { defaultLiveConfig, formatTime, passFilters, playBeep, restoreIfMinimized, type DashboardStoreShape } from './lib';
-import { subscribeListingStream } from './streamClient';
+import { errorMessage, subscribeListingStream } from './streamClient';
 
 const MAX_ROWS = 100;
 /** One banner text for every balance-exhausted surface (upstream 402, relayed 'billing' state). */
@@ -43,9 +43,8 @@ export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
       try {
         const res = await terminal.api.fetch('/api/modules/listing/listings/recent?limit=50');
         if (!alive) return;
-        if (res.status === 402) setBanner('MM balance exhausted — top up at auth.marketmaker.cc');
-        else if (res.status === 503) setBanner('LISTINGAPIS_API_KEY is not configured on the server');
-        else if (!res.ok) setBanner('ListingAPIs unavailable');
+        if (res.status === 402) setBanner(BILLING_BANNER);
+        else if (!res.ok) setBanner(await errorMessage(res)); // the server's own words, e.g. the bridge gap
         else {
           setBanner(null);
           const data = (await res.json()) as { listings: ModuleListing[] };
@@ -102,9 +101,12 @@ export function LiveListingsWidget({ widgetId, config }: WidgetProps) {
       },
       onError(err) {
         if (err.status === 401) setBanner('sign in required');
-        else if (err.status === 402) setBanner('MM balance exhausted — top up at auth.marketmaker.cc');
+        else if (err.status === 402) setBanner(BILLING_BANNER);
         else if (err.status === 403) setBanner('listingapis subscription required at auth.marketmaker.cc');
-        else if (err.status === 503) setBanner('busy, retrying');
+        // The parsed body's error field — e.g. the real "terminal auth bridge
+        // not configured" instead of a generic busy guess. Status 0 is a
+        // network failure whose exception text helps nobody.
+        else if (err.status > 0 && err.message) setBanner(err.message);
         else setBanner('connection error');
         // 401/403 never reconnect — leave the badge alone; the banner says why.
         if (err.status !== 401 && err.status !== 403) setStatus('reconnecting');
