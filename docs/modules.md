@@ -278,11 +278,13 @@ bun src/index.ts   # from packages/server
 All `/api/modules/*` routes require auth (Bearer `API_TOKEN` or a user session),
 same as the rest of `/api/`. The bundle/asset routes under `/modules/*` are
 **public** (a browser `<script>` loads them unauthenticated), matching the
-host's static-asset design.
+host's static-asset design. The **lifecycle routes** (`install`, `enable`,
+`disable`, `upgrade`, uninstall) carry an additional admin gate — see
+[Module admin authorization](#module-admin-authorization) below.
 
 | Method & path | Body | Description |
 |---------------|------|-------------|
-| `GET /api/modules` | — | `{ modules: InstalledModule[], apiVersion }`. |
+| `GET /api/modules` | — | `{ modules: InstalledModule[], apiVersion, viewer }`. |
 | `GET /api/modules/search?q=` | — | Proxies the npm registry for `keywords:profitmaker-module` (+ `q`); returns `{ results: [{ name, version, description, keywords }] }`. |
 | `POST /api/modules/install` | `{ name, version? }` | `bun add --exact`, validate, start. `name` is validated against the npm name grammar (rejected with 400 otherwise). |
 | `POST /api/modules/:id/enable` | — | Start the module at runtime. |
@@ -295,6 +297,11 @@ host's static-asset design.
 | `GET /modules/:id/assets/*` | — | Other bundle assets (path-traversal guarded). Public. |
 
 `InstalledModule`: `{ id, npmName, version, enabled, dev?, pendingRestart?, error?, manifest }`.
+`viewer`: `{ canManage: boolean }` — whether THIS caller may use the lifecycle
+routes, computed from the verified identity only: `true` solely for the SSO
+admin-role path. An operator token does not set it (the token authorizes each
+request separately, so clients combine `canManage` with their own saved-token
+state).
 
 `$BASE` below is your terminal server — `localhost:3001` for local dev, or your
 deployed host (e.g. the production API `https://profitmaker-api.marketmaker.cc`).
@@ -303,12 +310,41 @@ deployed host (e.g. the production API `https://profitmaker-api.marketmaker.cc`)
 BASE=https://profitmaker-api.marketmaker.cc   # or localhost:3001 for local dev
 # list
 curl -H 'Authorization: Bearer <token>' $BASE/api/modules
-# install
-curl -X POST -H 'Authorization: Bearer <token>' -H 'Content-Type: application/json' \
+# install (also needs an admin credential — see below)
+curl -X POST -H 'Authorization: Bearer <token>' -H 'X-Modules-Admin-Token: <admin-token>' \
+  -H 'Content-Type: application/json' \
   -d '{"name":"profitmaker-module-example"}' $BASE/api/modules/install
 # call a module route
 curl -H 'Authorization: Bearer <token>' $BASE/api/modules/example/hello
 ```
+
+### Module admin authorization
+
+Installing a module downloads an arbitrary npm package and imports it into the
+server process, where it runs unsandboxed with the server's privileges. Module
+lifecycle is therefore an **operator action**, and the lifecycle routes accept
+exactly two caller classes:
+
+1. **Operator shared secret** — the `X-Modules-Admin-Token` header matching env
+   `MODULES_ADMIN_TOKEN`. Serves self-hosted installs and CI, where there is no
+   SSO deployment to lean on. The header is separate from `Authorization`, which
+   still carries the caller's normal bearer token.
+2. **SSO admin** — a verified SSO JWT carrying role `admin` or `superuser` for
+   service `MODULES_ADMIN_SERVICE` (default `profitmaker`). Grant the role in the
+   auth-service admin UI (`PUT /api/v1/admin/users/:id/role`, service
+   `profitmaker`); it is read from the verified token, so a grant or revocation
+   takes effect at the caller's next token.
+
+Local sessions and `API_TOKEN` callers carry no roles and remain token-path
+only; a plain `user` role is likewise denied. The gate fails closed:
+
+| Caller state | Result |
+|--------------|--------|
+| No admin role and `MODULES_ADMIN_TOKEN` unset | `503` — module management disabled |
+| `MODULES_ADMIN_TOKEN` set but header missing or wrong | `403` — operator credential required |
+
+Read-only routes (`GET /api/modules`, search) and module dispatch
+(`/api/modules/:id/*`) are unaffected — any authenticated caller.
 
 ## Build & publish
 
@@ -532,9 +568,9 @@ What the host does, in order:
 
 1. **Boot**: `initRuntime()` installs `window.__PROFITMAKER__`, then (after mount)
    `loadModules()` runs.
-2. **Fetch**: `GET /api/modules`; for each **enabled** module with a `frontend`,
-   check `minTerminalApi` against `TERMINAL_API_VERSION` (incompatible → recorded
-   as an error, skipped).
+2. **Fetch**: `GET /api/modules`; for each **enabled** module with a `frontend`
+   (and not hidden by this user's visibility setting), check `minTerminalApi`
+   against `TERMINAL_API_VERSION` (incompatible → recorded as an error, skipped).
 3. **Style**: if `frontend.style` is set, inject
    `<link href="/modules/<id>/style.css?v=<version>">`.
 4. **Import**: `import('/modules/<id>/bundle.js?v=<version>')` and call
@@ -568,7 +604,11 @@ managing modules without leaving the UI. It has two tabs:
   enable/disable switch (`POST .../enable|disable`), version, **dev** and
   **restart-pending** badges, an uninstall button (`DELETE /api/modules/:id`),
   and any load error (both backend `error` and client-side frontend load
-  failures).
+  failures). Each npm-module row also carries a per-user **show in my terminal**
+  switch (eye icon, "for me" — see below). The server controls (enable switch,
+  uninstall) render only for callers who may manage modules: `viewer.canManage`
+  from the server, or an operator token entered in the collapsed **Operator
+  token** disclosure at the bottom of the tab.
 
 Disabling/uninstalling here unregisters the module's widget types client-side,
 so open widgets switch to the placeholder. Operations that need a server restart
@@ -586,14 +626,23 @@ The **Module Store itself is locked on** (`locked: true` in its definition, show
 as a padlock instead of a switch): switching it off would remove the only UI that
 can switch anything back on.
 
-Two implementation notes worth knowing before changing this:
+Three implementation notes worth knowing before changing this:
 
-- **The toggle does not use `/api/modules/*`.** Those routes are operator-gated
-  (`MODULES_ADMIN_TOKEN`) because installing a module runs third-party code with
-  the server's privileges. Toggling a built-in runs nothing, so it is a per-user
-  preference: it lives in user settings under `builtinWidgets.disabled` (a string
-  array of widget types) via `GET/PUT /api/settings/:key`, and needs only a normal
-  session. Client side that is `modules/builtinModules.ts`.
+- **The built-in toggle does not use `/api/modules/*`.** Those routes are
+  admin-gated — operator token or SSO admin role, see
+  [Module admin authorization](#module-admin-authorization) — because installing
+  a module runs third-party code with the server's privileges. Toggling a
+  built-in runs nothing, so it is a per-user preference: it lives in user
+  settings under `builtinWidgets.disabled` (a string array of widget types) via
+  `GET/PUT /api/settings/:key`, and needs only a normal session. Client side
+  that is `modules/builtinModules.ts`.
+- **"Show in my terminal" is per-user visibility, not isolation.** The switch
+  hides an installed module's widgets in *this user's* picker only — user
+  setting `modules.disabled` (a string array of module ids), same
+  `GET/PUT /api/settings/:key` mechanics as built-ins; client side
+  `modules/userModules.ts`. The module backend keeps running for everyone —
+  this is UI decluttering, not resource isolation — and each user's choice is
+  independent. Newly installed modules are visible by default.
 - **The catalog lives in `modules/builtinCatalog.ts`, not `builtinWidgets.tsx`.**
   `builtinWidgets` imports the Module Store widget (it is one of the built-ins),
   so having the store import the catalog back from there is an import cycle — one

@@ -27,6 +27,8 @@ curl http://localhost:3001/health
 | `DATABASE_URL` | -- | PostgreSQL connection string (required) |
 | `PORT` | `3001` | HTTP API port |
 | `API_TOKEN` | `your-secret-token` | Server-to-server auth token |
+| `MODULES_ADMIN_TOKEN` | _(unset)_ | Operator shared secret for the module lifecycle routes (sent as the `X-Modules-Admin-Token` header). Optional when SSO admins exist — a caller with an `admin`/`superuser` role for `MODULES_ADMIN_SERVICE` is authorized without it. With neither path available, module management fails closed (`503`). See [docs/modules.md](modules.md). |
+| `MODULES_ADMIN_SERVICE` | `profitmaker` | SSO service whose `admin`/`superuser` role authorizes the module lifecycle routes. Roles are granted in the auth-service admin UI. |
 
 ## Authentication
 
