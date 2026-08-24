@@ -88,7 +88,7 @@ describe('API_TOKEN (server-to-server)', () => {
 });
 
 describe('local session token', () => {
-  it('passes through and records {userId, authUserId: null}', async () => {
+  it('passes through and records {userId, authUserId: null, roles: null}', async () => {
     validateSessionMock.mockResolvedValue({ id: 'u-1', email: 'a@b.c', name: null });
     const { result, set, request } = await gate('/api/dashboards', {
       authorization: 'Bearer session-token',
@@ -96,18 +96,29 @@ describe('local session token', () => {
     expect(result).toBeUndefined();
     expect(set.status).toBeUndefined();
     expect(validateSessionMock).toHaveBeenCalledWith(expect.anything(), 'session-token');
-    expect(peekRequestIdentity(request)).toEqual({ userId: 'u-1', authUserId: null });
+    // A local session has no auth-service roles — null, never absent.
+    expect(peekRequestIdentity(request)).toEqual({ userId: 'u-1', authUserId: null, roles: null });
   });
 });
 
 describe('SSO JWT', () => {
-  it('passes through and records {userId, authUserId}', async () => {
-    ssoMock.mockResolvedValue({ authUserId: 'auth-1', id: 'u-2', email: 'x@y.z', name: 'X' });
+  it('passes through and records {userId, authUserId, roles}', async () => {
+    ssoMock.mockResolvedValue({
+      authUserId: 'auth-1',
+      id: 'u-2',
+      email: 'x@y.z',
+      name: 'X',
+      roles: { profitmaker: 'admin' },
+    });
     const { result, set, request } = await gate('/api/dashboards', {
       authorization: 'Bearer sso.jwt.token',
     });
     expect(result).toBeUndefined();
     expect(set.status).toBeUndefined();
-    expect(peekRequestIdentity(request)).toEqual({ userId: 'u-2', authUserId: 'auth-1' });
+    expect(peekRequestIdentity(request)).toEqual({
+      userId: 'u-2',
+      authUserId: 'auth-1',
+      roles: { profitmaker: 'admin' },
+    });
   });
 });

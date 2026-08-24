@@ -12,7 +12,9 @@ import { recordRequestIdentity } from '../modules/requestIdentity';
  * session token → SSO JWT. On the session/SSO paths the resolved caller is
  * recorded on the Request (see modules/requestIdentity) so the module
  * dispatcher can later mint `x-pm-user-*` headers — the only identity modules
- * ever see. API_TOKEN callers are services, not users: nothing is recorded.
+ * ever see. The SSO path also records the JWT's verified roles; they are
+ * host-internal (used by privileged routes) and never forwarded to modules.
+ * API_TOKEN callers are services, not users: nothing is recorded.
  *
  * Kept as a standalone function (not inline in index.ts) so the gate — the
  * security boundary of the whole HTTP surface — is unit-testable without
@@ -45,17 +47,24 @@ export async function authGate({
   // Allow valid local user session token. A local session carries no
   // auth-service identity (validateSession does not expose the users.sso_user_id
   // link), so authUserId is minted as null — same semantics as the socket
-  // path's billing user.
+  // path's billing user. It carries no roles either: roles exist only on the
+  // SSO path, where the verified JWT asserts them.
   const user = await validateSession(db, token);
   if (user) {
-    recordRequestIdentity(request, { userId: user.id, authUserId: null });
+    recordRequestIdentity(request, { userId: user.id, authUserId: null, roles: null });
     return;
   }
 
   // Allow a valid SSO JWT from auth.marketmaker.cc (verified via public JWKS).
+  // Roles ride along from the live claims so a role change applies at the next
+  // token; they stay host-internal (see requestIdentity).
   const ssoUser = await getSsoUserFromToken(token);
   if (ssoUser) {
-    recordRequestIdentity(request, { userId: ssoUser.id, authUserId: ssoUser.authUserId });
+    recordRequestIdentity(request, {
+      userId: ssoUser.id,
+      authUserId: ssoUser.authUserId,
+      roles: ssoUser.roles,
+    });
     return;
   }
 

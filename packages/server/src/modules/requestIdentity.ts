@@ -9,6 +9,15 @@
 export interface RequestIdentity {
   userId: string;
   authUserId: string | null;
+  /**
+   * Verified per-service roles from the SSO JWT (host-internal only — used by
+   * host routes to gate privileged operations). Null for local sessions, which
+   * carry no auth-service roles. rewriteForModule must NEVER inject roles into
+   * module-visible headers: modules are untrusted third-party code, and telling
+   * one "this caller is an admin" is a privilege leak. Roles stay on the host
+   * side of the boundary; modules see only the opaque ids.
+   */
+  roles: Record<string, string> | null;
 }
 
 const identities = new WeakMap<Request, RequestIdentity>();

@@ -11,21 +11,21 @@ describe('requestIdentity (WeakMap semantics)', () => {
 
   it('records and peeks an identity', () => {
     const request = new Request('http://localhost/api/x');
-    const identity = { userId: 'u-1', authUserId: 'auth-1' };
+    const identity = { userId: 'u-1', authUserId: 'auth-1', roles: { profitmaker: 'user' } };
     recordRequestIdentity(request, identity);
     expect(peekRequestIdentity(request)).toEqual(identity);
   });
 
   it('recording again overwrites the previous identity', () => {
     const request = new Request('http://localhost/api/x');
-    recordRequestIdentity(request, { userId: 'u-1', authUserId: null });
-    recordRequestIdentity(request, { userId: 'u-2', authUserId: 'auth-2' });
-    expect(peekRequestIdentity(request)).toEqual({ userId: 'u-2', authUserId: 'auth-2' });
+    recordRequestIdentity(request, { userId: 'u-1', authUserId: null, roles: null });
+    recordRequestIdentity(request, { userId: 'u-2', authUserId: 'auth-2', roles: null });
+    expect(peekRequestIdentity(request)).toEqual({ userId: 'u-2', authUserId: 'auth-2', roles: null });
   });
 
   it('identity does not leak to a different request (dies with the Request)', () => {
     const a = new Request('http://localhost/api/x');
-    recordRequestIdentity(a, { userId: 'u-1', authUserId: 'auth-1' });
+    recordRequestIdentity(a, { userId: 'u-1', authUserId: 'auth-1', roles: null });
     // GC-agnostic statement of WeakMap lifetime: a fresh Request never sees it.
     expect(peekRequestIdentity(new Request('http://localhost/api/x'))).toBeUndefined();
   });
@@ -41,7 +41,7 @@ describe('rewriteForModule identity headers', () => {
       'x-pm-user-id': 'forged-user',
       'x-pm-user-auth-id': 'forged-auth',
     });
-    recordRequestIdentity(request, { userId: 'real-user', authUserId: 'real-auth' });
+    recordRequestIdentity(request, { userId: 'real-user', authUserId: 'real-auth', roles: null });
 
     const out = rewriteForModule('hello', request);
     expect(out.headers.get('x-pm-user-id')).toBe('real-user');
@@ -53,7 +53,7 @@ describe('rewriteForModule identity headers', () => {
 
   it('injects only x-pm-user-id when the recorded identity has no auth id', () => {
     const request = moduleRequest({ 'x-pm-user-auth-id': 'forged-auth' });
-    recordRequestIdentity(request, { userId: 'local-user', authUserId: null });
+    recordRequestIdentity(request, { userId: 'local-user', authUserId: null, roles: null });
 
     const out = rewriteForModule('hello', request);
     expect(out.headers.get('x-pm-user-id')).toBe('local-user');
@@ -73,6 +73,24 @@ describe('rewriteForModule identity headers', () => {
     expect(out.headers.get('x-pm-user-auth-id')).toBeNull();
   });
 
+  it('strips a forged x-pm-user-role and never injects roles, even for an admin', () => {
+    // Roles are host-internal. Telling untrusted third-party module code "this
+    // caller is an admin" is a privilege leak, so the namespace is pre-empted:
+    // a caller-forged header is dropped and no recorded role map is ever set.
+    const request = moduleRequest({ 'x-pm-user-role': 'admin' });
+    recordRequestIdentity(request, {
+      userId: 'admin-user',
+      authUserId: 'auth-1',
+      roles: { profitmaker: 'admin' },
+    });
+
+    const out = rewriteForModule('hello', request);
+    expect(out.headers.get('x-pm-user-role')).toBeNull();
+    // Only the opaque ids cross the boundary — never the role map.
+    expect(out.headers.get('x-pm-user-id')).toBe('admin-user');
+    expect([...out.headers.keys()]).not.toContain('x-pm-user-role');
+  });
+
   it('still rewrites the mount prefix and strips proxy-authorization', () => {
     const request = moduleRequest({ 'proxy-authorization': 'Basic x' });
     const out = rewriteForModule('hello', request);
@@ -85,7 +103,7 @@ describe('identity flows through the Elysia lifecycle', () => {
   // The WeakMap is keyed on Request identity, so this only works if Elysia
   // hands the route handler the SAME Request object the lifecycle hook saw.
   it('recorded in onBeforeHandle, peekable in the route handler', async () => {
-    const identity = { userId: 'u-1', authUserId: 'auth-1' };
+    const identity = { userId: 'u-1', authUserId: 'auth-1', roles: null };
     const app = new Elysia()
       .onBeforeHandle(({ request }) => {
         recordRequestIdentity(request, identity);

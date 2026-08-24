@@ -682,6 +682,11 @@ export function rewriteForModule(id: string, request: Request): Request {
   // Identity is host-minted: drop caller assertions, then set recorded identity.
   sanitized.delete('x-pm-user-id');
   sanitized.delete('x-pm-user-auth-id');
+  // Roles are NOT part of the module protocol. Pre-empt the namespace so a
+  // caller-forged role header can never pose as a host assertion — and so no
+  // future edit here ever "helpfully" forwards the identity's role map to
+  // untrusted module code.
+  sanitized.delete('x-pm-user-role');
   const identity = peekRequestIdentity(request);
   if (identity) {
     sanitized.set('x-pm-user-id', identity.userId);
