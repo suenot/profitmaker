@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import type { InstalledModule, ModulePermission } from '@profitmaker/module-sdk';
-import { Search, RefreshCw, Trash2, AlertTriangle, Package, Download, Lock } from 'lucide-react';
+import { Search, RefreshCw, Trash2, AlertTriangle, Package, Download, Lock, KeyRound } from 'lucide-react';
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { moduleFetch } from './api';
+import { getAdminToken, setAdminToken, withAdminToken } from './adminToken';
 import { loadModules, unloadModule } from './loader';
 import { useModuleLoadStore } from './loaderState';
 import { useBuiltinModulesStore } from './builtinModules';
@@ -150,7 +151,7 @@ function InstalledTab() {
     setBusyId(m.id);
     try {
       const action = m.enabled ? 'disable' : 'enable';
-      const res = await moduleFetch(`/api/modules/${m.id}/${action}`, { method: 'POST' });
+      const res = await moduleFetch(`/api/modules/${m.id}/${action}`, withAdminToken({ method: 'POST' }));
       if (!res.ok) throw new Error(`${action} -> ${res.status}`);
       if (m.enabled) {
         // Just disabled — unregister its widget types so open widgets fall back
@@ -171,7 +172,7 @@ function InstalledTab() {
   const uninstall = async (m: InstalledModule) => {
     setBusyId(m.id);
     try {
-      const res = await moduleFetch(`/api/modules/${m.id}`, { method: 'DELETE' });
+      const res = await moduleFetch(`/api/modules/${m.id}`, withAdminToken({ method: 'DELETE' }));
       if (!res.ok) throw new Error(`uninstall -> ${res.status}`);
       const data = (await res.json()) as { pendingRestart?: boolean };
       // Unregister its widget types so open widgets fall back to the placeholder.
@@ -300,11 +301,11 @@ function BrowseTab() {
   const install = async (pkg: SearchResult) => {
     setInstalling(pkg.name);
     try {
-      const res = await moduleFetch('/api/modules/install', {
+      const res = await moduleFetch('/api/modules/install', withAdminToken({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: pkg.name, version: pkg.version }),
-      });
+      }));
       const data = (await res.json()) as { module?: InstalledModule; error?: string; details?: string };
       if (!res.ok || data.error) throw new Error(data.details || data.error || `install -> ${res.status}`);
       showSuccess(`Installed "${pkg.name}"`);
@@ -380,9 +381,26 @@ function BrowseTab() {
 // ---------------------------------------------------------------------------
 
 const ModuleStoreWidget: React.FC = () => {
+  const [adminToken, setAdminTokenState] = useState(getAdminToken());
+
   return (
     <div className="flex flex-col h-full bg-terminal-bg text-terminal-text">
       <Tabs defaultValue="browse" className="flex flex-col h-full">
+        <div className="mx-3 mt-2 flex items-center gap-2">
+          <KeyRound size={14} className="shrink-0 text-terminal-muted" />
+          <Input
+            type="password"
+            value={adminToken}
+            onChange={(e) => {
+              setAdminTokenState(e.target.value);
+              setAdminToken(e.target.value);
+            }}
+            placeholder="Operator token — required to install or remove modules"
+            autoComplete="off"
+            className="h-8 bg-terminal-widget/40 border-terminal-border text-terminal-text"
+            title="Sent as X-Modules-Admin-Token. The server operator sets the same value in MODULES_ADMIN_TOKEN."
+          />
+        </div>
         <TabsList className="mx-3 mt-2 self-start">
           <TabsTrigger value="browse">Browse</TabsTrigger>
           <TabsTrigger value="installed">Installed</TabsTrigger>
