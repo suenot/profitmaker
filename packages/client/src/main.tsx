@@ -47,13 +47,25 @@ useSessionStore.subscribe(() => {
     // list are per-user settings, so they only become readable once a token
     // exists.
     void useBuiltinModulesStore.getState().hydrate();
-    void useUserModulesStore.getState().hydrate();
-    // The previous identity may have had modules hidden at the time App's
-    // post-mount loadModules() ran, which skips hidden modules entirely. Load
-    // again for the new identity — safe to call repeatedly: concurrent calls
-    // share one in-flight promise, and a completed run just re-registers the
-    // still-enabled modules from the loader's bundle cache.
-    void loadModules();
+    // Sequence visibility hydration BEFORE loadModules: the loader's load
+    // filter reads the hidden list, and until the new identity's hydrate
+    // resolves the store still holds the PREVIOUS identity's list. Loading
+    // against that list would skip modules the old identity had hidden — an
+    // under-registration nothing recovers in the live session (the post-load
+    // sweep only unregisters). With the new list in place the filter reads
+    // the right identity's preference. hydrate() never rejects (it swallows
+    // fetch errors and still resolves), so the load always runs.
+    void useUserModulesStore
+      .getState()
+      .hydrate()
+      .finally(() => {
+        // The previous identity may have had modules hidden at the time App's
+        // post-mount loadModules() ran, which skips hidden modules entirely.
+        // Safe to call repeatedly: concurrent calls share one in-flight
+        // promise, and a completed run just re-registers the still-enabled
+        // modules from the loader's bundle cache.
+        void loadModules();
+      });
   }
   hadToken = hasToken;
 });

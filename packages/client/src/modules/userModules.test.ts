@@ -72,6 +72,18 @@ describe('hydrate', () => {
     expect(useUserModulesStore.getState().hydrated).toBe(true);
     expect(useUserModulesStore.getState().disabled).toEqual([]);
   });
+
+  it('resolves even when the settings fetch fails (the SSO transition chains loadModules on hydrate via .finally)', async () => {
+    // main.tsx runs loadModules() only after hydrate() settles, so hydrate
+    // rejecting would leave the new identity's enabled-but-previously-hidden
+    // modules unloaded for the rest of the session.
+    fetchMock.mockRejectedValue(new Error('network down'));
+
+    await expect(useUserModulesStore.getState().hydrate()).resolves.toBeUndefined();
+
+    expect(useUserModulesStore.getState().hydrated).toBe(true);
+    expect(useUserModulesStore.getState().disabled).toEqual([]);
+  });
 });
 
 describe('setEnabled', () => {
