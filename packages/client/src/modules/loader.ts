@@ -5,6 +5,7 @@ import { TERMINAL_API_VERSION } from '@profitmaker/module-sdk';
 import { resolveServerBase, moduleFetch } from './api';
 import { initRuntime, createModuleTerminal } from './runtime';
 import { useModuleLoadStore } from './loaderState';
+import { useUserModulesStore, applyModuleVisibility } from './userModules';
 import { useWidgetRegistry } from './registry';
 import { useNotificationStore } from '@/store/notificationStore';
 
@@ -152,7 +153,12 @@ export async function loadModules(): Promise<void> {
       return;
     }
 
-    const toLoad = modules.filter((m) => m.enabled && !m.error && m.manifest.frontend);
+    // Hidden modules are a per-user preference (userModules.ts): never import
+    // their bundles for this user, even on a cold start.
+    const { isHidden } = useUserModulesStore.getState();
+    const toLoad = modules.filter(
+      (m) => m.enabled && !m.error && m.manifest.frontend && !isHidden(m.id),
+    );
     await Promise.all(
       toLoad.map(async (m) => {
         try {
@@ -167,6 +173,14 @@ export async function loadModules(): Promise<void> {
         }
       }),
     );
+
+    // Re-apply visibility AFTER the loads settle. The filter above is not
+    // enough on its own: the hidden list hydrates asynchronously, so a hide
+    // can land while (or after) these bundles register, and any later
+    // loadModules() call re-registers cached bundles wholesale. Unregistering
+    // here closes both; without the filter, hidden widgets would flash in the
+    // picker between registration and this sweep.
+    applyModuleVisibility();
   })();
 
   try {

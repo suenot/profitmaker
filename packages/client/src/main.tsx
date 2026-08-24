@@ -3,6 +3,8 @@ import App from './App.tsx'
 import './index.css'
 import { registerBuiltinWidgets } from './modules/builtinWidgets'
 import { useBuiltinModulesStore } from './modules/builtinModules'
+import { useUserModulesStore } from './modules/userModules'
+import { loadModules } from './modules/loader'
 import { initRuntime } from './modules/runtime'
 import { start as startSyncBridge } from './services/syncBridge'
 import { bootstrap as bootstrapSso, getSsoToken } from './services/ssoClient'
@@ -23,6 +25,11 @@ initRuntime();
 // so the worst case is a widget briefly offered that the user had hidden.
 void useBuiltinModulesStore.getState().hydrate();
 
+// Same story for per-user module visibility (`modules.disabled`): the loader
+// also consults it, and its post-load sweep re-applies it, so a hydrate that
+// lands after a module bundle registers still hides that module's widgets.
+void useUserModulesStore.getState().hydrate();
+
 // SSO race recovery: market-data widgets mount and start fetching as soon as App
 // renders — which can BEAT the async bootstrap on a fresh login (no cached
 // session yet, cookie just set). Those first requests would 401 and the
@@ -36,9 +43,17 @@ useSessionStore.subscribe(() => {
   const hasToken = !!getSsoToken();
   if (hasToken && !hadToken) {
     void useDataProviderStore.getState().restartInactiveSubscriptions();
-    // Same transition: the built-in off-list is a per-user setting, so it only
-    // becomes readable once a token exists.
+    // Same transition: the built-in off-list and the per-user hidden-module
+    // list are per-user settings, so they only become readable once a token
+    // exists.
     void useBuiltinModulesStore.getState().hydrate();
+    void useUserModulesStore.getState().hydrate();
+    // The previous identity may have had modules hidden at the time App's
+    // post-mount loadModules() ran, which skips hidden modules entirely. Load
+    // again for the new identity — safe to call repeatedly: concurrent calls
+    // share one in-flight promise, and a completed run just re-registers the
+    // still-enabled modules from the loader's bundle cache.
+    void loadModules();
   }
   hadToken = hasToken;
 });
