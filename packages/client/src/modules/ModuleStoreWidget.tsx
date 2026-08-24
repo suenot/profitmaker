@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import type { InstalledModule, ModulePermission } from '@profitmaker/module-sdk';
-import { Search, RefreshCw, Trash2, AlertTriangle, Package, Download, Lock, KeyRound } from 'lucide-react';
+import { Search, RefreshCw, Trash2, AlertTriangle, Package, Download, Lock, KeyRound, Eye, EyeOff, ChevronDown } from 'lucide-react';
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -8,12 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 import { moduleFetch } from './api';
 import { getAdminToken, setAdminToken, withAdminToken } from './adminToken';
 import { loadModules, unloadModule } from './loader';
 import { useModuleLoadStore } from './loaderState';
 import { useBuiltinModulesStore } from './builtinModules';
+import { useUserModulesStore } from './userModules';
+import { useWidgetRegistry } from './registry';
 import { listBuiltinModules } from './builtinCatalog';
 import { resolveIcon } from './resolveIcon';
 import { useNotificationStore } from '@/store/notificationStore';
@@ -118,11 +121,22 @@ function BuiltinSection() {
   );
 }
 
-function InstalledTab() {
+function InstalledTab({ hasOperatorToken }: { hasOperatorToken: boolean }) {
   const [modules, setModules] = useState<InstalledModule[]>([]);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // Server truth: does THIS caller manage module lifecycle (verified SSO
+  // admin/superuser)? Falls back to the operator token for self-hosted
+  // local-session operators, for whom the server can only say `false`.
+  const [canManage, setCanManage] = useState(false);
+  const manageAllowed = canManage || hasOperatorToken;
   const loadErrors = useModuleLoadStore((s) => s.errors);
+  // Per-user visibility state. Select the slices, not the whole store — see the
+  // notification note below for why object subscriptions are avoided here.
+  const hiddenModules = useUserModulesStore((s) => s.disabled);
+  const visibilityBusyId = useUserModulesStore((s) => s.busyId);
+  const setHidden = useUserModulesStore((s) => s.setEnabled);
+  const hydrateVisibility = useUserModulesStore((s) => s.hydrate);
   // Select the actions, not the whole store: subscribing to the store object
   // makes every new notification a re-render + a fresh `notify` identity, which
   // re-runs the effects below — one failed request then loops forever.
@@ -134,8 +148,12 @@ function InstalledTab() {
     try {
       const res = await moduleFetch('/api/modules');
       if (!res.ok) throw new Error(`GET /api/modules -> ${res.status}`);
-      const data = (await res.json()) as { modules?: InstalledModule[] };
+      const data = (await res.json()) as {
+        modules?: InstalledModule[];
+        viewer?: { canManage?: boolean };
+      };
       setModules(data.modules ?? []);
+      setCanManage(data.viewer?.canManage ?? false);
     } catch (err) {
       showError('Failed to load installed modules', err instanceof Error ? err.message : String(err));
     } finally {
@@ -146,6 +164,50 @@ function InstalledTab() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  // main.tsx hydrates the hidden list at startup and on every SSO transition;
+  // this is the same defensive re-read BuiltinSection does for built-ins.
+  useEffect(() => {
+    void hydrateVisibility();
+  }, [hydrateVisibility]);
+
+  /**
+   * Per-user visibility (userModules.ts): hiding only unregisters the module's
+   * widget types in THIS browser — the module keeps running for everyone. This
+   * is deliberately NOT the /api/modules lifecycle route above, which is
+   * admin-gated and changes the installation for every user.
+   */
+  const toggleVisibility = async (m: InstalledModule) => {
+    const title = m.manifest.displayName || m.id;
+    const wasHidden = useUserModulesStore.getState().isHidden(m.id);
+    try {
+      if (!wasHidden) {
+        // Hide: setEnabled applies it locally (and rolls back on failure).
+        await setHidden(m.id, false);
+        return;
+      }
+      // Un-hide: persist, then re-register the widgets in this browser.
+      await setHidden(m.id, true);
+      await loadModules();
+      // Race guard: a loadModules() already in flight when the un-hide landed
+      // computed its load list while the module was still hidden, and the await
+      // above returned that stale shared run — nothing got registered. One
+      // fresh run now sees the module un-hidden. No loop: a module that
+      // legitimately fails to register stays error-flagged, as on any load.
+      if (
+        m.manifest.frontend &&
+        useWidgetRegistry.getState().typesByOwner(m.id).length === 0
+      ) {
+        await loadModules();
+      }
+      await refresh();
+    } catch (err) {
+      showError(
+        `Failed to ${wasHidden ? 'show' : 'hide'} "${title}"`,
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+  };
 
   const toggleEnabled = async (m: InstalledModule) => {
     setBusyId(m.id);
@@ -209,6 +271,8 @@ function InstalledTab() {
       {modules.map((m) => {
         const clientError = loadErrors[m.id];
         const serverError = m.error;
+        const title = m.manifest.displayName || m.id;
+        const hidden = hiddenModules.includes(m.id);
         return (
           <div key={m.id} className="rounded-md border border-terminal-border bg-terminal-widget/40 p-3">
             <div className="flex items-start justify-between gap-3">
@@ -224,23 +288,52 @@ function InstalledTab() {
                 )}
                 <PermissionBadges permissions={m.manifest.permissions ?? []} />
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Switch
-                  checked={m.enabled}
-                  disabled={busyId === m.id}
-                  onCheckedChange={() => void toggleEnabled(m)}
-                  aria-label={m.enabled ? 'Disable module' : 'Enable module'}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-terminal-muted hover:text-destructive"
-                  disabled={busyId === m.id}
-                  onClick={() => void uninstall(m)}
-                  title="Uninstall"
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                {/* Per-user visibility — the one control EVERY user gets. The
+                    eye icon + "for me" label keep it visually distinct from the
+                    server-wide switch below, which only managers see. */}
+                <div
+                  className="flex items-center gap-1.5"
+                  title="Per-user: hide this module's widgets from your own terminal. It keeps running for everyone else."
                 >
-                  <Trash2 size={14} />
-                </Button>
+                  {hidden ? (
+                    <EyeOff size={14} className="text-terminal-muted shrink-0" aria-hidden="true" />
+                  ) : (
+                    <Eye size={14} className="text-terminal-muted shrink-0" aria-hidden="true" />
+                  )}
+                  <span className="text-[10px] uppercase tracking-wide text-terminal-muted">for me</span>
+                  <Switch
+                    checked={!hidden}
+                    disabled={visibilityBusyId === m.id}
+                    onCheckedChange={() => void toggleVisibility(m)}
+                    aria-label={`Show ${title} in my terminal`}
+                  />
+                </div>
+                {/* Server-wide lifecycle — only for callers the server marked
+                    canManage, or after entering an operator token. */}
+                {manageAllowed && (
+                  <div
+                    className="flex items-center gap-2"
+                    title="Server-wide: affects every user of this server."
+                  >
+                    <Switch
+                      checked={m.enabled}
+                      disabled={busyId === m.id}
+                      onCheckedChange={() => void toggleEnabled(m)}
+                      aria-label={`${m.enabled ? 'Disable' : 'Enable'} ${title} server-wide`}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-terminal-muted hover:text-destructive"
+                      disabled={busyId === m.id}
+                      onClick={() => void uninstall(m)}
+                      title="Uninstall"
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -382,25 +475,42 @@ function BrowseTab() {
 
 const ModuleStoreWidget: React.FC = () => {
   const [adminToken, setAdminTokenState] = useState(getAdminToken());
+  const [tokenOpen, setTokenOpen] = useState(false);
 
   return (
     <div className="flex flex-col h-full bg-terminal-bg text-terminal-text">
       <Tabs defaultValue="browse" className="flex flex-col h-full">
-        <div className="mx-3 mt-2 flex items-center gap-2">
-          <KeyRound size={14} className="shrink-0 text-terminal-muted" />
-          <Input
-            type="password"
-            value={adminToken}
-            onChange={(e) => {
-              setAdminTokenState(e.target.value);
-              setAdminToken(e.target.value);
-            }}
-            placeholder="Operator token — required to install or remove modules"
-            autoComplete="off"
-            className="h-8 bg-terminal-widget/40 border-terminal-border text-terminal-text"
-            title="Sent as X-Modules-Admin-Token. The server operator sets the same value in MODULES_ADMIN_TOKEN."
-          />
-        </div>
+        {/* Operator token as a collapsed disclosure: SSO admins never need it
+            (the server authorizes their verified role), and for everyone else
+            it is a one-time entry, not a fixture at the top of the store. */}
+        <Collapsible open={tokenOpen} onOpenChange={setTokenOpen} className="mx-3 mt-2">
+          <CollapsibleTrigger
+            className="flex w-full items-center gap-1.5 text-xs text-terminal-muted hover:text-terminal-text"
+            title="Only needed when the server does not grant you an admin role (e.g. self-hosted without SSO)."
+          >
+            <KeyRound size={12} className="shrink-0" />
+            <span>Operator token{adminToken ? ' — saved' : ''}</span>
+            <ChevronDown
+              size={12}
+              className={`ml-auto shrink-0 transition-transform ${tokenOpen ? 'rotate-180' : ''}`}
+              aria-hidden="true"
+            />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <Input
+              type="password"
+              value={adminToken}
+              onChange={(e) => {
+                setAdminTokenState(e.target.value);
+                setAdminToken(e.target.value);
+              }}
+              placeholder="Only needed without an admin role"
+              autoComplete="off"
+              className="mt-2 h-8 bg-terminal-widget/40 border-terminal-border text-terminal-text"
+              title="Sent as X-Modules-Admin-Token. The server operator sets the same value in MODULES_ADMIN_TOKEN."
+            />
+          </CollapsibleContent>
+        </Collapsible>
         <TabsList className="mx-3 mt-2 self-start">
           <TabsTrigger value="browse">Browse</TabsTrigger>
           <TabsTrigger value="installed">Installed</TabsTrigger>
@@ -410,7 +520,7 @@ const ModuleStoreWidget: React.FC = () => {
             <BrowseTab />
           </TabsContent>
           <TabsContent value="installed" className="mt-0">
-            <InstalledTab />
+            <InstalledTab hasOperatorToken={!!adminToken} />
           </TabsContent>
         </ScrollArea>
       </Tabs>
