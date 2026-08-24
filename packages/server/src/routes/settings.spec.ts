@@ -57,6 +57,18 @@ describe('GET /api/settings/:key', () => {
     });
   });
 
+  it('returns the effective default for modules.disabled with no stored row', async () => {
+    const result = await getSetting('modules.disabled');
+
+    expect(result).toEqual({
+      status: 200,
+      body: {
+        success: true,
+        data: { key: 'modules.disabled', value: [] },
+      },
+    });
+  });
+
   it('prefers a stored value over the optional setting default', async () => {
     mocks.where.mockResolvedValueOnce([{
       key: 'builtinWidgets.disabled',

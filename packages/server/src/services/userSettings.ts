@@ -6,6 +6,8 @@ type UserSettingDefault = { defined: true; value: unknown } | { defined: false }
  */
 const optionalUserSettingDefaults = new Map<string, () => unknown>([
   ['builtinWidgets.disabled', () => []],
+  // Per-user list of module ids whose widgets are hidden from that user's picker.
+  ['modules.disabled', () => []],
 ]);
 
 export function getOptionalUserSettingDefault(key: string): UserSettingDefault {
