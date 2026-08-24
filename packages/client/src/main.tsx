@@ -8,7 +8,7 @@ import { loadModules } from './modules/loader'
 import { initRuntime } from './modules/runtime'
 import { start as startSyncBridge } from './services/syncBridge'
 import { bootstrap as bootstrapSso, getSsoToken } from './services/ssoClient'
-import { useSessionStore } from './services/sessionManager'
+import { useSessionStore, getActiveSession } from './services/sessionManager'
 import { useDataProviderStore } from './store/dataProviderStore'
 import { initAccounts } from './store/accountStore'
 
@@ -35,13 +35,19 @@ void useUserModulesStore.getState().hydrate();
 // session yet, cookie just set). Those first requests would 401 and the
 // subscriptions would stall. A cached session (reload) is already surfaced
 // SYNCHRONOUSLY by sessionManager.loadSessions(), so getSsoToken() returns it
-// before any fetch. For the fresh-login case, watch for the active token
-// transitioning absent -> present (bootstrap landing the session, or a manual
-// switch) and restart any subscriptions that stalled while it was missing.
+// before any fetch. Watch for the active token transitioning absent -> present
+// (bootstrap landing the session, or a manual switch) and restart any
+// subscriptions that stalled while it was missing. ALSO watch for an identity
+// quick-switch (setActiveSession): the token stays present throughout that pure
+// SPA switch, so without this second trigger the new identity would keep the
+// previous one's per-user hidden-module list and its toggles would write back
+// to the old identity's setting.
 let hadToken = !!getSsoToken();
+let lastSessionId = getActiveSession()?.id ?? null;
 useSessionStore.subscribe(() => {
   const hasToken = !!getSsoToken();
-  if (hasToken && !hadToken) {
+  const sessionId = getActiveSession()?.id ?? null;
+  if ((hasToken && !hadToken) || (hasToken && sessionId !== null && sessionId !== lastSessionId)) {
     void useDataProviderStore.getState().restartInactiveSubscriptions();
     // Same transition: the built-in off-list and the per-user hidden-module
     // list are per-user settings, so they only become readable once a token
@@ -68,6 +74,7 @@ useSessionStore.subscribe(() => {
       });
   }
   hadToken = hasToken;
+  lastSessionId = sessionId;
 });
 
 // Load the active identity's central exchange accounts on startup (and on every
