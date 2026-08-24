@@ -4,32 +4,67 @@ import { existsSync } from 'fs';
 import { createHash, timingSafeEqual } from 'node:crypto';
 
 import { moduleManager } from '../modules/manager';
+import { peekRequestIdentity } from '../modules/requestIdentity';
 import { MODULE_KEYWORD } from '@profitmaker/module-sdk';
 
 const NPM_SEARCH = 'https://registry.npmjs.org/-/v1/search';
 
 /**
- * Operator-only credential for the module lifecycle routes.
+ * Admin credential for the module lifecycle routes. Exactly two caller classes
+ * are authorized:
+ *
+ * (a) Operator shared secret — the X-Modules-Admin-Token header checked against
+ *     MODULES_ADMIN_TOKEN. Serves self-hosted installs and CI, where there is
+ *     no SSO deployment to lean on: whoever runs the server shares one secret
+ *     with their tooling.
+ * (b) SSO admin — a verified JWT whose per-service roles carry `admin` or
+ *     `superuser` for MODULES_ADMIN_SERVICE (default `profitmaker`). The auth
+ *     service mints this from its admin UI, and it is the hosted-deployment
+ *     answer to "who may install modules": the operator's admins, not every
+ *     account. Roles come only from the verified token recorded in
+ *     requestIdentity — never from a client-supplied claim.
  *
  * Installing a module means downloading an arbitrary npm package and importing
  * it into THIS process, where it runs unsandboxed with the server's full
  * privileges (DB, process.env, filesystem, every user's exchange credentials).
  * That is an operator action, not an end-user one, so it is deliberately NOT
- * satisfied by a user session and NOT by the general-purpose API_TOKEN — those
- * authenticate "some legitimate caller", which is a far larger set than "the
- * person who administers this deployment". On a hosted install any SSO account
- * is in the first set, which made this a remote-code-execution path.
+ * satisfied by a plain user session and NOT by the general-purpose API_TOKEN —
+ * local sessions and API_TOKEN callers carry no roles and remain token-path
+ * only, and a plain SSO `user` role is likewise still denied.
  *
- * Presented as its OWN header (`X-Modules-Admin-Token`) rather than as the
- * bearer token, because /api/* already spends the Authorization header on user
- * auth in index.ts — a caller sends their normal bearer AND this header.
+ * The token is presented as its OWN header (`X-Modules-Admin-Token`) rather
+ * than as the bearer token, because /api/* already spends the Authorization
+ * header on user auth in index.ts — a caller sends their normal bearer AND
+ * this header.
  *
- * FAIL CLOSED: when MODULES_ADMIN_TOKEN is unset, module management is
- * disabled outright rather than falling back to user auth. Read-only routes
- * (list/search) and dispatch are unaffected.
+ * FAIL CLOSED: with neither an authorized role nor a configured token there is
+ * NO path to lifecycle access — module management is disabled outright (503)
+ * rather than falling back to user auth. Read-only routes (list/search) and
+ * dispatch are unaffected.
  */
-const MODULES_ADMIN_TOKEN = process.env.MODULES_ADMIN_TOKEN || '';
 const ADMIN_HEADER = 'x-modules-admin-token';
+
+/** Lazy so tests can vi.stubEnv per request instead of baking in load-time values. */
+function modulesAdminToken(): string {
+  return process.env.MODULES_ADMIN_TOKEN || '';
+}
+
+function modulesAdminService(): string {
+  return process.env.MODULES_ADMIN_SERVICE || 'profitmaker';
+}
+
+/** Roles on MODULES_ADMIN_SERVICE that grant module lifecycle rights. Exact, case-sensitive. */
+const MODULE_ADMIN_ROLES = new Set(['admin', 'superuser']);
+
+/**
+ * True when the caller's VERIFIED identity (recorded by the auth gate from the
+ * SSO JWT) carries admin or superuser for the module admin service. Local
+ * sessions and API_TOKEN callers record roles: null and never qualify.
+ */
+function hasModuleAdminRole(request: Request): boolean {
+  const role = peekRequestIdentity(request)?.roles?.[modulesAdminService()];
+  return role !== undefined && MODULE_ADMIN_ROLES.has(role);
+}
 
 /**
  * Length-independent constant-time comparison of two secrets.
@@ -49,22 +84,26 @@ function secretsMatch(a: string, b: string): boolean {
 
 /**
  * Guard for the lifecycle routes. Returns an error body to short-circuit with,
- * or null when the caller proved operator rights.
+ * or null when the caller proved admin rights via either authorized class.
+ * The role check runs FIRST so SSO admins work even when MODULES_ADMIN_TOKEN
+ * is unset — that is the hosted-deployment case.
  */
-function operatorDenied(request: Request, set: { status?: number | string }): { error: string; details: string } | null {
-  if (!MODULES_ADMIN_TOKEN) {
+function adminDenied(request: Request, set: { status?: number | string }): { error: string; details: string } | null {
+  if (hasModuleAdminRole(request)) return null;
+  const token = modulesAdminToken();
+  if (!token) {
     set.status = 503;
     return {
       error: 'module management disabled',
-      details: 'MODULES_ADMIN_TOKEN is not configured on this server',
+      details: `module management requires an admin/superuser role for service ${modulesAdminService()} or a configured MODULES_ADMIN_TOKEN`,
     };
   }
   const presented = request.headers.get(ADMIN_HEADER) || '';
-  if (!presented || !secretsMatch(presented, MODULES_ADMIN_TOKEN)) {
+  if (!presented || !secretsMatch(presented, token)) {
     set.status = 403;
     return {
       error: 'operator credential required',
-      details: `module install/upgrade/uninstall requires a valid ${ADMIN_HEADER} header`,
+      details: `module install/upgrade/uninstall requires a valid ${ADMIN_HEADER} header or an admin role`,
     };
   }
   return null;
@@ -81,10 +120,13 @@ function operatorDenied(request: Request, set: { status?: number | string }): { 
  * intentionally bypass auth (public static assets), matching existing design.
  */
 export const moduleRoutes = new Elysia({ prefix: '/api/modules' })
-  // GET /api/modules — installed list + host apiVersion
-  .get('/', () => ({
+  // GET /api/modules — installed list + host apiVersion + whether THIS verified
+  // caller may use the lifecycle routes (server truth from the recorded
+  // identity, not a client-side decode of its own token).
+  .get('/', ({ request }) => ({
     modules: moduleManager.list(),
     apiVersion: moduleManager.apiVersion,
+    viewer: { canManage: hasModuleAdminRole(request) },
   }))
 
   // GET /api/modules/search?q= — proxy the npm registry keyword search
@@ -125,7 +167,7 @@ export const moduleRoutes = new Elysia({ prefix: '/api/modules' })
   .post(
     '/install',
     async ({ body, set, request }) => {
-      const denied = operatorDenied(request, set);
+      const denied = adminDenied(request, set);
       if (denied) return denied;
       try {
         const mod = await moduleManager.install({ name: body.name, version: body.version });
@@ -140,7 +182,7 @@ export const moduleRoutes = new Elysia({ prefix: '/api/modules' })
 
   // POST /api/modules/:id/enable — OPERATOR ONLY (starts third-party code)
   .post('/:id/enable', async ({ params, set, request }) => {
-    const denied = operatorDenied(request, set);
+    const denied = adminDenied(request, set);
     if (denied) return denied;
     try {
       return { module: await moduleManager.enable(params.id) };
@@ -152,7 +194,7 @@ export const moduleRoutes = new Elysia({ prefix: '/api/modules' })
 
   // POST /api/modules/:id/disable — OPERATOR ONLY (paired with enable)
   .post('/:id/disable', async ({ params, set, request }) => {
-    const denied = operatorDenied(request, set);
+    const denied = adminDenied(request, set);
     if (denied) return denied;
     try {
       return { module: await moduleManager.disable(params.id) };
@@ -164,7 +206,7 @@ export const moduleRoutes = new Elysia({ prefix: '/api/modules' })
 
   // POST /api/modules/:id/upgrade — OPERATOR ONLY
   .post('/:id/upgrade', async ({ params, set, request }) => {
-    const denied = operatorDenied(request, set);
+    const denied = adminDenied(request, set);
     if (denied) return denied;
     try {
       return { module: await moduleManager.upgrade(params.id) };
@@ -176,7 +218,7 @@ export const moduleRoutes = new Elysia({ prefix: '/api/modules' })
 
   // DELETE /api/modules/:id — uninstall — OPERATOR ONLY
   .delete('/:id', async ({ params, set, request }) => {
-    const denied = operatorDenied(request, set);
+    const denied = adminDenied(request, set);
     if (denied) return denied;
     try {
       return await moduleManager.uninstall(params.id);
