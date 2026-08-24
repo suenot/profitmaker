@@ -46,6 +46,12 @@ services:
       - KUCOIN_BROKER_FUTURES_PARTNER=${KUCOIN_BROKER_FUTURES_PARTNER}
       - KUCOIN_BROKER_FUTURES_KEY=${KUCOIN_BROKER_FUTURES_KEY}
       - KUCOIN_BROKER_FUTURES_NAME=${KUCOIN_BROKER_FUTURES_NAME}
+      # Listing module: operator key for the SHARED widgets (trends/stats/
+      # exchanges/status poller). Live listings bill each user's own key instead.
+      - LISTINGAPIS_API_KEY=${LISTINGAPIS_API_KEY:-}
+      # Operator credential for module lifecycle routes (Module Store
+      # install/enable/disable/upgrade/uninstall). Unset ⇒ management disabled.
+      - MODULES_ADMIN_TOKEN=${MODULES_ADMIN_TOKEN:-}
     volumes:
       # installed modules survive container rebuilds
       - modules-data:/app/packages/server/.modules
