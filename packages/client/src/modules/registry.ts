@@ -22,7 +22,12 @@ import type { WidgetDefinition } from '@profitmaker/module-sdk';
  * dashboard store; the registry only maps a `type` string to its definition.
  */
 
-/** Owner id for host-registered (built-in) widgets. Never a valid module id. */
+/**
+ * Owner id for host-registered (built-in) widgets. Never a valid module id:
+ * the sdk's RESERVED_MODULE_IDS rejects it at manifest validation (both server
+ * install paths parse through the schema), and unregisterByOwner() below
+ * refuses it defensively in case an install predates that check.
+ */
 export const HOST_OWNER = 'host';
 
 interface WidgetRegistryState {
@@ -112,6 +117,16 @@ export const useWidgetRegistry = create<WidgetRegistryState>((set, get) => ({
   },
 
   unregisterByOwner: (owner) => {
+    // Built-ins are never mass-removed. The manifest schema already rejects a
+    // module named HOST_OWNER at install; this guard also covers an install
+    // that predates it (hand-edited modules.json), where hiding that "module"
+    // would wipe every built-in widget including the Module Store itself.
+    if (owner === HOST_OWNER) {
+      console.error(
+        '[WidgetRegistry] rejected unregisterByOwner("host") — built-in widgets are never mass-removed'
+      );
+      return [];
+    }
     const removed = get().typesByOwner(owner);
     if (!removed.length) return removed;
     set((state) => {

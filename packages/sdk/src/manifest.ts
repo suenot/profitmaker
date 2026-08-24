@@ -52,6 +52,16 @@ export const ModuleBackendSchema = z.object({
   services: z.array(z.string()).default([]),
 });
 
+/**
+ * Module ids the host application reserves for itself. Must stay in sync with
+ * HOST_OWNER in packages/client/src/modules/registry.ts — the sdk cannot import
+ * client code, so the duplication is deliberate. A module named like the host
+ * owner would own every built-in widget's registry entry: hiding it in the
+ * Module Store would unregister every built-in widget, including the Module
+ * Store itself, so such ids are rejected at manifest validation.
+ */
+export const RESERVED_MODULE_IDS: readonly string[] = ['host'];
+
 export const ModuleManifestSchema = z.object({
   manifestVersion: z.literal(1),
   /** Globally-unique module id; used in URLs and widget-type namespacing */
@@ -66,9 +76,19 @@ export const ModuleManifestSchema = z.object({
   permissions: z.array(ModulePermissionSchema).default([]),
   frontend: ModuleFrontendSchema.optional(),
   backend: ModuleBackendSchema.optional(),
-}).refine((m) => m.frontend || m.backend, {
-  message: 'module must declare at least one of "frontend" or "backend"',
-});
+})
+  .refine((m) => m.frontend || m.backend, {
+    message: 'module must declare at least one of "frontend" or "backend"',
+  })
+  .superRefine((m, ctx) => {
+    if (RESERVED_MODULE_IDS.includes(m.id)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['id'],
+        message: `module id "${m.id}" is reserved by the host`,
+      });
+    }
+  });
 export type ModuleManifest = z.infer<typeof ModuleManifestSchema>;
 
 /** Shape of `GET /api/modules` entries shared between server, client and MCP */

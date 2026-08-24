@@ -124,4 +124,17 @@ describe('unregisterByOwner', () => {
     expect(useWidgetRegistry.getState().unregisterByOwner('ghost')).toEqual([]);
     expect(useWidgetRegistry.getState().getDefinition('chart')).toBeDefined();
   });
+
+  it('never mass-removes built-in widgets, even for a "host" owner', () => {
+    // RESERVED_MODULE_IDS in the sdk already rejects a module named "host" at
+    // install; this is the defensive backstop for installs that predate it.
+    useWidgetRegistry.getState().register(def('chart'));
+    useWidgetRegistry.getState().register(def('system.moduleStore'));
+
+    expect(useWidgetRegistry.getState().unregisterByOwner(HOST_OWNER)).toEqual([]);
+    expect(Object.keys(useWidgetRegistry.getState().definitions).sort()).toEqual([
+      'chart',
+      'system.moduleStore',
+    ]);
+  });
 });
