@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import type { InstalledModule, ModulePermission } from '@profitmaker/module-sdk';
-import { Search, RefreshCw, Trash2, AlertTriangle, Package, Download, Lock, KeyRound, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { Search, RefreshCw, Trash2, AlertTriangle, Package, Download, Lock, KeyRound, Eye, EyeOff, ChevronDown, Check } from 'lucide-react';
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -363,11 +363,28 @@ function BrowseTab() {
   const [loading, setLoading] = useState(false);
   const [installing, setInstalling] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
+  // Installed packages by npm name, so the Browse rows can show Installed/Update
+  // instead of a perpetually-offerable Install button. Keyed by npmName because
+  // that is what search results carry; module id only appears on installed rows.
+  const [installed, setInstalled] = useState<Record<string, InstalledModule>>({});
   // Select the actions, not the whole store: subscribing to the store object
   // makes every new notification a re-render + a fresh `notify` identity, which
   // re-runs the effects below — one failed request then loops forever.
   const showError = useNotificationStore((s) => s.showError);
   const showSuccess = useNotificationStore((s) => s.showSuccess);
+
+  const refreshInstalled = useCallback(async () => {
+    try {
+      const res = await moduleFetch('/api/modules');
+      if (!res.ok) throw new Error(`GET /api/modules -> ${res.status}`);
+      const data = (await res.json()) as { modules?: InstalledModule[] };
+      setInstalled(Object.fromEntries((data.modules ?? []).map((m) => [m.npmName, m])));
+    } catch {
+      // Browse stays fully functional without the marker — rows just show
+      // Install again. No banner: the Installed tab surfaces real failures.
+      setInstalled({});
+    }
+  }, []);
 
   const search = useCallback(async (q: string) => {
     setLoading(true);
@@ -386,10 +403,12 @@ function BrowseTab() {
     }
   }, [showError]);
 
-  // Initial unfiltered listing of available modules.
+  // Initial unfiltered listing of available modules, plus the installed map
+  // that decides Install vs Installed/Update per row.
   useEffect(() => {
     void search('');
-  }, [search]);
+    void refreshInstalled();
+  }, [search, refreshInstalled]);
 
   const install = async (pkg: SearchResult) => {
     setInstalling(pkg.name);
@@ -404,8 +423,29 @@ function BrowseTab() {
       showSuccess(`Installed "${pkg.name}"`);
       // Load the newly installed module's frontend without a page reload.
       await loadModules();
+      await refreshInstalled();
     } catch (err) {
       showError(`Failed to install "${pkg.name}"`, err instanceof Error ? err.message : String(err));
+    } finally {
+      setInstalling(null);
+    }
+  };
+
+  // Registry version differs from the installed one — upgrade to latest. The
+  // server always upgrades to its registry's latest (no version pinning on the
+  // route), which is the right action whether the registry row is newer or
+  // merely stale.
+  const upgrade = async (pkg: SearchResult, id: string) => {
+    setInstalling(pkg.name);
+    try {
+      const res = await moduleFetch(`/api/modules/${encodeURIComponent(id)}/upgrade`, withAdminToken({ method: 'POST' }));
+      const data = (await res.json()) as { module?: InstalledModule; error?: string; details?: string };
+      if (!res.ok || data.error) throw new Error(data.details || data.error || `upgrade -> ${res.status}`);
+      showSuccess(`Updated "${pkg.name}"`);
+      await loadModules();
+      await refreshInstalled();
+    } catch (err) {
+      showError(`Failed to update "${pkg.name}"`, err instanceof Error ? err.message : String(err));
     } finally {
       setInstalling(null);
     }
@@ -442,28 +482,50 @@ function BrowseTab() {
       )}
 
       <div className="space-y-2">
-        {results.map((pkg) => (
-          <div key={pkg.name} className="rounded-md border border-terminal-border bg-terminal-widget/40 p-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-terminal-text truncate">{pkg.name}</span>
-                  <span className="text-xs text-terminal-muted">v{pkg.version}</span>
+        {results.map((pkg) => {
+          const inst = installed[pkg.name];
+          const upToDate = !!inst && inst.version === pkg.version;
+          return (
+            <div key={pkg.name} className="rounded-md border border-terminal-border bg-terminal-widget/40 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-terminal-text truncate">{pkg.name}</span>
+                    <span className="text-xs text-terminal-muted">v{pkg.version}</span>
+                  </div>
+                  {pkg.description && <div className="text-xs text-terminal-muted mt-0.5">{pkg.description}</div>}
                 </div>
-                {pkg.description && <div className="text-xs text-terminal-muted mt-0.5">{pkg.description}</div>}
+                {upToDate ? (
+                  <Button size="sm" variant="ghost" disabled className="shrink-0 text-terminal-muted">
+                    <Check size={14} />
+                    Installed
+                  </Button>
+                ) : inst ? (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={installing === pkg.name}
+                    onClick={() => void upgrade(pkg, inst.id)}
+                    className="shrink-0"
+                  >
+                    {installing === pkg.name ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />}
+                    Update
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={installing === pkg.name}
+                    onClick={() => void install(pkg)}
+                    className="shrink-0"
+                  >
+                    {installing === pkg.name ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />}
+                    Install
+                  </Button>
+                )}
               </div>
-              <Button
-                size="sm"
-                disabled={installing === pkg.name}
-                onClick={() => void install(pkg)}
-                className="shrink-0"
-              >
-                {installing === pkg.name ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />}
-                Install
-              </Button>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
