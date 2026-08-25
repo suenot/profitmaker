@@ -10,6 +10,9 @@ COPY packages/client/package.json packages/client/
 COPY packages/cli/package.json packages/cli/
 COPY packages/mcp/package.json packages/mcp/
 COPY templates/module-template/package.json templates/module-template/
+# Workspaces glob includes modules/* — the lockfile records them, so every
+# workspace package.json must exist before `bun install --frozen-lockfile`.
+COPY modules/listing/package.json modules/listing/
 RUN bun install --frozen-lockfile
 
 # Copy all source
