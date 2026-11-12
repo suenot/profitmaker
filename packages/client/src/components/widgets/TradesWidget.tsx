@@ -7,6 +7,7 @@ import { useTradesWidgetsStore } from '../../store/tradesWidgetStore';
 import { useGroupStore } from '../../store/groupStore';
 import { Trade, MarketType } from '../../types/dataProviders';
 import { DollarSign, Hash, Clock, TrendingUp, TrendingDown } from 'lucide-react';
+import { useWidgetLook, type WidgetLookOverride } from '../../hooks/useWidgetLook';
 
 interface TradesWidgetV2Props {
   dashboardId?: string;
@@ -449,6 +450,7 @@ const TradesWidgetV2Inner: React.FC<TradesWidgetV2Props> = ({
           currentSubscription={currentSubscription}
           showTableHeader={widgetState.showTableHeader}
           largeTradeValue={widgetState.highlightLarge ? widgetState.largeTradeValue : 0}
+          look={widgetState.look}
         />
       </div>
 
@@ -496,13 +498,17 @@ const VirtualizedTradesList: React.FC<{
   showTableHeader: boolean;
   /** Quote value at or above which a row is emphasized; 0 disables it. */
   largeTradeValue?: number;
-}> = ({ trades, currentSubscription, showTableHeader, largeTradeValue = 0 }) => {
+  look?: WidgetLookOverride;
+}> = ({ trades, currentSubscription, showTableHeader, largeTradeValue = 0, look: override }) => {
   const parentRef = useRef<HTMLDivElement>(null);
+  const look = useWidgetLook(override);
+  // The original tape keeps its 20px rows; other styles take the preset's height.
+  const rowHeight = look.tape === 'classic' && !override?.rowHeight ? 20 : look.rowHeight;
 
   const virtualizer = useVirtualizer({
     count: trades.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 20, // Ultra compact rows
+    estimateSize: () => rowHeight, // Ultra compact rows
     overscan: 5, // Render 5 extra items outside visible area
     measureElement: undefined, // Force recalculation
   });
@@ -581,53 +587,79 @@ const VirtualizedTradesList: React.FC<{
             const isLarge = largeTradeValue > 0 && value >= largeTradeValue;
             const overshoot = isLarge ? Math.min(1, value / (largeTradeValue * 5)) : 0;
             const alpha = isLarge ? 0.28 + 0.45 * overshoot : 0.1;
+            const position: React.CSSProperties = {
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: `${rowHeight}px`,
+              transform: `translateY(${virtualRow.start}px)`,
+            };
+
+            if (look.tape === 'classic') {
+              return (
+                <div key={virtualRow.index} style={position}>
+                  <div
+                    className={`grid grid-cols-4 text-xs font-mono px-2 hover:bg-gray-50 dark:hover:bg-white/5 ${isLarge ? 'font-semibold' : ''}`}
+                    style={{
+                      height: rowHeight,
+                      lineHeight: `${rowHeight}px`,
+                      backgroundColor: isBuy ? `hsla(134, 61%, 41%, ${alpha})` : isSell ? `hsla(0, 84%, 60%, ${alpha})` : 'transparent',
+                      boxShadow: isLarge ? `inset 2px 0 0 ${isBuy ? 'hsl(134, 61%, 55%)' : 'hsl(0, 84%, 65%)'}` : undefined,
+                    }}
+                  >
+                    <div className="text-gray-600 dark:text-gray-400 flex items-center">
+                      {formatTime(trade.timestamp)}
+                    </div>
+                    <div
+                      className={`text-right flex items-center justify-end ${
+                        isBuy ? 'text-green-600 dark:text-green-400' :
+                        isSell ? 'text-red-600 dark:text-red-400' :
+                        'text-gray-900 dark:text-gray-100'
+                      }`}
+                    >
+                      {formatNumberWithSpaces(trade.price)}
+                    </div>
+                    <div className="text-right text-gray-900 dark:text-gray-100 flex items-center justify-end">
+                      {formatNumberWithSpaces(trade.amount)}
+                    </div>
+                    <div
+                      className={`text-right flex items-center justify-end ${
+                        isBuy ? 'text-green-600 dark:text-green-400' :
+                        isSell ? 'text-red-600 dark:text-red-400' :
+                        'text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      {formatNumberWithSpaces(trade.price * trade.amount)}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            const side = isBuy ? 'bid' : isSell ? 'ask' : null;
+            const sideText = side ? `var(--book-${side}-text)` : undefined;
+            const tinted = look.tape === 'tinted';
             return (
               <div
                 key={virtualRow.index}
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '20px !important',
-                  transform: `translateY(${virtualRow.start}px)`,
+                  ...position,
+                  fontSize: 'var(--row-font)',
+                  background: tinted && side ? `var(--book-${side}-zone)` : undefined,
+                  boxShadow: isLarge && side ? `inset 2px 0 0 var(--book-${side}-text)` : undefined,
                 }}
+                className={`grid grid-cols-4 items-center font-mono px-2 leading-none hover:bg-terminal-accent/60 ${
+                  tinted ? 'border-b border-terminal-border' : ''
+                } ${isLarge ? 'font-semibold' : ''}`}
               >
-                <div
-                  className={`grid grid-cols-4 text-xs font-mono px-2 hover:bg-gray-50 dark:hover:bg-white/5 ${isLarge ? 'font-semibold' : ''}`}
-                  style={{
-                    height: '20px !important',
-                    lineHeight: '20px !important',
-                    minHeight: '20px !important',
-                    maxHeight: '20px !important',
-                    backgroundColor: isBuy ? `hsla(134, 61%, 41%, ${alpha})` : isSell ? `hsla(0, 84%, 60%, ${alpha})` : 'transparent',
-                    boxShadow: isLarge ? `inset 2px 0 0 ${isBuy ? 'hsl(134, 61%, 55%)' : 'hsl(0, 84%, 65%)'}` : undefined,
-                  }}
-                >
-                  <div className="text-gray-600 dark:text-gray-400 flex items-center">
-                    {formatTime(trade.timestamp)}
-                  </div>
-                  <div 
-                    className={`text-right flex items-center justify-end ${
-                      isBuy ? 'text-green-600 dark:text-green-400' : 
-                      isSell ? 'text-red-600 dark:text-red-400' : 
-                      'text-gray-900 dark:text-gray-100'
-                    }`}
-                  >
-                    {formatNumberWithSpaces(trade.price)}
-                  </div>
-                  <div className="text-right text-gray-900 dark:text-gray-100 flex items-center justify-end">
-                    {formatNumberWithSpaces(trade.amount)}
-                  </div>
-                  <div 
-                    className={`text-right flex items-center justify-end ${
-                      isBuy ? 'text-green-600 dark:text-green-400' : 
-                      isSell ? 'text-red-600 dark:text-red-400' : 
-                      'text-gray-700 dark:text-gray-300'
-                    }`}
-                  > 
-                    {formatNumberWithSpaces(trade.price * trade.amount)}
-                  </div>
+                <div className="text-terminal-muted">{formatTime(trade.timestamp)}</div>
+                <div className="text-right" style={{ color: sideText }}>
+                  {formatNumberWithSpaces(trade.price)}
+                </div>
+                <div className="text-right text-terminal-text">{formatNumberWithSpaces(trade.amount)}</div>
+                <div className="text-right" style={{ color: sideText }}>
+                  {formatNumberWithSpaces(trade.price * trade.amount)}
                 </div>
               </div>
             );

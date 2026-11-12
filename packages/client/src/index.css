@@ -30,40 +30,106 @@
     --chart-grid: 220 16% 20%;
   }
 
-  [data-theme="midnight"] {
-    --terminal-bg: 226 40% 8%;
-    --terminal-widget: 226 34% 12%;
-    --terminal-accent: 226 32% 17%;
-    --terminal-text: 214 40% 96%;
-    --terminal-muted: 218 22% 70%;
-    --terminal-border: 226 28% 22%;
-    --palette-positive: 152 77% 43%;
-    --palette-negative: 356 77% 57%;
-    --chart-grid: 226 30% 16%;
-  }
-
-  [data-theme="oled"] {
-    --terminal-bg: 0 0% 0%;
-    --terminal-widget: 0 0% 5%;
-    --terminal-accent: 0 0% 11%;
-    --terminal-text: 0 0% 96%;
-    --terminal-muted: 0 0% 66%;
-    --terminal-border: 0 0% 16%;
-    --palette-positive: 152 77% 43%;
-    --palette-negative: 356 77% 57%;
+  /* Terminal presets. Each one also sets window chrome and type; the
+     widget layout that goes with it is in src/lib/themes.ts. */
+  [data-theme="onyx"] {
+    --terminal-bg: 0 0% 13%;
+    --terminal-widget: 0 0% 0%;
+    --terminal-accent: 0 0% 19%;
+    --terminal-text: 0 0% 86%;
+    --terminal-muted: 0 0% 55%;
+    --terminal-border: 0 0% 27%;
+    --palette-positive: 170 67% 40%;
+    --palette-negative: 355 88% 58%;
     --chart-grid: 0 0% 10%;
+    --terminal-brand: 224 100% 58%;
+    --terminal-brand-ink: 0 0% 100%;
+    --terminal-brand-text: 224 100% 66%;
+    --palette-radius: 4px;
+    --palette-widget-radius: 8px;
+    --palette-header-h: 2rem;
+    --palette-header-bg: hsl(0 0% 0%);
+    --palette-widget-border: transparent;
+    --palette-shadow: none;
+    --palette-widget-pad: 0.25rem;
+    --palette-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
+    --palette-num-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
   }
 
-  [data-theme="amber"] {
-    --terminal-bg: 30 14% 5%;
-    --terminal-widget: 30 12% 8%;
-    --terminal-accent: 32 16% 13%;
-    --terminal-text: 38 95% 62%;
-    --terminal-muted: 36 40% 48%;
-    --terminal-border: 32 20% 18%;
-    --palette-positive: 140 65% 48%;
-    --palette-negative: 4 85% 58%;
-    --chart-grid: 30 14% 12%;
+  [data-theme="gold"] {
+    --terminal-bg: 210 21% 5%;
+    --terminal-widget: 225 14% 11%;
+    --terminal-accent: 218 20% 16%;
+    --terminal-text: 216 14% 93%;
+    --terminal-muted: 215 10% 61%;
+    --terminal-border: 216 16% 24%;
+    --palette-positive: 157 61% 46%;
+    --palette-negative: 352 91% 62%;
+    --chart-grid: 218 20% 16%;
+    --terminal-brand: 48 97% 60%;
+    --terminal-brand-ink: 210 21% 5%;
+    --terminal-brand-text: 46 91% 49%;
+    --palette-radius: 8px;
+    --palette-widget-radius: 8px;
+    --palette-header-h: 2.5rem;
+    --palette-header-bg: hsl(225 14% 11%);
+    --palette-widget-border: transparent;
+    --palette-shadow: none;
+    --palette-widget-pad: 0.25rem;
+    --palette-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
+    --palette-num-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  }
+
+  [data-theme="dusk"] {
+    --terminal-bg: 240 9% 2%;
+    --terminal-widget: 240 7% 6%;
+    --terminal-accent: 240 7% 11%;
+    --terminal-text: 0 0% 100%;
+    --terminal-muted: 237 10% 56%;
+    --terminal-border: 240 8% 18%;
+    --palette-positive: 155 100% 43%;
+    --palette-negative: 351 100% 62%;
+    --chart-grid: 240 7% 9%;
+    --terminal-brand: 259 91% 58%;
+    --terminal-brand-ink: 0 0% 100%;
+    --terminal-brand-text: 259 91% 72%;
+    --palette-radius: 2px;
+    --palette-widget-radius: 2px;
+    --palette-header-h: 1.75rem;
+    --palette-header-bg: hsl(240 7% 8%);
+    --palette-shadow: none;
+    --palette-widget-pad: 0.25rem;
+    --palette-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
+    --palette-num-font: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --palette-book-ask-bar: rgba(245, 57, 94, 0.24);
+    --palette-book-bid-bar: rgba(20, 158, 97, 0.24);
+  }
+
+  [data-theme="ladder-night"] {
+    --terminal-bg: 237 33% 11%;
+    --terminal-widget: 245 32% 13%;
+    --terminal-accent: 237 26% 17%;
+    --terminal-text: 240 25% 92%;
+    --terminal-muted: 238 14% 60%;
+    --terminal-border: 238 24% 22%;
+    --palette-positive: 169 71% 42%;
+    --palette-negative: 339 71% 57%;
+    --chart-grid: 237 29% 14%;
+    --terminal-brand: 227 74% 59%;
+    --terminal-brand-ink: 0 0% 100%;
+    --terminal-brand-text: 227 74% 70%;
+    --palette-radius: 0px;
+    --palette-widget-radius: 0px;
+    --palette-header-h: 1.25rem;
+    --palette-header-bg: hsl(237 29% 14%);
+    --palette-shadow: none;
+    --palette-widget-pad: 0px;
+    --palette-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
+    --palette-num-font: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --palette-row-font: 11px;
+    --palette-book-ask-zone: hsl(339 71% 57% / 0.16);
+    --palette-book-bid-zone: hsl(169 71% 42% / 0.16);
+    --palette-book-volume-bar: hsl(38 100% 50% / 0.55);
   }
 
   [data-theme="light"] {
@@ -78,16 +144,59 @@
     --chart-grid: 210 20% 92%;
   }
 
-  [data-theme="paper"] {
-    --terminal-bg: 40 30% 94%;
-    --terminal-widget: 42 40% 98%;
-    --terminal-accent: 40 24% 90%;
-    --terminal-text: 30 20% 14%;
-    --terminal-muted: 30 10% 36%;
-    --terminal-border: 38 20% 82%;
-    --palette-positive: 152 70% 32%;
-    --palette-negative: 356 70% 48%;
-    --chart-grid: 40 20% 90%;
+  [data-theme="daylight"] {
+    --terminal-bg: 0 0% 92%;
+    --terminal-widget: 0 0% 100%;
+    --terminal-accent: 0 0% 95%;
+    --terminal-text: 0 0% 0%;
+    --terminal-muted: 0 0% 44%;
+    --terminal-border: 0 0% 92%;
+    --palette-positive: 170 67% 35%;
+    --palette-negative: 355 88% 52%;
+    --chart-grid: 0 0% 95%;
+    --terminal-brand: 224 100% 58%;
+    --terminal-brand-ink: 0 0% 100%;
+    --terminal-brand-text: 224 100% 50%;
+    --palette-radius: 4px;
+    --palette-widget-radius: 8px;
+    --palette-header-h: 2rem;
+    --palette-header-bg: hsl(0 0% 100%);
+    --palette-widget-border: transparent;
+    --palette-shadow: none;
+    --palette-widget-pad: 0.25rem;
+    --palette-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
+    --palette-num-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  }
+
+  [data-theme="ladder"] {
+    --terminal-bg: 0 0% 96%;
+    --terminal-widget: 0 0% 99%;
+    --terminal-accent: 0 0% 94%;
+    --terminal-text: 0 0% 7%;
+    --terminal-muted: 0 0% 42%;
+    --terminal-border: 0 0% 83%;
+    --palette-positive: 134 55% 36%;
+    --palette-negative: 354 67% 50%;
+    --chart-grid: 0 0% 93%;
+    --terminal-brand: 251 47% 18%;
+    --terminal-brand-ink: 0 0% 100%;
+    --terminal-brand-text: 251 47% 30%;
+    --palette-radius: 0px;
+    --palette-widget-radius: 0px;
+    --palette-header-h: 1.25rem;
+    --palette-header-bg: hsl(251 47% 18%);
+    --palette-header-text: hsl(0 0% 100%);
+    --palette-header-muted: hsl(0 0% 100% / 0.7);
+    --palette-shadow: none;
+    --palette-widget-pad: 0px;
+    --palette-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
+    --palette-num-font: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --palette-row-font: 11px;
+    --palette-book-ask-zone: #facfc9;
+    --palette-book-bid-zone: #cdf0d0;
+    --palette-book-volume-bar: #ffa400;
+    --palette-book-ask-text: hsl(0 0% 7%);
+    --palette-book-bid-text: hsl(0 0% 7%);
   }
 
   /*
@@ -129,6 +238,24 @@
 
     --radius: var(--palette-radius, 0.5rem);
     --widget-radius: var(--palette-widget-radius, 8px);
+
+    /* Window chrome. Palettes without these keep the original look. */
+    --widget-header-h: var(--palette-header-h, 2.5rem);
+    --widget-header-bg: var(--palette-header-bg, hsl(var(--terminal-accent) / 0.6));
+    --widget-header-text: var(--palette-header-text, hsl(var(--terminal-text)));
+    --widget-header-muted: var(--palette-header-muted, hsl(var(--terminal-muted)));
+    --widget-border: var(--palette-widget-border, hsl(var(--terminal-border)));
+    --widget-pad: var(--palette-widget-pad, 0.75rem);
+    --row-font: var(--palette-row-font, 0.75rem);
+
+    /* Order book and tape colours. Full colours, so a palette can set exact values. */
+    --book-ask-text: var(--palette-book-ask-text, hsl(var(--terminal-negative)));
+    --book-bid-text: var(--palette-book-bid-text, hsl(var(--terminal-positive)));
+    --book-ask-bar: var(--palette-book-ask-bar, hsl(var(--terminal-negative) / 0.18));
+    --book-bid-bar: var(--palette-book-bid-bar, hsl(var(--terminal-positive) / 0.18));
+    --book-ask-zone: var(--palette-book-ask-zone, hsl(var(--terminal-negative) / 0.12));
+    --book-bid-zone: var(--palette-book-bid-zone, hsl(var(--terminal-positive) / 0.12));
+    --book-volume-bar: var(--palette-book-volume-bar, hsl(var(--terminal-muted) / 0.35));
 
     --sidebar-background: var(--terminal-widget);
     --sidebar-foreground: var(--terminal-text);
@@ -203,7 +330,16 @@
   [data-radius="medium"] { --radius: 0.5rem; --widget-radius: 8px; }
   [data-radius="round"] { --radius: 0.875rem; --widget-radius: 16px; }
 
-  /* Font. Without the attribute the original font is used. */
+  /* A palette may bring its own UI font and number font. */
+  body {
+    font-family: var(--palette-font, inherit);
+  }
+  [data-theme] .font-mono {
+    font-family: var(--palette-num-font, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Font. Without the attribute the palette's font is used. */
   [data-font="geist"] body {
     font-family: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   }
@@ -256,13 +392,14 @@
   /* Light theme */
   background-color: hsl(var(--terminal-widget));
   backdrop-filter: blur(10px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--palette-shadow, 0 4px 20px rgba(0, 0, 0, 0.08));
+  border-color: var(--widget-border);
 }
 
 .dark .widget-container {
   /* Dark theme */
   background-color: hsl(var(--terminal-widget) / 0.95);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--palette-shadow, 0 8px 32px rgba(0, 0, 0, 0.2));
 }
 
 /* The default dark palette keeps its original widget surface exactly. */
@@ -272,17 +409,44 @@
 
 .widget-container:hover {
   /* Light theme */
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--palette-shadow, 0 8px 30px rgba(0, 0, 0, 0.12));
 }
 
 .dark .widget-container:hover {
   /* Dark theme */
-  box-shadow: 0 12px 42px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--palette-shadow, 0 12px 42px rgba(0, 0, 0, 0.25));
 }
 
 .widget-header {
   cursor: move;
   user-select: none;
+  height: var(--widget-header-h);
+  background: var(--widget-header-bg);
+  color: var(--widget-header-text);
+}
+
+/* Widgets outside a colour group: transparent header, unless the preset
+   draws its own window chrome. */
+.widget-header.is-transparent {
+  background: var(--palette-header-bg, transparent);
+}
+
+/* Header text and icons follow the chrome, which may be dark on a light palette. */
+.widget-header .widget-title {
+  color: var(--widget-header-text);
+}
+.widget-header .widget-icon {
+  color: var(--widget-header-muted);
+}
+.widget-header .widget-icon:hover {
+  color: var(--widget-header-text);
+}
+
+.widget-body {
+  height: calc(100% - var(--widget-header-h));
+}
+.widget-body.is-padded {
+  padding: var(--widget-pad);
 }
 
 .widget-resize-handle {
@@ -423,4 +587,13 @@
 /* Utility class to hide elements */
 .hide {
   display: none !important;
+}
+
+/* Header controls shrink with short title bars, so a preset's header height holds. */
+.widget-header button {
+  padding: clamp(0px, calc((var(--widget-header-h) - 22px) / 2), 4px);
+}
+.widget-header button > svg {
+  width: clamp(10px, calc(var(--widget-header-h) - 8px), 14px);
+  height: clamp(10px, calc(var(--widget-header-h) - 8px), 14px);
 }

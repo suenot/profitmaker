@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { MarketType } from '@/types/dataProviders';
+import type { WidgetLookOverride } from '@/hooks/useWidgetLook';
 
 interface TradesWidgetState {
   isAggregatedTrades: boolean;
@@ -21,6 +22,8 @@ interface TradesWidgetState {
   soundOnLarge: boolean;
   /** Merge consecutive prints at the same price and side into one row. */
   mergeSamePrice: boolean;
+  /** This widget's own look; unset values follow the active preset. */
+  look?: WidgetLookOverride;
 }
 
 interface TradesWidgetsStore {

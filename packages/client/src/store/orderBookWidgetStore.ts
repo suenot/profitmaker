@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { WidgetLookOverride } from '@/hooks/useWidgetLook';
 
 interface OrderBookWidgetState {
   exchange: string;
@@ -11,6 +12,8 @@ interface OrderBookWidgetState {
   isSubscribed: boolean;
   isLoading: boolean;
   error: string | null;
+  /** This widget's own look; unset values follow the active preset. */
+  look?: WidgetLookOverride;
 }
 
 interface OrderBookWidgetsStore {

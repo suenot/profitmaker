@@ -13,20 +13,60 @@ export type ThemeMode = 'dark' | 'light';
 /** What the user picks in the menu. `system` follows the OS. */
 export type ColorMode = ThemeMode | 'system';
 
+/** How the order book draws its rows. */
+export type BookStyle = 'classic' | 'bars' | 'ladder';
+/** How the trades tape draws its rows. */
+export type TapeStyle = 'classic' | 'plain' | 'tinted';
+
+/**
+ * Widget layout a preset brings with it. A widget may override each value in
+ * its own settings; see `useWidgetLook`.
+ */
+export interface WidgetLook {
+  book: BookStyle;
+  tape: TapeStyle;
+  /** Row height in px for the order book and the tape. */
+  rowHeight: number;
+}
+
+/**
+ * A preset is a whole look: the palette and window chrome in `index.css`
+ * under `[data-theme="<id>"]`, plus the widget layout here.
+ */
 export interface ThemePreset {
   id: string;
   label: string;
   mode: ThemeMode;
+  widgets: WidgetLook;
 }
 
+const ORIGINAL_WIDGETS: WidgetLook = { book: 'classic', tape: 'classic', rowHeight: 24 };
+
 export const THEMES: readonly ThemePreset[] = [
-  { id: 'dark', label: 'Graphite', mode: 'dark' },
-  { id: 'midnight', label: 'Midnight', mode: 'dark' },
-  { id: 'oled', label: 'OLED black', mode: 'dark' },
-  { id: 'amber', label: 'Amber terminal', mode: 'dark' },
-  { id: 'light', label: 'Light', mode: 'light' },
-  { id: 'paper', label: 'Paper', mode: 'light' },
+  { id: 'dark', label: 'Graphite', mode: 'dark', widgets: ORIGINAL_WIDGETS },
+  { id: 'onyx', label: 'Onyx', mode: 'dark', widgets: { book: 'bars', tape: 'plain', rowHeight: 20 } },
+  { id: 'gold', label: 'Gold', mode: 'dark', widgets: { book: 'bars', tape: 'plain', rowHeight: 20 } },
+  { id: 'dusk', label: 'Dusk', mode: 'dark', widgets: { book: 'bars', tape: 'plain', rowHeight: 18 } },
+  { id: 'ladder-night', label: 'Ladder night', mode: 'dark', widgets: { book: 'ladder', tape: 'tinted', rowHeight: 16 } },
+  { id: 'light', label: 'Light', mode: 'light', widgets: ORIGINAL_WIDGETS },
+  { id: 'daylight', label: 'Daylight', mode: 'light', widgets: { book: 'bars', tape: 'plain', rowHeight: 20 } },
+  { id: 'ladder', label: 'Ladder', mode: 'light', widgets: { book: 'ladder', tape: 'tinted', rowHeight: 16 } },
 ];
+
+export const BOOK_STYLES: readonly { id: BookStyle; label: string }[] = [
+  { id: 'classic', label: 'Rows' },
+  { id: 'bars', label: 'Depth bars' },
+  { id: 'ladder', label: 'Ladder' },
+];
+
+export const TAPE_STYLES: readonly { id: TapeStyle; label: string }[] = [
+  { id: 'classic', label: 'Soft tint' },
+  { id: 'plain', label: 'Coloured text' },
+  { id: 'tinted', label: 'Tinted rows' },
+];
+
+/** Row heights a widget can pick instead of the preset's. */
+export const ROW_HEIGHTS = [16, 18, 20, 24] as const;
 
 export const DEFAULT_THEME_ID = 'dark';
 export const DEFAULT_LIGHT_THEME_ID = 'light';
@@ -111,6 +151,8 @@ const DROPPED_KEYS = ['appearance'];
 /** Written by earlier versions: a theme id, and before that only `dark` / `light`. */
 const LEGACY_THEME_ID_KEY = 'themeId';
 const LEGACY_MODE_KEY = 'theme';
+/** Palettes that were removed, and the mode each one stood for. */
+const RETIRED_THEMES: Record<string, ThemeMode> = { midnight: 'dark', oled: 'dark', amber: 'dark', paper: 'light' };
 
 const TERMINAL_TOKENS = ['bg', 'widget', 'accent', 'text', 'muted', 'positive', 'negative', 'border'];
 const CUSTOM_ACCENT_PROPS = ['--terminal-brand', '--terminal-brand-ink', '--terminal-brand-text'];
@@ -160,7 +202,10 @@ export function loadAppearance(): Appearance {
 
     const legacyId = localStorage.getItem(LEGACY_THEME_ID_KEY) ?? localStorage.getItem(LEGACY_MODE_KEY);
     const legacy = THEMES.find((t) => t.id === legacyId);
-    if (!legacy) return { ...DEFAULT_APPEARANCE };
+    if (!legacy) {
+      const retired = legacyId ? RETIRED_THEMES[legacyId] : undefined;
+      return retired ? { ...DEFAULT_APPEARANCE, mode: retired } : { ...DEFAULT_APPEARANCE };
+    }
     const keepPalette = legacy.id !== 'dark' && legacy.id !== 'light';
     return normalizeAppearance({
       mode: legacy.mode,
