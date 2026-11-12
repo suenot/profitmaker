@@ -56,7 +56,7 @@ const BackendGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       const response = await fetch(`${serverUrl.replace(/\/$/, '')}/api/exchange/list`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      return response.status !== 401;
+      return response.status !== 401 && response.status !== 403;
     } catch {
       return true; // network errors are the health check's job
     }

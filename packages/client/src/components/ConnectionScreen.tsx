@@ -41,7 +41,7 @@ const ConnectionScreen: React.FC<ConnectionScreenProps> = ({ onConnected, reason
       const authResponse = await fetch(`${base}/api/exchange/list`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (authResponse.status === 401) {
+      if (authResponse.status === 401 || authResponse.status === 403) {
         setTestState('fail');
         setMessage(
           token
