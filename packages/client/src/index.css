@@ -17,42 +17,7 @@
  * --palette-radius and --palette-widget-radius; all of them are optional.
  */
 @layer base {
-  /* Marketmaker: the palette of marketmaker.cc. Default theme. */
   :root,
-  [data-theme="marketmaker"] {
-    --terminal-bg: 220 13% 5%;
-    --terminal-widget: 220 15% 8%;
-    --terminal-accent: 218 15% 11%;
-    --terminal-text: 216 15% 94%;
-    --terminal-muted: 221 9% 59%;
-    --terminal-border: 220 7% 16%;
-    --palette-positive: 81 87% 63%;
-    --palette-negative: 6 100% 68%;
-    --chart-grid: 220 10% 12%;
-    --terminal-brand: 81 87% 63%;
-    --terminal-brand-ink: 88 74% 5%;
-    --terminal-brand-text: 80 90% 70%;
-    --palette-radius: 0.625rem;
-    --palette-widget-radius: 14px;
-  }
-
-  [data-theme="marketmaker-light"] {
-    --terminal-bg: 220 16% 96%;
-    --terminal-widget: 0 0% 100%;
-    --terminal-accent: 216 15% 94%;
-    --terminal-text: 216 16% 6%;
-    --terminal-muted: 220 9% 37%;
-    --terminal-border: 220 9% 89%;
-    --palette-positive: 86 100% 25%;
-    --palette-negative: 7 73% 45%;
-    --chart-grid: 220 14% 93%;
-    --terminal-brand: 81 87% 63%;
-    --terminal-brand-ink: 88 74% 5%;
-    --terminal-brand-text: 86 100% 21%;
-    --palette-radius: 0.625rem;
-    --palette-widget-radius: 14px;
-  }
-
   [data-theme="dark"] {
     --terminal-bg: 220 13% 11%;
     --terminal-widget: 222 16% 16%;
@@ -165,9 +130,6 @@
     --radius: var(--palette-radius, 0.5rem);
     --widget-radius: var(--palette-widget-radius, 8px);
 
-    --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
-
     --sidebar-background: var(--terminal-widget);
     --sidebar-foreground: var(--terminal-text);
     --sidebar-primary: var(--terminal-text);
@@ -241,12 +203,12 @@
   [data-radius="medium"] { --radius: 0.5rem; --widget-radius: 8px; }
   [data-radius="round"] { --radius: 0.875rem; --widget-radius: 16px; }
 
-  /* Font. */
-  [data-font="system"] {
-    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Font. Without the attribute the original font is used. */
+  [data-font="geist"] body {
+    font-family: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   }
-  [data-font="mono"] {
-    --font-sans: var(--font-mono);
+  [data-font="mono"] body {
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   }
 
   /* Interface size: everything sized in rem follows the root font size. */
@@ -264,27 +226,9 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Prices and sizes line up in columns in every font. */
-  body {
-    font-variant-numeric: tabular-nums;
-  }
-
-  ::selection {
-    background: hsl(var(--terminal-brand, var(--terminal-text)) / 0.9);
-    color: hsl(var(--terminal-brand-ink, var(--terminal-bg)));
-  }
-
-  :focus-visible {
-    outline: 2px solid hsl(var(--ring));
-    outline-offset: 2px;
-  }
-
-  /* Film grain, as on marketmaker.cc. Off with the "Texture" setting. */
+  /* Fine film grain, opt-in with the "Texture" setting. */
   html[data-grain="on"] body::after {
     content: '';
     position: fixed;
@@ -319,6 +263,11 @@
   /* Dark theme */
   background-color: hsl(var(--terminal-widget) / 0.95);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* The default dark palette keeps its original widget surface exactly. */
+.dark[data-theme="dark"] .widget-container {
+  background-color: rgba(30, 34, 48, 0.95);
 }
 
 .widget-container:hover {

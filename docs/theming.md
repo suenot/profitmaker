@@ -1,7 +1,7 @@
 # Theming
 
-The terminal looks like marketmaker.cc by default: near-black graphite, lime
-accent, Geist and Geist Mono, rounded panels and a fine film grain.
+The terminal keeps its original look by default: the Graphite dark palette,
+the system font, 8px widget corners and no texture. Everything below is opt-in.
 
 ## What the user controls
 
@@ -13,20 +13,20 @@ every change previews on the terminal behind it.
 
 | Setting | Options | Attribute on `<html>` |
 |---|---|---|
-| Dark theme | Marketmaker, Graphite, Midnight, OLED black, Amber terminal | `data-theme` |
-| Light theme | Marketmaker, Light, Paper | `data-theme` |
+| Dark theme | Graphite, Midnight, OLED black, Amber terminal | `data-theme` |
+| Light theme | Light, Paper | `data-theme` |
 | Accent | Theme, lime, blue, violet, orange, pink, custom colour | `data-accent`, or inline vars for custom |
 | Price colours | Green up, Red up, Blue / orange (colour-blind safe) | `data-price` |
 | Corners | Theme, Square, Small, Medium, Round | `data-radius` |
-| Font | Geist, System, Mono | `data-font` |
+| Font | Default, Geist, Mono | `data-font` |
 | Interface size | Compact (14px), Default (16px), Large (18px) | `data-scale` |
 | Texture | Film grain on or off | `data-grain="on"` |
 
 Attributes are left off for the default value, such as `accent: 'palette'`.
 
-Settings are saved per device in `localStorage` under `appearance` as JSON. The
-older keys `themeId` and `theme` are migrated on load and removed on the next
-save.
+Settings are saved per device in `localStorage` under `appearance.v2` as JSON.
+The older keys `themeId` and `theme` are migrated on load; they and the old
+`appearance` key are removed on the next save.
 
 ## How it works
 
@@ -71,7 +71,7 @@ A palette may also set:
 |---|---|---|
 | `--terminal-brand` | `--terminal-text` | Primary buttons (`--primary`) |
 | `--terminal-brand-ink` | `--terminal-bg` | Text on primary buttons |
-| `--terminal-brand-text` | `--terminal-muted` | Brand colour as text: active tab, focus ring |
+| `--terminal-brand-text` | `--terminal-muted` | Brand colour as text: focus ring |
 | `--palette-radius` | `0.5rem` | Control corner radius (`--radius`) |
 | `--palette-widget-radius` | `8px` | Widget corner radius (`--widget-radius`) |
 
@@ -97,16 +97,15 @@ In React:
 ```tsx
 import { useTheme } from '@/hooks/useTheme';
 
-const { theme, themeId, appearance, setMode, updateAppearance, colorKey } = useTheme();
+const { theme, themeId, appearance, setMode, updateAppearance } = useTheme();
 // theme:   'dark' | 'light'  (Auto already resolved)
-// themeId: palette in use, e.g. 'marketmaker'
+// themeId: palette in use, e.g. 'dark'
 setMode('system');
 updateAppearance({ accent: 'blue', priceColors: 'colorblind' });
 ```
 
-Canvas libraries cannot read CSS variables. For them, `readChartColors()` from
-`@/lib/themes` returns the active colours as hex. Re-read them when `colorKey`
-changes; the chart widget does this.
+The chart widget keeps its own canvas colours for light and dark (see
+`getChartColors` in `widgets/Chart.tsx`).
 
 ## Adding a palette
 

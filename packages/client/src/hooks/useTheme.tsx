@@ -23,11 +23,6 @@ interface ThemeContextType {
   setMode: (mode: ColorMode) => void;
   updateAppearance: (patch: Partial<Appearance>) => void;
   resetAppearance: () => void;
-  /**
-   * Changes whenever anything that affects colours changes. Components that
-   * read computed styles (the chart) use it to know when to read them again.
-   */
-  colorKey: string;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -39,8 +34,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [prefersDark, setPrefersDark] = useState(() => window.matchMedia?.(DARK_QUERY).matches ?? true);
   const current = useRef(appearance);
 
-  // The document is updated before React re-renders, so components that read
-  // computed styles during render (the chart) already see the new palette.
+  // The document is updated before React re-renders.
   const commit = useCallback((next: Appearance) => {
     current.current = next;
     applyAppearance(next);
@@ -75,7 +69,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setMode: (mode) => updateAppearance({ mode }),
       updateAppearance,
       resetAppearance: () => commit({ ...DEFAULT_APPEARANCE }),
-      colorKey: [theme.id, appearance.accent, appearance.customAccent, appearance.priceColors].join('|'),
     };
   }, [appearance, prefersDark, updateAppearance, commit]);
 

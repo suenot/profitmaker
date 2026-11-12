@@ -24,14 +24,14 @@
     <script>
       (function () {
         try {
-          var a = JSON.parse(localStorage.getItem('appearance') || '{}');
-          var light = { 'marketmaker-light': 1, light: 1, paper: 1 };
+          var a = JSON.parse(localStorage.getItem('appearance.v2') || '{}');
+          var light = { light: 1, paper: 1 };
           var legacy = localStorage.getItem('themeId') || localStorage.getItem('theme');
-          var mode = a.mode || (legacy ? (light[legacy] ? 'light' : 'dark') : 'system');
+          var mode = a.mode || (legacy ? (light[legacy] ? 'light' : 'dark') : 'dark');
           if (mode === 'system') mode = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
           var id = mode === 'dark' ? a.darkTheme : a.lightTheme;
           if (!id && legacy && legacy !== 'dark' && legacy !== 'light' && !!light[legacy] === (mode === 'light')) id = legacy;
-          if (!id || !!light[id] !== (mode === 'light')) id = mode === 'dark' ? 'marketmaker' : 'marketmaker-light';
+          if (!id || !!light[id] !== (mode === 'light')) id = mode === 'dark' ? 'dark' : 'light';
           var root = document.documentElement;
           var d = root.dataset;
           d.theme = id;
@@ -40,9 +40,9 @@
           if (a.accent && a.accent !== 'palette' && a.accent !== 'custom') d.accent = a.accent;
           if (a.priceColors && a.priceColors !== 'classic') d.price = a.priceColors;
           if (a.radius && a.radius !== 'palette') d.radius = a.radius;
-          if (a.font && a.font !== 'geist') d.font = a.font;
+          if (a.font && a.font !== 'default') d.font = a.font;
           if (a.scale && a.scale !== 'default') d.scale = a.scale;
-          if (a.grain !== false) d.grain = 'on';
+          if (a.grain === true) d.grain = 'on';
         } catch (e) {}
       })();
     </script>

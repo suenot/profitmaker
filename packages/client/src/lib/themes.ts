@@ -20,18 +20,16 @@ export interface ThemePreset {
 }
 
 export const THEMES: readonly ThemePreset[] = [
-  { id: 'marketmaker', label: 'Marketmaker', mode: 'dark' },
   { id: 'dark', label: 'Graphite', mode: 'dark' },
   { id: 'midnight', label: 'Midnight', mode: 'dark' },
   { id: 'oled', label: 'OLED black', mode: 'dark' },
   { id: 'amber', label: 'Amber terminal', mode: 'dark' },
-  { id: 'marketmaker-light', label: 'Marketmaker', mode: 'light' },
   { id: 'light', label: 'Light', mode: 'light' },
   { id: 'paper', label: 'Paper', mode: 'light' },
 ];
 
-export const DEFAULT_THEME_ID = 'marketmaker';
-export const DEFAULT_LIGHT_THEME_ID = 'marketmaker-light';
+export const DEFAULT_THEME_ID = 'dark';
+export const DEFAULT_LIGHT_THEME_ID = 'light';
 
 export const ACCENTS = [
   { id: 'palette', label: 'Palette', swatch: null },
@@ -61,8 +59,8 @@ export const RADII = [
 export type RadiusId = (typeof RADII)[number]['id'];
 
 export const FONTS = [
+  { id: 'default', label: 'Default' },
   { id: 'geist', label: 'Geist' },
-  { id: 'system', label: 'System' },
   { id: 'mono', label: 'Mono' },
 ] as const;
 export type FontId = (typeof FONTS)[number]['id'];
@@ -87,24 +85,29 @@ export interface Appearance {
   radius: RadiusId;
   font: FontId;
   scale: ScaleId;
-  /** Film grain over the whole page, as on marketmaker.cc. */
+  /** Fine film grain over the whole page. Off by default. */
   grain: boolean;
 }
 
 export const DEFAULT_APPEARANCE: Appearance = {
-  mode: 'system',
+  mode: 'dark',
   darkTheme: DEFAULT_THEME_ID,
   lightTheme: DEFAULT_LIGHT_THEME_ID,
   accent: 'palette',
   customAccent: '#b9f34c',
   priceColors: 'classic',
   radius: 'palette',
-  font: 'geist',
+  font: 'default',
   scale: 'default',
-  grain: true,
+  grain: false,
 };
 
-const STORAGE_KEY = 'appearance';
+/**
+ * v2: the first version defaulted to a recoloured look; its records are
+ * dropped so everyone starts again from the original palettes.
+ */
+const STORAGE_KEY = 'appearance.v2';
+const DROPPED_KEYS = ['appearance'];
 /** Written by earlier versions: a theme id, and before that only `dark` / `light`. */
 const LEGACY_THEME_ID_KEY = 'themeId';
 const LEGACY_MODE_KEY = 'theme';
@@ -174,6 +177,7 @@ export function saveAppearance(appearance: Appearance): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appearance));
     localStorage.removeItem(LEGACY_THEME_ID_KEY);
     localStorage.removeItem(LEGACY_MODE_KEY);
+    for (const key of DROPPED_KEYS) localStorage.removeItem(key);
   } catch {
     // Storage can be unavailable (private mode); the look still applies for this page.
   }
@@ -216,7 +220,7 @@ export function applyAppearance(appearance: Appearance): ThemePreset {
   setData('accent', appearance.accent === 'palette' || appearance.accent === 'custom' ? null : appearance.accent);
   setData('price', appearance.priceColors === 'classic' ? null : appearance.priceColors);
   setData('radius', appearance.radius === 'palette' ? null : appearance.radius);
-  setData('font', appearance.font === 'geist' ? null : appearance.font);
+  setData('font', appearance.font === 'default' ? null : appearance.font);
   setData('scale', appearance.scale === 'default' ? null : appearance.scale);
   setData('grain', appearance.grain ? 'on' : null);
 
@@ -273,74 +277,5 @@ export function customAccentTokens(hex: string, mode: ThemeMode): Record<string,
     '--terminal-brand': `${h} ${s}% ${l}%`,
     '--terminal-brand-ink': luminance > 0.4 ? '220 13% 5%' : '0 0% 100%',
     '--terminal-brand-text': `${h} ${s}% ${textL}%`,
-  };
-}
-
-/** Converts a CSS variable value such as `220 13% 11%` to `#191c20`. */
-export function hslToHex(value: string, fallback = '#000000'): string {
-  const parts = value.trim().split(/[\s,/]+/).map((p) => parseFloat(p));
-  if (parts.length < 3 || parts.slice(0, 3).some((n) => Number.isNaN(n))) return fallback;
-
-  const h = ((parts[0] % 360) + 360) % 360;
-  const s = Math.min(Math.max(parts[1], 0), 100) / 100;
-  const l = Math.min(Math.max(parts[2], 0), 100) / 100;
-
-  const a = s * Math.min(l, 1 - l);
-  const channel = (n: number) => {
-    const k = (n + h / 30) % 12;
-    const c = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-    return Math.round(c * 255).toString(16).padStart(2, '0');
-  };
-  return `#${channel(0)}${channel(8)}${channel(4)}`;
-}
-
-export interface ChartColors {
-  back: string;
-  grid: string;
-  text: string;
-  /** Highlighted text: axis labels under the crosshair. */
-  textHL: string;
-  /** Legend title. */
-  textLG: string;
-  /** Legend values. */
-  llValue: string;
-  /** Legend bar background, translucent. */
-  llBack: string;
-  scale: string;
-  cross: string;
-  candleUp: string;
-  candleDw: string;
-  wickUp: string;
-  wickDw: string;
-  volUp: string;
-  volDw: string;
-}
-
-/** Chart colours of the active theme, as hex (canvas libraries cannot read CSS variables). */
-export function readChartColors(): ChartColors {
-  const style = getComputedStyle(document.documentElement);
-  const token = (name: string, fallback: string) => hslToHex(style.getPropertyValue(name), fallback);
-
-  const up = token('--terminal-positive', '#16c784');
-  const down = token('--terminal-negative', '#ea3943');
-  const back = token('--terminal-widget', '#22262f');
-  const text = token('--terminal-text', '#f8fafc');
-  const muted = token('--terminal-muted', '#b6bfc9');
-  return {
-    back,
-    grid: token('--chart-grid', '#2b303b'),
-    text: muted,
-    textHL: text,
-    textLG: text,
-    llValue: muted,
-    llBack: `${back}77`,
-    scale: token('--terminal-border', '#323a4d'),
-    cross: muted,
-    candleUp: up,
-    candleDw: down,
-    wickUp: up,
-    wickDw: down,
-    volUp: up,
-    volDw: down,
   };
 }

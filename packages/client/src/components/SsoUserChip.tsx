@@ -75,7 +75,7 @@ export const SsoUserChip: React.FC<{ onManageAccounts?: () => void }> = ({ onMan
       </button>
 
       {openMenu && (
-        <div className="absolute right-0 top-10 z-50 w-64 rounded-md border border-terminal-border bg-terminal-widget shadow-lg py-1">
+        <div className="absolute right-0 top-10 z-[11000] w-64 rounded-md border border-terminal-border bg-terminal-widget shadow-lg py-1">
           {/* Active identity header */}
           <div className="flex items-center gap-2 px-3 py-2 border-b border-terminal-border">
             <Avatar className="w-8 h-8">
