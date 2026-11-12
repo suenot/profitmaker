@@ -27,11 +27,17 @@ const moduleCmd = program.command('module').description('Module authoring helper
 moduleCmd
   .command('scaffold <name>')
   .description('Create a new module from templates/module-template (renames the id everywhere).')
-  .option('--dir <dir>', 'Parent directory for the new module (default: cwd)')
+  .option('--dir <dir>', 'Parent directory for the new module (default: the repo modules/ folder, a Bun workspace)')
   .action(async (name: string, opts: { dir?: string }) => {
     try {
       const dest = await scaffoldModule(name, opts.dir);
-      process.stdout.write(`Created module at ${dest}\nNext: cd ${dest} && bun install && bun run build\n`);
+      const inWorkspace = /[\\/]modules[\\/][^\\/]+$/.test(dest);
+      process.stdout.write(
+        `Created module at ${dest}\n` +
+          (inWorkspace
+            ? `Next: bun install (at the repo root), then cd ${dest} && bun run build\n`
+            : `Warning: outside the repo's modules/ folder the SDK dependency (workspace:*) will not resolve until @profitmaker/module-sdk is published to npm.\n`),
+      );
     } catch (err) {
       process.stderr.write((err instanceof Error ? err.message : String(err)) + '\n');
       process.exitCode = 1;

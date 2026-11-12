@@ -20,7 +20,11 @@ export async function scaffoldModule(name: string, destDir?: string): Promise<st
     throw new Error(`module template not found at ${templateDir}`);
   }
 
-  const dest = resolve(destDir || process.cwd(), id);
+  // Default parent: the monorepo's modules/ folder. It is a Bun workspace, so
+  // the template's `workspace:*` SDK dependency resolves there. The SDK is not
+  // on npm yet, so a module created elsewhere cannot `bun install` on its own.
+  const modulesDir = resolve(dirname(templateDir), '..', 'modules');
+  const dest = resolve(destDir || modulesDir, id);
   if (existsSync(dest)) {
     throw new Error(`destination already exists: ${dest}`);
   }
