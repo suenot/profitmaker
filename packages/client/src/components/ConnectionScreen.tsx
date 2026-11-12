@@ -10,6 +10,8 @@ type TestState = 'idle' | 'testing' | 'ok' | 'fail';
 interface ConnectionScreenProps {
   /** Called after the user saves a working (or chosen) server config. */
   onConnected?: () => void;
+  /** Optional reason shown above the form (e.g. the server rejected the token). */
+  reason?: string;
 }
 
 /**
@@ -17,7 +19,7 @@ interface ConnectionScreenProps {
  * ccxt-server; this lets the user point at one (URL + token), test it, and
  * persist the result into the primary-server provider config.
  */
-const ConnectionScreen: React.FC<ConnectionScreenProps> = ({ onConnected }) => {
+const ConnectionScreen: React.FC<ConnectionScreenProps> = ({ onConnected, reason }) => {
   const { providers, updateProvider } = useDataProviderStore();
   const primary = providers['primary-server'];
   const primaryConfig = (primary?.config ?? {}) as { serverUrl?: string; token?: string };
@@ -35,6 +37,19 @@ const ConnectionScreen: React.FC<ConnectionScreenProps> = ({ onConnected }) => {
       const response = await fetch(`${base}/health`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json().catch(() => ({}));
+      // /health is public, so also prove the token: an authenticated no-op read.
+      const authResponse = await fetch(`${base}/api/exchange/list`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (authResponse.status === 401) {
+        setTestState('fail');
+        setMessage(
+          token
+            ? 'Server reachable, but it rejected this access token (check API_TOKEN on the server).'
+            : 'Server reachable, but it needs an access token: enter the API_TOKEN the server was started with.',
+        );
+        return false;
+      }
       setTestState('ok');
       setMessage(`Server reachable — v${data.version ?? '?'} • ccxt ${data.ccxtVersion ?? '?'} • db ${data.db ? 'ok' : 'down'}`);
       return true;
@@ -66,6 +81,7 @@ const ConnectionScreen: React.FC<ConnectionScreenProps> = ({ onConnected }) => {
             Profitmaker runs against a ccxt-server backend. Enter its URL and access
             token to continue.
           </p>
+          {reason && <p className="text-sm text-amber-500">{reason}</p>}
 
           <div className="space-y-2">
             <Label htmlFor="cs-server-url">Server URL</Label>
