@@ -33,10 +33,10 @@ const Chart: React.FC<ChartProps> = ({
   };
   
   // Theme integration
-  // Colours come from the active theme's CSS variables; `themeId` only invalidates the memo.
-  const { themeId } = useTheme();
+  // Colours come from the active theme's CSS variables; `colorKey` only invalidates the memo.
+  const { colorKey } = useTheme();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const chartColors = useMemo(() => readChartColors(), [themeId]);
+  const chartColors = useMemo(() => readChartColors(), [colorKey]);
   
   // Store integration
   const { 

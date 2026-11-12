@@ -1,7 +1,9 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
+import '@fontsource-variable/geist'
+import '@fontsource-variable/geist-mono'
 import './index.css'
-import { applyTheme, getStoredThemeId } from './lib/themes'
+import { applyAppearance, loadAppearance } from './lib/themes'
 import { registerBuiltinWidgets } from './modules/builtinWidgets'
 import { useBuiltinModulesStore } from './modules/builtinModules'
 import { useUserModulesStore } from './modules/userModules'
@@ -100,6 +102,6 @@ bootstrapSso().finally(() => {
   }
 });
 
-applyTheme(getStoredThemeId());
+applyAppearance(loadAppearance());
 
 createRoot(document.getElementById("root")!).render(<App />);

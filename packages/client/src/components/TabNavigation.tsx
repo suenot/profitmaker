@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Bell, Palette, X } from 'lucide-react';
+import { Plus, Bell, SlidersHorizontal, X } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useNotificationStore } from '@/store/notificationStore';
@@ -7,6 +7,7 @@ import { Badge } from './ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -16,12 +17,15 @@ import {
 import UserDrawer from './UserDrawer';
 import NotificationHistory from './NotificationHistory';
 import { AnimatedLogo } from './AnimatedLogo';
+import AppearanceSettings, { COLOR_MODES } from './AppearanceSettings';
 import { SsoUserChip } from './SsoUserChip';
 
 const TabNavigation: React.FC = () => {
   const [isUserDrawerOpen, setIsUserDrawerOpen] = useState(false);
   const [isNotificationHistoryOpen, setIsNotificationHistoryOpen] = useState(false);
-  const { themeId, themes, setTheme } = useTheme();
+  const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
+  const { appearance, setMode } = useTheme();
+  const ModeIcon = (COLOR_MODES.find((m) => m.id === appearance.mode) ?? COLOR_MODES[2]).icon;
 
 
   // State for renaming dashboards
@@ -153,7 +157,7 @@ const TabNavigation: React.FC = () => {
                 className={`flex items-center px-4 h-full cursor-pointer whitespace-nowrap ${
                   activeDashboardId === dashboard.id ? 'text-terminal-text border-b-2' : 'text-terminal-muted hover:bg-terminal-accent/10'
                 }`}
-                style={activeDashboardId === dashboard.id ? { borderBottomColor: 'hsl(349.8deg 92.59% 78.82%)' } : {}}
+                style={activeDashboardId === dashboard.id ? { borderBottomColor: 'hsl(var(--terminal-brand-text, 349.8 92.59% 78.82%))' } : {}}
                 onClick={() => {
                   if (editingDashboardId !== dashboard.id) {
                     console.log('TabNavigation: Switching to dashboard', dashboard.id, dashboard.title);
@@ -223,32 +227,28 @@ const TabNavigation: React.FC = () => {
             <DropdownMenuTrigger asChild>
               <button
                 className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors"
-                title="Theme"
-                aria-label="Theme"
+                title="Appearance"
+                aria-label="Appearance"
               >
-                <Palette size={18} className="text-terminal-muted" />
+                <ModeIcon size={18} className="text-terminal-muted" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Theme</DropdownMenuLabel>
+              <DropdownMenuLabel>Appearance</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={themeId} onValueChange={setTheme}>
-                {themes.map((t) => (
-                  <DropdownMenuRadioItem key={t.id} value={t.id} className="gap-2">
-                    {/* The swatch carries its own data-theme, so it previews that palette. */}
-                    <span
-                      data-theme={t.id}
-                      aria-hidden="true"
-                      className="flex h-4 w-7 shrink-0 items-center justify-center gap-0.5 rounded-sm border border-terminal-border bg-terminal-bg"
-                    >
-                      <span className="h-2 w-1 rounded-[1px] bg-terminal-positive" />
-                      <span className="h-2 w-1 rounded-[1px] bg-terminal-negative" />
-                      <span className="h-2 w-1 rounded-[1px] bg-terminal-text" />
-                    </span>
-                    {t.label}
+              <DropdownMenuRadioGroup value={appearance.mode} onValueChange={(v) => setMode(v as typeof appearance.mode)}>
+                {COLOR_MODES.map(({ id, label, icon: Icon }) => (
+                  <DropdownMenuRadioItem key={id} value={id} className="gap-2">
+                    <Icon size={14} className="text-terminal-muted" />
+                    {label}
                   </DropdownMenuRadioItem>
                 ))}
               </DropdownMenuRadioGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="gap-2" onSelect={() => setIsAppearanceOpen(true)}>
+                <SlidersHorizontal size={14} className="text-terminal-muted" />
+                Customize…
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           {/* Single auth/identity control: active-identity avatar → compact
@@ -258,6 +258,7 @@ const TabNavigation: React.FC = () => {
         </div>
       </div>
       <UserDrawer open={isUserDrawerOpen} onOpenChange={setIsUserDrawerOpen} />
+      <AppearanceSettings open={isAppearanceOpen} onOpenChange={setIsAppearanceOpen} />
       <NotificationHistory 
         open={isNotificationHistoryOpen} 
         onOpenChange={(open) => {

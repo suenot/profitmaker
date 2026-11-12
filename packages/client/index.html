@@ -18,15 +18,31 @@
       allowlist here would break the app rather than protect it.
     -->
     <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'" />
-    <!-- Sets the theme before the first paint so the page does not flash.
-         Keep the mode list in sync with src/lib/themes.ts. -->
+    <!-- Applies the appearance before the first paint so the page does not
+         flash. A short copy of applyAppearance in src/lib/themes.ts: keep the
+         two in sync. The custom accent colour is applied there, not here. -->
     <script>
       (function () {
         try {
-          var id = localStorage.getItem('themeId') || localStorage.getItem('theme') || 'dark';
+          var a = JSON.parse(localStorage.getItem('appearance') || '{}');
+          var light = { 'marketmaker-light': 1, light: 1, paper: 1 };
+          var legacy = localStorage.getItem('themeId') || localStorage.getItem('theme');
+          var mode = a.mode || (legacy ? (light[legacy] ? 'light' : 'dark') : 'system');
+          if (mode === 'system') mode = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          var id = mode === 'dark' ? a.darkTheme : a.lightTheme;
+          if (!id && legacy && legacy !== 'dark' && legacy !== 'light' && !!light[legacy] === (mode === 'light')) id = legacy;
+          if (!id || !!light[id] !== (mode === 'light')) id = mode === 'dark' ? 'marketmaker' : 'marketmaker-light';
           var root = document.documentElement;
-          root.dataset.theme = id;
-          root.classList.add(id === 'light' || id === 'paper' ? 'light' : 'dark');
+          var d = root.dataset;
+          d.theme = id;
+          root.classList.add(mode);
+          root.style.colorScheme = mode;
+          if (a.accent && a.accent !== 'palette' && a.accent !== 'custom') d.accent = a.accent;
+          if (a.priceColors && a.priceColors !== 'classic') d.price = a.priceColors;
+          if (a.radius && a.radius !== 'palette') d.radius = a.radius;
+          if (a.font && a.font !== 'geist') d.font = a.font;
+          if (a.scale && a.scale !== 'default') d.scale = a.scale;
+          if (a.grain !== false) d.grain = 'on';
         } catch (e) {}
       })();
     </script>
