@@ -134,7 +134,14 @@ export class CCXTServerProviderImpl implements MarketDataProvider {
    * authenticates market-data requests. Mirrors modules/api.ts#resolveServerToken.
    */
   private authToken(): string | undefined {
-    return getSsoToken() || this.token;
+    return (
+      getSsoToken() ||
+      this.token ||
+      // Self-hosted fallbacks, same order as services/syncBridge.ts#resolveToken:
+      // a token saved in this browser, then the build-time VITE_API_TOKEN.
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('profitmaker.apiToken') || undefined : undefined) ||
+      (import.meta.env.VITE_API_TOKEN as string | undefined)
+    );
   }
 
   get info(): ProviderInfo {

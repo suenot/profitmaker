@@ -50,7 +50,12 @@ export function resolveServerBase(): string {
  * ccxt-server provider.
  */
 export function resolveServerToken(): string | undefined {
-  return getSsoToken() || resolveCcxtServerProvider()?.config.token;
+  return (
+    getSsoToken() ||
+    resolveCcxtServerProvider()?.config.token ||
+    (typeof localStorage !== 'undefined' ? localStorage.getItem('profitmaker.apiToken') || undefined : undefined) ||
+    (import.meta.env.VITE_API_TOKEN as string | undefined)
+  );
 }
 
 /**
