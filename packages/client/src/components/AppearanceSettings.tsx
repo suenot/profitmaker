@@ -241,7 +241,7 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ open, onOpenCha
           <div className="flex items-center justify-between gap-4">
             <div>
               <h3 className="text-xs font-medium uppercase tracking-wide text-terminal-muted">Texture</h3>
-              <p className="mt-0.5 text-xs text-terminal-muted/80">Fine film grain, as on marketmaker.cc</p>
+              <p className="mt-0.5 text-xs text-terminal-muted/80">Fine film grain over the terminal</p>
             </div>
             <Switch checked={appearance.grain} onCheckedChange={(grain) => updateAppearance({ grain })} aria-label="Texture" />
           </div>

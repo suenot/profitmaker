@@ -2,12 +2,40 @@ import React, { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallba
 import { RefreshCw } from 'lucide-react';
 import { NightVision } from 'night-vision';
 import { useTheme } from '../../hooks/useTheme';
-import { readChartColors } from '../../lib/themes';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { useGroupStore } from '../../store/groupStore';
 import { useChartWidgetsStore } from '../../store/chartWidgetStore';
 import { Timeframe, MarketType, ChartUpdateEvent, Candle } from '../../types/dataProviders';
 import TimeframeSelect from '../ui/TimeframeSelect';
+
+// Theme-aware chart colors
+const getChartColors = (theme: 'dark' | 'light') => {
+  if (theme === 'light') {
+    return {
+      back: '#ffffff',        // Белый фон для светлой темы
+      grid: '#e5e7eb',        // Светло-серая сетка  
+      candleUp: '#16c784',    // Ярко-зеленый для роста
+      candleDw: '#ea3943',    // Ярко-красный для падения
+      wickUp: '#16c784',      // Ярко-зеленый фитиль
+      wickDw: '#ea3943',      // Ярко-красный фитиль
+      volUp: '#16c784',       // Зеленый объем
+      volDw: '#ea3943',       // Красный объем
+    };
+  } else {
+    return {
+      back: '#000000',        // Черный фон для темной темы
+      grid: '#1a1a1a',        // Темная сетка
+      candleUp: '#26a69a',    // Зеленые свечи
+      candleDw: '#ef5350',    // Красные свечи
+      wickUp: '#26a69a',      // Зеленые фитили
+      wickDw: '#ef5350',      // Красные фитили
+      volUp: '#26a69a',       // Зеленый объем
+      volDw: '#ef5350',       // Красный объем
+    };
+  }
+};
+
+
 
 interface ChartProps {
   dashboardId?: string;
@@ -33,10 +61,8 @@ const Chart: React.FC<ChartProps> = ({
   };
   
   // Theme integration
-  // Colours come from the active theme's CSS variables; `colorKey` only invalidates the memo.
-  const { colorKey } = useTheme();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const chartColors = useMemo(() => readChartColors(), [colorKey]);
+  const { theme } = useTheme();
+  const chartColors = useMemo(() => getChartColors(theme), [theme]);
   
   // Store integration
   const { 
@@ -189,7 +215,10 @@ const Chart: React.FC<ChartProps> = ({
         width: chartDimensions.width,
         height: chartDimensions.height,
         autoResize: true,
-        colors: chartColors,
+        colors: {
+          back: chartColors.back,
+          grid: chartColors.grid
+        },
         data: { panes: [] } // Empty data initially
       } as any); // Type assertion для TypeScript
 
@@ -546,7 +575,10 @@ const Chart: React.FC<ChartProps> = ({
           width: chartDimensions.width,
           height: chartDimensions.height,
           autoResize: true,
-          colors: chartColors,
+          colors: {
+            back: chartColors.back,
+            grid: chartColors.grid
+          },
           data: currentData // Restore data
         } as any); // Type assertion для TypeScript
         
