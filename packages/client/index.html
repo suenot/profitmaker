@@ -18,6 +18,18 @@
       allowlist here would break the app rather than protect it.
     -->
     <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'" />
+    <!-- Sets the theme before the first paint so the page does not flash.
+         Keep the mode list in sync with src/lib/themes.ts. -->
+    <script>
+      (function () {
+        try {
+          var id = localStorage.getItem('themeId') || localStorage.getItem('theme') || 'dark';
+          var root = document.documentElement;
+          root.dataset.theme = id;
+          root.classList.add(id === 'light' || id === 'paper' ? 'light' : 'dark');
+        } catch (e) {}
+      })();
+    </script>
   </head>
 
   <body>

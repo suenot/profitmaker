@@ -2,104 +2,132 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Themes. Every theme sets the terminal palette under [data-theme="<id>"];
+ * the list of ids lives in src/lib/themes.ts. Values are HSL channels so that
+ * Tailwind can add opacity: hsl(var(--terminal-bg) / 0.5).
+ *
+ * The selector is [data-theme] and not :root[data-theme], so any element can
+ * carry data-theme and render a preview of that theme (the theme picker does).
+ */
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+  :root,
+  [data-theme="dark"] {
+    --terminal-bg: 220 13% 11%;
+    --terminal-widget: 222 16% 16%;
+    --terminal-accent: 217 29% 16%;
+    --terminal-text: 210 40% 98%;
+    --terminal-muted: 210 15% 75%;
+    --terminal-border: 220 21% 25%;
+    --terminal-positive: 152 77% 43%;
+    --terminal-negative: 356 77% 57%;
+    --chart-grid: 220 16% 20%;
+  }
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+  [data-theme="midnight"] {
+    --terminal-bg: 226 40% 8%;
+    --terminal-widget: 226 34% 12%;
+    --terminal-accent: 226 32% 17%;
+    --terminal-text: 214 40% 96%;
+    --terminal-muted: 218 22% 70%;
+    --terminal-border: 226 28% 22%;
+    --terminal-positive: 152 77% 43%;
+    --terminal-negative: 356 77% 57%;
+    --chart-grid: 226 30% 16%;
+  }
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+  [data-theme="oled"] {
+    --terminal-bg: 0 0% 0%;
+    --terminal-widget: 0 0% 5%;
+    --terminal-accent: 0 0% 11%;
+    --terminal-text: 0 0% 96%;
+    --terminal-muted: 0 0% 66%;
+    --terminal-border: 0 0% 16%;
+    --terminal-positive: 152 77% 43%;
+    --terminal-negative: 356 77% 57%;
+    --chart-grid: 0 0% 10%;
+  }
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+  [data-theme="amber"] {
+    --terminal-bg: 30 14% 5%;
+    --terminal-widget: 30 12% 8%;
+    --terminal-accent: 32 16% 13%;
+    --terminal-text: 38 95% 62%;
+    --terminal-muted: 36 40% 48%;
+    --terminal-border: 32 20% 18%;
+    --terminal-positive: 140 65% 48%;
+    --terminal-negative: 4 85% 58%;
+    --chart-grid: 30 14% 12%;
+  }
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+  [data-theme="light"] {
+    --terminal-bg: 210 28% 98%;
+    --terminal-widget: 0 0% 100%;
+    --terminal-accent: 210 28% 96%;
+    --terminal-text: 222 44% 8%;
+    --terminal-muted: 220 25% 25%;
+    --terminal-border: 210 28% 90%;
+    --terminal-positive: 152 77% 43%;
+    --terminal-negative: 356 77% 57%;
+    --chart-grid: 210 20% 92%;
+  }
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+  [data-theme="paper"] {
+    --terminal-bg: 40 30% 94%;
+    --terminal-widget: 42 40% 98%;
+    --terminal-accent: 40 24% 90%;
+    --terminal-text: 30 20% 14%;
+    --terminal-muted: 30 10% 36%;
+    --terminal-border: 38 20% 82%;
+    --terminal-positive: 152 70% 32%;
+    --terminal-negative: 356 70% 48%;
+    --chart-grid: 40 20% 90%;
+  }
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+  /*
+   * shadcn/ui tokens are aliases of the terminal palette, so dialogs, menus,
+   * inputs and toasts follow the active theme without their own colour set.
+   */
+  :root,
+  [data-theme] {
+    --background: var(--terminal-bg);
+    --foreground: var(--terminal-text);
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --card: var(--terminal-widget);
+    --card-foreground: var(--terminal-text);
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --popover: var(--terminal-widget);
+    --popover-foreground: var(--terminal-text);
+
+    --primary: var(--terminal-text);
+    --primary-foreground: var(--terminal-bg);
+
+    --secondary: var(--terminal-accent);
+    --secondary-foreground: var(--terminal-text);
+
+    --muted: var(--terminal-accent);
+    --muted-foreground: var(--terminal-muted);
+
+    --accent: var(--terminal-accent);
+    --accent-foreground: var(--terminal-text);
+
+    --destructive: var(--terminal-negative);
+    --destructive-foreground: 0 0% 100%;
+
+    --border: var(--terminal-border);
+    --input: var(--terminal-border);
+    --ring: var(--terminal-muted);
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
+    --sidebar-background: var(--terminal-widget);
+    --sidebar-foreground: var(--terminal-text);
+    --sidebar-primary: var(--terminal-text);
+    --sidebar-primary-foreground: var(--terminal-bg);
+    --sidebar-accent: var(--terminal-accent);
+    --sidebar-accent-foreground: var(--terminal-text);
+    --sidebar-border: var(--terminal-border);
     --sidebar-ring: 217.2 91.2% 59.8%;
-
-    /* Modern Light Trading Theme - HSL */
-    --terminal-bg: 210 28% 98%;        /* #F7F9FB */
-    --terminal-widget: 0 0% 100%;      /* #FFFFFF */
-    --terminal-accent: 210 28% 96%;    /* #F1F5F9 */
-    --terminal-text: 222 44% 8%;       /* #0F1419 - более темный для лучшей контрастности */
-    --terminal-muted: 220 25% 25%;     /* #2D3748 - более темный для лучшей читаемости */
-    --terminal-positive: 152 77% 43%;  /* #16C784 */
-    --terminal-negative: 356 77% 57%;  /* #EA3943 */
-    --terminal-border: 210 28% 90%;    /* #E2E8F0 */
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-
-    /* Modern Dark Trading Theme - optimized for OrderBook readability */
-    --terminal-bg: 220 13% 11%;           /* #181B20 */
-    --terminal-widget: 222 16% 16%;       /* #23272F */
-    --terminal-accent: 217 29% 16%;       /* #242D39 */
-    --terminal-text: 210 40% 98%;         /* #F7FAFC */
-    --terminal-muted: 210 15% 75%;        /* #B8C4D0 - улучшенная контрастность */
-    --terminal-positive: 152 77% 43%;     /* #16C784 */
-    --terminal-negative: 356 77% 57%;     /* #EA3943 */
-    --terminal-border: 220 21% 25%;       /* #343A46 - чуть светлее для лучшей видимости */
   }
 }
 
@@ -133,7 +161,7 @@
 
 .dark .widget-container {
   /* Dark theme */
-  background-color: rgba(30, 34, 48, 0.95);
+  background-color: hsl(var(--terminal-widget) / 0.95);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
