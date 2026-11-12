@@ -9,9 +9,50 @@
  *
  * The selector is [data-theme] and not :root[data-theme], so any element can
  * carry data-theme and render a preview of that theme (the theme picker does).
+ *
+ * --palette-positive / --palette-negative are the palette's own price colours;
+ * the --terminal-* pair that widgets use is derived below, so the price colour
+ * setting can swap them. A palette may also set --terminal-brand (accent fill),
+ * --terminal-brand-ink (text on it), --terminal-brand-text (accent as text),
+ * --palette-radius and --palette-widget-radius; all of them are optional.
  */
 @layer base {
+  /* Marketmaker: the palette of marketmaker.cc. Default theme. */
   :root,
+  [data-theme="marketmaker"] {
+    --terminal-bg: 220 13% 5%;
+    --terminal-widget: 220 15% 8%;
+    --terminal-accent: 218 15% 11%;
+    --terminal-text: 216 15% 94%;
+    --terminal-muted: 221 9% 59%;
+    --terminal-border: 220 7% 16%;
+    --palette-positive: 81 87% 63%;
+    --palette-negative: 6 100% 68%;
+    --chart-grid: 220 10% 12%;
+    --terminal-brand: 81 87% 63%;
+    --terminal-brand-ink: 88 74% 5%;
+    --terminal-brand-text: 80 90% 70%;
+    --palette-radius: 0.625rem;
+    --palette-widget-radius: 14px;
+  }
+
+  [data-theme="marketmaker-light"] {
+    --terminal-bg: 220 16% 96%;
+    --terminal-widget: 0 0% 100%;
+    --terminal-accent: 216 15% 94%;
+    --terminal-text: 216 16% 6%;
+    --terminal-muted: 220 9% 37%;
+    --terminal-border: 220 9% 89%;
+    --palette-positive: 86 100% 25%;
+    --palette-negative: 7 73% 45%;
+    --chart-grid: 220 14% 93%;
+    --terminal-brand: 81 87% 63%;
+    --terminal-brand-ink: 88 74% 5%;
+    --terminal-brand-text: 86 100% 21%;
+    --palette-radius: 0.625rem;
+    --palette-widget-radius: 14px;
+  }
+
   [data-theme="dark"] {
     --terminal-bg: 220 13% 11%;
     --terminal-widget: 222 16% 16%;
@@ -19,8 +60,8 @@
     --terminal-text: 210 40% 98%;
     --terminal-muted: 210 15% 75%;
     --terminal-border: 220 21% 25%;
-    --terminal-positive: 152 77% 43%;
-    --terminal-negative: 356 77% 57%;
+    --palette-positive: 152 77% 43%;
+    --palette-negative: 356 77% 57%;
     --chart-grid: 220 16% 20%;
   }
 
@@ -31,8 +72,8 @@
     --terminal-text: 214 40% 96%;
     --terminal-muted: 218 22% 70%;
     --terminal-border: 226 28% 22%;
-    --terminal-positive: 152 77% 43%;
-    --terminal-negative: 356 77% 57%;
+    --palette-positive: 152 77% 43%;
+    --palette-negative: 356 77% 57%;
     --chart-grid: 226 30% 16%;
   }
 
@@ -43,8 +84,8 @@
     --terminal-text: 0 0% 96%;
     --terminal-muted: 0 0% 66%;
     --terminal-border: 0 0% 16%;
-    --terminal-positive: 152 77% 43%;
-    --terminal-negative: 356 77% 57%;
+    --palette-positive: 152 77% 43%;
+    --palette-negative: 356 77% 57%;
     --chart-grid: 0 0% 10%;
   }
 
@@ -55,8 +96,8 @@
     --terminal-text: 38 95% 62%;
     --terminal-muted: 36 40% 48%;
     --terminal-border: 32 20% 18%;
-    --terminal-positive: 140 65% 48%;
-    --terminal-negative: 4 85% 58%;
+    --palette-positive: 140 65% 48%;
+    --palette-negative: 4 85% 58%;
     --chart-grid: 30 14% 12%;
   }
 
@@ -67,8 +108,8 @@
     --terminal-text: 222 44% 8%;
     --terminal-muted: 220 25% 25%;
     --terminal-border: 210 28% 90%;
-    --terminal-positive: 152 77% 43%;
-    --terminal-negative: 356 77% 57%;
+    --palette-positive: 152 77% 43%;
+    --palette-negative: 356 77% 57%;
     --chart-grid: 210 20% 92%;
   }
 
@@ -79,8 +120,8 @@
     --terminal-text: 30 20% 14%;
     --terminal-muted: 30 10% 36%;
     --terminal-border: 38 20% 82%;
-    --terminal-positive: 152 70% 32%;
-    --terminal-negative: 356 70% 48%;
+    --palette-positive: 152 70% 32%;
+    --palette-negative: 356 70% 48%;
     --chart-grid: 40 20% 90%;
   }
 
@@ -99,8 +140,8 @@
     --popover: var(--terminal-widget);
     --popover-foreground: var(--terminal-text);
 
-    --primary: var(--terminal-text);
-    --primary-foreground: var(--terminal-bg);
+    --primary: var(--terminal-brand, var(--terminal-text));
+    --primary-foreground: var(--terminal-brand-ink, var(--terminal-bg));
 
     --secondary: var(--terminal-accent);
     --secondary-foreground: var(--terminal-text);
@@ -111,14 +152,21 @@
     --accent: var(--terminal-accent);
     --accent-foreground: var(--terminal-text);
 
-    --destructive: var(--terminal-negative);
+    --destructive: var(--palette-negative);
     --destructive-foreground: 0 0% 100%;
 
     --border: var(--terminal-border);
     --input: var(--terminal-border);
-    --ring: var(--terminal-muted);
+    --ring: var(--terminal-brand-text, var(--terminal-muted));
 
-    --radius: 0.5rem;
+    --terminal-positive: var(--palette-positive);
+    --terminal-negative: var(--palette-negative);
+
+    --radius: var(--palette-radius, 0.5rem);
+    --widget-radius: var(--palette-widget-radius, 8px);
+
+    --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
 
     --sidebar-background: var(--terminal-widget);
     --sidebar-foreground: var(--terminal-text);
@@ -131,6 +179,81 @@
   }
 }
 
+/*
+ * Appearance settings (src/lib/themes.ts). Each one is a data attribute on
+ * <html>; these blocks come after the palettes and aliases, so they win.
+ */
+@layer base {
+  /* Accent colour. Without the attribute the palette's own accent is used. */
+  [data-accent="lime"] {
+    --terminal-brand: 81 87% 63%;
+    --terminal-brand-ink: 88 74% 5%;
+    --terminal-brand-text: 80 90% 70%;
+  }
+  [data-accent="blue"] {
+    --terminal-brand: 217 91% 60%;
+    --terminal-brand-ink: 0 0% 100%;
+    --terminal-brand-text: 213 94% 68%;
+  }
+  [data-accent="violet"] {
+    --terminal-brand: 262 83% 66%;
+    --terminal-brand-ink: 0 0% 100%;
+    --terminal-brand-text: 258 90% 76%;
+  }
+  [data-accent="orange"] {
+    --terminal-brand: 25 95% 55%;
+    --terminal-brand-ink: 20 80% 8%;
+    --terminal-brand-text: 27 96% 61%;
+  }
+  [data-accent="pink"] {
+    --terminal-brand: 350 93% 79%;
+    --terminal-brand-ink: 345 60% 10%;
+    --terminal-brand-text: 350 93% 79%;
+  }
+  .light[data-accent="lime"] { --terminal-brand-text: 86 100% 21%; }
+  .light[data-accent="blue"] { --terminal-brand-text: 221 83% 45%; }
+  .light[data-accent="violet"] { --terminal-brand-text: 263 70% 46%; }
+  .light[data-accent="orange"] { --terminal-brand-text: 21 90% 40%; }
+  .light[data-accent="pink"] { --terminal-brand-text: 345 75% 45%; }
+
+  /* Price colours. `classic` is the default and only appears on previews. */
+  [data-price="classic"] {
+    --terminal-positive: var(--palette-positive);
+    --terminal-negative: var(--palette-negative);
+  }
+  [data-price="inverted"] {
+    --terminal-positive: var(--palette-negative);
+    --terminal-negative: var(--palette-positive);
+  }
+  [data-price="colorblind"] {
+    --terminal-positive: 211 90% 56%;
+    --terminal-negative: 30 95% 55%;
+  }
+  .light[data-price="colorblind"],
+  .light [data-price="colorblind"] {
+    --terminal-positive: 214 85% 44%;
+    --terminal-negative: 26 95% 42%;
+  }
+
+  /* Corner radius. */
+  [data-radius="none"] { --radius: 0px; --widget-radius: 0px; }
+  [data-radius="small"] { --radius: 0.25rem; --widget-radius: 4px; }
+  [data-radius="medium"] { --radius: 0.5rem; --widget-radius: 8px; }
+  [data-radius="round"] { --radius: 0.875rem; --widget-radius: 16px; }
+
+  /* Font. */
+  [data-font="system"] {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  [data-font="mono"] {
+    --font-sans: var(--font-mono);
+  }
+
+  /* Interface size: everything sized in rem follows the root font size. */
+  html[data-scale="compact"] { font-size: 14px; }
+  html[data-scale="large"] { font-size: 18px; }
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -141,13 +264,46 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Prices and sizes line up in columns in every font. */
+  body {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: hsl(var(--terminal-brand, var(--terminal-text)) / 0.9);
+    color: hsl(var(--terminal-brand-ink, var(--terminal-bg)));
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Film grain, as on marketmaker.cc. Off with the "Texture" setting. */
+  html[data-grain="on"] body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2147483000;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  html.light[data-grain="on"] body::after {
+    opacity: 0.05;
+    mix-blend-mode: multiply;
   }
 }
 
 /* Widget container styles - adaptive for light and dark themes */
 .widget-container {
   position: absolute;
-  border-radius: 8px;
+  border-radius: var(--widget-radius, 8px);
   overflow: hidden;
   transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1), 
               box-shadow 0.3s cubic-bezier(0.2, 0, 0.2, 1),

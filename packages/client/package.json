@@ -14,9 +14,11 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@profitmaker/types": "workspace:*",
-    "@profitmaker/module-sdk": "workspace:*",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
     "@hookform/resolvers": "^3.9.0",
+    "@profitmaker/module-sdk": "workspace:*",
+    "@profitmaker/types": "workspace:*",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",

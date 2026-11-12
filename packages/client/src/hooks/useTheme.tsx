@@ -1,38 +1,83 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { THEMES, applyTheme, getStoredThemeId, getTheme, type ThemeMode, type ThemePreset } from '@/lib/themes';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  DEFAULT_APPEARANCE,
+  THEMES,
+  applyAppearance,
+  loadAppearance,
+  resolveTheme,
+  saveAppearance,
+  type Appearance,
+  type ColorMode,
+  type ThemeMode,
+  type ThemePreset,
+} from '@/lib/themes';
 
 interface ThemeContextType {
-  /** `dark` or `light`: the mode of the active theme. */
+  /** `dark` or `light`: the mode in use right now (`system` already resolved). */
   theme: ThemeMode;
-  /** Id of the active theme, see `THEMES`. */
+  /** Id of the palette in use right now, see `THEMES`. */
   themeId: string;
   themes: readonly ThemePreset[];
-  setTheme: (id: string) => void;
-  /** Switches between the default dark and the default light theme. */
-  toggleTheme: () => void;
+  /** Everything the user picked. */
+  appearance: Appearance;
+  setMode: (mode: ColorMode) => void;
+  updateAppearance: (patch: Partial<Appearance>) => void;
+  resetAppearance: () => void;
+  /**
+   * Changes whenever anything that affects colours changes. Components that
+   * read computed styles (the chart) use it to know when to read them again.
+   */
+  colorKey: string;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const DARK_QUERY = '(prefers-color-scheme: dark)';
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [themeId, setThemeId] = useState(getStoredThemeId);
+  const [appearance, setAppearance] = useState(loadAppearance);
+  const [prefersDark, setPrefersDark] = useState(() => window.matchMedia?.(DARK_QUERY).matches ?? true);
+  const current = useRef(appearance);
 
   // The document is updated before React re-renders, so components that read
   // computed styles during render (the chart) already see the new palette.
-  const setTheme = useCallback((id: string) => {
-    setThemeId(applyTheme(id).id);
+  const commit = useCallback((next: Appearance) => {
+    current.current = next;
+    applyAppearance(next);
+    saveAppearance(next);
+    setAppearance(next);
+  }, []);
+
+  const updateAppearance = useCallback(
+    (patch: Partial<Appearance>) => commit({ ...current.current, ...patch }),
+    [commit],
+  );
+
+  // Auto mode follows the OS switch between light and dark while the page is open.
+  useEffect(() => {
+    const media = window.matchMedia?.(DARK_QUERY);
+    if (!media) return;
+    const onChange = () => {
+      applyAppearance(current.current);
+      setPrefersDark(media.matches);
+    };
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
   }, []);
 
   const value = useMemo<ThemeContextType>(() => {
-    const mode = getTheme(themeId).mode;
+    const theme = resolveTheme(appearance, prefersDark);
     return {
-      theme: mode,
-      themeId,
+      theme: theme.mode,
+      themeId: theme.id,
       themes: THEMES,
-      setTheme,
-      toggleTheme: () => setTheme(mode === 'dark' ? 'light' : 'dark'),
+      appearance,
+      setMode: (mode) => updateAppearance({ mode }),
+      updateAppearance,
+      resetAppearance: () => commit({ ...DEFAULT_APPEARANCE }),
+      colorKey: [theme.id, appearance.accent, appearance.customAccent, appearance.priceColors].join('|'),
     };
-  }, [themeId, setTheme]);
+  }, [appearance, prefersDark, updateAppearance, commit]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
