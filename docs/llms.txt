@@ -2,7 +2,10 @@
 
 One-page reference for building a Profitmaker terminal **module** (an npm package
 that adds widgets and/or backend services to a running terminal). Full docs:
-`docs/modules.md`. Starting point: copy `templates/module-template/`.
+`docs/modules.md`. Starting point: `profitmaker module scaffold <id>`, which
+copies `templates/module-template/` into `modules/<id>`. The SDK is not on npm
+yet, so a module builds only inside the repo's `modules/` workspace. Walkthrough:
+`docs/guide-first-module.md`. All env vars: `docs/configuration.md`.
 
 **Driving a running terminal from the backend** (create/arrange/operate
 dashboards & widgets via API, with live updates to open browsers): see
