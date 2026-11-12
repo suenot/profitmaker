@@ -9,6 +9,7 @@ import { Badge } from '../ui/badge';
 import { Filter, ArrowUp, ArrowDown, Settings2, Play, Pause, RefreshCw } from 'lucide-react';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { useTradesWidgetsStore } from '../../store/tradesWidgetStore';
+import { WidgetStyleSettings } from './WidgetStyleSettings';
 import { useGroupStore } from '../../store/groupStore';
 import { MarketType } from '../../types/dataProviders';
 
@@ -489,6 +490,10 @@ const TradesSettingsWrapper: React.FC<TradesSettingsWrapperProps> = ({
           />
         </div>
       </div>
+
+      <Separator />
+
+      <WidgetStyleSettings kind="tape" look={widgetState.look} onChange={(look) => updateWidget(widgetId, { look })} />
 
       <Separator />
 

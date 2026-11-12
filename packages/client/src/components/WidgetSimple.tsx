@@ -482,13 +482,13 @@ const WidgetSimple: React.FC<WidgetSimpleProps> = ({
         "widget-container animate-fade-in border border-terminal-border",
         isActive && "ring-1 ring-blue-500",
         isMaximized && "border-0",
-        isCollapsed && "!h-10 overflow-hidden"
+        isCollapsed && "overflow-hidden"
       )}
       style={{
         left: isMaximized ? 0 : `${currentPosition.x}px`,
         top: isMaximized ? 0 : `${currentPosition.y}px`,
         width: isMaximized ? '100vw' : `${currentSize.width}px`,
-        height: isMaximized ? '100vh' : `${currentSize.height}px`,
+        height: isMaximized ? '100vh' : isCollapsed ? 'var(--widget-header-h)' : `${currentSize.height}px`,
         zIndex: isMaximized ? 10001 : (isCollapsed ? 10000 : zIndex),
         position: isMaximized ? 'fixed' : 'absolute',
       }}
@@ -496,8 +496,8 @@ const WidgetSimple: React.FC<WidgetSimpleProps> = ({
     >
       <div 
         className={cn(
-          "widget-header h-10 px-3 py-2 flex items-center justify-between",
-          isTransparentGroup ? "bg-transparent" : "bg-terminal-accent/60",
+          "widget-header px-3 flex items-center justify-between",
+          isTransparentGroup && "is-transparent",
           !isMaximized && !isCollapsed && "cursor-move"
         )}
         onMouseDown={(!isMaximized && !isCollapsed) ? handleDragStart : undefined}
@@ -526,12 +526,12 @@ const WidgetSimple: React.FC<WidgetSimpleProps> = ({
                   onChange={handleTitleChange}
                   onKeyDown={handleTitleKeyDown}
                   onBlur={handleTitleBlur}
-                  className="text-xs font-medium bg-transparent border-none outline-none text-terminal-text w-full min-w-0"
+                  className="widget-title text-xs font-medium bg-transparent border-none outline-none w-full min-w-0"
                   style={{ margin: 0, padding: 0 }}
                 />
               ) : (
                 <h3 
-                  className="text-xs font-medium truncate text-terminal-text cursor-pointer"
+                  className="widget-title text-xs font-medium truncate cursor-pointer"
                   onDoubleClick={handleTitleDoubleClick}
                   title="Double click to edit"
                 >
@@ -549,7 +549,7 @@ const WidgetSimple: React.FC<WidgetSimpleProps> = ({
               onClick={handleSettingsClick}
               title="Widget Settings"
             >
-              <Settings size={14} className="text-terminal-muted hover:text-terminal-text transition-colors" />
+              <Settings size={14} className="widget-icon transition-colors" />
             </button>
           )}
           <button 
@@ -557,7 +557,7 @@ const WidgetSimple: React.FC<WidgetSimpleProps> = ({
             onClick={handleCollapseToggle}
             title={isCollapsed ? "Expand widget" : "Collapse widget"}
           >
-            <Minus size={14} className="text-terminal-muted hover:text-terminal-text transition-colors" />
+            <Minus size={14} className="widget-icon transition-colors" />
           </button>
           {!isCollapsed && (
             <button 
@@ -565,14 +565,14 @@ const WidgetSimple: React.FC<WidgetSimpleProps> = ({
               onClick={handleMaximizeToggle}
             >
               {isMaximized ? (
-                <Minimize2 size={14} className="text-terminal-muted hover:text-terminal-text transition-colors" />
+                <Minimize2 size={14} className="widget-icon transition-colors" />
               ) : (
-                <Maximize2 size={14} className="text-terminal-muted hover:text-terminal-text transition-colors" />
+                <Maximize2 size={14} className="widget-icon transition-colors" />
               )}
             </button>
           )}
           <button 
-            className="p-1 rounded-sm hover:bg-terminal-widget/50 text-terminal-muted hover:text-terminal-negative transition-colors"
+            className="widget-icon p-1 rounded-sm hover:bg-terminal-widget/50 hover:!text-terminal-negative transition-colors"
             onClick={onRemove}
           >
             <X size={14} />
@@ -582,8 +582,8 @@ const WidgetSimple: React.FC<WidgetSimpleProps> = ({
       
       {!isCollapsed && (
         <div className={cn(
-          "h-[calc(100%-40px)] overflow-auto bg-terminal-bg",
-          widgetType === 'chart' || widgetType === 'trades' ? '' : 'p-3'
+          "widget-body overflow-auto bg-terminal-bg",
+          widgetType !== 'chart' && widgetType !== 'trades' && 'is-padded'
         )}>
           {children}
         </div>

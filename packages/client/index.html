@@ -25,13 +25,16 @@
       (function () {
         try {
           var a = JSON.parse(localStorage.getItem('appearance.v2') || '{}');
-          var light = { light: 1, paper: 1 };
+          // Palette id -> 1 for light, 0 for dark. Keep in sync with THEMES.
+          var known = { dark: 0, onyx: 0, gold: 0, dusk: 0, 'ladder-night': 0, light: 1, daylight: 1, ladder: 1 };
+          // Retired palettes only decide the mode of an old saved choice.
+          var light = { light: 1, daylight: 1, ladder: 1, paper: 1 };
           var legacy = localStorage.getItem('themeId') || localStorage.getItem('theme');
           var mode = a.mode || (legacy ? (light[legacy] ? 'light' : 'dark') : 'dark');
           if (mode === 'system') mode = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
           var id = mode === 'dark' ? a.darkTheme : a.lightTheme;
           if (!id && legacy && legacy !== 'dark' && legacy !== 'light' && !!light[legacy] === (mode === 'light')) id = legacy;
-          if (!id || !!light[id] !== (mode === 'light')) id = mode === 'dark' ? 'dark' : 'light';
+          if (!id || !(id in known) || !!known[id] !== (mode === 'light')) id = mode === 'dark' ? 'dark' : 'light';
           var root = document.documentElement;
           var d = root.dataset;
           d.theme = id;

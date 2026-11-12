@@ -11,6 +11,7 @@ import { useDataProviderStore } from '../../store/dataProviderStore';
 import { useOrderBookWidgetsStore } from '../../store/orderBookWidgetStore';
 import { useGroupStore } from '../../store/groupStore';
 import { MarketType } from '../../types/dataProviders';
+import { WidgetStyleSettings } from './WidgetStyleSettings';
 
 interface OrderBookSettingsWrapperProps {
   widgetId: string;
@@ -302,6 +303,10 @@ const OrderBookSettingsWrapper: React.FC<OrderBookSettingsWrapperProps> = ({ wid
           </div>
         </div>
       </div>
+
+      <Separator />
+
+      <WidgetStyleSettings kind="book" look={widget.look} onChange={(look) => updateWidget(widgetId, { look })} />
 
       <Separator />
 

@@ -6,6 +6,7 @@ import { useOrderBookWidgetsStore } from '../../store/orderBookWidgetStore';
 import { useGroupStore } from '../../store/groupStore';
 import { OrderBook, OrderBookEntry, MarketType } from '../../types/dataProviders';
 import { getAdaptivePriceDecimals } from '../../utils/formatters';
+import { useWidgetLook } from '../../hooks/useWidgetLook';
 
 interface OrderBookWidgetV2Props {
   dashboardId?: string;
@@ -37,6 +38,7 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
   const { getGroupById, selectedGroupId: globalSelectedGroupId, getTransparentGroup } = useGroupStore();
 
   const widget = getWidget(widgetId);
+  const look = useWidgetLook(widget.look);
 
   // Resolve the instrument from THIS widget's bound group (selectedGroupId),
   // falling back to the global picker, then the transparent group — identical to
@@ -325,46 +327,98 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
     return new Date(timestamp).toLocaleTimeString();
   };
 
-  // Virtualized Asks Component (sells - top)
-  const VirtualizedAsks = ({ asks }: { asks: any[] }) => {
-    const asksParentRef = useRef<HTMLDivElement>(null);
-    
-    const asksVirtualizer = useVirtualizer({
-      count: asks.length,
-      getScrollElement: () => asksParentRef.current,
-      estimateSize: () => 24, // Fixed height for compact design
+  // Bars are scaled to the biggest value in view. Depth bars follow the
+  // cumulative setting; the ladder's volume bars always show the level size.
+  const maxLevel = useMemo(() => {
+    if (!processedOrderBook) return { amount: 0, depth: 0 };
+    const all = [...processedOrderBook.asks, ...processedOrderBook.bids];
+    const amount = Math.max(0, ...all.map((e: any) => e.amount));
+    const depth = showCumulative ? Math.max(0, ...all.map((e: any) => e.cumulative || 0)) : amount;
+    return { amount, depth };
+  }, [processedOrderBook, showCumulative]);
+
+  /** One side of the book, virtualised. Asks are drawn best price at the bottom. */
+  const BookSide = ({ side, entries }: { side: 'ask' | 'bid'; entries: any[] }) => {
+    const parentRef = useRef<HTMLDivElement>(null);
+    const rowHeight = look.rowHeight;
+
+    const virtualizer = useVirtualizer({
+      count: entries.length,
+      getScrollElement: () => parentRef.current,
+      estimateSize: () => rowHeight,
       measureElement: undefined, // Disable dynamic measurement for performance
     });
 
+    const isAsk = side === 'ask';
+    const classicRow = isAsk
+      ? 'grid grid-cols-3 gap-2 text-xs px-2 py-1 bg-red-50/20 hover:bg-red-50/30 dark:bg-red-900/20 dark:hover:bg-red-900/30 border-l-2 border-red-500 dark:border-red-400'
+      : 'grid grid-cols-3 gap-2 text-xs px-2 py-1 bg-green-50/20 hover:bg-green-50/30 dark:bg-green-900/20 dark:hover:bg-green-900/30 border-l-2 border-green-500 dark:border-green-400';
+    const classicPrice = isAsk ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400';
+
     return (
-      <div ref={asksParentRef} className="flex-1 overflow-auto">
+      <div ref={parentRef} className="flex-1 overflow-auto flex flex-col">
         <div
           style={{
-            height: asksVirtualizer.getTotalSize(),
+            height: virtualizer.getTotalSize(),
             width: '100%',
             position: 'relative',
+            flexShrink: 0,
+            // Asks sit against the spread, so the best prices meet in the middle.
+            marginTop: isAsk && look.book !== 'classic' ? 'auto' : undefined,
           }}
         >
-          {asksVirtualizer.getVirtualItems().map((virtualRow) => {
-            const ask = asks[asks.length - 1 - virtualRow.index]; // Reverse order for asks
+          {virtualizer.getVirtualItems().map((virtualRow) => {
+            const entry = isAsk ? entries[entries.length - 1 - virtualRow.index] : entries[virtualRow.index];
+            const ladderRow = look.book === 'ladder';
+            const level = ladderRow ? entry.amount : showCumulative ? entry.cumulative || 0 : entry.amount;
+            const max = ladderRow ? maxLevel.amount : maxLevel.depth;
+            const share = max > 0 ? Math.min(100, (level / max) * 100) : 0;
+            const position: React.CSSProperties = {
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: `${virtualRow.size}px`,
+              transform: `translateY(${virtualRow.start}px)`,
+            };
+            const third = showCumulative ? formatAmount(entry.cumulative || 0) : formatVolume(entry.total);
+
+            if (look.book === 'classic') {
+              return (
+                <div key={virtualRow.key} style={position} className={classicRow}>
+                  <div className={`font-mono leading-none ${classicPrice}`}>{formatPrice(entry.price)}</div>
+                  <div className="font-mono text-right text-terminal-text leading-none">{formatAmount(entry.amount)}</div>
+                  <div className="font-mono text-right text-terminal-muted leading-none">{third}</div>
+                </div>
+              );
+            }
+
+            const ladder = ladderRow;
             return (
               <div
                 key={virtualRow.key}
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: `${virtualRow.size}px`,
-                  transform: `translateY(${virtualRow.start}px)`,
+                  ...position,
+                  fontSize: 'var(--row-font)',
+                  background: ladder ? `var(--book-${side}-zone)` : undefined,
                 }}
-                className="grid grid-cols-3 gap-2 text-xs px-2 py-1 bg-red-50/20 hover:bg-red-50/30 dark:bg-red-900/20 dark:hover:bg-red-900/30 border-l-2 border-red-500 dark:border-red-400"
+                className={`grid grid-cols-3 gap-2 items-center px-2 leading-none hover:bg-terminal-accent/60 ${
+                  ladder ? 'border-b border-terminal-border' : ''
+                }`}
               >
-                <div className="font-mono text-red-600 dark:text-red-400 leading-none">{formatPrice(ask.price)}</div>
-                <div className="font-mono text-right text-terminal-text leading-none">{formatAmount(ask.amount)}</div>
-                <div className="font-mono text-right text-terminal-muted leading-none">
-                  {showCumulative ? formatAmount((ask as any).cumulative || 0) : formatVolume(ask.total)}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 right-0"
+                  style={{
+                    width: `${share}%`,
+                    background: ladder ? 'var(--book-volume-bar)' : `var(--book-${side}-bar)`,
+                  }}
+                />
+                <div className="relative font-mono" style={{ color: `var(--book-${side}-text)` }}>
+                  {formatPrice(entry.price)}
                 </div>
+                <div className="relative font-mono text-right text-terminal-text">{formatAmount(entry.amount)}</div>
+                <div className="relative font-mono text-right text-terminal-muted">{third}</div>
               </div>
             );
           })}
@@ -372,56 +426,6 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
       </div>
     );
   };
-
-  // Virtualized Bids Component (buys - bottom)
-  const VirtualizedBids = ({ bids }: { bids: any[] }) => {
-    const bidsParentRef = useRef<HTMLDivElement>(null);
-    
-    const bidsVirtualizer = useVirtualizer({
-      count: bids.length,
-      getScrollElement: () => bidsParentRef.current,
-      estimateSize: () => 24, // Fixed height for compact design
-      measureElement: undefined, // Disable dynamic measurement for performance
-    });
-
-    return (
-      <div ref={bidsParentRef} className="flex-1 overflow-auto">
-        <div
-          style={{
-            height: bidsVirtualizer.getTotalSize(),
-            width: '100%',
-            position: 'relative',
-          }}
-        >
-          {bidsVirtualizer.getVirtualItems().map((virtualRow) => {
-            const bid = bids[virtualRow.index];
-            return (
-              <div
-                key={virtualRow.key}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: `${virtualRow.size}px`,
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
-                className="grid grid-cols-3 gap-2 text-xs px-2 py-1 bg-green-50/20 hover:bg-green-50/30 dark:bg-green-900/20 dark:hover:bg-green-900/30 border-l-2 border-green-500 dark:border-green-400"
-              >
-                <div className="font-mono text-green-600 dark:text-green-400 leading-none">{formatPrice(bid.price)}</div>
-                <div className="font-mono text-right text-terminal-text leading-none">{formatAmount(bid.amount)}</div>
-                <div className="font-mono text-right text-terminal-muted leading-none">
-                  {showCumulative ? formatAmount((bid as any).cumulative || 0) : formatVolume(bid.total)}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -443,25 +447,40 @@ const OrderBookWidgetV2Inner: React.FC<OrderBookWidgetV2Props> = ({
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col space-y-1">
+        <div className={`flex-1 flex flex-col ${look.book === 'classic' ? 'space-y-1' : ''}`}>
           {/* Headers */}
-          <div className="grid grid-cols-3 gap-2 text-xs font-medium text-terminal-muted px-2 py-1 border-b border-terminal-border">
+          <div
+            className={`grid grid-cols-3 gap-2 font-medium text-terminal-muted px-2 border-b border-terminal-border ${
+              look.book === 'classic' ? 'text-xs py-1' : 'items-center'
+            }`}
+            style={look.book === 'classic' ? undefined : { fontSize: 'var(--row-font)', height: look.rowHeight }}
+          >
             <div>Price</div>
             <div className="text-right">Volume</div>
             <div className="text-right">{showCumulative ? 'Cumul.' : 'Total'}</div>
           </div>
 
           {/* Asks (sells) - top - Virtualized */}
-          <VirtualizedAsks asks={processedOrderBook.asks} />
+          <BookSide side="ask" entries={processedOrderBook.asks} />
 
           {/* Spread */}
-          <div className="bg-terminal-accent p-2 text-center border-y border-terminal-border flex-shrink-0">
-            <div className="text-xs text-terminal-text">Spread: {formatPrice(processedOrderBook.spread)}</div>
-            <div className="text-xs text-terminal-muted">({processedOrderBook.spreadPercent.toFixed(4)}%)</div>
-          </div>
+          {look.book === 'classic' ? (
+            <div className="bg-terminal-accent p-2 text-center border-y border-terminal-border flex-shrink-0">
+              <div className="text-xs text-terminal-text">Spread: {formatPrice(processedOrderBook.spread)}</div>
+              <div className="text-xs text-terminal-muted">({processedOrderBook.spreadPercent.toFixed(4)}%)</div>
+            </div>
+          ) : (
+            <div
+              className="flex flex-shrink-0 items-center justify-center gap-2 border-y border-terminal-border bg-terminal-accent font-mono"
+              style={{ height: look.rowHeight, fontSize: 'var(--row-font)' }}
+            >
+              <span className="text-terminal-text">{formatPrice(processedOrderBook.spread)}</span>
+              <span className="text-terminal-muted">{processedOrderBook.spreadPercent.toFixed(4)}%</span>
+            </div>
+          )}
 
           {/* Bids (buys) - bottom - Virtualized */}
-          <VirtualizedBids bids={processedOrderBook.bids} />
+          <BookSide side="bid" entries={processedOrderBook.bids} />
         </div>
       )}
     </div>

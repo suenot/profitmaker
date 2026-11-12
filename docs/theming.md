@@ -13,8 +13,8 @@ every change previews on the terminal behind it.
 
 | Setting | Options | Attribute on `<html>` |
 |---|---|---|
-| Dark theme | Graphite, Midnight, OLED black, Amber terminal | `data-theme` |
-| Light theme | Light, Paper | `data-theme` |
+| Dark theme | Graphite, Onyx, Gold, Dusk, Ladder night | `data-theme` |
+| Light theme | Light, Daylight, Ladder | `data-theme` |
 | Accent | Theme, lime, blue, violet, orange, pink, custom colour | `data-accent`, or inline vars for custom |
 | Price colours | Green up, Red up, Blue / orange (colour-blind safe) | `data-price` |
 | Corners | Theme, Square, Small, Medium, Round | `data-radius` |
@@ -23,6 +23,12 @@ every change previews on the terminal behind it.
 | Texture | Film grain on or off | `data-grain="on"` |
 
 Attributes are left off for the default value, such as `accent: 'palette'`.
+
+Graphite and Light are the original look. The other palettes are presets: each
+brings its own colours, window chrome (header height and colour, borders,
+shadows, fonts) and a layout for the order book and the trades tape. Ids of
+removed palettes (`midnight`, `oled`, `amber`, `paper`) fall back to Graphite
+or Light.
 
 Settings are saved per device in `localStorage` under `appearance.v2` as JSON.
 The older keys `themeId` and `theme` are migrated on load; they and the old
@@ -75,7 +81,22 @@ A palette may also set:
 | `--palette-radius` | `0.5rem` | Control corner radius (`--radius`) |
 | `--palette-widget-radius` | `8px` | Widget corner radius (`--widget-radius`) |
 
-The accent and corner settings override these.
+| `--palette-header-h` | `2.5rem` | Widget header height |
+| `--palette-header-bg` | accent at 60% | Widget header background |
+| `--palette-header-text` / `--palette-header-muted` | text / muted | Header title and icon colours |
+| `--palette-widget-border` | `--terminal-border` | Widget border colour |
+| `--palette-shadow` | the original shadow | Widget shadow (`none` for flat presets) |
+| `--palette-widget-pad` | `0.75rem` | Padding inside widgets that have padding |
+| `--palette-font` / `--palette-num-font` | inherit / monospace | Interface font and the font for numbers |
+| `--palette-row-font` | `0.75rem` | Font size in order book and tape rows |
+| `--palette-book-ask-text` / `-bid-text` | negative / positive | Price text in the book |
+| `--palette-book-ask-bar` / `-bid-bar` | negative / positive at 18% | Depth bars |
+| `--palette-book-ask-zone` / `-bid-zone` | negative / positive at 12% | Ladder row backgrounds, tinted tape |
+| `--palette-book-volume-bar` | muted at 35% | Ladder volume bars |
+
+Components read the aliases without the `palette-` prefix (`--widget-header-h`,
+`--book-ask-bar` and so on), defined once in the `[data-theme]` block. The
+accent and corner settings override the radius and brand values.
 
 The shadcn/ui tokens (`--background`, `--card`, `--primary`, `--ring` and the
 rest) are aliases of the terminal tokens, declared once in `index.css`. A new
@@ -107,13 +128,28 @@ updateAppearance({ accent: 'blue', priceColors: 'colorblind' });
 The chart widget keeps its own canvas colours for light and dark (see
 `getChartColors` in `widgets/Chart.tsx`).
 
+## Widget look
+
+A preset also sets `widgets` in `THEMES`:
+
+| Field | Values | Meaning |
+|---|---|---|
+| `book` | `classic`, `bars`, `ladder` | Order book rows: the original rows, depth bars, or a ladder with zone backgrounds and volume bars |
+| `tape` | `classic`, `plain`, `tinted` | Trades rows: the original soft tint, coloured text only, or zone backgrounds |
+| `rowHeight` | 16, 18, 20, 24 | Row height in px |
+
+`useWidgetLook(override)` returns the look for one widget. Each order book and
+trades widget has a Style section in its settings; "Preset" follows the theme,
+any other choice is stored in that widget's `look`.
+
 ## Adding a palette
 
 1. Add a `[data-theme="<id>"]` block to `packages/client/src/index.css` with
    all nine variables from the first table, and any optional ones.
-2. Add `{ id, label, mode }` to `THEMES` in `packages/client/src/lib/themes.ts`.
-3. If the mode is `light`, add the id to the light list in the pre-paint script
-   in `packages/client/index.html`.
+2. Add `{ id, label, mode, widgets }` to `THEMES` in
+   `packages/client/src/lib/themes.ts`.
+3. Add the id to `known` (and, for a light palette, to `light`) in the
+   pre-paint script in `packages/client/index.html`.
 
 The Appearance panel shows the new palette with a preview card. No other code
 changes.
