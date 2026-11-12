@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from 'react';
 import { Loader2, RefreshCw, Search, TrendingUp, TrendingDown, Wallet, User } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useTheme } from '../../hooks/useTheme';
 import { useDataProviderStore } from '../../store/dataProviderStore';
 import { useUserStore, ExchangeAccount } from '../../store/userStore';
 import { useUserBalancesWidgetStore } from '../../store/userBalancesWidgetStore';
@@ -229,8 +228,6 @@ const UserBalancesWidget: React.FC<UserBalancesWidgetProps> = ({
   );
 
 
-  // Theme integration
-  const { theme } = useTheme();
 
   // Get balances for all user accounts - CRITICAL: Direct call without useMemo to enable Zustand auto-subscription
   const getAllBalances = () => {

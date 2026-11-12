@@ -34,7 +34,7 @@ These files are also published at
 | [Build your first dashboard](guide-first-dashboard.md) | A scalping desk with one instrument group |
 | [Drive the terminal with an AI agent](guide-ai-agent.md) | `.mcp.json`, layouts from plain words, live updates |
 | [Write your first module](guide-first-module.md) | Scaffold, a backend route, a widget, dev loading |
-| [Theming](theming.md) | Dark and light mode, CSS variables |
+| [Theming](theming.md) | Theme presets, CSS variables, adding a theme |
 
 ## Reference
 

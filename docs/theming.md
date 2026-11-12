@@ -1,168 +1,85 @@
 # Theming
 
-## Overview
+The terminal ships with six themes: Graphite (default), Midnight, OLED black,
+Amber terminal, Light and Paper. The user picks one from the palette button in
+the top bar. The choice is stored in `localStorage` under `themeId`.
 
-Profitmaker uses Tailwind CSS with CSS custom properties (HSL values) for theming. Dark mode is the default. Light mode is supported via the `class` strategy.
+## How it works
 
-## Dark/Light Mode
+Colours are CSS custom properties holding HSL channels (`220 13% 11%`), so
+Tailwind can add opacity: `bg-terminal-accent/50`.
 
-Controlled by the `dark` class on the `<html>` element (Tailwind `darkMode: ["class"]`). The `next-themes` library handles toggling and persistence.
+| Piece | File | Role |
+|---|---|---|
+| Palettes | `packages/client/src/index.css` | One `[data-theme="<id>"]` block per theme. The only place with colour values. |
+| Registry | `packages/client/src/lib/themes.ts` | Lists theme ids, labels and mode (`dark` or `light`). Applies a theme. |
+| React API | `packages/client/src/hooks/useTheme.tsx` | `ThemeProvider` and `useTheme()`. |
+| Pre-paint script | `packages/client/index.html` | Sets the theme before the first paint, so there is no flash. |
 
-## CSS Variables
+`applyTheme(id)` sets `data-theme="<id>"` on `<html>`, plus the class `dark` or
+`light`. The class keeps Tailwind `dark:` variants working.
 
-All theme colors are defined in `src/index.css` as HSL values (without the `hsl()` wrapper). They're consumed via Tailwind utilities.
+## Tokens
 
-### shadcn/ui Variables (Standard)
+Every theme defines these variables:
 
-These are the standard shadcn/ui color tokens:
+| Variable | Tailwind class | Use |
+|---|---|---|
+| `--terminal-bg` | `bg-terminal-bg` | Page background |
+| `--terminal-widget` | `bg-terminal-widget` | Widget and panel background |
+| `--terminal-accent` | `bg-terminal-accent` | Hover, selected and secondary surfaces |
+| `--terminal-text` | `text-terminal-text` | Main text |
+| `--terminal-muted` | `text-terminal-muted` | Secondary text and icons |
+| `--terminal-border` | `border-terminal-border` | Borders and dividers |
+| `--terminal-positive` | `text-terminal-positive` | Buy, profit, rising price |
+| `--terminal-negative` | `text-terminal-negative` | Sell, loss, falling price |
+| `--chart-grid` | none | Chart grid lines |
 
-| Variable | Light | Dark | Usage |
-|----------|-------|------|-------|
-| `--background` | White | Dark gray | Page background |
-| `--foreground` | Dark text | Light text | Default text color |
-| `--card` | White | Dark surface | Card backgrounds |
-| `--primary` | Brand color | Brand color | Primary buttons, links |
-| `--secondary` | Light gray | Medium gray | Secondary elements |
-| `--muted` | Light gray | Dark gray | Muted backgrounds |
-| `--destructive` | Red | Red | Destructive actions |
-| `--accent` | Light accent | Dark accent | Accent elements |
-| `--border` | Light border | Dark border | Borders |
-| `--input` | Input border | Input border | Form input borders |
-| `--ring` | Focus ring | Focus ring | Focus indicators |
-| `--popover` | White | Dark | Popover/dropdown backgrounds |
+The shadcn/ui tokens (`--background`, `--card`, `--popover`, `--border`,
+`--muted`, `--sidebar-*` and the rest) are aliases of the terminal tokens. They
+are declared once, in the `:root, [data-theme]` block of `index.css`. A new
+theme does not have to set them.
 
-### Terminal Palette (Custom)
+## Using the theme in a component
 
-These are custom variables specific to the trading terminal:
+Use the Tailwind classes. Do not write hex colours or palette classes such as
+`bg-gray-800` or `text-green-500`: they ignore the active theme.
 
-| Variable | Light Value | Dark Value | Usage |
-|----------|-------------|------------|-------|
-| `--terminal-bg` | `#F7F9FB` | `#181B20` | Terminal canvas background |
-| `--terminal-widget` | `#FFFFFF` | `#23272F` | Widget background |
-| `--terminal-accent` | `#F1F5F9` | `#242D39` | Widget accent/hover |
-| `--terminal-text` | `#0F1419` | `#F7FAFC` | Primary text |
-| `--terminal-muted` | `#2D3748` | `#B8C4D0` | Secondary/muted text |
-| `--terminal-positive` | `#16C784` | `#16C784` | Positive values (green) |
-| `--terminal-negative` | `#EA3943` | `#EA3943` | Negative values (red) |
-| `--terminal-border` | `#E2E8F0` | `#343A46` | Widget borders |
-
-### Using Terminal Colors in Components
-
-In Tailwind classes:
-
-```html
-<div className="bg-terminal-widget text-terminal-text border-terminal-border">
-  <span className="text-terminal-positive">+2.5%</span>
-  <span className="text-terminal-negative">-1.3%</span>
-  <span className="text-terminal-muted">Volume: 1.2M</span>
+```tsx
+<div className="bg-terminal-widget border border-terminal-border text-terminal-text">
+  <span className="text-terminal-positive">+2.4%</span>
 </div>
 ```
 
-In raw CSS:
+In React:
 
-```css
-.my-element {
-  background-color: hsl(var(--terminal-widget));
-  color: hsl(var(--terminal-text));
-}
+```tsx
+import { useTheme } from '@/hooks/useTheme';
+
+const { theme, themeId, themes, setTheme } = useTheme();
+// theme:   'dark' | 'light'  (mode of the active theme)
+// themeId: 'dark' | 'midnight' | 'oled' | 'amber' | 'light' | 'paper'
+setTheme('midnight');
 ```
 
-With alpha:
+Canvas libraries cannot read CSS variables. For them, `readChartColors()` from
+`@/lib/themes` returns the active palette as hex. The chart widget uses it.
 
-```css
-.overlay {
-  background: hsla(var(--terminal-widget), 0.8);
-  border: 1px solid hsla(var(--terminal-border), 0.5);
-}
-```
+## Adding a theme
 
-## Tailwind Configuration
+1. Add a `[data-theme="<id>"]` block to `packages/client/src/index.css` with
+   all nine variables from the table above.
+2. Add `{ id, label, mode }` to `THEMES` in `packages/client/src/lib/themes.ts`.
+3. If the mode is `light`, add the id to the light list in the pre-paint script
+   in `packages/client/index.html`.
 
-The terminal color tokens are registered in `tailwind.config.ts`:
+The picker shows the new theme with a preview swatch. No other code changes.
 
-```typescript
-// tailwind.config.ts
-theme: {
-  extend: {
-    colors: {
-      terminal: {
-        bg: 'hsl(var(--terminal-bg))',
-        widget: 'hsl(var(--terminal-widget))',
-        accent: 'hsl(var(--terminal-accent))',
-        text: 'hsl(var(--terminal-text))',
-        muted: 'hsl(var(--terminal-muted))',
-        positive: 'hsl(var(--terminal-positive))',
-        negative: 'hsl(var(--terminal-negative))',
-        border: 'hsl(var(--terminal-border))',
-      }
-    }
-  }
-}
-```
+Check text contrast on `--terminal-bg` and `--terminal-widget` (WCAG AA: 4.5:1
+for `--terminal-text`), and check that positive and negative stay
+distinguishable on both surfaces.
 
-## Animations
+## Modules
 
-Custom animations defined in `tailwind.config.ts`:
-
-| Animation | CSS Class | Description |
-|-----------|-----------|-------------|
-| `accordion-down` | `animate-accordion-down` | Accordion open |
-| `accordion-up` | `animate-accordion-up` | Accordion close |
-| `fade-in` | `animate-fade-in` | Fade in + slide up |
-| `fade-out` | `animate-fade-out` | Fade out + slide down |
-| `scale-in` | `animate-scale-in` | Scale from 0.95 to 1 |
-| `float` | `animate-float` | Gentle floating (infinite) |
-| `pulse-gentle` | `animate-pulse-gentle` | Subtle opacity pulse |
-| `enter` | `animate-enter` | Combined fade-in + scale-in |
-| `exit` | `animate-exit` | Combined fade-out + scale-out |
-
-## shadcn/ui Components
-
-The project uses shadcn/ui components located in `src/components/ui/`. These are unstyled by default and pick up the CSS variable theme.
-
-Component configuration is in `components.json` at the project root.
-
-Key utility: `cn()` from `src/lib/utils.ts` -- merges Tailwind classes with proper conflict resolution (clsx + tailwind-merge).
-
-```typescript
-import { cn } from '@/lib/utils';
-
-<div className={cn(
-  "p-4 rounded-md",
-  isActive && "bg-terminal-accent",
-  className
-)} />
-```
-
-## Customizing the Theme
-
-### Change existing colors
-
-Edit the CSS variables in `src/index.css`:
-
-```css
-:root {
-  --terminal-positive: 120 80% 45%;  /* different green */
-}
-
-.dark {
-  --terminal-positive: 120 80% 45%;
-}
-```
-
-### Add new terminal colors
-
-1. Add the CSS variable in `src/index.css` (both `:root` and `.dark`)
-2. Register in `tailwind.config.ts` under `theme.extend.colors.terminal`
-3. Use via `text-terminal-yourcolor` or `bg-terminal-yourcolor`
-
-### Widget styling conventions
-
-- Widget background: `bg-terminal-widget`
-- Widget border: `border-terminal-border`
-- Primary text: `text-terminal-text`
-- Secondary text: `text-terminal-muted`
-- Positive numbers: `text-terminal-positive`
-- Negative numbers: `text-terminal-negative`
-- Hover states: `bg-terminal-accent`
-- Scrollbars: Custom-styled via CSS in `index.css` using terminal variables
+Module widgets render inside the terminal document, so the same classes and
+variables apply to them. See `docs/modules.md`.

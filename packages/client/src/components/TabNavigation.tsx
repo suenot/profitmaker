@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Bell, Sun, Moon, X } from 'lucide-react';
+import { Plus, Bell, Palette, X } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { Badge } from './ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 import UserDrawer from './UserDrawer';
 import NotificationHistory from './NotificationHistory';
 import { AnimatedLogo } from './AnimatedLogo';
@@ -12,7 +21,7 @@ import { SsoUserChip } from './SsoUserChip';
 const TabNavigation: React.FC = () => {
   const [isUserDrawerOpen, setIsUserDrawerOpen] = useState(false);
   const [isNotificationHistoryOpen, setIsNotificationHistoryOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const { themeId, themes, setTheme } = useTheme();
 
 
   // State for renaming dashboards
@@ -210,18 +219,38 @@ const TabNavigation: React.FC = () => {
               </Badge>
             )}
           </button>
-          <button
-            className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors"
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-          >
-            {theme === 'dark' ? (
-              <Sun size={18} className="text-terminal-muted" />
-            ) : (
-              <Moon size={18} className="text-terminal-muted" />
-            )}
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="p-2 rounded-full hover:bg-terminal-accent/50 transition-colors"
+                title="Theme"
+                aria-label="Theme"
+              >
+                <Palette size={18} className="text-terminal-muted" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Theme</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={themeId} onValueChange={setTheme}>
+                {themes.map((t) => (
+                  <DropdownMenuRadioItem key={t.id} value={t.id} className="gap-2">
+                    {/* The swatch carries its own data-theme, so it previews that palette. */}
+                    <span
+                      data-theme={t.id}
+                      aria-hidden="true"
+                      className="flex h-4 w-7 shrink-0 items-center justify-center gap-0.5 rounded-sm border border-terminal-border bg-terminal-bg"
+                    >
+                      <span className="h-2 w-1 rounded-[1px] bg-terminal-positive" />
+                      <span className="h-2 w-1 rounded-[1px] bg-terminal-negative" />
+                      <span className="h-2 w-1 rounded-[1px] bg-terminal-text" />
+                    </span>
+                    {t.label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {/* Single auth/identity control: active-identity avatar → compact
               dropdown (switch identities, add login, manage accounts, log out).
               "Manage accounts" opens the exchange-accounts drawer. */}

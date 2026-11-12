@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { applyTheme, getStoredThemeId } from './lib/themes'
 import { registerBuiltinWidgets } from './modules/builtinWidgets'
 import { useBuiltinModulesStore } from './modules/builtinModules'
 import { useUserModulesStore } from './modules/userModules'
@@ -98,5 +99,7 @@ bootstrapSso().finally(() => {
     void useDataProviderStore.getState().restartInactiveSubscriptions();
   }
 });
+
+applyTheme(getStoredThemeId());
 
 createRoot(document.getElementById("root")!).render(<App />);
