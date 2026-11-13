@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LogIn, LogOut, Plus, Settings } from 'lucide-react';
-import { useSsoStore, login, addLogin, logout, switchSession, dropSession } from '@/services/ssoClient';
+import { AlertTriangle, Check, LogIn, LogOut, Plus, Settings } from 'lucide-react';
+import { useSsoStore, login, addLogin, logout, switchSession } from '@/services/ssoClient';
+import type { SsoUser } from '@/services/sessionManager';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 
 /**
@@ -9,9 +10,10 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
  *
  *  - No identity connected → a compact "Login with MarketMaker" button.
  *  - Signed in → the ACTIVE identity's avatar; clicking opens a compact dropdown
- *    with the active identity on top, the other connected identities with
- *    quick-switch, "Add login" (auth /login?prompt=login), "Log out", and
- *    "Manage accounts" (opens the exchange-accounts drawer via onManageAccounts).
+ *    listing every connected identity (click to switch, a check marks the
+ *    active one, an expired one signs in again), then "Add login"
+ *    (auth /login?prompt=login), "Manage accounts" (opens the exchange-accounts
+ *    drawer via onManageAccounts) and "Log out <active identity>".
  *
  * All display (avatar, initials, name) is sourced from the ACTIVE SSO session
  * (`useSsoStore().user`, which is `getActiveSession().user`) — NOT the legacy
@@ -19,6 +21,15 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
  * Renders nothing while status is 'unknown' with no sessions (auth unreachable)
  * so we never flash a misleading login button.
  */
+const initialsOf = (u: SsoUser) => (u.email || u.username || '?').slice(0, 2).toUpperCase();
+
+const IdentityAvatar: React.FC<{ user: SsoUser }> = ({ user }) => (
+  <Avatar className="w-7 h-7 shrink-0">
+    {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.email} /> : null}
+    <AvatarFallback className="text-[10px]">{initialsOf(user)}</AvatarFallback>
+  </Avatar>
+);
+
 export const SsoUserChip: React.FC<{ onManageAccounts?: () => void }> = ({ onManageAccounts }) => {
   const { status, user, sessions, activeSessionId } = useSsoStore();
   const [openMenu, setOpenMenu] = useState(false);
@@ -75,72 +86,68 @@ export const SsoUserChip: React.FC<{ onManageAccounts?: () => void }> = ({ onMan
       </button>
 
       {openMenu && (
-        <div className="absolute right-0 top-10 z-[11000] w-64 rounded-md border border-terminal-border bg-terminal-widget shadow-lg py-1">
-          {/* Active identity header */}
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-terminal-border">
-            <Avatar className="w-8 h-8">
-              {user.avatarUrl ? (
-                <AvatarImage src={user.avatarUrl} alt={user.email} />
-              ) : (
-                <AvatarFallback>{initials}</AvatarFallback>
-              )}
-            </Avatar>
-            <div className="min-w-0">
-              <div className="text-xs font-medium truncate">{activeLabel}</div>
-              <div className="text-[10px] text-terminal-muted truncate">{user.email}</div>
-            </div>
+        <div className="absolute right-0 top-10 z-[11000] w-64 rounded-md border border-terminal-border bg-terminal-widget shadow-lg p-1">
+          <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-terminal-muted">Accounts</div>
+
+          {/* Every identity in one list: click switches, the active one has a check. */}
+          <div className="max-h-72 overflow-auto">
+            {sessions.map((s) => {
+              const isActive = s.id === activeSessionId;
+              const stale = s.expiresAt !== undefined && s.expiresAt <= Date.now();
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => {
+                    setOpenMenu(false);
+                    if (stale) addLogin();
+                    else if (!isActive) switchSession(s.id);
+                  }}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-left hover:bg-terminal-accent/30"
+                  title={stale ? 'Session expired: sign in again' : isActive ? 'Active identity' : 'Switch to this identity'}
+                >
+                  <IdentityAvatar user={s.user} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs truncate">{s.user.username || s.user.email}</div>
+                    <div className="text-[10px] text-terminal-muted truncate">
+                      {stale ? (
+                        <span className="inline-flex items-center gap-1 text-terminal-negative">
+                          <AlertTriangle size={10} /> Session expired, click to sign in
+                        </span>
+                      ) : (
+                        s.user.email
+                      )}
+                    </div>
+                  </div>
+                  {isActive && <Check size={14} className="shrink-0 text-terminal-positive" />}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Other identities + quick-switch */}
-          {sessions.length > 1 && (
-            <div className="py-1 border-b border-terminal-border">
-              <div className="px-3 py-1 text-[10px] uppercase tracking-wide text-terminal-muted">Switch identity</div>
-              {sessions
-                .filter((s) => s.id !== activeSessionId)
-                .map((s) => {
-                  const stale = s.expiresAt !== undefined && s.expiresAt <= Date.now();
-                  return (
-                    <div key={s.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-terminal-accent/30">
-                      <button
-                        onClick={() => { switchSession(s.id); setOpenMenu(false); }}
-                        className="flex-1 min-w-0 text-left flex items-center gap-2"
-                        title={stale ? 'Session expired — re-login' : 'Switch to this identity'}
-                      >
-                        <span className="w-3.5 shrink-0" />
-                        <span className="text-xs truncate">{s.user.username || s.user.email}</span>
-                        {stale && <span className="text-[9px] px-1 rounded bg-terminal-negative/20 text-terminal-negative">stale</span>}
-                      </button>
-                      <button
-                        onClick={() => dropSession(s.id)}
-                        className="text-terminal-muted hover:text-terminal-negative"
-                        title="Remove identity"
-                      >
-                        <LogOut size={14} />
-                      </button>
-                    </div>
-                  );
-                })}
-            </div>
-          )}
+          <div className="my-1 border-t border-terminal-border" />
 
-          {/* Actions */}
           <button
-            onClick={() => { addLogin(); setOpenMenu(false); }}
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-terminal-accent/30 text-terminal-text"
+            onClick={() => { setOpenMenu(false); addLogin(); }}
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs hover:bg-terminal-accent/30 text-terminal-text"
           >
-            <Plus size={14} /> Add login
+            <span className="w-7 h-7 shrink-0 rounded-full border border-dashed border-terminal-border flex items-center justify-center">
+              <Plus size={14} className="text-terminal-muted" />
+            </span>
+            Add login
           </button>
           <button
             onClick={() => { setOpenMenu(false); onManageAccounts?.(); }}
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-terminal-accent/30 text-terminal-text"
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs hover:bg-terminal-accent/30 text-terminal-text"
           >
-            <Settings size={14} /> Manage accounts
+            <span className="w-7 h-7 shrink-0 flex items-center justify-center"><Settings size={14} /></span>
+            Manage accounts
           </button>
           <button
-            onClick={() => { void logout(); setOpenMenu(false); }}
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-terminal-accent/30 text-terminal-negative"
+            onClick={() => { setOpenMenu(false); void logout(); }}
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs hover:bg-terminal-accent/30 text-terminal-muted hover:text-terminal-negative"
           >
-            <LogOut size={14} /> Log out{sessions.length > 1 ? ' (active)' : ''}
+            <span className="w-7 h-7 shrink-0 flex items-center justify-center"><LogOut size={14} /></span>
+            <span className="truncate">Log out {activeLabel}</span>
           </button>
         </div>
       )}
