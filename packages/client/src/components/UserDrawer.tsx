@@ -14,9 +14,11 @@ import {
 } from './ui/sheet';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Avatar, AvatarFallback } from './ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { SearchableSelect } from './ui/SearchableSelect';
-import { Plus, Trash2, Check, Loader2, LogIn, Share2, ShieldAlert, ShieldCheck, Eye, Pencil } from 'lucide-react';
+import {
+  AlertTriangle, Check, Clock, Eye, Landmark, Loader2, LogIn, Pencil, Plus, Share2, ShieldAlert, ShieldCheck, Trash2, Users, X,
+} from 'lucide-react';
 
 interface UserDrawerProps {
   open: boolean;
@@ -26,11 +28,12 @@ interface UserDrawerProps {
 /**
  * Identity + accounts panel over the central-accounts model.
  *
- * "Identities" are the connected ecosystem SSO sessions (multi-login): switch,
- * add, or remove them. Under the ACTIVE identity we list exchange accounts from
- * the server proxy (GET /api/accounts) — own + shared — with badges. Adding an
- * account POSTs the keys to the server (→ auth); nothing sensitive is stored in
- * the browser. Owned accounts can be shared by email + access level.
+ * "Identities" are the connected ecosystem SSO sessions (multi-login): click a
+ * row to make it active, add or remove them. Under the ACTIVE identity we list
+ * exchange accounts from the server proxy (GET /api/accounts), own + shared,
+ * with badges. Adding, editing and sharing happen inline in the list, and
+ * deleting asks for confirmation in place. Keys are POSTed to the server
+ * (→ auth); nothing sensitive is stored in the browser.
  */
 const UserDrawer: React.FC<UserDrawerProps> = ({ open, onOpenChange }) => {
   const { sessions, activeSessionId, status } = useSsoStore();
@@ -40,10 +43,6 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onOpenChange }) => {
   const users = useUserStore((s) => s.users);
 
   const activeUser = users.find((u) => u.id === (activeSessionId ?? sessions[0]?.id));
-
-  const [addingAccount, setAddingAccount] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<ExchangeAccount | null>(null);
-  const [shareFor, setShareFor] = useState<ExchangeAccount | null>(null);
 
   // Load the active identity's accounts whenever the drawer opens / identity changes.
   useEffect(() => {
@@ -59,7 +58,6 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onOpenChange }) => {
         </SheetHeader>
 
         <div className="flex flex-col gap-4 px-4 py-2 flex-1 overflow-auto">
-          {/* Identities (SSO sessions) */}
           {sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
               <div className="text-lg font-semibold">No identity connected</div>
@@ -72,53 +70,61 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onOpenChange }) => {
             </div>
           ) : (
             <>
-              <div className="flex flex-col gap-2">
-                <div className="text-xs font-semibold text-terminal-muted uppercase tracking-wide">Identities</div>
+              {/* Identities (SSO sessions) */}
+              <div className="flex flex-col gap-0.5">
+                <div className="text-xs font-semibold text-terminal-muted uppercase tracking-wide mb-1">Identities</div>
                 {sessions.map((s) => {
                   const isActive = s.id === activeSessionId;
+                  const stale = s.expiresAt !== undefined && s.expiresAt <= Date.now();
                   return (
                     <div
                       key={s.id}
-                      className={`flex items-center gap-3 p-2 rounded-lg border border-terminal-border/50 ${isActive ? 'bg-terminal-accent/30' : ''}`}
+                      className={`group flex items-center gap-1 rounded ${isActive ? 'bg-terminal-accent/30' : 'hover:bg-terminal-accent/20'}`}
                     >
-                      <Avatar className="w-9 h-9">
-                        <AvatarFallback>{(s.user.email || '?').slice(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{s.user.username || s.user.email}</div>
-                        <div className="text-xs text-terminal-muted truncate">{s.user.email}</div>
-                      </div>
-                      {s.expiresAt !== undefined && s.expiresAt <= Date.now() && (
-                        <button
-                          onClick={login}
-                          className="text-[10px] px-1.5 py-0.5 rounded bg-terminal-negative/20 text-terminal-negative border border-terminal-negative/40"
-                          title="Session expired — click to re-login"
-                        >
-                          stale · re-login
-                        </button>
-                      )}
-                      <Button
-                        size="icon"
-                        variant={isActive ? 'default' : 'outline'}
-                        onClick={() => switchSession(s.id)}
-                        title="Make active"
+                      <button
+                        onClick={() => (stale ? addLogin() : switchSession(s.id))}
+                        className="flex flex-1 min-w-0 items-center gap-2 p-2 text-left"
+                        title={stale ? 'Session expired: sign in again' : isActive ? 'Active identity' : 'Make active'}
                       >
-                        {isActive ? <Check size={16} /> : <span className="w-4 h-4 rounded-full border border-terminal-border" />}
-                      </Button>
+                        <Avatar className="w-8 h-8 shrink-0">
+                          {s.user.avatarUrl ? <AvatarImage src={s.user.avatarUrl} alt={s.user.email} /> : null}
+                          <AvatarFallback className="text-xs">{(s.user.email || '?').slice(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm truncate">{s.user.username || s.user.email}</div>
+                          <div className="text-xs text-terminal-muted truncate">
+                            {stale ? (
+                              <span className="inline-flex items-center gap-1 text-terminal-negative">
+                                <AlertTriangle size={10} /> Session expired, click to sign in
+                              </span>
+                            ) : (
+                              s.user.email
+                            )}
+                          </div>
+                        </div>
+                        {isActive && <Check size={16} className="shrink-0 text-terminal-positive" />}
+                      </button>
                       <Button
                         size="icon"
-                        variant="outline"
+                        variant="ghost"
+                        className="h-7 w-7 mr-1 shrink-0 text-terminal-muted hover:text-terminal-negative"
                         onClick={() => dropSession(s.id)}
-                        title="Remove identity"
+                        title="Remove identity from this terminal"
                       >
-                        <Trash2 size={16} />
+                        <X size={14} />
                       </Button>
                     </div>
                   );
                 })}
-                <Button onClick={addLogin} className="w-full" variant="outline">
-                  <Plus className="mr-2" size={16} /> Add login
-                </Button>
+                <button
+                  onClick={addLogin}
+                  className="flex items-center gap-2 p-2 rounded text-sm text-terminal-muted hover:bg-terminal-accent/20 hover:text-terminal-text"
+                >
+                  <span className="w-8 h-8 shrink-0 rounded-full border border-dashed border-terminal-border flex items-center justify-center">
+                    <Plus size={14} />
+                  </span>
+                  Add login
+                </button>
               </div>
 
               {/* Active identity's central accounts */}
@@ -129,9 +135,6 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onOpenChange }) => {
                   error={error}
                   status={status}
                   onRetry={() => void loadAccounts()}
-                  onAddAccount={() => setAddingAccount(true)}
-                  onEdit={(acc) => setEditingAccount(acc)}
-                  onShare={(acc) => setShareFor(acc)}
                 />
               )}
 
@@ -146,41 +149,56 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onOpenChange }) => {
           </SheetClose>
         </SheetFooter>
       </SheetContent>
-
-      {addingAccount && <AccountSheet onClose={() => setAddingAccount(false)} />}
-      {editingAccount && <AccountSheet account={editingAccount} onClose={() => setEditingAccount(null)} />}
-      {shareFor && <ShareAccountSheet account={shareFor} onClose={() => setShareFor(null)} />}
     </Sheet>
   );
 };
 
 // --- central accounts list -------------------------------------------------
 
+const Badge: React.FC<{ className: string; title: string; children: React.ReactNode }> = ({ className, title, children }) => (
+  <span className={`text-[10px] px-1.5 py-0.5 rounded border inline-flex items-center gap-0.5 ${className}`} title={title}>
+    {children}
+  </span>
+);
+
+const LevelBadge: React.FC<{ level: 'read' | 'trade' }> = ({ level }) =>
+  level === 'read' ? (
+    <Badge className="bg-yellow-500/15 text-yellow-500 border-yellow-500/30" title="Read-only access">
+      <Eye size={10} /> read
+    </Badge>
+  ) : (
+    <Badge className="bg-green-500/15 text-green-500 border-green-500/30" title="Trade access">
+      <ShieldCheck size={10} /> trade
+    </Badge>
+  );
+
 const AccountBadges: React.FC<{ account: ExchangeAccount }> = ({ account }) => {
-  const shared = !!account.shared;
   const readOnly = account.read_only || account.access_level === 'read';
   return (
-    <div className="flex items-center gap-1">
-      {shared ? (
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 border border-blue-500/30" title="Shared with you">
-          shared
-        </span>
+    <div className="flex flex-wrap items-center gap-1">
+      {account.shared ? (
+        <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/30" title="Shared with you">
+          <Users size={10} /> shared
+        </Badge>
       ) : (
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-terminal-accent/40 text-terminal-text border border-terminal-border/40" title="You own this account">
+        <Badge className="bg-terminal-accent/40 text-terminal-text border-terminal-border/40" title="You own this account">
           owner
-        </span>
+        </Badge>
       )}
-      {readOnly ? (
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/15 text-yellow-500 border border-yellow-500/30 inline-flex items-center gap-0.5" title="Read-only access">
-          <Eye size={10} /> read
-        </span>
-      ) : (
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/15 text-green-500 border border-green-500/30 inline-flex items-center gap-0.5" title="Trade access">
-          <ShieldCheck size={10} /> trade
-        </span>
+      <LevelBadge level={readOnly ? 'read' : 'trade'} />
+      {account.has_ro_keys && (
+        <Badge className="bg-terminal-accent/40 text-terminal-muted border-terminal-border/40" title="Has a separate read-only key pair">
+          RO keys
+        </Badge>
       )}
     </div>
   );
+};
+
+const formatDate = (d?: string) => {
+  if (!d) return null;
+  const t = new Date(d);
+  return Number.isNaN(t.getTime()) ? null : t.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
 const AccountsBlock: React.FC<{
@@ -189,17 +207,21 @@ const AccountsBlock: React.FC<{
   error: string | null;
   status: 'unknown' | 'authenticated' | 'unauthenticated';
   onRetry: () => void;
-  onAddAccount: () => void;
-  onEdit: (acc: ExchangeAccount) => void;
-  onShare: (acc: ExchangeAccount) => void;
-}> = ({ accounts, loading, error, status, onRetry, onAddAccount, onEdit, onShare }) => {
-  const removeAccount = useAccountStore((s) => s.removeAccount);
+}> = ({ accounts, loading, error, status, onRetry }) => {
+  const [adding, setAdding] = useState(false);
+  const canAdd = status === 'authenticated';
 
   return (
     <div className="mt-2">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center gap-2 mb-2">
         <div className="font-semibold">Exchange accounts</div>
+        {accounts.length > 0 && <span className="text-xs text-terminal-muted">{accounts.length}</span>}
         {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-terminal-muted" />}
+        {!adding && accounts.length > 0 && (
+          <Button size="sm" variant="ghost" className="ml-auto h-7 px-2 text-xs" onClick={() => setAdding(true)} disabled={!canAdd}>
+            <Plus className="mr-1" size={14} /> Add
+          </Button>
+        )}
       </div>
 
       {error && (
@@ -219,57 +241,104 @@ const AccountsBlock: React.FC<{
         </div>
       )}
 
-      {!loading && !error && accounts.length === 0 && (
-        <div className="text-sm text-terminal-muted mb-2">No accounts yet for this identity.</div>
+      {adding && <AccountForm onClose={() => setAdding(false)} />}
+
+      {!loading && !error && accounts.length === 0 && !adding && (
+        <div className="flex flex-col items-center gap-2 py-6 text-center">
+          <Landmark size={28} className="text-terminal-muted opacity-50" />
+          <div className="text-sm text-terminal-muted">
+            No exchange accounts yet. Keys are stored encrypted on the server, never in this browser.
+          </div>
+          <Button onClick={() => setAdding(true)} className="mt-1 w-full" variant="outline" disabled={!canAdd}>
+            <Plus className="mr-2" size={16} /> Add exchange account
+          </Button>
+        </div>
       )}
 
-      {accounts.map((acc) => {
-        const owner = !acc.shared;
-        const accountLabel = acc.label || acc.id.slice(0, 8);
-        return (
-          <div key={acc.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-1.5 p-2 rounded border border-terminal-border/30 bg-terminal-accent/10 mb-1">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="shrink-0 text-xs font-mono px-1 py-0.5 rounded bg-terminal-widget/80 border border-terminal-border/30">{acc.exchange}</span>
-              <span className="min-w-0 truncate text-xs" title={accountLabel}>{accountLabel}</span>
-            </div>
-            {owner && (
-              <div className="row-span-2 flex shrink-0 items-center gap-1">
-                <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => onEdit(acc)} title="Edit account">
-                  <Pencil size={14} />
-                </Button>
-                <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => onShare(acc)} title="Share account">
-                  <Share2 size={14} />
-                </Button>
-                <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => void removeAccount(acc.id)} title="Remove account">
-                  <Trash2 size={14} />
-                </Button>
-              </div>
-            )}
-            {owner && (
-              <div className="min-w-0">
-                <AccountBadges account={acc} />
-              </div>
-            )}
-            {!owner && <AccountBadges account={acc} />}
-          </div>
-        );
-      })}
-
-      <Button
-        onClick={onAddAccount}
-        className="w-full mt-2"
-        variant="outline"
-        disabled={status !== 'authenticated'}
-      >
-        <Plus className="mr-2" size={16} /> Add account
-      </Button>
+      {accounts.map((acc) => <AccountRow key={acc.id} account={acc} />)}
     </div>
   );
 };
 
-// --- add/edit account (write-only keys; no client-side storage) -------------
+type RowMode = 'view' | 'edit' | 'share' | 'delete';
 
-const AccountSheet: React.FC<{ account?: ExchangeAccount; onClose: () => void }> = ({ account, onClose }) => {
+const AccountRow: React.FC<{ account: ExchangeAccount }> = ({ account }) => {
+  const removeAccount = useAccountStore((s) => s.removeAccount);
+  const [mode, setMode] = useState<RowMode>('view');
+  const [busy, setBusy] = useState(false);
+  const owner = !account.shared;
+  const accountLabel = account.label || account.id.slice(0, 8);
+  const added = formatDate(account.created_at);
+
+  if (mode === 'edit') return <AccountForm account={account} onClose={() => setMode('view')} />;
+
+  const handleDelete = async () => {
+    setBusy(true);
+    const ok = await removeAccount(account.id);
+    setBusy(false);
+    if (!ok) setMode('view');
+  };
+
+  const toggle = (m: RowMode) => setMode((cur) => (cur === m ? 'view' : m));
+
+  return (
+    <div className="p-2 rounded border border-terminal-border/30 bg-terminal-accent/10 mb-1">
+      <div className="flex items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="shrink-0 text-xs font-mono font-semibold">{account.exchange}</span>
+            <span className="min-w-0 truncate text-xs text-terminal-muted" title={accountLabel}>/ {accountLabel}</span>
+          </div>
+          <div className="mt-1.5">
+            <AccountBadges account={account} />
+          </div>
+          {added && (
+            <div className="mt-1.5 flex items-center gap-1 text-[10px] text-terminal-muted">
+              <Clock size={10} /> Added {added}
+            </div>
+          )}
+        </div>
+
+        {owner && mode !== 'delete' && (
+          <div className="flex shrink-0 items-center">
+            <Button size="icon" variant="ghost" className="h-7 w-7 text-terminal-muted hover:text-terminal-text" onClick={() => setMode('edit')} title="Edit account">
+              <Pencil size={14} />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className={`h-7 w-7 hover:text-terminal-text ${mode === 'share' ? 'text-terminal-text bg-terminal-accent/40' : 'text-terminal-muted'}`}
+              onClick={() => toggle('share')}
+              title="Share access"
+            >
+              <Share2 size={14} />
+            </Button>
+            <Button size="icon" variant="ghost" className="h-7 w-7 text-terminal-muted hover:text-terminal-negative" onClick={() => setMode('delete')} title="Delete account">
+              <Trash2 size={14} />
+            </Button>
+          </div>
+        )}
+
+        {owner && mode === 'delete' && (
+          <div className="flex shrink-0 items-center gap-1">
+            <Button size="sm" variant="destructive" className="h-7 px-2 text-xs" onClick={() => void handleDelete()} disabled={busy}>
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Delete'}
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setMode('view')} disabled={busy}>
+              Cancel
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {mode === 'share' && owner && <SharePanel account={account} />}
+    </div>
+  );
+};
+
+// --- add/edit account inline (write-only keys; no client-side storage) ------
+
+const AccountForm: React.FC<{ account?: ExchangeAccount; onClose: () => void }> = ({ account, onClose }) => {
   const addAccount = useAccountStore((s) => s.addAccount);
   const updateAccount = useAccountStore((s) => s.updateAccount);
   const { exchanges, loading: loadingExchanges } = useExchangesList();
@@ -325,65 +394,60 @@ const AccountSheet: React.FC<{ account?: ExchangeAccount; onClose: () => void }>
   };
 
   return (
-    <Sheet open onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[400px] bg-terminal-widget border-l border-terminal-border flex flex-col">
-        <SheetHeader>
-          <SheetTitle>{editing ? 'Edit account' : 'Add account'}</SheetTitle>
-          <SheetDescription>
-            {editing
-              ? 'Update account details or rotate credentials. Existing keys are never shown; leave key fields blank to keep them.'
-              : 'Keys are sent to your terminal server and stored encrypted in the central account service — never in this browser.'}
-          </SheetDescription>
-        </SheetHeader>
-        <form className="flex flex-col gap-3 mt-3 flex-1" onSubmit={(e) => { e.preventDefault(); void handleSave(); }}>
-          <div className="space-y-2">
-            <label className="text-xs font-medium">Exchange *</label>
-            <SearchableSelect
-              value={exchange}
-              onValueChange={setExchange}
-              options={exchanges.map((ex) => ex.id)}
-              optionLabels={exchanges.reduce((labels, ex) => ({ ...labels, [ex.id]: ex.name }), {})}
-              placeholder={loadingExchanges ? 'Loading exchanges...' : 'Select exchange'}
-              searchPlaceholder="Search exchanges (e.g., binance, bybit, okx)..."
-              loading={loadingExchanges}
-              disabled={loadingExchanges || editing}
-              className="w-full"
-            />
-          </div>
-          <Input placeholder="Label (optional, e.g. 'Main spot')" value={label} onChange={(e) => setLabel(e.target.value)} className="w-full" />
-          {editing && account.api_key_suffix && (
-            <div className="rounded-md border border-terminal-border/60 bg-terminal-accent/10 px-3 py-2 text-xs text-terminal-muted">
-              Current API key ends in <span className="font-mono text-terminal-text">••••{account.api_key_suffix}</span>
-            </div>
-          )}
-          <Input placeholder={editing ? 'New API Key (leave blank to keep current)' : 'API Key *'} value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full" autoComplete="off" />
-          <Input placeholder={editing ? 'New secret (leave blank to keep current)' : 'Secret *'} type="password" value={apiSecret} onChange={(e) => setApiSecret(e.target.value)} className="w-full" autoComplete="off" />
-          <Input placeholder={editing ? 'New passphrase (leave blank to keep current)' : 'Passphrase (optional, required for some exchanges like BitGet)'} type="password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} className="w-full" autoComplete="off" />
-          <label className="flex items-center gap-2 text-xs text-terminal-muted">
-            <input type="checkbox" checked={readOnly} onChange={(e) => setReadOnly(e.target.checked)} />
-            Read-only account (server will never trade with it)
-          </label>
-          {error && <div className="text-red-500 text-xs">{error}</div>}
-          <div className="flex gap-2 mt-2">
-            <Button type="submit" className="flex-1" disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : (editing ? 'Save' : 'Add')}
-            </Button>
-            <Button type="button" className="flex-1" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
-          </div>
-        </form>
-      </SheetContent>
-    </Sheet>
+    <form
+      className="flex flex-col gap-2 p-2 rounded border border-terminal-border bg-terminal-accent/10 mb-1"
+      onSubmit={(e) => { e.preventDefault(); void handleSave(); }}
+      onKeyDown={(e) => { if (e.key === 'Escape' && !saving) { e.stopPropagation(); onClose(); } }}
+    >
+      <div className="text-xs font-semibold">{editing ? `Edit ${account.exchange} account` : 'Add exchange account'}</div>
+      <SearchableSelect
+        value={exchange}
+        onValueChange={setExchange}
+        options={exchanges.map((ex) => ex.id)}
+        optionLabels={exchanges.reduce((labels, ex) => ({ ...labels, [ex.id]: ex.name }), {})}
+        placeholder={loadingExchanges ? 'Loading exchanges...' : 'Select exchange *'}
+        searchPlaceholder="Search exchanges (e.g., binance, bybit, okx)..."
+        loading={loadingExchanges}
+        disabled={loadingExchanges || editing}
+        className="w-full"
+      />
+      <Input placeholder="Label (optional, e.g. 'Main spot')" value={label} onChange={(e) => setLabel(e.target.value)} className="w-full" autoFocus={editing} />
+      {editing && account.api_key_suffix && (
+        <div className="text-xs text-terminal-muted">
+          Current API key ends in <span className="font-mono text-terminal-text">••••{account.api_key_suffix}</span>. Leave the key fields blank to keep it.
+        </div>
+      )}
+      <Input placeholder={editing ? 'New API key' : 'API key *'} value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full font-mono" autoComplete="off" />
+      <Input placeholder={editing ? 'New secret' : 'Secret *'} type="password" value={apiSecret} onChange={(e) => setApiSecret(e.target.value)} className="w-full font-mono" autoComplete="off" />
+      <Input placeholder={editing ? 'New passphrase' : 'Passphrase (only some exchanges need it)'} type="password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} className="w-full font-mono" autoComplete="off" />
+      <label className="flex items-center gap-2 text-xs text-terminal-muted">
+        <input type="checkbox" checked={readOnly} onChange={(e) => setReadOnly(e.target.checked)} />
+        Read-only account (server will never trade with it)
+      </label>
+      {!editing && (
+        <div className="text-[10px] text-terminal-muted">
+          Keys go to your terminal server and are stored encrypted in the central account service, never in this browser.
+        </div>
+      )}
+      {error && <div className="text-terminal-negative text-xs">{error}</div>}
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" className="flex-1" disabled={saving}>
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : (editing ? 'Save' : 'Add account')}
+        </Button>
+        <Button type="button" size="sm" className="flex-1" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+      </div>
+    </form>
   );
 };
 
-// --- share account (grants) ------------------------------------------------
+// --- share account inline (grants) -----------------------------------------
 
-const ShareAccountSheet: React.FC<{ account: ExchangeAccount; onClose: () => void }> = ({ account, onClose }) => {
+const SharePanel: React.FC<{ account: ExchangeAccount }> = ({ account }) => {
   const listGrants = useAccountStore((s) => s.listGrants);
   const shareAccount = useAccountStore((s) => s.shareAccount);
   const revokeGrant = useAccountStore((s) => s.revokeGrant);
 
-  const [grants, setGrants] = useState<AccountGrant[]>([]);
+  const [grants, setGrants] = useState<AccountGrant[] | null>(null);
   const [email, setEmail] = useState('');
   const [level, setLevel] = useState<'read' | 'trade'>('read');
   const [error, setError] = useState('');
@@ -413,58 +477,49 @@ const ShareAccountSheet: React.FC<{ account: ExchangeAccount; onClose: () => voi
   };
 
   return (
-    <Sheet open onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[400px] bg-terminal-widget border-l border-terminal-border flex flex-col">
-        <SheetHeader>
-          <SheetTitle>Share {account.exchange} account</SheetTitle>
-          <SheetDescription>{account.label || account.id}</SheetDescription>
-        </SheetHeader>
-
-        <div className="flex flex-col gap-3 mt-3 flex-1 overflow-auto">
-          <Input placeholder="Grantee email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full" />
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setLevel('read')}
-              className={`flex-1 text-xs px-2 py-1.5 rounded border inline-flex items-center justify-center gap-1 ${level === 'read' ? 'bg-yellow-500/15 text-yellow-500 border-yellow-500/40' : 'border-terminal-border/40 text-terminal-muted'}`}
+    <div className="mt-2 pt-2 border-t border-terminal-border/40 flex flex-col gap-1.5">
+      <div className="text-xs font-semibold flex items-center gap-1"><Users size={12} /> Shared access</div>
+      {grants === null ? (
+        <div className="flex items-center gap-1 text-xs text-terminal-muted"><Loader2 size={12} className="animate-spin" /> Loading…</div>
+      ) : grants.length === 0 ? (
+        <div className="text-xs text-terminal-muted">Not shared with anyone yet.</div>
+      ) : (
+        grants.map((g) => (
+          <div key={g.id} className="flex items-center gap-2">
+            <span className="truncate text-xs flex-1">{g.grantee_email || g.grantee_user_id}</span>
+            <LevelBadge level={g.access_level === 'trade' ? 'trade' : 'read'} />
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-6 w-6 text-terminal-muted hover:text-terminal-negative"
+              onClick={async () => { await revokeGrant(account.id, g.id); await refresh(); }}
+              title="Revoke"
             >
-              <Eye size={12} /> read
-            </button>
-            <button
-              type="button"
-              onClick={() => setLevel('trade')}
-              className={`flex-1 text-xs px-2 py-1.5 rounded border inline-flex items-center justify-center gap-1 ${level === 'trade' ? 'bg-green-500/15 text-green-500 border-green-500/40' : 'border-terminal-border/40 text-terminal-muted'}`}
-            >
-              <ShieldCheck size={12} /> trade
-            </button>
+              <Trash2 size={12} />
+            </Button>
           </div>
-          {error && <div className="text-red-500 text-xs">{error}</div>}
-          <Button onClick={() => void handleShare()} disabled={busy}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (<><Share2 className="mr-2" size={14} /> Share</>)}
-          </Button>
-
-          <div className="mt-2">
-            <div className="text-xs font-semibold text-terminal-muted uppercase tracking-wide mb-1">Current grants</div>
-            {grants.length === 0 && <div className="text-sm text-terminal-muted">Not shared with anyone.</div>}
-            {grants.map((g) => (
-              <div key={g.id} className="flex items-center gap-2 p-1.5 rounded border border-terminal-border/30 mb-1">
-                <span className="truncate text-xs flex-1">{g.grantee_email || g.grantee_user_id}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded border ${g.access_level === 'trade' ? 'bg-green-500/15 text-green-500 border-green-500/30' : 'bg-yellow-500/15 text-yellow-500 border-yellow-500/30'}`}>
-                  {g.access_level}
-                </span>
-                <Button size="icon" variant="outline" onClick={async () => { await revokeGrant(account.id, g.id); await refresh(); }} title="Revoke">
-                  <Trash2 size={14} />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <SheetFooter>
-          <Button variant="outline" onClick={onClose}>Done</Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        ))
+      )}
+      <form className="flex items-center gap-1" onSubmit={(e) => { e.preventDefault(); void handleShare(); }}>
+        <Input type="email" placeholder="Grantee email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-8 flex-1 text-xs" autoComplete="off" />
+        <select
+          value={level}
+          onChange={(e) => setLevel(e.target.value as 'read' | 'trade')}
+          className="h-8 rounded-md border border-input bg-background px-1 text-xs"
+          aria-label="Access level"
+        >
+          <option value="read">read</option>
+          <option value="trade">trade</option>
+        </select>
+        <Button type="submit" size="sm" variant="outline" className="h-8 px-2 text-xs" disabled={busy || !email.trim()}>
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Share'}
+        </Button>
+      </form>
+      {account.read_only && level === 'trade' && (
+        <div className="text-[10px] text-terminal-muted">This account is read-only, so a trade grant still allows only reading.</div>
+      )}
+      {error && <div className="text-terminal-negative text-xs">{error}</div>}
+    </div>
   );
 };
 
